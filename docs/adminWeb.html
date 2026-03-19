@@ -392,7 +392,7 @@
 
         function copyGalleryCode() {
             if (!activeDomain) return alert("Assign a domain to this project first.");
-            const snippet = `<!-- Menutech Gallery -->\n<script src="https://menutech.services/migrar/menutechUI.js"><\/script>\n<menutech-gallery domain="${activeDomain}"></menutech-gallery>`;
+            const snippet = `<!-- Menutech Gallery -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-gallery domain="${activeDomain}"></menutech-gallery>`;
             navigator.clipboard.writeText(snippet).then(() => {
                 const btn = document.getElementById('btn-copy-code');
                 const oldText = btn.textContent;

@@ -61,9 +61,15 @@ class MenutechGallery extends HTMLElement {
     }
 
     async render() {
-        const domain = this.getAttribute('domain');
+        let domain = this.getAttribute('domain');
+
+        // Fallback: Use current hostname if domain attribute is missing
         if (!domain) {
-            this.shadowRoot.innerHTML = `<p style="color:#ef4444; font-weight:500;">Error: 'domain' attribute not specified.</p>`;
+            domain = window.location.hostname.replace(/^www\./, '');
+        }
+
+        if (!domain) {
+            this.shadowRoot.innerHTML = `<p style="color:#ef4444; font-weight:500;">Error: Could not determine domain.</p>`;
             return;
         }
 
