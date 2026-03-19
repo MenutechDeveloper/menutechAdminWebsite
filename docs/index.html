@@ -173,6 +173,13 @@
             const { data: { session } } = await sb.auth.getSession();
             if (session) {
                 user = session.user;
+                if (!user.email_confirmed_at) {
+                    const m = document.getElementById('login-msg');
+                    m.textContent = "Please verify your email before logging in.";
+                    m.style.color = "var(--orange)";
+                    await sb.auth.signOut();
+                    return;
+                }
                 const { data: profile } = await sb.from('profiles').select('role').eq('id', user.id).single();
 
                 document.getElementById('auth-overlay').classList.add('hidden');
