@@ -90,10 +90,46 @@
             .bento-grid { grid-template-columns: 1fr; }
             header h1 { font-size: 2.8rem; }
         }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+        .toast {
+            min-width: 320px;
+            max-width: 440px;
+            padding: 18px 24px;
+            border-radius: 24px;
+            background: #1c1f26;
+            border: 1px solid var(--border);
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            pointer-events: auto;
+            animation: toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1), toastFadeOut 0.5s 5.5s forwards;
+            line-height: 1.4;
+        }
+        .toast.success { border-left: 6px solid var(--success); }
+        .toast.error { border-left: 6px solid var(--error); }
+        .toast.warning { border-left: 6px solid var(--orange); }
+        @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastFadeOut { from { opacity: 1; } to { opacity: 0; } }
     </style>
 </head>
 <body>
     <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
 
     <!-- Auth Module -->
     <div id="auth-overlay">
@@ -158,6 +194,24 @@
         import { MT_CONFIG } from './config.js';
         let sb = null, user = null;
 
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            const icon = document.createElement('div');
+            icon.style.fontSize = '1.2rem';
+            icon.textContent = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+
+            const msg = document.createElement('div');
+            msg.textContent = message;
+
+            toast.appendChild(icon);
+            toast.appendChild(msg);
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 6000);
+        };
+
         document.addEventListener('DOMContentLoaded', async () => {
             initEvents();
             try {
@@ -174,9 +228,7 @@
             if (session) {
                 user = session.user;
                 if (!user.email_confirmed_at) {
-                    const m = document.getElementById('login-msg');
-                    m.textContent = "Please verify your email before logging in.";
-                    m.style.color = "var(--orange)";
+                    showToast("Please verify your email address before logging in.", "warning");
                     await sb.auth.signOut();
                     return;
                 }
@@ -213,11 +265,15 @@
 
         async function signIn() {
             const e = document.getElementById('login-email').value.trim(), p = document.getElementById('login-pass').value, m = document.getElementById('login-msg');
-            if (!e || !p) { m.textContent = "Please fill all fields."; m.style.color = "var(--error)"; return; }
+            if (!e || !p) { showToast("Please fill all fields.", "error"); return; }
             m.innerHTML = '<div class="loader"></div>';
             const { error } = await sb.auth.signInWithPassword({ email: e, password: p });
-            if (error) { m.textContent = error.message; m.style.color = "var(--error)"; }
-            else { location.reload(); }
+            if (error) {
+                m.textContent = "";
+                showToast(error.message, "error");
+            } else {
+                location.reload();
+            }
         }
 
         async function signUp() {
@@ -227,7 +283,7 @@
             const d = document.getElementById('reg-domain').value.trim();
             const m = document.getElementById('reg-msg');
 
-            if (!u || !e || !p) { m.textContent = "Please fill all required fields."; m.style.color = "var(--error)"; return; }
+            if (!u || !e || !p) { showToast("Please fill all required fields.", "error"); return; }
 
             m.innerHTML = '<div class="loader"></div>';
             const { error } = await sb.auth.signUp({
@@ -241,11 +297,17 @@
                 }
             });
 
-            if (error) { m.textContent = error.message; m.style.color = "var(--error)"; }
-            else {
-                m.textContent = "Account created! You can now Sign In.";
-                m.style.color = "var(--success)";
-                setTimeout(() => toggleAuth('signin'), 2500);
+            if (error) {
+                m.textContent = "";
+                if (error.message.includes("Database error saving new user")) {
+                    showToast("Account created! But there was an error saving your profile (username or domain might be taken). Please check your email to confirm.", "warning");
+                } else {
+                    showToast(error.message, "error");
+                }
+            } else {
+                m.textContent = "";
+                showToast("Registration successful! Please check your email to confirm your account.", "success");
+                setTimeout(() => toggleAuth('signin'), 3000);
             }
         }
     </script>
