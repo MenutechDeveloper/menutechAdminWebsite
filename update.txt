@@ -1,32 +1,41 @@
--- FIX: Adding 'email' column to profiles table if it doesn't exist
--- The error "column 'email' does not exist" suggests it's missing from public.profiles
+-- FIX: Ensure 'email', 'username', and 'domain' columns exist in public.profiles
+-- This addresses the "column does not exist" errors
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='email') THEN
         ALTER TABLE public.profiles ADD COLUMN email TEXT;
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='username') THEN
+        ALTER TABLE public.profiles ADD COLUMN username TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='domain') THEN
+        ALTER TABLE public.profiles ADD COLUMN domain TEXT;
+    END IF;
 END $$;
 
--- 1. Populate existing emails from auth.users to public.profiles
+-- 1. Sync existing data from auth.users to public.profiles
+-- Populates email, username, and domain for users who are already registered
 UPDATE public.profiles p
-SET email = u.email
+SET
+    email = u.email,
+    username = COALESCE(u.raw_user_meta_data->>'username', p.username, 'No Username'),
+    domain = COALESCE(u.raw_user_meta_data->>'domain', p.domain)
 FROM auth.users u
-WHERE p.id = u.id AND p.email IS NULL;
+WHERE p.id = u.id;
 
 -- 2. Update admin user (Francisco)
--- Using subquery to identify by email in case the profile email is still being synced
+-- Identifies by email and updates name to 'antonio' and clears domain
 UPDATE public.profiles
 SET username = 'antonio', domain = NULL
 WHERE id IN (SELECT id FROM auth.users WHERE email = 'francisco.menutech@gmail.com');
 
 -- 3. Delete profile for 'designerantoniomontiel@gmail.com'
--- IMPORTANT: This only removes from public.profiles. You MUST delete from Auth Dashboard too.
+-- Removes from public.profiles only (Auth account must be deleted in dashboard)
 DELETE FROM public.profiles
 WHERE id IN (SELECT id FROM auth.users WHERE email = 'designerantoniomontiel@gmail.com');
 
--- 4. Automatic Synchronization Trigger (UPDATED)
--- This script ensures new users from Auth are added to Profiles automatically.
-
+-- 4. Automatic Synchronization Trigger
+-- Ensures all future signups automatically create a profile with metadata
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -52,5 +61,5 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- Optional: To delete the user from AUTH via SQL (Requires high privileges)
+-- Optional: To delete the user from AUTH via SQL (if permissions allow)
 -- DELETE FROM auth.users WHERE email = 'designerantoniomontiel@gmail.com';
