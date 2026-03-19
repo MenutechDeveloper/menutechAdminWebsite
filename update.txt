@@ -1,5 +1,4 @@
 -- FIX: Ensure 'email', 'username', and 'domain' columns exist in public.profiles
--- This addresses the "column does not exist" errors
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='email') THEN
@@ -14,7 +13,6 @@ BEGIN
 END $$;
 
 -- 1. Sync existing data from auth.users to public.profiles
--- Populates email, username, and domain for users who are already registered
 UPDATE public.profiles p
 SET
     email = u.email,
@@ -24,18 +22,19 @@ FROM auth.users u
 WHERE p.id = u.id;
 
 -- 2. Update admin user (Francisco)
--- Identifies by email and updates name to 'antonio' and clears domain
 UPDATE public.profiles
 SET username = 'antonio', domain = NULL
 WHERE id IN (SELECT id FROM auth.users WHERE email = 'francisco.menutech@gmail.com');
 
--- 3. Delete profile for 'designerantoniomontiel@gmail.com'
--- Removes from public.profiles only (Auth account must be deleted in dashboard)
+-- 3. Delete user 'designerantoniomontiel@gmail.com' COMPLETELY
+-- First from profiles, then from auth.users
 DELETE FROM public.profiles
 WHERE id IN (SELECT id FROM auth.users WHERE email = 'designerantoniomontiel@gmail.com');
 
+DELETE FROM auth.users
+WHERE email = 'designerantoniomontiel@gmail.com';
+
 -- 4. Automatic Synchronization Trigger
--- Ensures all future signups automatically create a profile with metadata
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -60,6 +59,3 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
--- Optional: To delete the user from AUTH via SQL (if permissions allow)
--- DELETE FROM auth.users WHERE email = 'designerantoniomontiel@gmail.com';
