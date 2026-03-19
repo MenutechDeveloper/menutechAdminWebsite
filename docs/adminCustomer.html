@@ -113,15 +113,6 @@
 
             <div id="loading" class="loader"></div>
 
-            <div style="margin-top: 60px; padding: 30px; border-radius: 24px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2);">
-                <h4 style="color: var(--error); margin-bottom: 10px; font-size: 0.9rem;">⚠️ Important: User Deletion</h4>
-                <p style="color: var(--text-dim); font-size: 0.8rem; line-height: 1.5;">
-                    The <b>✖ (Delete)</b> button removes the user's data and profile from this system.
-                    However, their <b>Auth Account</b> persists in Supabase for security reasons.
-                    To allow a user to re-register with the same email, you must also delete them from the
-                    <a href="https://supabase.com/dashboard/project/eemqyrysdgasfjlitads/auth/users" target="_blank" style="color: var(--orange); text-decoration: none; font-weight: 700;">Supabase Auth Dashboard</a>.
-                </p>
-            </div>
         </div>
     </div>
 
@@ -265,7 +256,6 @@
                         ${isAdminView ? `<button class="btn btn-save" onclick="updateUser('${u.id}')">SAVE</button>` : ''}
                         ${isAdminView && u.role === 'owner' ? `<button class="btn btn-access" onclick="openAccess('${u.id}')" title="Grant Dev Access">🔐</button>` : ''}
                         <button class="btn btn-access" onclick="manageGallery('${u.id}', '${u.domain}')">GALLERY</button>
-                        ${isAdminView ? `<button class="btn btn-del" onclick="deleteUser('${u.id}')">✖</button>` : ''}
                     </div>
                 </div>
             `).join('');
@@ -278,14 +268,6 @@
             const { error } = await sb.from('profiles').update({ domain, role, username }).eq('id', id);
             if (error) alert("Update error: " + error.message);
             else { alert("User updated successfully"); loadAllUsers(); }
-        }
-
-        window.deleteUser = async function(id) {
-            if (confirm("Delete profile?")) {
-                const { error } = await sb.from('profiles').delete().eq('id', id);
-                if (error) alert("Deletion error: " + error.message);
-                else loadAllUsers();
-            }
         }
 
         window.manageGallery = function(id, domain) {

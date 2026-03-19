@@ -112,13 +112,13 @@
         <div class="auth-card hidden" id="signup-box" style="max-width: 540px;">
             <h2>Get Started</h2>
             <p class="lead">Create your account to start managing.</p>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
                 <div class="group"><label for="reg-user">Username</label><input type="text" id="reg-user" placeholder="johndoe77"></div>
                 <div class="group"><label for="reg-email">Email Address</label><input type="email" id="reg-email" placeholder="you@domain.com"></div>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
                 <div class="group"><label for="reg-pass">Password</label><input type="password" id="reg-pass" placeholder="••••••••"></div>
-                <div class="group"><label for="reg-domain">Target Domain</label><input type="text" id="reg-domain" placeholder="example.com"></div>
+                <div class="group"><label for="reg-domain">Target Domain (Optional)</label><input type="text" id="reg-domain" placeholder="example.com"></div>
             </div>
             <button id="btn-signup" class="btn-orange">Create Account</button>
             <div id="reg-msg" style="margin-top:20px; font-size: 0.85rem;"></div>
@@ -220,7 +220,7 @@
             const d = document.getElementById('reg-domain').value.trim();
             const m = document.getElementById('reg-msg');
 
-            if (!u || !e || !p || !d) { m.textContent = "Please fill all fields."; m.style.color = "var(--error)"; return; }
+            if (!u || !e || !p) { m.textContent = "Please fill all required fields."; m.style.color = "var(--error)"; return; }
 
             m.innerHTML = '<div class="loader"></div>';
             const { error } = await sb.auth.signUp({

@@ -1,0 +1,40 @@
+-- 1. Update admin user (Francisco)
+-- This updates the username and clears the domain as requested.
+UPDATE public.profiles
+SET username = 'antonio', domain = NULL
+WHERE email = 'francisco.menutech@gmail.com';
+
+-- 2. Delete user 'designerantoniomontiel@gmail.com'
+-- IMPORTANT: To fully delete, you must also delete from Supabase Auth Dashboard.
+-- This SQL only removes the profile record.
+DELETE FROM public.profiles
+WHERE email = 'designerantoniomontiel@gmail.com';
+
+-- 3. Automatic Synchronization Trigger
+-- This script ensures that every time a new user registers in Supabase Auth,
+-- a corresponding profile is created with the metadata (username, domain).
+
+-- Create the trigger function
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, username, domain, role)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'username', 'No Username'),
+    NEW.raw_user_meta_data->>'domain',
+    'owner'
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create the trigger
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- To remove the designerantoniomontiel@gmail.com user from AUTH via SQL (if you have permissions):
+-- DELETE FROM auth.users WHERE email = 'designerantoniomontiel@gmail.com';
