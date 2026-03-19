@@ -1,20 +1,32 @@
--- 1. Update admin user (Francisco)
--- This updates the username and clears the domain as requested.
+-- FIX: Adding 'email' column to profiles table if it doesn't exist
+-- The error "column 'email' does not exist" suggests it's missing from public.profiles
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='email') THEN
+        ALTER TABLE public.profiles ADD COLUMN email TEXT;
+    END IF;
+END $$;
+
+-- 1. Populate existing emails from auth.users to public.profiles
+UPDATE public.profiles p
+SET email = u.email
+FROM auth.users u
+WHERE p.id = u.id AND p.email IS NULL;
+
+-- 2. Update admin user (Francisco)
+-- Using subquery to identify by email in case the profile email is still being synced
 UPDATE public.profiles
 SET username = 'antonio', domain = NULL
-WHERE email = 'francisco.menutech@gmail.com';
+WHERE id IN (SELECT id FROM auth.users WHERE email = 'francisco.menutech@gmail.com');
 
--- 2. Delete user 'designerantoniomontiel@gmail.com'
--- IMPORTANT: To fully delete, you must also delete from Supabase Auth Dashboard.
--- This SQL only removes the profile record.
+-- 3. Delete profile for 'designerantoniomontiel@gmail.com'
+-- IMPORTANT: This only removes from public.profiles. You MUST delete from Auth Dashboard too.
 DELETE FROM public.profiles
-WHERE email = 'designerantoniomontiel@gmail.com';
+WHERE id IN (SELECT id FROM auth.users WHERE email = 'designerantoniomontiel@gmail.com');
 
--- 3. Automatic Synchronization Trigger
--- This script ensures that every time a new user registers in Supabase Auth,
--- a corresponding profile is created with the metadata (username, domain).
+-- 4. Automatic Synchronization Trigger (UPDATED)
+-- This script ensures new users from Auth are added to Profiles automatically.
 
--- Create the trigger function
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -25,16 +37,20 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'username', 'No Username'),
     NEW.raw_user_meta_data->>'domain',
     'owner'
-  );
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    username = EXCLUDED.username,
+    domain = EXCLUDED.domain;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create the trigger
+-- Re-create the trigger
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- To remove the designerantoniomontiel@gmail.com user from AUTH via SQL (if you have permissions):
+-- Optional: To delete the user from AUTH via SQL (Requires high privileges)
 -- DELETE FROM auth.users WHERE email = 'designerantoniomontiel@gmail.com';
