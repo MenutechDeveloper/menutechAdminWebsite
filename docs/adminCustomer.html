@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Management Console | Menutech</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #0b0c10;
+            --card: #14161d;
+            --input: #1a1d26;
+            --text: #ffffff;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+            --error: #ef4444;
+            --success: #10b981;
+            --dev: #8b5cf6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 100% 0%, rgba(255, 149, 51, 0.1) 0%, transparent 40%), radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.05) 0%, transparent 40%); }
+
+        header { padding: 30px 60px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: rgba(11, 12, 16, 0.8); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000; }
+        header h1 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 600; }
+        .btn-back { background: none; border: 1px solid var(--border); color: #fff; padding: 10px 20px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.3s; margin-right: 20px; }
+        .btn-back:hover { border-color: var(--orange); color: var(--orange); }
+
+        .badge { padding: 6px 14px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border: 1px solid transparent; }
+        .badge-admin { background: rgba(255, 149, 51, 0.1); color: var(--orange); border-color: rgba(255, 149, 51, 0.2); }
+        .badge-dev { background: rgba(139, 92, 246, 0.1); color: var(--dev); border-color: rgba(139, 92, 246, 0.2); }
+        .badge-owner { background: rgba(148, 163, 184, 0.1); color: var(--text-dim); border-color: rgba(148, 163, 184, 0.2); }
+
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 40px; animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-title { font-family: 'Outfit', sans-serif; font-size: 1.2rem; margin-bottom: 24px; color: var(--text-dim); display: flex; align-items: center; gap: 12px; }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        .user-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 60px; }
+        .user-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px 32px; display: grid; grid-template-columns: 1.5fr 1.5fr 1fr auto; align-items: center; gap: 24px; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .user-card:hover { border-color: var(--orange); transform: scale(1.005); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+
+        .user-info h3 { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 10px; }
+        .user-info .email { font-size: 0.75rem; color: var(--orange); font-weight: 500; }
+        .user-info .uid { font-size: 0.65rem; color: var(--text-dim); font-family: monospace; margin-top: 4px; }
+
+        .controls { display: flex; flex-direction: column; gap: 8px; }
+        .controls input, .controls select { width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: #fff; font-size: 0.8rem; transition: all 0.3s; }
+        .controls input:focus { border-color: var(--orange); outline: none; }
+
+        .actions { display: flex; gap: 10px; }
+        .btn { padding: 12px 18px; border-radius: 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.3s; border: none; text-transform: uppercase; }
+        .btn-save { background: var(--orange); color: #000; }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 149, 51, 0.3); }
+        .btn-del { background: rgba(239, 68, 68, 0.1); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.1); }
+        .btn-del:hover { background: var(--error); color: #fff; }
+        .btn-access { background: rgba(139, 92, 246, 0.1); color: var(--dev); border: 1px solid rgba(139, 92, 246, 0.1); }
+        .btn-access:hover { background: var(--dev); color: #fff; }
+
+        /* Modal for Developer Access */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .modal { background: var(--card); border: 1px solid var(--border); border-radius: 32px; width: 100%; max-width: 500px; padding: 40px; }
+        .modal h2 { font-family: 'Outfit', sans-serif; margin-bottom: 24px; font-size: 1.5rem; }
+        .dev-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--input); border-radius: 16px; margin-bottom: 8px; border: 1px solid var(--border); }
+
+        .loader { width: 30px; height: 30px; border: 3px solid rgba(255, 149, 51, 0.1); border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite; margin: 40px auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #no-access { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+
+    <div id="no-access" class="hidden">
+        <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 12px;">Access Denied</h2>
+        <p style="color: var(--text-dim)">You do not have permission to access the management console.</p>
+        <button onclick="location.href='adminWeb.html'" class="btn btn-save" style="margin-top: 30px">Go to Dashboard</button>
+    </div>
+
+    <div id="app" class="hidden">
+        <header>
+            <div style="display: flex; align-items: center;">
+                <button onclick="location.href='index.html'" class="btn-back">PANEL</button>
+                <h1>Console</h1>
+            </div>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <span id="user-display" style="font-size: 0.85rem; font-weight: 600;"></span>
+                <span id="role-badge" class="badge"></span>
+                <button onclick="logout()" class="btn btn-del" style="padding: 8px 16px; font-size: 0.7rem;">LOGOUT</button>
+            </div>
+        </header>
+
+        <div class="container">
+            <div id="admin-tools" class="hidden">
+                <div class="section-title">All Users</div>
+                <div style="margin-bottom: 30px;">
+                    <input type="text" id="user-search" placeholder="Search by name, username or email..." style="width: 100%; max-width: 400px; background: var(--input); border: 1px solid var(--border); border-radius: 14px; padding: 14px 20px; color: #fff;">
+                </div>
+                <div id="user-list" class="user-list"></div>
+            </div>
+
+            <div id="dev-tools" class="hidden">
+                <div class="section-title">Assigned Projects (Owners)</div>
+                <div id="assigned-list" class="user-list"></div>
+            </div>
+
+            <div id="loading" class="loader"></div>
+
+            <div style="margin-top: 60px; padding: 30px; border-radius: 24px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2);">
+                <h4 style="color: var(--error); margin-bottom: 10px; font-size: 0.9rem;">⚠️ Important: User Deletion</h4>
+                <p style="color: var(--text-dim); font-size: 0.8rem; line-height: 1.5;">
+                    The <b>✖ (Delete)</b> button removes the user's data and profile from this system.
+                    However, their <b>Auth Account</b> persists in Supabase for security reasons.
+                    To allow a user to re-register with the same email, you must also delete them from the
+                    <a href="https://supabase.com/dashboard/project/eemqyrysdgasfjlitads/auth/users" target="_blank" style="color: var(--orange); text-decoration: none; font-weight: 700;">Supabase Auth Dashboard</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dev Access Modal -->
+    <div id="access-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <h2 id="modal-title">Grant Access</h2>
+            <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 24px;">Select developers to manage this project.</p>
+            <div id="dev-check-list" style="max-height: 300px; overflow-y: auto; margin-bottom: 30px;"></div>
+            <div style="display: flex; gap: 12px;">
+                <button onclick="closeModal()" class="btn btn-del" style="flex: 1">Cancel</button>
+                <button onclick="saveAccess()" class="btn btn-save" style="flex: 1">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { MT_CONFIG } from './config.js';
+        let sb = null, user = null, userRole = null, activeOwnerId = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
+                sb = createClient(MT_CONFIG.SUPABASE_URL, MT_CONFIG.SUPABASE_KEY);
+                checkAuth();
+            } catch (err) {
+                console.error("Initialization error:", err);
+                alert("Critical Error: Could not connect to the database.");
+            }
+        });
+
+        async function checkAuth() {
+            const { data: { session }, error: sError } = await sb.auth.getSession();
+            if (sError || !session) { location.href = "index.html"; return; }
+
+            user = session.user;
+            const { data, error } = await sb.from('profiles').select('role').eq('id', user.id).single();
+
+            if (error || !data || data.role === 'owner') {
+                document.getElementById('no-access').classList.remove('hidden');
+            } else {
+                userRole = data.role;
+                document.getElementById('app').classList.remove('hidden');
+                document.getElementById('user-display').textContent = user.email;
+                const rb = document.getElementById('role-badge');
+                rb.textContent = userRole;
+                rb.className = `badge badge-${userRole}`;
+
+                if (userRole === 'admin') {
+                    document.getElementById('admin-tools').classList.remove('hidden');
+                    loadAllUsers();
+                } else if (userRole === 'developer') {
+                    document.getElementById('dev-tools').classList.remove('hidden');
+                    loadAssignedOwners();
+                }
+            }
+        }
+
+        let allUsers = [];
+        async function loadAllUsers() {
+            const loader = document.getElementById('loading');
+            loader.classList.remove('hidden');
+
+            const { data, error } = await sb.from('profiles').select('*').order('role', { ascending: true });
+            loader.classList.add('hidden');
+
+            if (error) return alert("Error loading users: " + error.message);
+            allUsers = data || [];
+            renderList(allUsers, 'user-list', true);
+
+            document.getElementById('user-search').oninput = (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = allUsers.filter(u =>
+                    (u.username || '').toLowerCase().includes(term) ||
+                    (u.email || '').toLowerCase().includes(term) ||
+                    (u.domain || '').toLowerCase().includes(term)
+                );
+                renderList(filtered, 'user-list', true);
+            };
+        }
+
+        async function loadAssignedOwners() {
+            const loader = document.getElementById('loading');
+            loader.classList.remove('hidden');
+
+            const { data: accessData, error: accessError } = await sb
+                .from('developer_access')
+                .select('owner_id')
+                .eq('developer_id', user.id);
+
+            if (accessError) {
+                loader.classList.add('hidden');
+                return alert("Error loading assignments: " + accessError.message);
+            }
+
+            const ownerIds = (accessData || []).map(a => a.owner_id);
+            if (ownerIds.length === 0) {
+                loader.classList.add('hidden');
+                document.getElementById('assigned-list').innerHTML = '<p style="color: var(--text-dim); text-align:center; padding: 40px;">No projects assigned yet.</p>';
+                return;
+            }
+
+            const { data, error } = await sb
+                .from('profiles')
+                .select('*')
+                .in('id', ownerIds)
+                .order('updated_at', { ascending: false });
+
+            loader.classList.add('hidden');
+
+            if (error) return alert("Error loading assigned projects: " + error.message);
+            renderList(data, 'assigned-list', false);
+        }
+
+        window.renderList = function(users, targetId, isAdminView) {
+            const list = document.getElementById(targetId);
+            list.innerHTML = (users || []).map(u => `
+                <div class="user-card">
+                    <div class="user-info">
+                        <h3 title="User ID: ${u.id}">
+                            ${u.username || 'No Username'}
+                            ${u.domain ? `<span style="font-size: 0.7rem; background: rgba(255,149,51,0.1); color: var(--orange); padding: 2px 8px; border-radius: 6px;">${u.domain}</span>` : ''}
+                        </h3>
+                        <div class="email">${u.email || 'No Email'}</div>
+                        <div class="uid">ID: ${u.id.substring(0,12)}...</div>
+                    </div>
+                    <div class="controls">
+                        <input type="text" value="${u.username || ''}" placeholder="Username" id="user-${u.id}" ${!isAdminView ? 'disabled' : ''}>
+                        <input type="text" value="${u.domain || ''}" placeholder="Registered Domain" id="dom-${u.id}" ${!isAdminView ? 'disabled' : ''}>
+                        ${isAdminView ? `
+                        <select id="role-${u.id}">
+                            <option value="owner" ${u.role === 'owner' ? 'selected' : ''}>Owner</option>
+                            <option value="developer" ${u.role === 'developer' ? 'selected' : ''}>Developer</option>
+                            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                        </select>` : ''}
+                    </div>
+                    <div class="badge-container" style="text-align: center;">
+                        <span class="badge badge-${u.role}">${u.role}</span>
+                    </div>
+                    <div class="actions" style="justify-content: flex-end;">
+                        ${isAdminView ? `<button class="btn btn-save" onclick="updateUser('${u.id}')">SAVE</button>` : ''}
+                        ${isAdminView && u.role === 'owner' ? `<button class="btn btn-access" onclick="openAccess('${u.id}')" title="Grant Dev Access">🔐</button>` : ''}
+                        <button class="btn btn-access" onclick="manageGallery('${u.id}', '${u.domain}')">GALLERY</button>
+                        ${isAdminView ? `<button class="btn btn-del" onclick="deleteUser('${u.id}')">✖</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.updateUser = async function(id) {
+            const domain = document.getElementById(`dom-${id}`).value.trim();
+            const username = document.getElementById(`user-${id}`).value.trim();
+            const role = document.getElementById(`role-${id}`).value;
+            const { error } = await sb.from('profiles').update({ domain, role, username }).eq('id', id);
+            if (error) alert("Update error: " + error.message);
+            else { alert("User updated successfully"); loadAllUsers(); }
+        }
+
+        window.deleteUser = async function(id) {
+            if (confirm("Delete profile?")) {
+                const { error } = await sb.from('profiles').delete().eq('id', id);
+                if (error) alert("Deletion error: " + error.message);
+                else loadAllUsers();
+            }
+        }
+
+        window.manageGallery = function(id, domain) {
+            sessionStorage.setItem('mt_edit_owner_id', id);
+            sessionStorage.setItem('mt_edit_domain', domain);
+            location.href = "adminWeb.html";
+        }
+
+        window.openAccess = async function(ownerId) {
+            activeOwnerId = ownerId;
+            document.getElementById('access-modal').classList.remove('hidden');
+            const { data: devs } = await sb.from('profiles').select('*').eq('role', 'developer');
+            const { data: existing } = await sb.from('developer_access').select('developer_id').eq('owner_id', ownerId);
+
+            const existingIds = (existing || []).map(e => e.developer_id);
+            const list = document.getElementById('dev-check-list');
+            list.innerHTML = (devs || []).map(d => `
+                <div class="dev-item">
+                    <span style="font-size: 0.8rem; font-weight: 600;">${d.id.substring(0,8)}...</span>
+                    <input type="checkbox" value="${d.id}" ${existingIds.includes(d.id) ? 'checked' : ''} class="dev-chk">
+                </div>
+            `).join('');
+        }
+
+        window.closeModal = function() { document.getElementById('access-modal').classList.add('hidden'); }
+
+        window.saveAccess = async function() {
+            const checks = document.querySelectorAll('.dev-chk');
+            await sb.from('developer_access').delete().eq('owner_id', activeOwnerId);
+
+            const inserts = Array.from(checks).filter(c => c.checked).map(c => ({
+                developer_id: c.value,
+                owner_id: activeOwnerId
+            }));
+
+            if (inserts.length) {
+                const { error } = await sb.from('developer_access').insert(inserts);
+                if (error) alert("Access update error: " + error.message);
+                else alert("Access updated successfully");
+            } else {
+                alert("Access cleared");
+            }
+            window.closeModal();
+        }
+
+        window.logout = async function() { await sb.auth.signOut(); location.href = "index.html"; }
+    </script>
+</body>
+</html>

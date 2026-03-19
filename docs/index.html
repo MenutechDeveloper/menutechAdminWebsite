@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Menutech</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #0b0c10;
+            --card: #14161d;
+            --input: #1a1d26;
+            --text: #ffffff;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.1) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.05) 0%, transparent 40%); }
+
+        /* Auth Screen */
+        #auth-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 24px; }
+        .auth-card {
+            background: var(--card); width: 100%; max-width: 440px; padding: 60px 45px; border-radius: 40px; border: 1px solid var(--border);
+            box-shadow: 0 24px 64px -12px rgba(0,0,0,0.5); position: relative; text-align: center;
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .auth-card h2 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 600; margin-bottom: 12px; color: #fff; }
+        .auth-card p.lead { color: var(--text-dim); margin-bottom: 40px; font-size: 0.95rem; font-weight: 400; line-height: 1.6; }
+
+        .group { margin-bottom: 24px; text-align: left; }
+        .group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--orange); letter-spacing: 0.5px; margin-bottom: 10px; margin-left: 4px; opacity: 0.9; }
+        input {
+            width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 18px 22px; color: #fff; font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 4px rgba(255, 149, 51, 0.08); }
+
+        .btn-orange {
+            width: 100%; padding: 20px; border-radius: 22px; border: none; background: var(--orange); color: #000; font-weight: 700; font-size: 1rem;
+            cursor: pointer; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); margin-top: 12px;
+        }
+        .btn-orange:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(255, 149, 51, 0.25); }
+
+        .auth-nav { margin-top: 36px; display: flex; flex-direction: column; gap: 14px; }
+        .link { background: none; border: none; color: var(--text-dim); font-size: 0.85rem; cursor: pointer; text-decoration: none; font-weight: 500; transition: color 0.2s; }
+        .link:hover { color: var(--orange); }
+
+        /* Main Panel */
+        .container { width: 100%; max-width: 1000px; margin: 0 auto; padding: 100px 24px; animation: fadeIn 1s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        header { text-align: center; margin-bottom: 80px; }
+        header h1 { font-family: 'Outfit', sans-serif; font-size: 3.5rem; font-weight: 600; letter-spacing: -1.5px; margin-bottom: 10px; }
+        header p { color: var(--text-dim); font-size: 1.1rem; }
+
+        .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; margin-top: 40px; }
+        .bento-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 40px; padding: 60px 40px;
+            text-align: center; cursor: pointer; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative; overflow: hidden; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .bento-card:hover { transform: translateY(-10px); border-color: var(--orange); box-shadow: 0 30px 60px -12px rgba(0,0,0,0.5); }
+        .bento-card h3 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; margin-bottom: 15px; color: #fff; }
+        .bento-card p { color: var(--text-dim); font-size: 0.95rem; line-height: 1.5; }
+
+        .bento-card .icon-box {
+            width: 80px; height: 80px; background: rgba(255,149,51,0.1); border-radius: 24px; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 30px; color: var(--orange); font-size: 2rem; border: 1px solid rgba(255,149,51,0.2);
+        }
+
+        #top-nav { position: fixed; top: 30px; right: 30px; background: rgba(20,22,29,0.7); backdrop-filter: blur(20px); padding: 14px 28px; border-radius: 24px; border: 1px solid var(--border); display: flex; align-items: center; gap: 24px; z-index: 5000; }
+        #user-email { font-weight: 700; font-size: 0.85rem; color: var(--orange); }
+        .btn-logout { background: none; border: none; color: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer; opacity: 0.6; transition: 0.3s; }
+        .btn-logout:hover { opacity: 1; color: var(--orange); }
+
+        .loader { border: 3px solid rgba(255, 149, 51, 0.1); width: 28px; height: 28px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 1s linear infinite; margin: 0 auto; }
+        @keyframes rotate { to { transform: rotate(360deg); } }
+        .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            .bento-grid { grid-template-columns: 1fr; }
+            header h1 { font-size: 2.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+
+    <!-- Auth Module -->
+    <div id="auth-overlay">
+        <div class="auth-card" id="signin-box">
+            <h2>Welcome back</h2>
+            <p class="lead">Sign in to access your dashboard.</p>
+            <div class="group"><label>Email Address</label><input type="email" id="login-email" placeholder="you@domain.com"></div>
+            <div class="group"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••"></div>
+            <button id="btn-signin" class="btn-orange">Sign In</button>
+            <div id="login-msg" style="margin-top:20px; font-size: 0.85rem;"></div>
+            <div class="auth-nav">
+                <button class="link" onclick="toggleAuth('signup')">Don't have an account? Sign Up</button>
+            </div>
+        </div>
+
+        <div class="auth-card hidden" id="signup-box" style="max-width: 540px;">
+            <h2>Get Started</h2>
+            <p class="lead">Create your account to start managing.</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="group"><label for="reg-user">Username</label><input type="text" id="reg-user" placeholder="johndoe77"></div>
+                <div class="group"><label for="reg-email">Email Address</label><input type="email" id="reg-email" placeholder="you@domain.com"></div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="group"><label for="reg-pass">Password</label><input type="password" id="reg-pass" placeholder="••••••••"></div>
+                <div class="group"><label for="reg-domain">Target Domain</label><input type="text" id="reg-domain" placeholder="example.com"></div>
+            </div>
+            <button id="btn-signup" class="btn-orange">Create Account</button>
+            <div id="reg-msg" style="margin-top:20px; font-size: 0.85rem;"></div>
+            <div class="auth-nav">
+                <button class="link" onclick="toggleAuth('signin')">Already have an account? Sign In</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="top-nav" class="hidden">
+        <div id="user-email"></div>
+        <button id="btn-logout" class="btn-logout">Logout</button>
+    </div>
+
+    <div class="container hidden" id="main-app">
+        <header>
+            <h1>Control Panel</h1>
+            <p>Select a module to manage your digital assets.</p>
+        </header>
+
+        <div class="bento-grid">
+            <a href="adminCustomer.html" class="bento-card" id="card-users">
+                <div class="icon-box">👤</div>
+                <h3>Users</h3>
+                <p>Manage clients, domains, and global platform permissions.</p>
+            </a>
+
+            <a href="adminWeb.html" class="bento-card">
+                <div class="icon-box">🖼️</div>
+                <h3>Website Edit</h3>
+                <p>Customize your gallery, upload images, and manage domain content.</p>
+            </a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { MT_CONFIG } from './config.js';
+        let sb = null, user = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initEvents();
+            try {
+                const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
+                sb = createClient(MT_CONFIG.SUPABASE_URL, MT_CONFIG.SUPABASE_KEY);
+                checkSession();
+            } catch (err) {
+                console.error("Init error:", err);
+            }
+        });
+
+        async function checkSession() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (session) {
+                user = session.user;
+                const { data: profile } = await sb.from('profiles').select('role').eq('id', user.id).single();
+
+                document.getElementById('auth-overlay').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                document.getElementById('top-nav').classList.remove('hidden');
+                document.getElementById('user-email').textContent = user.email;
+
+                if (profile && profile.role === 'owner') {
+                    document.getElementById('card-users').style.display = 'none';
+                    // Re-center if only one card
+                    document.querySelector('.bento-grid').style.gridTemplateColumns = '1fr';
+                    document.querySelector('.bento-grid').style.maxWidth = '500px';
+                    document.querySelector('.bento-grid').style.margin = '40px auto 0 auto';
+                }
+            }
+        }
+
+        window.toggleAuth = (mode) => {
+            document.getElementById('signin-box').classList.add('hidden');
+            document.getElementById('signup-box').classList.add('hidden');
+            document.getElementById(mode + '-box').classList.remove('hidden');
+        };
+
+        function initEvents() {
+            document.getElementById('btn-signin').onclick = signIn;
+            document.getElementById('btn-signup').onclick = signUp;
+            document.getElementById('btn-logout').onclick = logout;
+        }
+
+        window.logout = async () => { await sb.auth.signOut(); location.reload(); };
+
+        async function signIn() {
+            const e = document.getElementById('login-email').value.trim(), p = document.getElementById('login-pass').value, m = document.getElementById('login-msg');
+            if (!e || !p) { m.textContent = "Please fill all fields."; m.style.color = "var(--error)"; return; }
+            m.innerHTML = '<div class="loader"></div>';
+            const { error } = await sb.auth.signInWithPassword({ email: e, password: p });
+            if (error) { m.textContent = error.message; m.style.color = "var(--error)"; }
+            else { location.reload(); }
+        }
+
+        async function signUp() {
+            const u = document.getElementById('reg-user').value.trim();
+            const e = document.getElementById('reg-email').value.trim();
+            const p = document.getElementById('reg-pass').value;
+            const d = document.getElementById('reg-domain').value.trim();
+            const m = document.getElementById('reg-msg');
+
+            if (!u || !e || !p || !d) { m.textContent = "Please fill all fields."; m.style.color = "var(--error)"; return; }
+
+            m.innerHTML = '<div class="loader"></div>';
+            const { error } = await sb.auth.signUp({
+                email: e,
+                password: p,
+                options: {
+                    data: {
+                        username: u,
+                        domain: d
+                    }
+                }
+            });
+
+            if (error) { m.textContent = error.message; m.style.color = "var(--error)"; }
+            else {
+                m.textContent = "Account created! You can now Sign In.";
+                m.style.color = "var(--success)";
+                setTimeout(() => toggleAuth('signin'), 2500);
+            }
+        }
+    </script>
+</body>
+</html>
