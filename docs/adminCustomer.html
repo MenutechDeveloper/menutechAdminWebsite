@@ -9,25 +9,34 @@
 
         :root {
             --orange: #ff9533;
+            --bg: #fff5eb;
+            --card: #ffffff;
+            --input: #fffcf9;
+            --text: #2d333f;
+            --text-dim: #64748b;
+            --border: #f0e0d0;
+            --error: #ef4444;
+            --success: #10b981;
+            --dev: #8b5cf6;
+        }
+
+        body.dark-mode {
             --bg: #0b0c10;
             --card: #14161d;
             --input: #1a1d26;
             --text: #ffffff;
             --text-dim: #94a3b8;
             --border: #2d333f;
-            --error: #ef4444;
-            --success: #10b981;
-            --dev: #8b5cf6;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; }
 
         .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 100% 0%, rgba(255, 149, 51, 0.1) 0%, transparent 40%), radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.05) 0%, transparent 40%); }
 
-        header { padding: 30px 60px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: rgba(11, 12, 16, 0.8); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000; }
+        header { padding: 30px 60px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: var(--card); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000; }
         header h1 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 600; }
-        .btn-back { background: none; border: 1px solid var(--border); color: #fff; padding: 10px 20px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.3s; margin-right: 20px; }
+        .btn-back { background: none; border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.3s; margin-right: 20px; }
         .btn-back:hover { border-color: var(--orange); color: var(--orange); }
 
         .badge { padding: 6px 14px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border: 1px solid transparent; }
@@ -45,12 +54,12 @@
         .user-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px 32px; display: grid; grid-template-columns: 1.5fr 1.5fr 1fr auto; align-items: center; gap: 24px; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .user-card:hover { border-color: var(--orange); transform: scale(1.005); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
 
-        .user-info h3 { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 10px; }
+        .user-info h3 { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 10px; }
         .user-info .email { font-size: 0.75rem; color: var(--orange); font-weight: 500; }
         .user-info .uid { font-size: 0.65rem; color: var(--text-dim); font-family: monospace; margin-top: 4px; }
 
         .controls { display: flex; flex-direction: column; gap: 8px; }
-        .controls input, .controls select { width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: #fff; font-size: 0.8rem; transition: all 0.3s; }
+        .controls input, .controls select { width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 0.8rem; transition: all 0.3s; }
         .controls input:focus { border-color: var(--orange); outline: none; }
 
         .actions { display: flex; gap: 10px; }
@@ -72,6 +81,19 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         #no-access { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+
+        .theme-switch {
+            position: relative; display: inline-block; width: 44px; height: 20px;
+        }
+        .theme-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; inset: 0; background-color: var(--border); transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: var(--orange); transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--orange); }
+        input:checked + .slider:before { transform: translateX(24px); background-color: #fff; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -93,6 +115,10 @@
             <div style="display: flex; align-items: center; gap: 20px;">
                 <span id="user-display" style="font-size: 0.85rem; font-weight: 600;"></span>
                 <span id="role-badge" class="badge"></span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
                 <button onclick="logout()" class="btn btn-del" style="padding: 8px 16px; font-size: 0.7rem;">LOGOUT</button>
             </div>
         </header>
@@ -134,6 +160,7 @@
         let sb = null, user = null, userRole = null, activeOwnerId = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
             try {
                 const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
                 sb = createClient(MT_CONFIG.SUPABASE_URL, MT_CONFIG.SUPABASE_KEY);
@@ -232,12 +259,10 @@
             list.innerHTML = (users || []).map(u => `
                 <div class="user-card">
                     <div class="user-info">
-                        <h3 title="User ID: ${u.id}">
+                        <h3>
                             ${u.username || 'No Username'}
                             ${u.domain ? `<span style="font-size: 0.7rem; background: rgba(255,149,51,0.1); color: var(--orange); padding: 2px 8px; border-radius: 6px;">${u.domain}</span>` : ''}
                         </h3>
-                        <div class="email">${u.email || 'No Email'}</div>
-                        <div class="uid">ID: ${u.id.substring(0,12)}...</div>
                     </div>
                     <div class="controls">
                         <input type="text" value="${u.username || ''}" placeholder="Username" id="user-${u.id}" ${!isAdminView ? 'disabled' : ''}>
@@ -311,6 +336,24 @@
                 alert("Access cleared");
             }
             window.closeModal();
+        }
+
+        function initTheme() {
+            const toggle = document.getElementById('theme-toggle');
+            const currentTheme = localStorage.getItem('theme');
+            if (currentTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                toggle.checked = true;
+            }
+            toggle.addEventListener('change', () => {
+                if (toggle.checked) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
         }
 
         window.logout = async function() { await sb.auth.signOut(); location.href = "index.html"; }

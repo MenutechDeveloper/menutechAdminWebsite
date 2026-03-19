@@ -56,8 +56,7 @@ class MenutechGallery extends HTMLElement {
     }
 
     getPattern(i) {
-        const p = ['', 'wide', 'tall', '', 'large', '', 'wide', ''];
-        return p[i % p.length];
+        return '';
     }
 
     async render() {
@@ -75,11 +74,10 @@ class MenutechGallery extends HTMLElement {
 
         const styles = `
             <style>
-                :host { display: block; width: 100%; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+                :host { display: block; width: 100%; max-width: 1200px; margin: 40px auto; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
                 .gallery-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-                    grid-auto-rows: 240px;
+                    grid-template-columns: repeat(4, 1fr);
                     gap: 20px;
                     padding: 0;
                 }
@@ -90,6 +88,7 @@ class MenutechGallery extends HTMLElement {
                     background: #14161d;
                     box-shadow: 0 12px 30px -10px rgba(0,0,0,0.3);
                     transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                    aspect-ratio: 1/1;
                 }
                 .gallery-item:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4); }
                 .gallery-item img {
@@ -99,16 +98,11 @@ class MenutechGallery extends HTMLElement {
                     transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
                 }
                 .gallery-item:hover img { transform: scale(1.06); }
-                .gallery-item.large { grid-column: span 2; grid-row: span 2; }
-                .gallery-item.wide { grid-column: span 2; }
-                .gallery-item.tall { grid-row: span 2; }
 
                 .loader { text-align: center; padding: 60px; color: #ff9533; font-weight: 600; letter-spacing: 1px; }
 
                 @media (max-width: 640px) {
-                    .gallery-grid { grid-template-columns: 1fr; grid-auto-rows: 300px; gap: 16px; }
-                    .gallery-item.wide, .gallery-item.large { grid-column: span 1; }
-                    .gallery-item.tall, .gallery-item.large { grid-row: span 1; }
+                    .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
                 }
             </style>
         `;

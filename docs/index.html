@@ -9,18 +9,27 @@
 
         :root {
             --orange: #ff9533;
+            --bg: #fff5eb;
+            --card: #ffffff;
+            --input: #fffcf9;
+            --text: #2d333f;
+            --text-dim: #64748b;
+            --border: #f0e0d0;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        body.dark-mode {
             --bg: #0b0c10;
             --card: #14161d;
             --input: #1a1d26;
             --text: #ffffff;
             --text-dim: #94a3b8;
             --border: #2d333f;
-            --success: #10b981;
-            --error: #ef4444;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
 
         .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.1) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.05) 0%, transparent 40%); }
 
@@ -33,13 +42,13 @@
         }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .auth-card h2 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 600; margin-bottom: 12px; color: #fff; }
+        .auth-card h2 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 600; margin-bottom: 12px; color: var(--text); }
         .auth-card p.lead { color: var(--text-dim); margin-bottom: 40px; font-size: 0.95rem; font-weight: 400; line-height: 1.6; }
 
         .group { margin-bottom: 24px; text-align: left; }
         .group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--orange); letter-spacing: 0.5px; margin-bottom: 10px; margin-left: 4px; opacity: 0.9; }
         input {
-            width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 18px 22px; color: #fff; font-size: 1rem;
+            width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 18px 22px; color: var(--text); font-size: 1rem;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 4px rgba(255, 149, 51, 0.08); }
@@ -69,7 +78,7 @@
             position: relative; overflow: hidden; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .bento-card:hover { transform: translateY(-10px); border-color: var(--orange); box-shadow: 0 30px 60px -12px rgba(0,0,0,0.5); }
-        .bento-card h3 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; margin-bottom: 15px; color: #fff; }
+        .bento-card h3 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; margin-bottom: 15px; color: var(--text); }
         .bento-card p { color: var(--text-dim); font-size: 0.95rem; line-height: 1.5; }
 
         .bento-card .icon-box {
@@ -77,10 +86,23 @@
             margin-bottom: 30px; color: var(--orange); font-size: 2rem; border: 1px solid rgba(255,149,51,0.2);
         }
 
-        #top-nav { position: fixed; top: 30px; right: 30px; background: rgba(20,22,29,0.7); backdrop-filter: blur(20px); padding: 14px 28px; border-radius: 24px; border: 1px solid var(--border); display: flex; align-items: center; gap: 24px; z-index: 5000; }
+        #top-nav { position: fixed; top: 30px; right: 30px; background: var(--card); backdrop-filter: blur(20px); padding: 14px 28px; border-radius: 24px; border: 1px solid var(--border); display: flex; align-items: center; gap: 24px; z-index: 5000; }
         #user-email { font-weight: 700; font-size: 0.85rem; color: var(--orange); }
-        .btn-logout { background: none; border: none; color: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer; opacity: 0.6; transition: 0.3s; }
+        .btn-logout { background: none; border: none; color: var(--text); font-size: 0.8rem; font-weight: 600; cursor: pointer; opacity: 0.6; transition: 0.3s; }
         .btn-logout:hover { opacity: 1; color: var(--orange); }
+
+        .theme-switch {
+            position: relative; display: inline-block; width: 50px; height: 24px;
+        }
+        .theme-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; inset: 0; background-color: var(--border); transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: var(--orange); transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--orange); }
+        input:checked + .slider:before { transform: translateX(26px); background-color: #fff; }
 
         .loader { border: 3px solid rgba(255, 149, 51, 0.1); width: 28px; height: 28px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 1s linear infinite; margin: 0 auto; }
         @keyframes rotate { to { transform: rotate(360deg); } }
@@ -166,6 +188,10 @@
 
     <div id="top-nav" class="hidden">
         <div id="user-email"></div>
+        <label class="theme-switch">
+            <input type="checkbox" id="theme-toggle">
+            <span class="slider"></span>
+        </label>
         <button id="btn-logout" class="btn-logout">Logout</button>
     </div>
 
@@ -213,6 +239,7 @@
         };
 
         document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
             initEvents();
             try {
                 const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
@@ -254,6 +281,24 @@
             document.getElementById('signup-box').classList.add('hidden');
             document.getElementById(mode + '-box').classList.remove('hidden');
         };
+
+        function initTheme() {
+            const toggle = document.getElementById('theme-toggle');
+            const currentTheme = localStorage.getItem('theme');
+            if (currentTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                toggle.checked = true;
+            }
+            toggle.addEventListener('change', () => {
+                if (toggle.checked) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+        }
 
         function initEvents() {
             document.getElementById('btn-signin').onclick = signIn;
