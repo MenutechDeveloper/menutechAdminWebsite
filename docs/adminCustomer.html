@@ -37,13 +37,45 @@
         #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
         #top-nav > * { pointer-events: auto; }
 
-        #user-display-pill { background: var(--card); backdrop-filter: blur(20px); padding: 8px 20px; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
-        #user-display { font-weight: 700; font-size: 0.8rem; color: var(--orange); }
-        .btn-logout-top { background: rgba(239, 68, 68, 0.1); border: none; color: var(--error); padding: 6px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        .btn-logout-top:hover { background: var(--error); color: #fff; }
+        #user-display-pill {
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 22px; border-radius: 24px; border: 1px solid var(--border);
+            display: flex; align-items: center; gap: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto;
+        }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); }
 
-        .btn-panel-top { background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 12px 24px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
-        .btn-panel-top:hover { transform: translateY(-2px); border-color: var(--orange); color: var(--orange); }
+        #user-display-pill.admin-glow { box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); border-color: gold; animation: rainbow 5s linear infinite; }
+        #user-display-pill.dev-glow { box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); animation: pulse-white 2s infinite; }
+        #user-display-pill.owner-glow { box-shadow: 0 0 15px rgba(255, 149, 51, 0.3); }
+
+        @keyframes rainbow {
+            0% { border-color: gold; box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+            33% { border-color: #ff6b6b; box-shadow: 0 0 15px rgba(255, 107, 107, 0.4); }
+            66% { border-color: #4facfe; box-shadow: 0 0 15px rgba(79, 172, 254, 0.4); }
+            100% { border-color: gold; box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+        }
+        @keyframes pulse-white { 0% { box-shadow: 0 0 5px rgba(255,255,255,0.2); } 50% { box-shadow: 0 0 20px rgba(255,255,255,0.6); } 100% { box-shadow: 0 0 5px rgba(255,255,255,0.2); } }
+
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; }
+        #user-display { font-weight: 800; font-size: 0.85rem; color: var(--text); font-family: 'Outfit', sans-serif; }
+        #user-role-sublabel { font-size: 0.65rem; color: var(--orange); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .pill-menu {
+            position: absolute; top: calc(100% + 12px); right: 0; background: var(--card); border: 1px solid var(--border);
+            border-radius: 20px; padding: 10px; min-width: 160px; box-shadow: 0 15px 45px rgba(0,0,0,0.2);
+            opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
+        }
+        #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .pill-menu-item {
+            padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text);
+            display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none;
+        }
+        .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
+        .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
+        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
 
         header { text-align: center; margin-bottom: 60px; padding-top: 120px; }
         header h1 { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 700; }
@@ -92,7 +124,7 @@
         #no-access { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
 
         .theme-switch {
-            width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+            width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); pointer-events: auto; }
         .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
 
         .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
@@ -126,13 +158,18 @@
         </div>
         <div style="display: flex; align-items: center; gap: 15px;">
             <div class="theme-switch" id="theme-toggle">
-                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
-                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 1V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 21V23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.22 4.22L5.64 5.64" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.36 18.36L19.78 19.78" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12H23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.22 19.78L5.64 18.36" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.36 5.64L19.78 4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79C20.916 15.1119 20.0156 17.3308 18.4526 19.0655C16.8895 20.8001 14.7656 21.9392 12.4439 22.2855C10.1221 22.6318 7.74955 22.1627 5.73142 20.9575C3.71329 19.7523 2.18182 17.8913 1.40114 15.6881C0.620455 13.4849 0.64379 11.083 1.46714 8.89271C2.2905 6.70243 3.86012 4.86906 5.90422 3.70494C7.94833 2.54082 10.3344 2.12151 12.6517 2.51862C14.969 2.91572 17.068 4.10398 18.59 5.88" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 15C13.2091 15 15 13.2091 15 11C15 8.79086 13.2091 7 11 7C8.79086 7 7 8.79086 7 11C7 13.2091 8.79086 15 11 15Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <div id="user-display-pill">
-                <span id="role-badge" class="badge"></span>
-                <div id="user-display"></div>
-                <button onclick="logout()" class="btn-logout-top">Logout</button>
+                <div class="pill-info">
+                    <div id="user-display">Loading...</div>
+                    <div id="user-role-sublabel">User</div>
+                </div>
+                <div class="pill-menu">
+                    <a href="index.html" class="pill-menu-item">🏠 Home</a>
+                    <div class="pill-menu-item danger" onclick="logout()">🚪 Logout</div>
+                </div>
             </div>
         </div>
     </div>
@@ -203,10 +240,17 @@
                 userRole = data.role;
                 document.getElementById('app').classList.remove('hidden');
                 document.getElementById('top-nav').classList.remove('hidden');
-                document.getElementById('user-display').textContent = user.email;
-                const rb = document.getElementById('role-badge');
-                rb.textContent = userRole;
-                rb.className = `badge badge-${userRole}`;
+
+                const pill = document.getElementById('user-display-pill');
+                const nameEl = document.getElementById('user-display');
+                const roleEl = document.getElementById('user-role-sublabel');
+
+                nameEl.textContent = data.username || user.email.split('@')[0];
+                roleEl.textContent = data.role || 'User';
+
+                if (data.role === 'admin') pill.classList.add('admin-glow');
+                else if (data.role === 'developer') pill.classList.add('dev-glow');
+                else pill.classList.add('owner-glow');
 
                 if (userRole === 'admin') {
                     document.getElementById('admin-tools').classList.remove('hidden');
@@ -369,6 +413,13 @@
                 const isDark = document.body.classList.contains('dark-mode');
                 localStorage.setItem('theme', isDark ? 'dark' : 'light');
             });
+
+            const pill = document.getElementById('user-display-pill');
+            pill.onclick = (e) => {
+                e.stopPropagation();
+                pill.classList.toggle('active');
+            };
+            document.addEventListener('click', () => pill.classList.remove('active'));
         }
 
         window.logout = async function() { await sb.auth.signOut(); location.href = "index.html"; }
