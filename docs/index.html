@@ -68,7 +68,7 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         header { text-align: center; margin-bottom: 80px; }
-        header h1 { font-family: 'Outfit', sans-serif; font-size: 3.5rem; font-weight: 700; letter-spacing: -1.5px; margin-bottom: 10px; }
+        .logo-main { width: 100%; max-width: 320px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
         header p { color: var(--text-dim); font-size: 1.1rem; }
 
         .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; margin-top: 40px; }
@@ -90,21 +90,33 @@
         #top-nav > * { pointer-events: auto; }
 
         #user-display-pill {
-            background: var(--card); backdrop-filter: blur(20px); padding: 8px 22px; border-radius: 24px; border: 1px solid var(--border);
-            display: flex; align-items: center; gap: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto;
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 32px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 18px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; min-width: 180px; justify-content: center;
+            overflow: hidden;
         }
-        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
 
-        #user-display-pill.admin-glow { box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); border-color: gold; animation: rainbow 5s linear infinite; }
-        #user-display-pill.dev-glow { box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); animation: pulse-white 2s infinite; }
-        #user-display-pill.owner-glow { box-shadow: 0 0 15px rgba(255, 149, 51, 0.3); }
+        #user-display-pill.admin-glow { border-color: gold; animation: rainbow 8s linear infinite, foil-shine 3s infinite linear; background: linear-gradient(135deg, var(--card) 0%, rgba(255,215,0,0.05) 100%); }
+        #user-display-pill.dev-glow { animation: pulse-white 2s infinite, foil-shine 5s infinite linear; background: linear-gradient(135deg, var(--card) 0%, rgba(255,255,255,0.05) 100%); }
+        #user-display-pill.owner-glow { background: linear-gradient(135deg, var(--card) 0%, rgba(255,149,51,0.05) 100%); }
+
+        @keyframes foil-shine {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        #user-display-pill::after {
+            content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(115deg, transparent 0%, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%, transparent 100%);
+            transform: rotate(25deg); transition: 0.6s; pointer-events: none; opacity: 0;
+        }
+        #user-display-pill:hover::after { opacity: 0.3; left: 100%; transition: 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
 
         @keyframes rainbow {
-            0% { border-color: gold; box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
-            33% { border-color: #ff6b6b; box-shadow: 0 0 15px rgba(255, 107, 107, 0.4); }
-            66% { border-color: #4facfe; box-shadow: 0 0 15px rgba(79, 172, 254, 0.4); }
-            100% { border-color: gold; box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+            0% { border-color: gold; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
+            33% { border-color: #ff6b6b; box-shadow: 0 0 20px rgba(255, 107, 107, 0.4); }
+            66% { border-color: #4facfe; box-shadow: 0 0 20px rgba(79, 172, 254, 0.4); }
+            100% { border-color: gold; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
         }
         @keyframes pulse-white { 0% { box-shadow: 0 0 5px rgba(255,255,255,0.2); } 50% { box-shadow: 0 0 20px rgba(255,255,255,0.6); } 100% { box-shadow: 0 0 5px rgba(255,255,255,0.2); } }
 
@@ -114,7 +126,7 @@
 
         .pill-menu {
             position: absolute; top: calc(100% + 12px); right: 0; background: var(--card); border: 1px solid var(--border);
-            border-radius: 20px; padding: 10px; min-width: 160px; box-shadow: 0 15px 45px rgba(0,0,0,0.2);
+            border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
             opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
         }
         #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
@@ -246,7 +258,7 @@
 
     <div class="container hidden" id="main-app">
         <header>
-            <h1>Control Panel</h1>
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
             <p>Select a module to manage your digital assets.</p>
         </header>
 

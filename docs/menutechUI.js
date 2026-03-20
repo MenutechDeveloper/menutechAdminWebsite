@@ -74,12 +74,13 @@ class MenutechGallery extends HTMLElement {
 
         const styles = `
             <style>
-                :host { display: block; width: 100%; max-width: 1200px; margin: 80px auto; padding: 0 24px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; clear: both; }
+                :host { display: block; width: 100%; max-width: 1200px; margin: 80px auto; padding: 0 24px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; clear: both; text-align: center; }
                 .gallery-grid {
                     display: grid;
                     grid-template-columns: repeat(4, 1fr);
                     gap: 30px;
                     padding: 0;
+                    margin: 0 auto;
                 }
                 .gallery-item {
                     position: relative;
