@@ -38,21 +38,33 @@
         #top-nav > * { pointer-events: auto; }
 
         #user-display-pill {
-            background: var(--card); backdrop-filter: blur(20px); padding: 8px 22px; border-radius: 24px; border: 1px solid var(--border);
-            display: flex; align-items: center; gap: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto;
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 32px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 18px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; min-width: 180px; justify-content: center;
+            overflow: hidden;
         }
-        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
 
-        #user-display-pill.admin-glow { box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); border-color: gold; animation: rainbow 5s linear infinite; }
-        #user-display-pill.dev-glow { box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); animation: pulse-white 2s infinite; }
-        #user-display-pill.owner-glow { box-shadow: 0 0 15px rgba(255, 149, 51, 0.3); }
+        #user-display-pill.admin-glow { border-color: gold; animation: rainbow 8s linear infinite, foil-shine 3s infinite linear; background: linear-gradient(135deg, var(--card) 0%, rgba(255,215,0,0.05) 100%); }
+        #user-display-pill.dev-glow { animation: pulse-white 2s infinite, foil-shine 5s infinite linear; background: linear-gradient(135deg, var(--card) 0%, rgba(255,255,255,0.05) 100%); }
+        #user-display-pill.owner-glow { background: linear-gradient(135deg, var(--card) 0%, rgba(255,149,51,0.05) 100%); }
+
+        @keyframes foil-shine {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        #user-display-pill::after {
+            content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(115deg, transparent 0%, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%, transparent 100%);
+            transform: rotate(25deg); transition: 0.6s; pointer-events: none; opacity: 0;
+        }
+        #user-display-pill:hover::after { opacity: 0.3; left: 100%; transition: 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
 
         @keyframes rainbow {
-            0% { border-color: gold; box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
-            33% { border-color: #ff6b6b; box-shadow: 0 0 15px rgba(255, 107, 107, 0.4); }
-            66% { border-color: #4facfe; box-shadow: 0 0 15px rgba(79, 172, 254, 0.4); }
-            100% { border-color: gold; box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+            0% { border-color: gold; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
+            33% { border-color: #ff6b6b; box-shadow: 0 0 20px rgba(255, 107, 107, 0.4); }
+            66% { border-color: #4facfe; box-shadow: 0 0 20px rgba(79, 172, 254, 0.4); }
+            100% { border-color: gold; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
         }
         @keyframes pulse-white { 0% { box-shadow: 0 0 5px rgba(255,255,255,0.2); } 50% { box-shadow: 0 0 20px rgba(255,255,255,0.6); } 100% { box-shadow: 0 0 5px rgba(255,255,255,0.2); } }
 
@@ -62,7 +74,7 @@
 
         .pill-menu {
             position: absolute; top: calc(100% + 12px); right: 0; background: var(--card); border: 1px solid var(--border);
-            border-radius: 20px; padding: 10px; min-width: 160px; box-shadow: 0 15px 45px rgba(0,0,0,0.2);
+            border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
             opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
         }
         #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
@@ -78,7 +90,7 @@
         .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
 
         header { text-align: center; margin-bottom: 60px; padding-top: 120px; }
-        header h1 { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 700; }
+        .logo-main { width: 100%; max-width: 280px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
 
         .badge { padding: 6px 14px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border: 1px solid transparent; }
         .badge-admin { background: rgba(255, 149, 51, 0.1); color: var(--orange); border-color: rgba(255, 149, 51, 0.2); }
@@ -95,9 +107,7 @@
         .user-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px 32px; display: grid; grid-template-columns: 1.5fr 1.5fr 1fr auto; align-items: center; gap: 24px; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .user-card:hover { border-color: var(--orange); transform: scale(1.005); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
 
-        .user-info h3 { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 10px; }
-        .user-info .email { font-size: 0.75rem; color: var(--orange); font-weight: 500; }
-        .user-info .uid { font-size: 0.65rem; color: var(--text-dim); font-family: monospace; margin-top: 4px; }
+        .user-info h3 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 10px; }
 
         .controls { display: flex; flex-direction: column; gap: 8px; }
         .controls input, .controls select { width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 0.8rem; transition: all 0.3s; }
@@ -176,14 +186,14 @@
 
     <div id="app" class="hidden">
         <header>
-            <h1>Management Console</h1>
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
         </header>
 
         <div class="container">
             <div id="admin-tools" class="hidden">
                 <div class="section-title">All Users</div>
                 <div style="margin-bottom: 30px;">
-                    <input type="text" id="user-search" placeholder="Search by name, username or email..." style="width: 100%; max-width: 400px; background: var(--input); border: 1px solid var(--border); border-radius: 14px; padding: 14px 20px; color: var(--text);">
+                    <input type="text" id="user-search" placeholder="Search users or domains..." style="width: 100%; max-width: 400px; background: var(--input); border: 1px solid var(--border); border-radius: 14px; padding: 14px 20px; color: var(--text);">
                 </div>
                 <div id="user-list" class="user-list"></div>
             </div>
@@ -278,7 +288,6 @@
                 const term = e.target.value.toLowerCase();
                 const filtered = allUsers.filter(u =>
                     (u.username || '').toLowerCase().includes(term) ||
-                    (u.email || '').toLowerCase().includes(term) ||
                     (u.domain || '').toLowerCase().includes(term)
                 );
                 renderList(filtered, 'user-list', true);
@@ -375,7 +384,7 @@
             const list = document.getElementById('dev-check-list');
             list.innerHTML = (devs || []).map(d => `
                 <div class="dev-item">
-                    <span style="font-size: 0.8rem; font-weight: 600;">${d.id.substring(0,8)}...</span>
+                    <span style="font-size: 0.9rem; font-weight: 600;">${d.username || d.id.substring(0,8)}</span>
                     <input type="checkbox" value="${d.id}" ${existingIds.includes(d.id) ? 'checked' : ''} class="dev-chk">
                 </div>
             `).join('');
