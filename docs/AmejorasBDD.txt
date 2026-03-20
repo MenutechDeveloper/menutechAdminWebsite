@@ -1,0 +1,8 @@
+Ajustes en la base de datos para optimizar la Galería:
+
+1. Se recomienda agregar un índice en la tabla 'galeria' para la columna 'user_id' para acelerar la eliminación y consulta por usuario, especialmente ahora que se realiza un proceso de borrado y reinserción (bulk sync).
+
+SQL:
+CREATE INDEX IF NOT EXISTS idx_galeria_user_id ON public.galeria (user_id);
+
+2. El flujo actual de "Save Changes" realiza un DELETE seguido de un INSERT. Esto asegura que el orden y contenido sea exacto a lo que el usuario ve en pantalla, pero genera más transacciones. Si la tabla crece mucho, se podría considerar un sistema de diferencias (delta), pero para el volumen actual de imágenes por menú, este enfoque es óptimo y sencillo.

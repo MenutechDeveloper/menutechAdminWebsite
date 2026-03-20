@@ -104,27 +104,30 @@
             background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
             display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; min-width: 220px; justify-content: flex-start;
-            overflow: hidden;
         }
         #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
 
         #user-display-pill.admin-glow {
             background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
             background-size: 400% 400%;
-            animation: foil-shine-bg 3s ease infinite;
+            animation: foil-shine-bg 15s ease infinite;
             border: none !important;
         }
+        #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
+
         #user-display-pill.dev-glow {
             background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
             background-size: 400% 400%;
-            animation: foil-shine-bg 4s ease infinite;
+            animation: foil-shine-bg 15s ease infinite;
             border: none !important;
         }
+        #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
+
         #user-display-pill.owner-glow {
-            background: linear-gradient(135deg, #ff9533 0%, #ffcc99 20%, #e67e22 40%, #ffcc99 60%, #ff9533 80%, #ffcc99 100%);
+            background: var(--card);
+            background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.4) 20%, transparent 40%, rgba(255,255,255,0.4) 60%, transparent 80%, rgba(255,255,255,0.4) 100%);
             background-size: 400% 400%;
-            animation: foil-shine-bg 5s ease infinite;
-            border: none !important;
+            animation: foil-shine-bg 15s ease infinite;
         }
 
         body.dark-mode #user-display-pill.admin-glow { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #4338ca 50%, #312e81 75%, #1e1b4b 100%); background-size: 400% 400%; }
@@ -144,9 +147,10 @@
         #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .pill-menu {
-            position: absolute; top: calc(100% + 12px); right: 0; background: var(--card); border: 1px solid var(--border);
+            position: absolute; top: calc(100% + 12px); right: 0; background: var(--card) !important; border: 1px solid var(--border);
             border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
             opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
+            animation: none !important;
         }
         #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
@@ -182,6 +186,27 @@
             .sidebar { width: 100%; }
             .bento { grid-template-columns: repeat(2, 1fr); gap: 16px; }
         }
+
+        /* Floating Footer */
+        #floating-footer {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px);
+            padding: 16px 32px; border-radius: 30px; border: 1.5px solid var(--border);
+            display: flex; gap: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            z-index: 7000; animation: footerSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        body.dark-mode #floating-footer { background: rgba(28, 31, 38, 0.8); }
+
+        @keyframes footerSlideUp { from { bottom: -100px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+
+        .btn-footer {
+            padding: 14px 28px; border-radius: 18px; font-weight: 800; font-size: 0.85rem;
+            text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 1px;
+        }
+        .btn-save-all { background: var(--orange); color: #fff; box-shadow: 0 8px 20px rgba(255,149,51,0.3); }
+        .btn-save-all:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255,149,51,0.4); }
+        .btn-visit { background: var(--input); color: var(--text); border: 1px solid var(--border); }
+        .btn-visit:hover { background: var(--border); transform: translateY(-3px); }
     </style>
 </head>
 <body>
@@ -210,6 +235,11 @@
         </div>
     </div>
 
+    <div id="floating-footer" class="hidden">
+        <button class="btn-footer btn-save-all" onclick="saveChanges()">Save Changes</button>
+        <button class="btn-footer btn-visit" onclick="visitSite()">Visit Site</button>
+    </div>
+
     <div class="container hidden" id="main-app">
         <header>
             <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
@@ -223,9 +253,6 @@
                     <div class="search-box">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <label style="margin:0">Find Project</label>
-                            <span id="drag-handle" style="cursor: move; display: flex; align-items: center; color: var(--text-dim);">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg>
-                            </span>
                         </div>
                         <input type="text" id="client-search" placeholder="Domain or Name...">
                         <div class="client-list" id="client-list">
@@ -264,6 +291,7 @@
     <script type="module">
         import { MT_CONFIG } from './config.js';
         let sb = null, user = null, userRole = null, activeOwnerId = null, activeDomain = null;
+        let localGallery = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
             initTheme();
@@ -294,7 +322,6 @@
                 const sidebarContainer = document.getElementById('sidebar-container');
                 sidebarContainer.classList.remove('hidden');
                 sidebarContainer.classList.add('collapsed');
-                initDraggableSearch();
                 document.getElementById('btn-copy-code').classList.remove('hidden');
                 await setupContextSwitcher();
                 if (!activeOwnerId) { activeOwnerId = user.id; activeDomain = profile.domain; document.getElementById('view-domain-title').textContent = activeDomain || "Admin Workspace"; }
@@ -373,33 +400,81 @@
             s.innerHTML = '<div class="loader"></div>';
             for (const f of files) {
                 const fd = new FormData(); fd.append('file', f); fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
-                const d = await res.json();
-                await sb.from('galeria').insert([{ user_id: activeOwnerId, domain: activeDomain || 'undetermined', image_url: d.secure_url }]);
+                try {
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
+                    const d = await res.json();
+                    localGallery.unshift({ image_url: d.secure_url, isNew: true });
+                } catch (e) { console.error("Upload error", e); }
             }
-            s.textContent = "Done"; setTimeout(() => s.textContent = "", 3000); loadGallery();
+            s.textContent = "Images added locally"; setTimeout(() => s.textContent = "", 3000);
+            renderGallery();
+            document.getElementById('floating-footer').classList.remove('hidden');
         }
 
         async function loadGallery() {
-            const g = document.getElementById('gallery-grid');
-            const { data } = await sb.from('galeria').select('*').eq('user_id', activeOwnerId).order('created_at', { ascending: false });
-            g.innerHTML = (data || []).map(it => `<div class="card"><img src="${it.image_url}" loading="lazy"><div class="del-overlay"><button class="btn-del" onclick="deleteImage('${it.id}')">Delete</button></div></div>`).join('');
+            const { data, error } = await sb.from('galeria').select('*').eq('user_id', activeOwnerId).order('created_at', { ascending: false });
+            localGallery = data || [];
+            renderGallery();
+            document.getElementById('floating-footer').classList.add('hidden');
         }
-        window.deleteImage = async (id) => { if(confirm("Confirm?")) { await sb.from('galeria').delete().eq('id', id); loadGallery(); } };
 
-        function initDraggableSearch() {
-            const dragItem = document.getElementById("sidebar-container");
-            const handle = document.getElementById("drag-handle");
-            let active = false; let currentX = 0, currentY = 0, initialX, initialY;
-            const saved = localStorage.getItem('sidebar_pos');
-            if (saved) { try { const p = JSON.parse(saved); currentX = p.x; currentY = p.y; dragItem.style.left = currentX + "px"; dragItem.style.top = currentY + "px"; } catch(e) {} }
-            handle.addEventListener("mousedown", dragStart); handle.addEventListener("touchstart", dragStart);
-            document.addEventListener("mouseup", dragEnd); document.addEventListener("touchend", dragEnd);
-            document.addEventListener("mousemove", drag); document.addEventListener("touchmove", drag);
-            function dragStart(e) { const cx = e.type === "touchstart" ? e.touches[0].clientX : e.clientX, cy = e.type === "touchstart" ? e.touches[0].clientY : e.clientY; initialX = cx - currentX; initialY = cy - currentY; if (e.target === handle || handle.contains(e.target)) { active = true; dragItem.style.transition = 'none'; } }
-            function dragEnd() { if (!active) return; active = false; dragItem.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'; localStorage.setItem('sidebar_pos', JSON.stringify({ x: currentX, y: currentY })); }
-            function drag(e) { if (active) { e.preventDefault(); const cx = e.type === "touchmove" ? e.touches[0].clientX : e.clientX, cy = e.type === "touchmove" ? e.touches[0].clientY : e.clientY; currentX = cx - initialX; currentY = cy - initialY; dragItem.style.left = currentX + "px"; dragItem.style.top = currentY + "px"; } }
+        function renderGallery() {
+            const g = document.getElementById('gallery-grid');
+            g.innerHTML = localGallery.map((it, idx) => `
+                <div class="card ${it.isNew ? 'new-card' : ''}">
+                    <img src="${it.image_url}" loading="lazy">
+                    <div class="del-overlay">
+                        <button class="btn-del" onclick="removeLocalImage(${idx})">Remove</button>
+                    </div>
+                </div>`).join('');
         }
+
+        window.removeLocalImage = (idx) => {
+            localGallery.splice(idx, 1);
+            renderGallery();
+            document.getElementById('floating-footer').classList.remove('hidden');
+        };
+
+        window.saveChanges = async () => {
+            if (!activeOwnerId) return;
+            const btn = document.querySelector('.btn-save-all');
+            const oldText = btn.textContent;
+            btn.textContent = "SAVING...";
+            btn.disabled = true;
+
+            try {
+                // 1. Delete all current for this user
+                await sb.from('galeria').delete().eq('user_id', activeOwnerId);
+
+                // 2. Insert all from localGallery
+                if (localGallery.length > 0) {
+                    const toInsert = localGallery.map(it => ({
+                        user_id: activeOwnerId,
+                        domain: activeDomain || 'undetermined',
+                        image_url: it.image_url
+                    }));
+                    await sb.from('galeria').insert(toInsert);
+                }
+
+                if (window.showToast) window.showToast("Changes saved successfully!", "success");
+                else alert("Changes saved!");
+
+                document.getElementById('floating-footer').classList.add('hidden');
+                loadGallery(); // Reload to get IDs from DB
+            } catch (e) {
+                console.error(e);
+                alert("Error saving changes.");
+            } finally {
+                btn.textContent = oldText;
+                btn.disabled = false;
+            }
+        };
+
+        window.visitSite = () => {
+            if (!activeDomain) return alert("No domain assigned.");
+            const url = activeDomain.startsWith('http') ? activeDomain : `https://${activeDomain}`;
+            window.open(url, '_blank');
+        };
 
         function initTheme() {
             const toggle = document.getElementById('theme-toggle');
