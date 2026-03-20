@@ -75,20 +75,22 @@
             background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
             background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
         }
+        #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
+
         #user-display-pill.dev-glow {
             background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
             background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
         }
+        #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
+
         #user-display-pill.owner-glow {
-            background: linear-gradient(135deg, #ff9533 0%, #ffcc99 20%, #e67e22 40%, #ffcc99 60%, #ff9533 80%, #ffcc99 100%);
+            background: #000;
+            background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 20%, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 80%, rgba(255,255,255,0.1) 100%);
             background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
         }
+        #user-display-pill.owner-glow #user-name, #user-display-pill.owner-glow #user-role-label { color: #fff !important; }
 
-        body.dark-mode #user-display-pill.admin-glow { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #4338ca 50%, #312e81 75%, #1e1b4b 100%); background-size: 400% 400%; }
-        body.dark-mode #user-display-pill.dev-glow { background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%); background-size: 400% 400%; }
-
-        #user-display-pill #user-name, #user-display-pill #user-role-label { color: #000; transition: color 0.3s; }
-        body.dark-mode #user-display-pill #user-name, body.dark-mode #user-display-pill #user-role-label { color: #fff; }
+        #user-display-pill #user-name, #user-display-pill #user-role-label { color: var(--text); transition: color 0.3s; }
 
         @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
@@ -166,8 +168,8 @@
             <div id="user-display-pill" class="hidden">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <div class="pill-info">
-                    <div id="user-name">Loading...</div>
-                    <div id="user-role-label">User</div>
+                    <div id="user-name">&nbsp;</div>
+                    <div id="user-role-label">&nbsp;</div>
                 </div>
                 <div class="pill-menu">
                     <a href="index.html" class="pill-menu-item">Home</a>
@@ -226,21 +228,30 @@
             if (session) {
                 user = session.user;
                 if (!user.email_confirmed_at) { showToast("Please verify your email address before logging in.", "warning"); await sb.auth.signOut(); return; }
-                document.getElementById('auth-overlay').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
-                document.getElementById('nav-left').classList.remove('hidden');
-                document.getElementById('user-display-pill').classList.remove('hidden');
+
                 const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
                 const pill = document.getElementById('user-display-pill');
                 const nameEl = document.getElementById('user-name'), roleEl = document.getElementById('user-role-label');
+
                 if (profile) {
                     nameEl.textContent = profile.username || user.email.split('@')[0];
                     roleEl.textContent = profile.role || 'User';
                     if (profile.role === 'admin') pill.classList.add('admin-glow');
                     else if (profile.role === 'developer') pill.classList.add('dev-glow');
                     else pill.classList.add('owner-glow');
-                    if (profile.role === 'owner') { document.getElementById('card-users').style.display = 'none'; document.querySelector('.bento-grid').style.gridTemplateColumns = '1fr'; document.querySelector('.bento-grid').style.maxWidth = '500px'; document.querySelector('.bento-grid').style.margin = '40px auto 0 auto'; }
+
+                    if (profile.role === 'owner') {
+                        document.getElementById('card-users').style.display = 'none';
+                        document.querySelector('.bento-grid').style.gridTemplateColumns = '1fr';
+                        document.querySelector('.bento-grid').style.maxWidth = '500px';
+                        document.querySelector('.bento-grid').style.margin = '40px auto 0 auto';
+                    }
                 }
+
+                document.getElementById('auth-overlay').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                document.getElementById('nav-left').classList.remove('hidden');
+                document.getElementById('user-display-pill').classList.remove('hidden');
             }
         }
 
