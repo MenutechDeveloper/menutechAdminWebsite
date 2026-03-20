@@ -74,11 +74,11 @@ class MenutechGallery extends HTMLElement {
 
         const styles = `
             <style>
-                :host { display: block; width: 100%; max-width: 1200px; margin: 40px auto; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+                :host { display: block; width: 100%; max-width: 1200px; margin: 60px auto; padding: 0 24px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; }
                 .gallery-grid {
                     display: grid;
                     grid-template-columns: repeat(4, 1fr);
-                    gap: 20px;
+                    gap: 30px;
                     padding: 0;
                 }
                 .gallery-item {
@@ -101,7 +101,8 @@ class MenutechGallery extends HTMLElement {
 
                 .loader { text-align: center; padding: 60px; color: #ff9533; font-weight: 600; letter-spacing: 1px; }
 
-                @media (max-width: 640px) {
+                @media (max-width: 768px) {
+                    :host { margin: 40px auto; padding: 0 16px; }
                     .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
                 }
             </style>
