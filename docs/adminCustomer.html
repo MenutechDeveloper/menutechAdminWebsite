@@ -158,8 +158,8 @@
         </div>
         <div style="display: flex; align-items: center; gap: 15px;">
             <div class="theme-switch" id="theme-toggle">
-                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 1V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 21V23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.22 4.22L5.64 5.64" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.36 18.36L19.78 19.78" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12H23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.22 19.78L5.64 18.36" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.36 5.64L19.78 4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79C20.916 15.1119 20.0156 17.3308 18.4526 19.0655C16.8895 20.8001 14.7656 21.9392 12.4439 22.2855C10.1221 22.6318 7.74955 22.1627 5.73142 20.9575C3.71329 19.7523 2.18182 17.8913 1.40114 15.6881C0.620455 13.4849 0.64379 11.083 1.46714 8.89271C2.2905 6.70243 3.86012 4.86906 5.90422 3.70494C7.94833 2.54082 10.3344 2.12151 12.6517 2.51862C14.969 2.91572 17.068 4.10398 18.59 5.88" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 15C13.2091 15 15 13.2091 15 11C15 8.79086 13.2091 7 11 7C8.79086 7 7 8.79086 7 11C7 13.2091 8.79086 15 11 15Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </div>
             <div id="user-display-pill">
                 <div class="pill-info">
@@ -167,8 +167,8 @@
                     <div id="user-role-sublabel">User</div>
                 </div>
                 <div class="pill-menu">
-                    <a href="index.html" class="pill-menu-item">🏠 Home</a>
-                    <div class="pill-menu-item danger" onclick="logout()">🚪 Logout</div>
+                    <a href="index.html" class="pill-menu-item">Home</a>
+                    <div class="pill-menu-item danger" onclick="logout()">Logout</div>
                 </div>
             </div>
         </div>
@@ -343,7 +343,7 @@
                     </div>
                     <div class="actions" style="justify-content: flex-end;">
                         ${isAdminView ? `<button class="btn btn-save" onclick="updateUser('${u.id}')">SAVE</button>` : ''}
-                        ${isAdminView && u.role === 'owner' ? `<button class="btn btn-access" onclick="openAccess('${u.id}')" title="Grant Dev Access">🔐</button>` : ''}
+                        ${isAdminView && u.role === 'owner' ? `<button class="btn btn-access" onclick="openAccess('${u.id}')" title="Grant Dev Access">ACCESS</button>` : ''}
                         <button class="btn btn-access" onclick="manageGallery('${u.id}', '${u.domain}')">GALLERY</button>
                     </div>
                 </div>
