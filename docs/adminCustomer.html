@@ -30,67 +30,64 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; overflow-x: hidden; }
 
         .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 100% 0%, rgba(255, 149, 51, 0.1) 0%, transparent 40%), radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.05) 0%, transparent 40%); }
 
         #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
         #top-nav > * { pointer-events: auto; }
 
+        /* Premium User Pill */
         #user-display-pill {
-            background: var(--card); backdrop-filter: blur(20px); padding: 8px 32px; border-radius: 40px; border: 1.5px solid var(--border);
-            display: flex; align-items: center; gap: 18px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; min-width: 180px; justify-content: center;
-            overflow: hidden;
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); min-width: 220px; justify-content: flex-start; overflow: hidden;
         }
         #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
 
-        #user-display-pill.admin-glow { border-color: gold; animation: rainbow 8s linear infinite, foil-shine 3s infinite linear; background: linear-gradient(135deg, var(--card) 0%, rgba(255,215,0,0.05) 100%); }
-        #user-display-pill.dev-glow { animation: pulse-white 2s infinite, foil-shine 5s infinite linear; background: linear-gradient(135deg, var(--card) 0%, rgba(255,255,255,0.05) 100%); }
-        #user-display-pill.owner-glow { background: linear-gradient(135deg, var(--card) 0%, rgba(255,149,51,0.05) 100%); }
-
-        @keyframes foil-shine {
-            0% { background-position: -200% center; }
-            100% { background-position: 200% center; }
+        #user-display-pill.admin-glow {
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
+            background-size: 400% 400%; animation: foil-shine-bg 3s ease infinite; border: none !important;
         }
-        #user-display-pill::after {
-            content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(115deg, transparent 0%, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%, transparent 100%);
-            transform: rotate(25deg); transition: 0.6s; pointer-events: none; opacity: 0;
+        #user-display-pill.dev-glow {
+            background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
+            background-size: 400% 400%; animation: foil-shine-bg 4s ease infinite; border: none !important;
         }
-        #user-display-pill:hover::after { opacity: 0.3; left: 100%; transition: 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-
-        @keyframes rainbow {
-            0% { border-color: gold; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
-            33% { border-color: #ff6b6b; box-shadow: 0 0 20px rgba(255, 107, 107, 0.4); }
-            66% { border-color: #4facfe; box-shadow: 0 0 20px rgba(79, 172, 254, 0.4); }
-            100% { border-color: gold; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
+        #user-display-pill.owner-glow {
+            background: linear-gradient(135deg, #ff9533 0%, #ffcc99 20%, #e67e22 40%, #ffcc99 60%, #ff9533 80%, #ffcc99 100%);
+            background-size: 400% 400%; animation: foil-shine-bg 5s ease infinite; border: none !important;
         }
-        @keyframes pulse-white { 0% { box-shadow: 0 0 5px rgba(255,255,255,0.2); } 50% { box-shadow: 0 0 20px rgba(255,255,255,0.6); } 100% { box-shadow: 0 0 5px rgba(255,255,255,0.2); } }
 
-        .pill-info { display: flex; flex-direction: column; line-height: 1.2; }
-        #user-display { font-weight: 800; font-size: 0.85rem; color: var(--text); font-family: 'Outfit', sans-serif; }
-        #user-role-sublabel { font-size: 0.65rem; color: var(--orange); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        body.dark-mode #user-display-pill.admin-glow { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #4338ca 50%, #312e81 75%, #1e1b4b 100%); background-size: 400% 400%; }
+        body.dark-mode #user-display-pill.dev-glow { background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%); background-size: 400% 400%; }
 
-        .pill-menu {
-            position: absolute; top: calc(100% + 12px); right: 0; background: var(--card); border: 1px solid var(--border);
-            border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-            opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
-        }
+        #user-display-pill #user-display, #user-display-pill #user-role-sublabel { color: #000; transition: color 0.3s; }
+        body.dark-mode #user-display-pill #user-display, body.dark-mode #user-display-pill #user-role-sublabel { color: #fff; }
+
+        @keyframes foil-shine-bg { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        #user-display { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; text-align: left; }
+        #user-role-sublabel { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; }
+
+        .pill-menu { position: absolute; top: calc(100% + 12px); right: 0; background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2); opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000; }
         #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
-
-        .pill-menu-item {
-            padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text);
-            display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none;
-        }
+        .pill-menu-item { padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none; }
         .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
         .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
 
-        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
-        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
+        .theme-switch { width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; }
+        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); }
 
         header { text-align: center; margin-bottom: 60px; padding-top: 120px; }
-        .logo-main { width: 100%; max-width: 280px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
+        .logo-main { width: 100%; max-width: 280px; height: auto; margin: 0 auto 10px auto; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
 
         .badge { padding: 6px 14px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border: 1px solid transparent; }
         .badge-admin { background: rgba(255, 149, 51, 0.1); color: var(--orange); border-color: rgba(255, 149, 51, 0.2); }
@@ -104,74 +101,43 @@
         .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
         .user-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 60px; }
-        .user-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px 32px; display: grid; grid-template-columns: 1.5fr 1.5fr 1fr auto; align-items: center; gap: 24px; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .user-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px 32px; display: grid; grid-template-columns: 1.5fr 1.5fr 1fr auto; align-items: center; gap: 24px; transition: 0.4s; }
         .user-card:hover { border-color: var(--orange); transform: scale(1.005); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-
-        .user-info h3 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 10px; }
+        .user-info h3 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
 
         .controls { display: flex; flex-direction: column; gap: 8px; }
-        .controls input, .controls select { width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 0.8rem; transition: all 0.3s; }
+        .controls input, .controls select { width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 0.8rem; }
         .controls input:focus { border-color: var(--orange); outline: none; }
 
         .actions { display: flex; gap: 10px; }
-        .btn { padding: 12px 18px; border-radius: 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.3s; border: none; text-transform: uppercase; }
+        .btn { padding: 12px 18px; border-radius: 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.3s; border: none; text-transform: uppercase; }
         .btn-save { background: var(--orange); color: #000; }
-        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 149, 51, 0.3); }
-        .btn-del { background: rgba(239, 68, 68, 0.1); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.1); }
-        .btn-del:hover { background: var(--error); color: #fff; }
-        .btn-access { background: rgba(139, 92, 246, 0.1); color: var(--dev); border: 1px solid rgba(139, 92, 246, 0.1); }
-        .btn-access:hover { background: var(--dev); color: #fff; }
-
-        /* Modal for Developer Access */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        .modal { background: var(--card); border: 1px solid var(--border); border-radius: 32px; width: 100%; max-width: 500px; padding: 40px; }
-        .modal h2 { font-family: 'Outfit', sans-serif; margin-bottom: 24px; font-size: 1.5rem; font-weight: 700; }
-        .dev-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--input); border-radius: 16px; margin-bottom: 8px; border: 1px solid var(--border); }
+        .btn-del { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+        .btn-access { background: rgba(139, 92, 246, 0.1); color: var(--dev); }
 
         .loader { width: 30px; height: 30px; border: 3px solid rgba(255, 149, 51, 0.1); border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite; margin: 40px auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        #no-access { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
-
-        .theme-switch {
-            width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); pointer-events: auto; }
-        .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
-
-        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
-        .sun-icon { color: var(--orange); }
-        .moon-icon { color: #8b5cf6; display: none; }
-        body.dark-mode .sun-icon { display: none; }
-        body.dark-mode .moon-icon { display: block; }
         .hidden { display: none !important; }
-
-        @media (max-width: 768px) {
-            header h1 { font-size: 2.2rem; }
-            .container { padding: 0 20px; }
-            .user-card { grid-template-columns: 1fr; gap: 16px; text-align: center; padding: 24px; }
-            .actions { justify-content: center !important; }
-            .user-info h3 { justify-content: center; }
-        }
+        @media (max-width: 768px) { .user-card { grid-template-columns: 1fr; gap: 16px; text-align: center; } .actions { justify-content: center !important; } }
     </style>
 </head>
 <body>
     <div class="bg-mesh"></div>
-
-    <div id="no-access" class="hidden">
+    <div id="no-access" class="hidden" style="text-align: center; padding: 100px;">
         <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 12px;">Access Denied</h2>
-        <p style="color: var(--text-dim)">You do not have permission to access the management console.</p>
-        <button onclick="location.href='adminWeb.html'" class="btn btn-save" style="margin-top: 30px">Go to Dashboard</button>
+        <button onclick="location.href='index.html'" class="btn btn-save" style="margin-top: 30px">Back to Login</button>
     </div>
 
     <div id="top-nav" class="hidden">
-        <div>
-             <button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button>
-        </div>
+        <div><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
         <div style="display: flex; align-items: center; gap: 15px;">
             <div class="theme-switch" id="theme-toggle">
                 <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                 <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </div>
             <div id="user-display-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <div class="pill-info">
                     <div id="user-display">Loading...</div>
                     <div id="user-role-sublabel">User</div>
@@ -185,253 +151,104 @@
     </div>
 
     <div id="app" class="hidden">
-        <header>
-            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
-        </header>
-
+        <header><img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo"></header>
         <div class="container">
             <div id="admin-tools" class="hidden">
                 <div class="section-title">All Users</div>
-                <div style="margin-bottom: 30px;">
-                    <input type="text" id="user-search" placeholder="Search users or domains..." style="width: 100%; max-width: 400px; background: var(--input); border: 1px solid var(--border); border-radius: 14px; padding: 14px 20px; color: var(--text);">
-                </div>
+                <div style="margin-bottom: 30px;"><input type="text" id="user-search" placeholder="Search users or domains..." style="width: 100%; max-width: 400px; background: var(--input); border: 1px solid var(--border); border-radius: 14px; padding: 14px 20px; color: var(--text);"></div>
                 <div id="user-list" class="user-list"></div>
             </div>
-
             <div id="dev-tools" class="hidden">
-                <div class="section-title">Assigned Projects (Owners)</div>
+                <div class="section-title">Assigned Projects</div>
                 <div id="assigned-list" class="user-list"></div>
             </div>
-
             <div id="loading" class="loader"></div>
-
-        </div>
-    </div>
-
-    <!-- Dev Access Modal -->
-    <div id="access-modal" class="modal-overlay hidden">
-        <div class="modal">
-            <h2 id="modal-title">Grant Access</h2>
-            <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 24px;">Select developers to manage this project.</p>
-            <div id="dev-check-list" style="max-height: 300px; overflow-y: auto; margin-bottom: 30px;"></div>
-            <div style="display: flex; gap: 12px;">
-                <button onclick="closeModal()" class="btn btn-del" style="flex: 1">Cancel</button>
-                <button onclick="saveAccess()" class="btn btn-save" style="flex: 1">Save Changes</button>
-            </div>
         </div>
     </div>
 
     <script type="module">
         import { MT_CONFIG } from './config.js';
-        let sb = null, user = null, userRole = null, activeOwnerId = null;
-
+        let sb = null, user = null, userRole = null;
         document.addEventListener('DOMContentLoaded', async () => {
             initTheme();
             try {
                 const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
                 sb = createClient(MT_CONFIG.SUPABASE_URL, MT_CONFIG.SUPABASE_KEY);
                 checkAuth();
-            } catch (err) {
-                console.error("Initialization error:", err);
-                alert("Critical Error: Could not connect to the database.");
-            }
+            } catch (err) { console.error(err); }
         });
 
         async function checkAuth() {
-            const { data: { session }, error: sError } = await sb.auth.getSession();
-            if (sError || !session) { location.href = "index.html"; return; }
-
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { location.href = "index.html"; return; }
             user = session.user;
-            const { data, error } = await sb.from('profiles').select('role').eq('id', user.id).single();
-
-            if (error || !data || data.role === 'owner') {
-                document.getElementById('no-access').classList.remove('hidden');
-            } else {
+            const { data } = await sb.from('profiles').select('role, username').eq('id', user.id).single();
+            if (!data || data.role === 'owner') { document.getElementById('no-access').classList.remove('hidden'); }
+            else {
                 userRole = data.role;
                 document.getElementById('app').classList.remove('hidden');
                 document.getElementById('top-nav').classList.remove('hidden');
-
                 const pill = document.getElementById('user-display-pill');
-                const nameEl = document.getElementById('user-display');
-                const roleEl = document.getElementById('user-role-sublabel');
-
-                nameEl.textContent = data.username || user.email.split('@')[0];
-                roleEl.textContent = data.role || 'User';
-
+                document.getElementById('user-display').textContent = data.username || user.email.split('@')[0];
+                document.getElementById('user-role-sublabel').textContent = data.role;
                 if (data.role === 'admin') pill.classList.add('admin-glow');
                 else if (data.role === 'developer') pill.classList.add('dev-glow');
                 else pill.classList.add('owner-glow');
 
-                if (userRole === 'admin') {
-                    document.getElementById('admin-tools').classList.remove('hidden');
-                    loadAllUsers();
-                } else if (userRole === 'developer') {
-                    document.getElementById('dev-tools').classList.remove('hidden');
-                    loadAssignedOwners();
-                }
+                if (userRole === 'admin') { document.getElementById('admin-tools').classList.remove('hidden'); loadAllUsers(); }
+                else if (userRole === 'developer') { document.getElementById('dev-tools').classList.remove('hidden'); loadAssignedOwners(); }
             }
         }
 
-        let allUsers = [];
         async function loadAllUsers() {
-            const loader = document.getElementById('loading');
-            loader.classList.remove('hidden');
-
-            const { data, error } = await sb.from('profiles').select('*').order('role', { ascending: true });
-            loader.classList.add('hidden');
-
-            if (error) return alert("Error loading users: " + error.message);
-            allUsers = data || [];
-            renderList(allUsers, 'user-list', true);
-
+            const { data } = await sb.from('profiles').select('*').order('role', { ascending: true });
+            document.getElementById('loading').classList.add('hidden');
+            renderList(data, 'user-list', true);
             document.getElementById('user-search').oninput = (e) => {
                 const term = e.target.value.toLowerCase();
-                const filtered = allUsers.filter(u =>
-                    (u.username || '').toLowerCase().includes(term) ||
-                    (u.domain || '').toLowerCase().includes(term)
-                );
+                const filtered = data.filter(u => (u.username||'').toLowerCase().includes(term) || (u.domain||'').toLowerCase().includes(term));
                 renderList(filtered, 'user-list', true);
             };
         }
 
         async function loadAssignedOwners() {
-            const loader = document.getElementById('loading');
-            loader.classList.remove('hidden');
-
-            const { data: accessData, error: accessError } = await sb
-                .from('developer_access')
-                .select('owner_id')
-                .eq('developer_id', user.id);
-
-            if (accessError) {
-                loader.classList.add('hidden');
-                return alert("Error loading assignments: " + accessError.message);
-            }
-
-            const ownerIds = (accessData || []).map(a => a.owner_id);
-            if (ownerIds.length === 0) {
-                loader.classList.add('hidden');
-                document.getElementById('assigned-list').innerHTML = '<p style="color: var(--text-dim); text-align:center; padding: 40px;">No projects assigned yet.</p>';
-                return;
-            }
-
-            const { data, error } = await sb
-                .from('profiles')
-                .select('*')
-                .in('id', ownerIds)
-                .order('updated_at', { ascending: false });
-
-            loader.classList.add('hidden');
-
-            if (error) return alert("Error loading assigned projects: " + error.message);
+            const { data: access } = await sb.from('developer_access').select('owner_id').eq('developer_id', user.id);
+            const ids = (access || []).map(a => a.owner_id);
+            const { data } = await sb.from('profiles').select('*').in('id', ids);
+            document.getElementById('loading').classList.add('hidden');
             renderList(data, 'assigned-list', false);
         }
 
-        window.renderList = function(users, targetId, isAdminView) {
+        function renderList(users, targetId, isAdminView) {
             const list = document.getElementById(targetId);
             list.innerHTML = (users || []).map(u => `
                 <div class="user-card">
-                    <div class="user-info">
-                        <h3>
-                            ${u.username || 'No Username'}
-                        </h3>
-                        ${u.domain ? `<div style="font-size: 0.75rem; color: var(--orange); font-weight: 600; margin-top: 4px;">${u.domain}</div>` : ''}
-                    </div>
-                    <div class="controls">
-                        <input type="text" value="${u.username || ''}" placeholder="Username" id="user-${u.id}" ${!isAdminView ? 'disabled' : ''}>
-                        <input type="text" value="${u.domain || ''}" placeholder="Registered Domain" id="dom-${u.id}" ${!isAdminView ? 'disabled' : ''}>
-                        ${isAdminView ? `
-                        <select id="role-${u.id}">
-                            <option value="owner" ${u.role === 'owner' ? 'selected' : ''}>Owner</option>
-                            <option value="developer" ${u.role === 'developer' ? 'selected' : ''}>Developer</option>
-                            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
-                        </select>` : ''}
-                    </div>
-                    <div class="badge-container" style="text-align: center;">
-                        <span class="badge badge-${u.role}">${u.role}</span>
-                    </div>
-                    <div class="actions" style="justify-content: flex-end;">
-                        ${isAdminView ? `<button class="btn btn-save" onclick="updateUser('${u.id}')">SAVE</button>` : ''}
-                        ${isAdminView && u.role === 'owner' ? `<button class="btn btn-access" onclick="openAccess('${u.id}')" title="Grant Dev Access">ACCESS</button>` : ''}
-                        <button class="btn btn-access" onclick="manageGallery('${u.id}', '${u.domain}')">GALLERY</button>
-                    </div>
-                </div>
-            `).join('');
+                    <div class="user-info"><h3>${u.username || 'No Name'}</h3>${u.domain ? `<div style="font-size: 0.75rem; color: var(--orange); font-weight: 600;">${u.domain}</div>` : ''}</div>
+                    <div class="controls"><input type="text" value="${u.username || ''}" id="user-${u.id}" ${!isAdminView ? 'disabled' : ''}><input type="text" value="${u.domain || ''}" id="dom-${u.id}" ${!isAdminView ? 'disabled' : ''}></div>
+                    <div class="badge-container"><span class="badge badge-${u.role}">${u.role}</span></div>
+                    <div class="actions">${isAdminView ? `<button class="btn btn-save" onclick="updateUser('${u.id}')">SAVE</button>` : ''}<button class="btn btn-access" onclick="manageGallery('${u.id}')">GALLERY</button></div>
+                </div>`).join('');
         }
 
-        window.updateUser = async function(id) {
-            const domain = document.getElementById(`dom-${id}`).value.trim();
-            const username = document.getElementById(`user-${id}`).value.trim();
-            const role = document.getElementById(`role-${id}`).value;
-            const { error } = await sb.from('profiles').update({ domain, role, username }).eq('id', id);
-            if (error) alert("Update error: " + error.message);
-            else { alert("User updated successfully"); loadAllUsers(); }
-        }
+        window.updateUser = async (id) => {
+            const u = document.getElementById(`user-${id}`).value, d = document.getElementById(`dom-${id}`).value;
+            await sb.from('profiles').update({ username: u, domain: d }).eq('id', id);
+            alert("Updated");
+        };
 
-        window.manageGallery = function(id, domain) {
-            sessionStorage.setItem('mt_edit_owner_id', id);
-            sessionStorage.setItem('mt_edit_domain', domain);
-            location.href = "adminWeb.html";
-        }
-
-        window.openAccess = async function(ownerId) {
-            activeOwnerId = ownerId;
-            document.getElementById('access-modal').classList.remove('hidden');
-            const { data: devs } = await sb.from('profiles').select('*').eq('role', 'developer');
-            const { data: existing } = await sb.from('developer_access').select('developer_id').eq('owner_id', ownerId);
-
-            const existingIds = (existing || []).map(e => e.developer_id);
-            const list = document.getElementById('dev-check-list');
-            list.innerHTML = (devs || []).map(d => `
-                <div class="dev-item">
-                    <span style="font-size: 0.9rem; font-weight: 600;">${d.username || d.id.substring(0,8)}</span>
-                    <input type="checkbox" value="${d.id}" ${existingIds.includes(d.id) ? 'checked' : ''} class="dev-chk">
-                </div>
-            `).join('');
-        }
-
-        window.closeModal = function() { document.getElementById('access-modal').classList.add('hidden'); }
-
-        window.saveAccess = async function() {
-            const checks = document.querySelectorAll('.dev-chk');
-            await sb.from('developer_access').delete().eq('owner_id', activeOwnerId);
-
-            const inserts = Array.from(checks).filter(c => c.checked).map(c => ({
-                developer_id: c.value,
-                owner_id: activeOwnerId
-            }));
-
-            if (inserts.length) {
-                const { error } = await sb.from('developer_access').insert(inserts);
-                if (error) alert("Access update error: " + error.message);
-                else alert("Access updated successfully");
-            } else {
-                alert("Access cleared");
-            }
-            window.closeModal();
-        }
+        window.manageGallery = (ownerId) => {
+            sessionStorage.setItem('mt_edit_owner_id', ownerId);
+            location.href = 'adminWeb.html';
+        };
 
         function initTheme() {
-            const toggle = document.getElementById('theme-toggle');
-            const currentTheme = localStorage.getItem('theme');
-            if (currentTheme === 'dark') {
-                document.body.classList.add('dark-mode');
-            }
-            toggle.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                const isDark = document.body.classList.contains('dark-mode');
-                localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            });
-
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            document.getElementById('theme-toggle').onclick = () => { document.body.classList.toggle('dark-mode'); localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); };
             const pill = document.getElementById('user-display-pill');
-            pill.onclick = (e) => {
-                e.stopPropagation();
-                pill.classList.toggle('active');
-            };
+            pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
             document.addEventListener('click', () => pill.classList.remove('active'));
         }
-
-        window.logout = async function() { await sb.auth.signOut(); location.href = "index.html"; }
+        window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
     </script>
 </body>
 </html>
