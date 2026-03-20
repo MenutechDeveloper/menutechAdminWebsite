@@ -73,15 +73,15 @@
 
         #user-display-pill.admin-glow {
             background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
-            background-size: 400% 400%; animation: foil-shine 3s ease infinite; border: none !important;
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
         }
         #user-display-pill.dev-glow {
             background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
-            background-size: 400% 400%; animation: foil-shine 4s ease infinite; border: none !important;
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
         }
         #user-display-pill.owner-glow {
             background: linear-gradient(135deg, #ff9533 0%, #ffcc99 20%, #e67e22 40%, #ffcc99 60%, #ff9533 80%, #ffcc99 100%);
-            background-size: 400% 400%; animation: foil-shine 5s ease infinite; border: none !important;
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
         }
 
         body.dark-mode #user-display-pill.admin-glow { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #4338ca 50%, #312e81 75%, #1e1b4b 100%); background-size: 400% 400%; }
@@ -136,8 +136,8 @@
         <div class="auth-card" id="signin-box">
             <h2>Welcome back</h2>
             <p class="lead">Sign in to access your dashboard.</p>
-            <div class="group"><label>Email Address</label><input type="email" id="login-email" placeholder="you@domain.com"></div>
-            <div class="group"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••"></div>
+            <div class="group"><label>Email Address</label><input type="email" id="login-email"></div>
+            <div class="group"><label>Password</label><input type="password" id="login-pass"></div>
             <button id="btn-signin" class="btn-orange">Sign In</button>
             <div id="login-msg" style="margin-top:20px; font-size: 0.85rem;"></div>
             <div class="auth-nav"><button class="link" onclick="toggleAuth('signup')">Don't have an account? Sign Up</button></div>
@@ -146,10 +146,10 @@
         <div class="auth-card hidden" id="signup-box" style="max-width: 540px;">
             <h2>Get Started</h2>
             <p class="lead">Create your account to start managing.</p>
-            <div class="group"><label for="reg-user">Username</label><input type="text" id="reg-user" placeholder="johndoe77"></div>
-            <div class="group"><label for="reg-email">Email Address</label><input type="email" id="reg-email" placeholder="you@domain.com"></div>
-            <div class="group"><label for="reg-pass">Password</label><input type="password" id="reg-pass" placeholder="••••••••"></div>
-            <div class="group"><label for="reg-domain">Target Domain (Optional)</label><input type="text" id="reg-domain" placeholder="example.com"></div>
+            <div class="group"><label for="reg-user">Username</label><input type="text" id="reg-user"></div>
+            <div class="group"><label for="reg-email">Email Address</label><input type="email" id="reg-email"></div>
+            <div class="group"><label for="reg-pass">Password</label><input type="password" id="reg-pass"></div>
+            <div class="group"><label for="reg-domain">Domain</label><input type="text" id="reg-domain"></div>
             <button id="btn-signup" class="btn-orange">Create Account</button>
             <div id="reg-msg" style="margin-top:20px; font-size: 0.85rem;"></div>
             <div class="auth-nav"><button class="link" onclick="toggleAuth('signin')">Already have an account? Sign In</button></div>
