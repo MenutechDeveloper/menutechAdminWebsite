@@ -109,38 +109,26 @@
 
         #user-display-pill.admin-glow {
             background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
-            background-size: 400% 400%;
-            animation: foil-shine-bg 25s ease infinite;
-            border: none !important;
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
         }
         #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
 
         #user-display-pill.dev-glow {
             background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
-            background-size: 400% 400%;
-            animation: foil-shine-bg 25s ease infinite;
-            border: none !important;
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
         }
         #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
 
         #user-display-pill.owner-glow {
-            background: var(--card);
-            background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.4) 20%, transparent 40%, rgba(255,255,255,0.4) 60%, transparent 80%, rgba(255,255,255,0.4) 100%);
-            background-size: 400% 400%;
-            animation: foil-shine-bg 25s ease infinite;
+            background: #000;
+            background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 20%, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 80%, rgba(255,255,255,0.1) 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
         }
+        #user-display-pill.owner-glow #user-name, #user-display-pill.owner-glow #user-role-label { color: #fff !important; }
 
-        body.dark-mode #user-display-pill.admin-glow { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #4338ca 50%, #312e81 75%, #1e1b4b 100%); background-size: 400% 400%; }
-        body.dark-mode #user-display-pill.dev-glow { background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%); background-size: 400% 400%; }
+        #user-display-pill #user-name, #user-display-pill #user-role-label { color: var(--text); transition: color 0.3s; }
 
-        #user-display-pill #user-name, #user-display-pill #user-role-label { color: #000; transition: color 0.3s; }
-        body.dark-mode #user-display-pill #user-name, body.dark-mode #user-display-pill #user-role-label { color: #fff; }
-
-        @keyframes foil-shine-bg {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+        @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
         .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
         #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
@@ -224,8 +212,8 @@
             <div id="user-display-pill">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <div class="pill-info">
-                    <div id="user-name">Loading...</div>
-                    <div id="user-role-label">User</div>
+                    <div id="user-name">&nbsp;</div>
+                    <div id="user-role-label">&nbsp;</div>
                 </div>
                 <div class="pill-menu">
                     <a href="index.html" class="pill-menu-item">Home</a>
@@ -313,7 +301,7 @@
             const { data: profile, error: pError } = await sb.from('profiles').select('*').eq('id', user.id).single();
 
             if (pError || !profile) {
-                userRole = 'owner'; activeOwnerId = user.id; showApp(); return;
+                userRole = 'owner'; activeOwnerId = user.id; showApp(null); return;
             }
 
             userRole = profile.role;
@@ -325,9 +313,9 @@
                 document.getElementById('btn-copy-code').classList.remove('hidden');
                 await setupContextSwitcher();
                 if (!activeOwnerId) { activeOwnerId = user.id; activeDomain = profile.domain; document.getElementById('view-domain-title').textContent = activeDomain || "Admin Workspace"; }
-                showApp();
+                showApp(profile);
             } else {
-                activeOwnerId = user.id; activeDomain = profile.domain; showApp();
+                activeOwnerId = user.id; activeDomain = profile.domain; showApp(profile);
             }
         }
 
@@ -358,13 +346,11 @@
             renderOwners(allOwners); loadGallery();
         }
 
-        async function showApp() {
+        async function showApp(profile) {
             const main = document.getElementById('main-app');
             const nav = document.getElementById('top-nav');
-            if (main) main.classList.remove('hidden');
-            if (nav) nav.classList.remove('hidden');
             const pill = document.getElementById('user-display-pill');
-            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+
             if (profile) {
                 document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
                 document.getElementById('user-role-label').textContent = profile.role || 'User';
@@ -372,6 +358,9 @@
                 else if (profile.role === 'developer') pill.classList.add('dev-glow');
                 else pill.classList.add('owner-glow');
             }
+
+            if (main) main.classList.remove('hidden');
+            if (nav) nav.classList.remove('hidden');
             if (activeOwnerId) loadGallery();
         }
 
