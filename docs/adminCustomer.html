@@ -34,9 +34,16 @@
 
         .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 100% 0%, rgba(255, 149, 51, 0.1) 0%, transparent 40%), radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.05) 0%, transparent 40%); }
 
-        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; background: var(--card); backdrop-filter: blur(20px); padding: 12px 32px; border-radius: 28px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; z-index: 5000; box-shadow: 0 10px 40px rgba(0,0,0,0.1); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 10px 24px; border-radius: 16px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.4s; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(255, 149, 51, 0.2); }
-        .btn-panel-top:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(255, 149, 51, 0.3); }
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
+        #top-nav > * { pointer-events: auto; }
+
+        #user-display-pill { background: var(--card); backdrop-filter: blur(20px); padding: 8px 20px; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        #user-display { font-weight: 700; font-size: 0.8rem; color: var(--orange); }
+        .btn-logout-top { background: rgba(239, 68, 68, 0.1); border: none; color: var(--error); padding: 6px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-logout-top:hover { background: var(--error); color: #fff; }
+
+        .btn-panel-top { background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 12px 24px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .btn-panel-top:hover { transform: translateY(-2px); border-color: var(--orange); color: var(--orange); }
 
         header { text-align: center; margin-bottom: 60px; padding-top: 120px; }
         header h1 { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 700; }
@@ -85,20 +92,23 @@
         #no-access { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
 
         .theme-switch {
-            position: relative; width: 68px; height: 34px; background: #f0e0d0; border-radius: 34px; cursor: pointer; display: flex; align-items: center; padding: 0 6px; transition: 0.4s;
-        }
-        body.dark-mode .theme-switch { background: #2d333f; }
-        .theme-switch-dot {
-            width: 24px; height: 24px; background: #fff; border-radius: 50%; transition: 0.4s; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        body.dark-mode .theme-switch-dot { transform: translateX(32px); background: #fff; }
+            width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
 
-        .theme-switch svg { width: 15px; height: 15px; transition: 0.4s; }
-        .sun-icon { color: #ff9533; stroke: #ff9533; }
-        .moon-icon { color: #8b5cf6; stroke: #8b5cf6; display: none; }
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
         body.dark-mode .sun-icon { display: none; }
         body.dark-mode .moon-icon { display: block; }
         .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 2.2rem; }
+            .container { padding: 0 20px; }
+            .user-card { grid-template-columns: 1fr; gap: 16px; text-align: center; padding: 24px; }
+            .actions { justify-content: center !important; }
+            .user-info h3 { justify-content: center; }
+        }
     </style>
 </head>
 <body>
@@ -111,19 +121,19 @@
     </div>
 
     <div id="top-nav" class="hidden">
-        <div style="display: flex; align-items: center; gap: 20px;">
+        <div>
              <button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button>
         </div>
-        <div style="display: flex; align-items: center; gap: 20px;">
-            <div id="user-display" style="font-size: 0.85rem; font-weight: 600; color: var(--orange);"></div>
-            <span id="role-badge" class="badge"></span>
+        <div style="display: flex; align-items: center; gap: 15px;">
             <div class="theme-switch" id="theme-toggle">
-                <div class="theme-switch-dot">
-                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                </div>
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
             </div>
-            <button onclick="logout()" class="btn btn-del" style="padding: 8px 16px; font-size: 0.7rem;">LOGOUT</button>
+            <div id="user-display-pill">
+                <span id="role-badge" class="badge"></span>
+                <div id="user-display"></div>
+                <button onclick="logout()" class="btn-logout-top">Logout</button>
+            </div>
         </div>
     </div>
 
