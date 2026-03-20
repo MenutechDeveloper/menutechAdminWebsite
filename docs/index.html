@@ -42,8 +42,8 @@
         }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .auth-card h2 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 600; margin-bottom: 12px; color: var(--text); }
-        .auth-card p.lead { color: var(--text-dim); margin-bottom: 40px; font-size: 0.95rem; font-weight: 400; line-height: 1.6; }
+        .auth-card h2 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+        .auth-card p.lead { color: var(--text-dim); margin-bottom: 40px; font-size: 0.95rem; font-weight: 500; line-height: 1.6; }
 
         .group { margin-bottom: 24px; text-align: left; }
         .group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--orange); letter-spacing: 0.5px; margin-bottom: 10px; margin-left: 4px; opacity: 0.9; }
@@ -68,7 +68,7 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         header { text-align: center; margin-bottom: 80px; }
-        header h1 { font-family: 'Outfit', sans-serif; font-size: 3.5rem; font-weight: 600; letter-spacing: -1.5px; margin-bottom: 10px; }
+        header h1 { font-family: 'Outfit', sans-serif; font-size: 3.5rem; font-weight: 700; letter-spacing: -1.5px; margin-bottom: 10px; }
         header p { color: var(--text-dim); font-size: 1.1rem; }
 
         .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; margin-top: 40px; }
@@ -78,36 +78,36 @@
             position: relative; overflow: hidden; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .bento-card:hover { transform: translateY(-10px); border-color: var(--orange); box-shadow: 0 30px 60px -12px rgba(0,0,0,0.5); }
-        .bento-card h3 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; margin-bottom: 15px; color: var(--text); }
-        .bento-card p { color: var(--text-dim); font-size: 0.95rem; line-height: 1.5; }
+        .bento-card h3 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; margin-bottom: 15px; color: var(--text); font-weight: 700; }
+        .bento-card p { color: var(--text-dim); font-size: 0.95rem; line-height: 1.6; font-weight: 500; }
 
         .bento-card .icon-box {
             width: 80px; height: 80px; background: rgba(255,149,51,0.1); border-radius: 24px; display: flex; align-items: center; justify-content: center;
             margin-bottom: 30px; color: var(--orange); font-size: 2rem; border: 1px solid rgba(255,149,51,0.2);
         }
 
-        #top-nav { position: fixed; top: 30px; left: 30px; right: 30px; background: var(--card); backdrop-filter: blur(20px); padding: 14px 28px; border-radius: 24px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; z-index: 5000; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        #user-email { font-weight: 700; font-size: 0.85rem; color: var(--orange); margin-right: 15px; }
-        .btn-logout { background: none; border: none; color: var(--text); font-size: 0.8rem; font-weight: 600; cursor: pointer; opacity: 0.6; transition: 0.3s; }
-        .btn-logout:hover { opacity: 1; color: var(--orange); }
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; background: var(--card); backdrop-filter: blur(20px); padding: 12px 32px; border-radius: 28px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; z-index: 5000; box-shadow: 0 10px 40px rgba(0,0,0,0.1); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        #user-email { font-weight: 700; font-size: 0.85rem; color: var(--orange); margin-right: 5px; }
+        .btn-logout { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.1); color: var(--error); padding: 8px 16px; border-radius: 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-logout:hover { background: var(--error); color: #fff; }
 
         .theme-switch {
-            position: relative; width: 60px; height: 30px; background: #f0e0d0; border-radius: 30px; cursor: pointer; display: flex; align-items: center; padding: 0 5px; transition: 0.4s;
+            position: relative; width: 68px; height: 34px; background: #f0e0d0; border-radius: 34px; cursor: pointer; display: flex; align-items: center; padding: 0 6px; transition: 0.4s;
         }
         body.dark-mode .theme-switch { background: #2d333f; }
         .theme-switch-dot {
-            width: 22px; height: 22px; background: #fff; border-radius: 50%; transition: 0.4s; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            width: 24px; height: 24px; background: #fff; border-radius: 50%; transition: 0.4s; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
-        body.dark-mode .theme-switch-dot { transform: translateX(28px); background: #fff; }
+        body.dark-mode .theme-switch-dot { transform: translateX(32px); background: #fff; }
 
-        .theme-switch svg { width: 14px; height: 14px; transition: 0.4s; }
-        .sun-icon { color: #ff9533; }
-        .moon-icon { color: #8b5cf6; display: none; }
+        .theme-switch svg { width: 15px; height: 15px; transition: 0.4s; }
+        .sun-icon { color: #ff9533; stroke: #ff9533; }
+        .moon-icon { color: #8b5cf6; stroke: #8b5cf6; display: none; }
         body.dark-mode .sun-icon { display: none; }
         body.dark-mode .moon-icon { display: block; }
 
-        .btn-panel-top { background: var(--orange); color: #000; border: none; padding: 8px 20px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        .btn-panel-top:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(255, 149, 51, 0.3); }
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 10px 24px; border-radius: 16px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.4s; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(255, 149, 51, 0.2); }
+        .btn-panel-top:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(255, 149, 51, 0.3); }
 
         .loader { border: 3px solid rgba(255, 149, 51, 0.1); width: 28px; height: 28px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 1s linear infinite; margin: 0 auto; }
         @keyframes rotate { to { transform: rotate(360deg); } }
@@ -199,8 +199,8 @@
             <div id="user-email"></div>
             <div class="theme-switch" id="theme-toggle">
                 <div class="theme-switch-dot">
-                    <svg class="sun-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.38.39-1.02 0-1.41zM7.05 18.01c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.38.39-1.02 0-1.41z"/></svg>
-                    <svg class="moon-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.12 22C6.53 22 2 17.47 2 11.88c0-4.52 2.71-8.55 6.88-10.32.44-.19.93.12.93.59a.5.5 0 0 1-.01.12c-.27 1.28-.2 2.62.2 3.89.96 3.01 3.4 5.43 6.4 6.38 1.27.4 2.61.47 3.89.2.04-.01.08-.02.12-.02.47 0 .78.49.59.93-1.77 4.17-5.8 6.88-10.32 6.88z"/></svg>
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                 </div>
             </div>
             <button id="btn-logout" class="btn-logout">Logout</button>
