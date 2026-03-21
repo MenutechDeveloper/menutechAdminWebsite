@@ -1,10 +1,22 @@
-SQL to update the database:
-
--- 1. Add gallery_type column to profiles
+-- 1. Añadir la columna gallery_type a la tabla profiles (si no existe)
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS gallery_type TEXT DEFAULT 'grid';
 
--- 2. Update existing profiles to have 'grid' as default if they are NULL
-UPDATE public.profiles SET gallery_type = 'grid' WHERE gallery_type IS NULL;
-
--- 3. (Optional) Add index to speed up lookups by domain if not already present
+-- 2. Asegurar que haya un índice en la columna domain de la tabla profiles para un acceso rápido
 CREATE INDEX IF NOT EXISTS idx_profiles_domain ON public.profiles(domain);
+
+-- 3. Asegurar que haya un índice en la columna domain de la tabla galeria para un acceso rápido
+CREATE INDEX IF NOT EXISTS idx_galeria_domain ON public.galeria(domain);
+
+-- 4. Habilitar RLS en la tabla profiles (si no está habilitado)
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+-- 5. Crear política para permitir la lectura pública de los perfiles basada en el dominio
+-- Esto es necesario para que el componente web pueda recuperar el estilo de galería (gallery_type)
+-- configurado para un dominio específico sin autenticación.
+CREATE POLICY "Permitir lectura pública de perfiles por dominio"
+ON public.profiles
+FOR SELECT
+USING (true);
+-- Nota: 'USING (true)' permite leer cualquier fila. Si quieres mayor seguridad,
+-- podrías restringir a solo las columnas necesarias, pero para la funcionalidad
+-- de la galería, el componente necesita poder consultar el perfil por su dominio.

@@ -42,13 +42,18 @@ class MenutechGallery extends HTMLElement {
         const attrType = this.getAttribute('type');
         const attrImages = this.getAttribute('images-list');
 
-        if (attrType && attrImages) {
-            return {
-                images: attrImages.split(',').map(url => ({ image_url: url.trim() })),
-                type: attrType
-            };
+        let result = {
+            images: [],
+            type: attrType || 'grid'
+        };
+
+        // Case 1: Manual override via images-list attribute
+        if (attrImages) {
+            result.images = attrImages.split(',').filter(u => u.trim()).map(url => ({ image_url: url.trim() }));
+            return result;
         }
 
+        // Case 2: Fetch from Supabase based on domain
         if (!this.supabase) await this.initSupabase();
         try {
             const imagesPromise = this.supabase
@@ -57,23 +62,29 @@ class MenutechGallery extends HTMLElement {
                 .eq('domain', domain)
                 .order('created_at', { ascending: false });
 
-            const typePromise = this.supabase
-                .from('profiles')
-                .select('gallery_type')
-                .eq('domain', domain)
-                .maybeSingle();
+            // If we already have a type override, don't fetch it from DB
+            const typePromise = attrType
+                ? Promise.resolve({ data: { gallery_type: attrType } })
+                : this.supabase
+                    .from('profiles')
+                    .select('gallery_type')
+                    .eq('domain', domain)
+                    .limit(1)
+                    .single();
 
             const [imagesRes, typeRes] = await Promise.all([imagesPromise, typePromise]);
 
             if (imagesRes.error) throw imagesRes.error;
 
-            return {
-                images: imagesRes.data || [],
-                type: (typeRes.data && typeRes.data.gallery_type) ? typeRes.data.gallery_type : 'grid'
-            };
+            result.images = imagesRes.data || [];
+            if (!attrType && typeRes.data) {
+                result.type = typeRes.data.gallery_type || 'grid';
+            }
+
+            return result;
         } catch (err) {
             console.error("MenutechGallery Fetch Error:", err);
-            return { images: [], type: 'grid' };
+            return result;
         }
     }
 
