@@ -1,0 +1,6 @@
+SQL to update the database:
+
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS gallery_type TEXT DEFAULT 'grid';
+
+-- This adds a column to the profiles table to store the preferred gallery style (either 'grid' or 'slider').
+-- Existing profiles will default to 'grid'.
