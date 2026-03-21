@@ -1,6 +1,10 @@
 SQL to update the database:
 
+-- 1. Add gallery_type column to profiles
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS gallery_type TEXT DEFAULT 'grid';
 
--- This adds a column to the profiles table to store the preferred gallery style (either 'grid' or 'slider').
--- Existing profiles will default to 'grid'.
+-- 2. Update existing profiles to have 'grid' as default if they are NULL
+UPDATE public.profiles SET gallery_type = 'grid' WHERE gallery_type IS NULL;
+
+-- 3. (Optional) Add index to speed up lookups by domain if not already present
+CREATE INDEX IF NOT EXISTS idx_profiles_domain ON public.profiles(domain);
