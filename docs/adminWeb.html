@@ -286,18 +286,18 @@
             <div class="main-content">
                 <!-- Gallery Section -->
                 <div id="section-gallery">
-                    <div class="component-header" style="justify-content: center; margin-bottom: 40px;">
-                        <div style="display: flex; align-items: center; gap: 24px; background: var(--card); padding: 8px 16px; border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                    <div class="component-header">
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <h2>Gallery Images</h2>
                             <div class="segmented-control">
                                 <button class="segment-btn active" data-value="grid" onclick="setGalleryType('grid')">Grid</button>
                                 <button class="segment-btn" data-value="slider" onclick="setGalleryType('slider')">Slider</button>
                             </div>
-                            <div style="width: 1px; height: 24px; background: var(--border);"></div>
-                            <button id="btn-copy-code" class="btn-copy hidden" style="width: auto; margin: 0; padding: 8px 16px; border: none; background: transparent; font-size: 0.7rem; letter-spacing: 1px;">COPY CODE</button>
                         </div>
+                        <button id="btn-copy-code" class="btn-copy hidden" style="width: auto; margin-top: 0; padding: 12px 24px;">COPY GALLERY CODE</button>
                     </div>
 
-                    <div class="drop-zone" id="drop-zone" style="max-width: 600px; margin: 0 auto 40px auto; height: 160px; border-radius: 28px;">
+                    <div class="drop-zone" id="drop-zone">
                         <p>Upload Images</p>
                         <span>Click to select or drag files here</span>
                         <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
