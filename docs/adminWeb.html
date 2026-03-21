@@ -164,6 +164,63 @@
         .btn-copy { background: rgba(255, 149, 51, 0.1); border: 1px solid rgba(255, 149, 51, 0.3); color: var(--orange); padding: 8px 16px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 15px; width: 100%; }
         .btn-copy:hover { background: var(--orange); color: #000; }
 
+        /* Segmented Control for Gallery Style */
+        .segmented-control {
+            display: flex;
+            background: var(--input);
+            padding: 4px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            gap: 4px;
+        }
+        .segment-btn {
+            flex: 1;
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+        .segment-btn.active {
+            background: var(--card);
+            color: var(--orange);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Preview Section */
+        #preview-section {
+            margin-top: 60px;
+            padding-top: 60px;
+            border-top: 1px solid var(--border);
+        }
+        #preview-section h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .preview-container {
+            background: var(--card);
+            border-radius: 40px;
+            border: 1px solid var(--border);
+            padding: 40px;
+            min-height: 400px;
+            overflow: hidden;
+        }
+
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast { min-width: 320px; max-width: 440px; padding: 18px 24px; border-radius: 24px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.9rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1), toastFadeOut 0.5s 5.5s forwards; line-height: 1.4; }
+        .toast.success { border-left: 6px solid var(--success); }
+        .toast.error { border-left: 6px solid var(--error); }
+        .toast.warning { border-left: 6px solid var(--orange); }
+        @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastFadeOut { from { opacity: 1; } to { opacity: 0; } }
+
         .loader { border: 3px solid rgba(255, 149, 51, 0.1); width: 28px; height: 28px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 1s linear infinite; margin: 0 auto; }
         @keyframes rotate { to { transform: rotate(360deg); } }
         .hidden { display: none !important; }
@@ -199,6 +256,7 @@
 </head>
 <body>
     <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
 
     <div id="top-nav" class="hidden">
         <div>
@@ -261,10 +319,10 @@
                     <div class="component-header">
                         <div style="display: flex; align-items: center; gap: 20px;">
                             <h2>Gallery Images</h2>
-                            <select id="gallery-style-select" style="background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 12px; font-weight: 600; font-size: 0.85rem; cursor: pointer; outline: none;">
-                                <option value="grid">Bento Grid</option>
-                                <option value="slider">Swiper Slider</option>
-                            </select>
+                            <div class="segmented-control">
+                                <button class="segment-btn active" data-value="grid" onclick="setGalleryType('grid')">Grid</button>
+                                <button class="segment-btn" data-value="slider" onclick="setGalleryType('slider')">Slider</button>
+                            </div>
                         </div>
                         <button id="btn-copy-code" class="btn-copy hidden" style="width: auto; margin-top: 0; padding: 12px 24px;">COPY GALLERY CODE</button>
                     </div>
@@ -277,6 +335,15 @@
 
                     <div id="upload-status" style="text-align:center; margin-bottom:40px; font-weight: 600; font-size: 0.9rem;"></div>
                     <div class="bento" id="gallery-grid"></div>
+
+                    <!-- Live Preview Section -->
+                    <div id="preview-section">
+                        <h2>Live Preview</h2>
+                        <div class="preview-container">
+                            <script src="./menutechUI.js"></script>
+                            <menutech-gallery id="live-preview"></menutech-gallery>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -286,6 +353,19 @@
         import { MT_CONFIG } from './config.js';
         let sb = null, user = null, userRole = null, activeOwnerId = null, activeDomain = null;
         let localGallery = [];
+        let currentGalleryType = 'grid';
+
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = document.createElement('div');
+            icon.innerHTML = type === 'success' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><polyline points="20 6 9 17 4 12"/></svg>' : type === 'error' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+            const msg = document.createElement('div');
+            msg.textContent = message;
+            toast.appendChild(icon); toast.appendChild(msg); container.appendChild(toast);
+            setTimeout(() => toast.remove(), 6000);
+        };
 
         document.addEventListener('DOMContentLoaded', async () => {
             initTheme();
@@ -377,13 +457,22 @@
             document.addEventListener('click', () => pill.classList.remove('active'));
             window.logout = async () => { if(sb) await sb.auth.signOut(); location.href = "index.html"; };
             document.getElementById('btn-copy-code').onclick = () => {
-                if (!activeDomain) return alert("Assign a domain to this project first.");
+                if (!activeDomain) return showToast("Assign a domain to this project first.", "warning");
                 const snippet = `<!-- Menutech Gallery -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-gallery domain="${activeDomain}"></menutech-gallery>`;
                 navigator.clipboard.writeText(snippet).then(() => { const btn = document.getElementById('btn-copy-code'); const old = btn.textContent; btn.textContent = "COPIED!"; setTimeout(() => btn.textContent = old, 2000); });
             };
-            document.getElementById('gallery-style-select').onchange = () => {
+
+            window.setGalleryType = (type) => {
+                currentGalleryType = type;
+                document.querySelectorAll('.segment-btn').forEach(b => {
+                    b.classList.toggle('active', b.getAttribute('data-value') === type);
+                });
                 document.getElementById('floating-footer').classList.remove('hidden');
+                updatePreview();
             };
+            window.renderGallery = renderGallery; // Expose for preview update
+            window.updatePreview = updatePreview; // Expose for manual update
+
             const dz = document.getElementById('drop-zone'), fi = document.getElementById('file-input');
             dz.onclick = () => fi.click();
             fi.onchange = () => uploadFiles(fi.files);
@@ -393,7 +482,7 @@
         }
 
         async function uploadFiles(files) {
-            if (!activeOwnerId) return alert("Select a project first.");
+            if (!activeOwnerId) return showToast("Select a project first.", "warning");
             const s = document.getElementById('upload-status');
             s.innerHTML = '<div class="loader"></div>';
             for (const f of files) {
@@ -407,6 +496,7 @@
             s.textContent = "Images added locally"; setTimeout(() => s.textContent = "", 3000);
             renderGallery();
             document.getElementById('floating-footer').classList.remove('hidden');
+            updatePreview();
         }
 
         async function loadGallery() {
@@ -414,14 +504,15 @@
             localGallery = data || [];
 
             // Load gallery type from profile
-            const { data: profile } = await sb.from('profiles').select('gallery_type').eq('id', activeOwnerId).single();
-            if (profile && profile.gallery_type) {
-                document.getElementById('gallery-style-select').value = profile.gallery_type;
-            } else {
-                document.getElementById('gallery-style-select').value = 'grid';
-            }
+            const { data: profile } = await sb.from('profiles').select('gallery_type').eq('id', activeOwnerId).maybeSingle();
+            currentGalleryType = (profile && profile.gallery_type) ? profile.gallery_type : 'grid';
+
+            document.querySelectorAll('.segment-btn').forEach(b => {
+                b.classList.toggle('active', b.getAttribute('data-value') === currentGalleryType);
+            });
 
             renderGallery();
+            updatePreview();
             document.getElementById('floating-footer').classList.add('hidden');
         }
 
@@ -440,7 +531,21 @@
             localGallery.splice(idx, 1);
             renderGallery();
             document.getElementById('floating-footer').classList.remove('hidden');
+            updatePreview();
         };
+
+        function updatePreview() {
+            const preview = document.getElementById('live-preview');
+            if (localGallery.length === 0) {
+                preview.innerHTML = '<p style="text-align:center; padding: 40px; color: var(--text-dim);">No images to preview.</p>';
+                return;
+            }
+            const imagesList = localGallery.map(it => it.image_url).join(',');
+            preview.setAttribute('type', currentGalleryType);
+            preview.setAttribute('images-list', imagesList);
+            // Force re-render if it's already connected
+            if (preview.render) preview.render();
+        }
 
         window.saveChanges = async () => {
             if (!activeOwnerId) return;
@@ -451,7 +556,8 @@
 
             try {
                 // 1. Delete all current for this user
-                await sb.from('galeria').delete().eq('user_id', activeOwnerId);
+                const { error: delError } = await sb.from('galeria').delete().eq('user_id', activeOwnerId);
+                if (delError) throw delError;
 
                 // 2. Insert all from localGallery
                 if (localGallery.length > 0) {
@@ -460,21 +566,21 @@
                         domain: activeDomain || 'undetermined',
                         image_url: it.image_url
                     }));
-                    await sb.from('galeria').insert(toInsert);
+                    const { error: insError } = await sb.from('galeria').insert(toInsert);
+                    if (insError) throw insError;
                 }
 
                 // 3. Save gallery style to profile
-                const style = document.getElementById('gallery-style-select').value;
-                await sb.from('profiles').update({ gallery_type: style }).eq('id', activeOwnerId);
+                const { error: upError } = await sb.from('profiles').update({ gallery_type: currentGalleryType }).eq('id', activeOwnerId);
+                if (upError) throw upError;
 
-                if (window.showToast) window.showToast("Changes saved successfully!", "success");
-                else alert("Changes saved!");
+                showToast("Changes saved successfully!", "success");
 
                 document.getElementById('floating-footer').classList.add('hidden');
-                loadGallery(); // Reload to get IDs from DB
+                setTimeout(() => loadGallery(), 500); // Small delay to ensure DB propagation
             } catch (e) {
                 console.error(e);
-                alert("Error saving changes.");
+                showToast("Error saving changes: " + (e.message || e), "error");
             } finally {
                 btn.textContent = oldText;
                 btn.disabled = false;
@@ -482,7 +588,7 @@
         };
 
         window.visitSite = () => {
-            if (!activeDomain) return alert("No domain assigned.");
+            if (!activeDomain) return showToast("No domain assigned.", "warning");
             const url = activeDomain.startsWith('http') ? activeDomain : `https://${activeDomain}`;
             window.open(url, '_blank');
         };

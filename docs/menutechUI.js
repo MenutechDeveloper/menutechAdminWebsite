@@ -14,11 +14,11 @@ class MenutechGallery extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['domain'];
+        return ['domain', 'type', 'images-list'];
     }
 
     attributeChangedCallback(name, oldVal, newVal) {
-        if (name === 'domain' && oldVal !== newVal) {
+        if (oldVal !== newVal) {
             this.render();
         }
     }
@@ -39,6 +39,16 @@ class MenutechGallery extends HTMLElement {
     }
 
     async fetchGalleryData(domain) {
+        const attrType = this.getAttribute('type');
+        const attrImages = this.getAttribute('images-list');
+
+        if (attrType && attrImages) {
+            return {
+                images: attrImages.split(',').map(url => ({ image_url: url.trim() })),
+                type: attrType
+            };
+        }
+
         if (!this.supabase) await this.initSupabase();
         try {
             const imagesPromise = this.supabase
@@ -51,7 +61,7 @@ class MenutechGallery extends HTMLElement {
                 .from('profiles')
                 .select('gallery_type')
                 .eq('domain', domain)
-                .single();
+                .maybeSingle();
 
             const [imagesRes, typeRes] = await Promise.all([imagesPromise, typePromise]);
 
@@ -73,13 +83,15 @@ class MenutechGallery extends HTMLElement {
 
     async loadSwiper() {
         const loadCSS = () => new Promise((resolve) => {
-            if (this.shadowRoot.querySelector('link[href*="swiper-bundle.min.css"]')) return resolve();
+            const cssUrl = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css';
+            // Check global head first to avoid multiple injections
+            if (document.querySelector(`link[href="${cssUrl}"]`)) return resolve();
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css';
+            link.href = cssUrl;
             link.onload = resolve;
             link.onerror = resolve;
-            this.shadowRoot.appendChild(link);
+            document.head.appendChild(link);
         });
 
         const loadJS = () => new Promise((resolve) => {
@@ -108,71 +120,56 @@ class MenutechGallery extends HTMLElement {
         if (this._rendering) return;
         this._rendering = true;
 
-        let domain = this.getAttribute('domain');
-        if (!domain) {
-            domain = window.location.hostname.replace(/^www\./, '');
-        }
+        try {
+            let domain = this.getAttribute('domain');
+            if (!domain) {
+                domain = window.location.hostname.replace(/^www\./, '');
+            }
 
-        if (!domain) {
-            this.shadowRoot.innerHTML = `<p style="color:#ef4444; font-weight:500;">Error: Could not determine domain.</p>`;
-            this._rendering = false;
-            return;
-        }
+            const isPreview = this.hasAttribute('type');
 
-        const styles = `
-            <style>
-                :host { display: block; width: 100%; max-width: 1200px; margin: 80px auto; padding: 0 24px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; clear: both; text-align: center; }
-                .gallery-grid {
-                    display: grid;
-                    grid-template-columns: repeat(4, 1fr);
-                    gap: 30px;
-                    padding: 0;
-                    margin: 0 auto;
-                }
-                .gallery-item {
-                    position: relative;
-                    border-radius: 28px;
-                    overflow: hidden;
-                    background: #14161d;
-                    box-shadow: 0 12px 30px -10px rgba(0,0,0,0.3);
-                    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-                    aspect-ratio: 1/1;
-                }
-                .gallery-item:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4); }
-                .gallery-item img {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                    transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-                }
-                .gallery-item:hover img { transform: scale(1.06); }
+            if (!domain && !isPreview) {
+                this.shadowRoot.innerHTML = `<p style="color:#ef4444; font-weight:500;">Error: Could not determine domain.</p>`;
+                return;
+            }
 
-                .loader { text-align: center; padding: 60px; color: #ff9533; font-weight: 600; letter-spacing: 1px; }
-
-                @media (max-width: 768px) {
-                    :host { margin: 40px auto; padding: 0 16px; }
-                    .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-                }
-            </style>
-        `;
-
-        this.shadowRoot.innerHTML = `${styles}<div class="loader">Loading Gallery...</div>`;
-
-        const data = await this.fetchGalleryData(domain);
-        const images = data.images;
-        const type = data.type;
-
-        if (images.length === 0) {
-            this.shadowRoot.innerHTML = `${styles}<div style="text-align:center; padding: 80px 20px; color: #64748b; font-weight: 400;">No images found in the gallery for this domain.</div>`;
-            this._rendering = false;
-            return;
-        }
-
-        if (type === 'slider') {
-            await this.loadSwiper();
-            const sliderStyles = `
+            const styles = `
                 <style>
-                    .swiper { width: 100%; padding: 50px 0; }
+                    :host { display: block; width: 100%; max-width: 1200px; margin: 80px auto; padding: 0 24px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; clear: both; text-align: center; }
+                    .gallery-grid {
+                        display: grid;
+                        grid-template-columns: repeat(4, 1fr);
+                        gap: 30px;
+                        padding: 0;
+                        margin: 0 auto;
+                    }
+                    .gallery-item {
+                        position: relative;
+                        border-radius: 28px;
+                        overflow: hidden;
+                        background: #14161d;
+                        box-shadow: 0 12px 30px -10px rgba(0,0,0,0.3);
+                        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                        aspect-ratio: 1/1;
+                    }
+                    .gallery-item:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4); }
+                    .gallery-item img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+                    }
+                    .gallery-item:hover img { transform: scale(1.06); }
+
+                    .loader { text-align: center; padding: 60px; color: #ff9533; font-weight: 600; letter-spacing: 1px; }
+
+                    @media (max-width: 768px) {
+                        :host { margin: 40px auto; padding: 0 16px; }
+                        .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+                    }
+
+                    /* Slider specific styles */
+                    .swiper { width: 100%; padding: 50px 0; overflow: hidden; position: relative; }
                     .swiper-wrapper { display: flex; align-items: center; }
                     .swiper-slide {
                         width: 300px;
@@ -188,60 +185,84 @@ class MenutechGallery extends HTMLElement {
                         height: 100%;
                         object-fit: cover;
                     }
+                    .swiper-pagination { bottom: 0 !important; }
                     .swiper-pagination-bullet-active { background: #ff9533 !important; }
                     @media (max-width: 768px) {
                         .swiper-slide { width: 260px; height: 260px; }
                     }
                 </style>
             `;
-            const slidesHtml = images.map(img => `
-                <div class="swiper-slide">
-                    <img src="${img.image_url}" />
-                </div>
-            `).join('');
 
-            this.shadowRoot.innerHTML = `
-                ${styles}
-                ${sliderStyles}
-                <div class="swiper">
-                    <div class="swiper-wrapper">
-                        ${slidesHtml}
+            this.shadowRoot.innerHTML = `${styles}<div class="loader">Loading Gallery...</div>`;
+
+            const data = await this.fetchGalleryData(domain);
+            const images = data.images;
+            const type = data.type;
+
+            if (images.length === 0) {
+                this.shadowRoot.innerHTML = `${styles}<div style="text-align:center; padding: 80px 20px; color: #64748b; font-weight: 400;">No images found in the gallery for this domain.</div>`;
+                return;
+            }
+
+            if (type === 'slider') {
+                await this.loadSwiper();
+                const slidesHtml = images.map(img => `
+                    <div class="swiper-slide">
+                        <img src="${img.image_url}" />
                     </div>
-                    <div class="swiper-pagination"></div>
-                </div>
-            `;
+                `).join('');
 
-            new Swiper(this.shadowRoot.querySelector('.swiper'), {
-                effect: 'coverflow',
-                grabCursor: true,
-                centeredSlides: true,
-                slidesPerView: 'auto',
-                coverflowEffect: {
-                    rotate: 50,
-                    stretch: 0,
-                    depth: 100,
-                    modifier: 1,
-                    slideShadows: true,
-                },
-                pagination: {
-                    el: this.shadowRoot.querySelector('.swiper-pagination'),
-                },
-                autoplay: {
-                    delay: 2500,
-                    disableOnInteraction: false,
-                },
-            });
-        } else {
-            const itemsHtml = images.map((img, i) => `
-                <div class="gallery-item ${this.getPattern(i)}">
-                    <img src="${img.image_url}" loading="lazy">
-                </div>
-            `).join('');
+                this.shadowRoot.innerHTML = `
+                    ${styles}
+                    <div class="swiper">
+                        <div class="swiper-wrapper">
+                            ${slidesHtml}
+                        </div>
+                        <div class="swiper-pagination"></div>
+                    </div>
+                `;
 
-            this.shadowRoot.innerHTML = `${styles}<div class="gallery-grid">${itemsHtml}</div>`;
+                if (window.Swiper) {
+                    new Swiper(this.shadowRoot.querySelector('.swiper'), {
+                        effect: 'coverflow',
+                        grabCursor: true,
+                        centeredSlides: true,
+                        slidesPerView: 'auto',
+                        loop: images.length > 3,
+                        coverflowEffect: {
+                            rotate: 50,
+                            stretch: 0,
+                            depth: 100,
+                            modifier: 1,
+                            slideShadows: true,
+                        },
+                        pagination: {
+                            el: this.shadowRoot.querySelector('.swiper-pagination'),
+                            clickable: true
+                        },
+                        autoplay: {
+                            delay: 2500,
+                            disableOnInteraction: false,
+                        },
+                    });
+                }
+            } else {
+                const itemsHtml = images.map((img, i) => `
+                    <div class="gallery-item ${this.getPattern(i)}">
+                        <img src="${img.image_url}" loading="lazy">
+                    </div>
+                `).join('');
+
+                this.shadowRoot.innerHTML = `${styles}<div class="gallery-grid">${itemsHtml}</div>`;
+            }
+        } finally {
+            this._rendering = false;
         }
-        this._rendering = false;
     }
 }
 
-customElements.define('menutech-gallery', MenutechGallery);
+// Expose the class for potential manual interaction
+window.MenutechGallery = MenutechGallery;
+if (!customElements.get('menutech-gallery')) {
+    customElements.define('menutech-gallery', MenutechGallery);
+}
