@@ -1,0 +1,12 @@
+127.0.0.1 - - [21/Mar/2026 08:35:37] "GET /adminWeb.html HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 08:35:37] "GET /menutechUI.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 08:35:37] "GET /config.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 08:35:38] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 08:35:57] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 08:35:57] "GET /config.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 08:36:46] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 08:36:46] "GET /config.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 08:36:46] "GET /menutechUI.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 08:37:22] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 08:37:22] "GET /config.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Mar/2026 08:37:22] "GET /menutechUI.js HTTP/1.1" 200 -

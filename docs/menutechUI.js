@@ -14,7 +14,7 @@ class MenutechGallery extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['domain', 'type', 'images-list'];
+        return ['domain', 'type', 'images-list', 'admin-mode'];
     }
 
     attributeChangedCallback(name, oldVal, newVal) {
@@ -133,9 +133,11 @@ class MenutechGallery extends HTMLElement {
                 return;
             }
 
+            const isAdmin = this.hasAttribute('admin-mode');
             const styles = `
                 <style>
                     :host { display: block; width: 100%; max-width: 1200px; margin: 80px auto; padding: 0 24px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; clear: both; text-align: center; }
+                    :host([admin-mode]) { margin: 20px auto; }
                     .gallery-grid {
                         display: grid;
                         grid-template-columns: repeat(4, 1fr);
@@ -160,6 +162,42 @@ class MenutechGallery extends HTMLElement {
                         transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
                     }
                     .gallery-item:hover img { transform: scale(1.06); }
+
+                    /* Admin Styles */
+                    .admin-overlay {
+                        position: absolute;
+                        inset: 0;
+                        background: rgba(0,0,0,0.6);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        opacity: 0;
+                        transition: 0.3s;
+                        backdrop-filter: blur(4px);
+                        z-index: 10;
+                    }
+                    .gallery-item:hover .admin-overlay, .swiper-slide:hover .admin-overlay {
+                        opacity: 1;
+                    }
+                    .btn-delete {
+                        background: #ef4444;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 12px;
+                        font-weight: 700;
+                        font-size: 0.8rem;
+                        cursor: pointer;
+                        transform: translateY(10px);
+                        transition: 0.3s;
+                    }
+                    .gallery-item:hover .btn-delete, .swiper-slide:hover .btn-delete {
+                        transform: translateY(0);
+                    }
+                    .btn-delete:hover {
+                        background: #dc2626;
+                        transform: scale(1.05);
+                    }
 
                     .loader { text-align: center; padding: 60px; color: #ff9533; font-weight: 600; letter-spacing: 1px; }
 
@@ -206,9 +244,14 @@ class MenutechGallery extends HTMLElement {
 
             if (type === 'slider') {
                 await this.loadSwiper();
-                const slidesHtml = images.map(img => `
-                    <div class="swiper-slide">
+                const slidesHtml = images.map((img, i) => `
+                    <div class="swiper-slide" style="position: relative;">
                         <img src="${img.image_url}" />
+                        ${isAdmin ? `
+                            <div class="admin-overlay">
+                                <button class="btn-delete" data-index="${i}">Remove</button>
+                            </div>
+                        ` : ''}
                     </div>
                 `).join('');
 
@@ -250,10 +293,29 @@ class MenutechGallery extends HTMLElement {
                 const itemsHtml = images.map((img, i) => `
                     <div class="gallery-item ${this.getPattern(i)}">
                         <img src="${img.image_url}" loading="lazy">
+                        ${isAdmin ? `
+                            <div class="admin-overlay">
+                                <button class="btn-delete" data-index="${i}">Remove</button>
+                            </div>
+                        ` : ''}
                     </div>
                 `).join('');
 
                 this.shadowRoot.innerHTML = `${styles}<div class="gallery-grid">${itemsHtml}</div>`;
+            }
+
+            if (isAdmin) {
+                this.shadowRoot.querySelectorAll('.btn-delete').forEach(btn => {
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        const index = parseInt(btn.getAttribute('data-index'));
+                        this.dispatchEvent(new CustomEvent('delete-image', {
+                            detail: { index },
+                            bubbles: true,
+                            composed: true
+                        }));
+                    };
+                });
             }
         } finally {
             this._rendering = false;
