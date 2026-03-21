@@ -259,7 +259,13 @@
                 <!-- Gallery Section -->
                 <div id="section-gallery">
                     <div class="component-header">
-                        <h2>Gallery Images</h2>
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <h2>Gallery Images</h2>
+                            <select id="gallery-style-select" style="background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 12px; font-weight: 600; font-size: 0.85rem; cursor: pointer; outline: none;">
+                                <option value="grid">Bento Grid</option>
+                                <option value="slider">Swiper Slider</option>
+                            </select>
+                        </div>
                         <button id="btn-copy-code" class="btn-copy hidden" style="width: auto; margin-top: 0; padding: 12px 24px;">COPY GALLERY CODE</button>
                     </div>
 
@@ -375,6 +381,9 @@
                 const snippet = `<!-- Menutech Gallery -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-gallery domain="${activeDomain}"></menutech-gallery>`;
                 navigator.clipboard.writeText(snippet).then(() => { const btn = document.getElementById('btn-copy-code'); const old = btn.textContent; btn.textContent = "COPIED!"; setTimeout(() => btn.textContent = old, 2000); });
             };
+            document.getElementById('gallery-style-select').onchange = () => {
+                document.getElementById('floating-footer').classList.remove('hidden');
+            };
             const dz = document.getElementById('drop-zone'), fi = document.getElementById('file-input');
             dz.onclick = () => fi.click();
             fi.onchange = () => uploadFiles(fi.files);
@@ -403,6 +412,15 @@
         async function loadGallery() {
             const { data, error } = await sb.from('galeria').select('*').eq('user_id', activeOwnerId).order('created_at', { ascending: false });
             localGallery = data || [];
+
+            // Load gallery type from profile
+            const { data: profile } = await sb.from('profiles').select('gallery_type').eq('id', activeOwnerId).single();
+            if (profile && profile.gallery_type) {
+                document.getElementById('gallery-style-select').value = profile.gallery_type;
+            } else {
+                document.getElementById('gallery-style-select').value = 'grid';
+            }
+
             renderGallery();
             document.getElementById('floating-footer').classList.add('hidden');
         }
@@ -444,6 +462,10 @@
                     }));
                     await sb.from('galeria').insert(toInsert);
                 }
+
+                // 3. Save gallery style to profile
+                const style = document.getElementById('gallery-style-select').value;
+                await sb.from('profiles').update({ gallery_type: style }).eq('id', activeOwnerId);
 
                 if (window.showToast) window.showToast("Changes saved successfully!", "success");
                 else alert("Changes saved!");
