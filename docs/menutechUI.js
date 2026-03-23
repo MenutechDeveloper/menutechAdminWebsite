@@ -218,11 +218,12 @@ class MenutechGallery extends HTMLElement {
                     }
 
                     /* Slider specific styles */
-                    .swiper { width: 100%; padding: 50px 0; overflow: hidden; position: relative; }
+                    .swiper { width: 100%; max-width: 800px; margin: 0 auto; padding: 50px 0; overflow: hidden; position: relative; }
                     .swiper-wrapper { display: flex; align-items: center; }
                     .swiper-slide {
-                        width: 300px;
-                        height: 300px;
+                        width: 450px;
+                        height: 450px;
+                        flex-shrink: 0;
                         border-radius: 28px;
                         overflow: hidden;
                         box-shadow: 0 12px 30px -10px rgba(0,0,0,0.3);
@@ -237,7 +238,7 @@ class MenutechGallery extends HTMLElement {
                     .swiper-pagination { bottom: 0 !important; }
                     .swiper-pagination-bullet-active { background: #ff9533 !important; }
                     @media (max-width: 768px) {
-                        .swiper-slide { width: 260px; height: 260px; }
+                        .swiper-slide { width: 280px; height: 280px; }
                     }
                 </style>
             `;
@@ -282,21 +283,22 @@ class MenutechGallery extends HTMLElement {
                         grabCursor: true,
                         centeredSlides: true,
                         slidesPerView: 'auto',
-                        loop: images.length > 3,
+                        loop: true,
+                        speed: 1000,
+                        autoplay: {
+                            delay: 2500,
+                            disableOnInteraction: false,
+                        },
                         coverflowEffect: {
-                            rotate: 50,
+                            rotate: 30,
                             stretch: 0,
-                            depth: 100,
-                            modifier: 1,
+                            depth: 150,
+                            modifier: 1.5,
                             slideShadows: true,
                         },
                         pagination: {
                             el: this.shadowRoot.querySelector('.swiper-pagination'),
                             clickable: true
-                        },
-                        autoplay: {
-                            delay: 2500,
-                            disableOnInteraction: false,
                         },
                     });
                 }
