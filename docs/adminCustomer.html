@@ -122,10 +122,19 @@
 
         .hidden { display: none !important; }
         @media (max-width: 768px) { .user-card { grid-template-columns: 1fr; gap: 16px; text-align: center; } .actions { justify-content: center !important; } }
+
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast { min-width: 320px; max-width: 440px; padding: 18px 24px; border-radius: 24px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.9rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1), toastFadeOut 0.5s 5.5s forwards; line-height: 1.4; }
+        .toast.success { border-left: 6px solid var(--success); }
+        .toast.error { border-left: 6px solid var(--error); }
+        .toast.warning { border-left: 6px solid var(--orange); }
+        @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastFadeOut { from { opacity: 1; } to { opacity: 0; } }
     </style>
 </head>
 <body>
     <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
     <div id="no-access" class="hidden" style="text-align: center; padding: 100px;">
         <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 12px;">Access Denied</h2>
         <button onclick="location.href='index.html'" class="btn btn-save" style="margin-top: 30px">Back to Login</button>
@@ -171,6 +180,18 @@
     <script type="module">
         import { MT_CONFIG } from './config.js';
         let sb = null, user = null, userRole = null;
+
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = document.createElement('div');
+            icon.innerHTML = type === 'success' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><polyline points="20 6 9 17 4 12"/></svg>' : type === 'error' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+            const msg = document.createElement('div');
+            msg.textContent = message;
+            toast.appendChild(icon); toast.appendChild(msg); container.appendChild(toast);
+            setTimeout(() => toast.remove(), 6000);
+        };
         document.addEventListener('DOMContentLoaded', async () => {
             initTheme();
             try {
@@ -228,15 +249,30 @@
                 <div class="user-card">
                     <div class="user-info"><h3>${u.username || 'No Name'}</h3>${u.domain ? `<div style="font-size: 0.75rem; color: var(--orange); font-weight: 600;">${u.domain}</div>` : ''}</div>
                     <div class="controls"><input type="text" value="${u.username || ''}" id="user-${u.id}" ${!isAdminView ? 'disabled' : ''}><input type="text" value="${u.domain || ''}" id="dom-${u.id}" ${!isAdminView ? 'disabled' : ''}></div>
-                    <div class="badge-container"><span class="badge badge-${u.role}">${u.role}</span></div>
+                    <div class="badge-container">
+                        ${isAdminView ? `
+                            <select id="role-${u.id}" style="width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">
+                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                <option value="developer" ${u.role === 'developer' ? 'selected' : ''}>Developer</option>
+                                <option value="owner" ${u.role === 'owner' ? 'selected' : ''}>Owner</option>
+                            </select>
+                        ` : `<span class="badge badge-${u.role}">${u.role}</span>`}
+                    </div>
                     <div class="actions">${isAdminView ? `<button class="btn btn-save" onclick="updateUser('${u.id}')">SAVE</button>` : ''}<button class="btn btn-access" onclick="manageGallery('${u.id}')">GALLERY</button></div>
                 </div>`).join('');
         }
 
         window.updateUser = async (id) => {
-            const u = document.getElementById(`user-${id}`).value, d = document.getElementById(`dom-${id}`).value;
-            await sb.from('profiles').update({ username: u, domain: d }).eq('id', id);
-            alert("Updated");
+            const u = document.getElementById(`user-${id}`).value;
+            const d = document.getElementById(`dom-${id}`).value;
+            const r = document.getElementById(`role-${id}`).value;
+            const { error } = await sb.from('profiles').update({ username: u, domain: d, role: r }).eq('id', id);
+
+            if (error) {
+                window.showToast(error.message, "error");
+            } else {
+                window.showToast("User updated successfully", "success");
+            }
         };
 
         window.manageGallery = (ownerId) => {
