@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>
+
+if (window !== window.top) {
+  window.top.location.href = window.location.href;
+}
+</script>
+
+<title>Generador QR — Menutech</title>
+
+<style>
+  :root{
+    --bg:#0d1117;
+    --card:#161b22;
+    --muted:#8b9ab5;
+    --accent:#ff7b00;
+    --border:#1f242d;
+  }
+
+  *{box-sizing:border-box;font-family:Inter,system-ui}
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:white;
+    padding:32px;
+  }
+  .QR{
+    display:flex;
+    justify-content:center;
+}
+
+  .wrap{
+    width:100%;
+    max-width:1200px;
+    display:grid;
+    grid-template-columns:380px 1fr;
+    gap:28px;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    padding:22px;
+    border-radius:14px;
+  }
+
+  h2{margin:0 0 10px;font-size:20px;font-weight:600}
+
+  label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
+
+  input[type="text"]{
+    width:100%;padding:12px;border-radius:10px;
+    background:#0d1117;border:1px solid var(--border);
+    color:white;font-size:14px;
+  }
+
+  input[type="color"]{
+    -webkit-appearance:none;
+    width:42px;height:42px;border-radius:50%;
+    padding:0;border:none;cursor:pointer;
+    background:transparent;
+  }
+  input[type="color"]::-webkit-color-swatch{
+    border-radius:50%;
+    border:2px solid #222;
+  }
+
+  select{
+    width:100%;
+    padding:12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:#0d1117;
+    color:white;
+    font-size:14px;
+  }
+
+  #dropzone{
+    border:2px dashed var(--muted);
+    border-radius:14px;
+    padding:32px 12px;
+    text-align:center;
+    font-size:14px;
+    color:var(--muted);
+    cursor:pointer;
+   	margin-bottom:10px;
+  }
+
+  #dropzone:hover{border-color:var(--accent)}
+
+  #logo-preview{
+    width:100px;height:100px;object-fit:contain;
+    display:none;
+    margin:14px auto 0;
+  }
+
+  .btn-primary{
+    background:var(--accent);border:none;
+    padding:12px 18px;border-radius:12px;
+    cursor:pointer;font-weight:600;color:white;
+  }
+
+  .btn-outline{
+    background:transparent;
+    border:2px solid var(--accent);
+    padding:12px 18px;
+    border-radius:12px;
+    cursor:pointer;
+    font-weight:600;
+    color:var(--accent);
+  }
+
+  #download:disabled{
+    opacity:.35;
+    cursor:not-allowed;
+  }
+
+  #preview-area{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:420px;
+    background:#11151d;
+    border-radius:14px;
+    border:1px solid var(--border);
+    padding:20px;
+    position:relative;
+    overflow:hidden;
+  }
+
+  #fakeQR, #realQR{
+    width:400px;
+    height:400px;
+    position:absolute;
+  }
+
+  #popup {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(.7);
+    background: #161b22;
+    border: 1px solid var(--accent);
+    border-radius: 16px;
+    padding: 26px 32px;
+    z-index: 9999;
+    display: none;
+    text-align: center;
+    width: 320px;
+    opacity:0;
+    box-shadow:0 0 40px #0008;
+    animation: none;
+  }
+
+  #popup.show {
+    display:block;
+    animation: popShow .35s ease forwards;
+  }
+
+  @keyframes popShow {
+    0% { opacity:0; transform:translate(-50%, -50%) scale(.7); }
+    100% { opacity:1; transform:translate(-50%, -50%) scale(1); }
+  }
+
+  #popup h3{
+    margin:0 0 8px;
+    color:white;
+    font-size:18px;
+  }
+
+  #contrastContainer {
+    margin-top: 18px;
+  }
+
+  #contrastLabel {
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: var(--muted);
+  }
+
+  #contrastBar {
+    width:100%;
+    height:16px;
+    background:#2a2f3a;
+    border-radius:12px;
+    overflow:hidden;
+    position:relative;
+    border:1px solid #444;
+  }
+
+  #contrastFill {
+    height:100%;
+    width:0%;
+    transition: width .4s ease, background .4s ease;
+  }
+
+  #contrastText {
+    margin-top:6px;
+    font-size:13px;
+    text-align:center;
+    color:#ccc;
+    font-weight:500;
+  }
+
+#top-logo {
+  width: 100%;
+  text-align: center;
+  padding: 10px 0;
+  margin-bottom: 12px;
+}
+
+#top-logo img {
+  width: 10%;             
+  object-fit: contain;
+}
+.card h2{
+  color:white;
+}
+
+</style>
+</head>
+<body>
+<menutech-themes></menutech-themes>
+<div id="top-logo">
+  <img src="https://menutech.services/assets/img/logomt.png" alt="Logo">
+</div>
+
+
+<div class="QR">
+<div class="wrap">
+
+  <div class="card">
+    <h2>Generador QR</h2>
+
+    <label>URL / Texto</label>
+    <input id="urlInput" type="text" placeholder="Escribe aquí…">
+
+    <label style="margin-top:16px">Color módulos</label>
+    <input id="colorDark" type="color" value="#000000">
+
+    <label style="margin-top:16px">Color fondo</label>
+    <input id="colorLight" type="color" value="#ffffff">
+
+    <label style="margin-top:18px">Logo</label>
+
+    <div id="dropzone">
+        Arrastra tu logo aquí
+        <img id="logo-preview" src="">
+    </div>
+
+    <input id="logoFile" type="file" accept="image/*" style="display:none">
+
+    <label style="margin-top:18px">Estilo de puntos</label>
+    <select id="dotStyle">
+      <option value="square">Bloques cuadrados</option>
+      <option value="rounded">Redondeados</option>
+      <option value="dots">Puntos</option>
+      <option value="classy">Classy</option>
+      <option value="classy-rounded">Classy redondeado</option>
+      <option value="extra-rounded">Extra redondeado</option>
+    </select>
+
+    <div style="display:flex;gap:12px;margin-top:26px">
+      <button class="btn-primary" id="generate">Generar QR</button>
+      <button class="btn-outline" id="download" disabled>Descargar</button>
+    </div>
+
+    <!-- Barra de contraste PRO -->
+    <div id="contrastContainer">
+      <div id="contrastLabel">Contraste de legibilidad</div>
+      <div id="contrastBar"><div id="contrastFill"></div></div>
+      <div id="contrastText">—</div>
+    </div>
+
+  </div>
+
+  <div class="card" id="preview-area">
+    <div id="fakeQR"></div>
+    <div id="realQR" style="display:none"></div>
+  </div>
+
+</div>
+</div>
+<div id="popup">
+  <h3></h3>
+</div>
+
+<script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+
+<script>
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby0TpmDbEjVRouzgjqaZnUnhL5TzRrDiLMkmfJALRO8EFzvHTHfaRz145uQieb7T7YWYw/exec";
+
+let currentLogo = null;
+
+/* ==== PREVIEW QR ==== */
+const fakeQR = new QRCodeStyling({
+  width:400, height:400, data:"preview",
+  margin:10,
+  dotsOptions:{color:"#000000", type:"square"},
+  backgroundOptions:{color:"#ffffff"},
+  qrOptions:{errorCorrectionLevel:"H"},
+  imageOptions:{imageSize:0.2, margin:6}
+});
+fakeQR.append(document.getElementById("fakeQR"));
+
+let realQR = null;
+
+/* ==== POPUP ==== */
+function showPopup(msg){
+  const popup = document.getElementById("popup");
+  popup.querySelector("h3").innerText = msg;
+  popup.classList.add("show");
+  setTimeout(()=> popup.classList.remove("show"), 2000);
+}
+
+/* ======== BARRA DE CONTRASTE ======== */
+function updateContrast(){
+  const dark = colorDark.value;
+  const light = colorLight.value;
+
+  const cd = parseInt(dark.replace("#",""),16);
+  const cl = parseInt(light.replace("#",""),16);
+
+  const r1=(cd>>16)&255, g1=(cd>>8)&255, b1=cd&255;
+  const r2=(cl>>16)&255, g2=(cl>>8)&255, b2=cl&255;
+
+  const dist = Math.sqrt(
+    Math.pow(r2-r1,2)+Math.pow(g2-g1,2)+Math.pow(b2-b1,2)
+  );
+
+  const pct = Math.min(100, Math.max(0, (dist/441)*100 ));
+  const fill = document.getElementById("contrastFill");
+  const text = document.getElementById("contrastText");
+
+  fill.style.width = pct+"%";
+
+  if(pct < 35){
+    fill.style.background = "#c40000";
+    text.innerText = "MALO — Difícil de escanear";
+    text.style.color = "#ff5b5b";
+  }
+  else if(pct < 65){
+    fill.style.background = "#d6b300";
+    text.innerText = "REGULAR — Aceptable";
+    text.style.color = "#e6d37a";
+  }
+  else{
+    fill.style.background = "#11c26d";
+    text.innerText = "ÓPTIMO — Excelente legibilidad";
+    text.style.color = "#7dffb5";
+  }
+}
+
+/* ==== Update Fake QR Preview ==== */
+function updateFake(){
+  fakeQR.update({
+    data: urlInput.value || "preview",
+    dotsOptions:{color:colorDark.value, type:dotStyle.value},
+    backgroundOptions:{color:colorLight.value},
+    image: currentLogo || undefined
+  });
+
+  updateContrast();
+}
+
+document.querySelectorAll("input,select").forEach(el=>{
+  el.addEventListener("input", updateFake);
+});
+
+/* ==== LOGO ==== */
+const drop = document.getElementById("dropzone");
+const fileInp = document.getElementById("logoFile");
+
+drop.onclick = ()=> fileInp.click();
+drop.ondragover = e=>{ e.preventDefault(); drop.style.borderColor="#ff7b00"; };
+drop.ondragleave = ()=> drop.style.borderColor="var(--muted)";
+drop.ondrop = e=>{ e.preventDefault(); loadLogo(e.dataTransfer.files[0]); };
+fileInp.onchange = e=> loadLogo(e.target.files[0]);
+
+function loadLogo(file){
+  const img = new Image();
+  img.src = URL.createObjectURL(file);
+  img.onload = ()=>{
+    currentLogo = img.src;
+    const preview = document.getElementById("logo-preview");
+    preview.style.display = "block";
+    preview.src = img.src;
+    updateFake();
+  };
+}
+
+/* ==== Función para registrar en Google Sheet ==== */
+function registrarQR(id, urlReal) {
+  fetch(GOOGLE_SCRIPT_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: `id=${encodeURIComponent(id)}&url=${encodeURIComponent(urlReal)}`
+  })
+  .then(r => r.text())
+  .then(t => console.log("Script respondió:", t))
+  .catch(err => console.error("Error enviando al script:", err));
+}
+
+
+
+/* ==== GENERAR ==== */
+generate.onclick = ()=>{
+  const url = urlInput.value.trim();
+  if(url.length===0){ showPopup("Debes ingresar un enlace o texto."); return; }
+
+  const id = crypto.randomUUID().split('-')[0];
+
+  // URL del QR que se escaneará
+  const qrUrl = `https://qr.menutech.biz/?id=${encodeURIComponent(id)}`;
+
+  // Generar QR real
+  realQR = new QRCodeStyling({
+    width:400,
+    height:400,
+    data:qrUrl,
+    margin:2,
+    dotsOptions:{color:colorDark.value, type:dotStyle.value},
+    backgroundOptions:{color:colorLight.value},
+    qrOptions:{errorCorrectionLevel:"H"},
+    imageOptions:{imageSize:0.2, margin:6},
+    image: currentLogo || undefined
+  });
+
+  const real = document.getElementById("realQR");
+  real.innerHTML="";
+  realQR.append(real);
+  real.style.display="block";
+
+  // Registrar en Google Sheet (URL REAL del cliente)
+  registrarQR(id, url);
+
+  // Habilitar descarga
+  download.disabled = false;
+  showPopup("QR generado correctamente");
+};
+download.onclick = () => {
+  if (!realQR) {
+    showPopup("Primero genera un QR.");
+    return;
+  }
+
+  realQR.download({
+    name: "QR",
+    extension: "png"
+  });
+  showPopup("QR descargado correctamente");
+};
+
+
+</script>
+<script src="https://menutech.xyz/menutechUI.min.js"></script>
+</body>
+</html>
+
+
+
