@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <script>
-
 if (window !== window.top) {
   window.top.location.href = window.location.href;
 }
@@ -19,6 +18,7 @@ if (window !== window.top) {
     --muted:#8b9ab5;
     --accent:#ff7b00;
     --border:#1f242d;
+    --error:#ff5b5b;
   }
 
   *{box-sizing:border-box;font-family:Inter,system-ui}
@@ -28,7 +28,11 @@ if (window !== window.top) {
     background:var(--bg);
     color:white;
     padding:32px;
+    opacity: 0;
+    transition: opacity 0.5s;
   }
+  body.ready { opacity: 1; }
+
   .QR{
     display:flex;
     justify-content:center;
@@ -104,6 +108,7 @@ if (window !== window.top) {
     padding:12px 18px;border-radius:12px;
     cursor:pointer;font-weight:600;color:white;
   }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .btn-outline{
     background:transparent;
@@ -153,7 +158,6 @@ if (window !== window.top) {
     width: 320px;
     opacity:0;
     box-shadow:0 0 40px #0008;
-    animation: none;
   }
 
   #popup.show {
@@ -221,10 +225,22 @@ if (window !== window.top) {
   color:white;
 }
 
+.loader-inline {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 10px;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
 </style>
 </head>
 <body>
-<menutech-themes></menutech-themes>
 <div id="top-logo">
   <img src="https://menutech.services/assets/img/logomt.png" alt="Logo">
 </div>
@@ -272,7 +288,6 @@ if (window !== window.top) {
       <button class="btn-outline" id="download" disabled>Descargar</button>
     </div>
 
-    <!-- Barra de contraste PRO -->
     <div id="contrastContainer">
       <div id="contrastLabel">Contraste de legibilidad</div>
       <div id="contrastBar"><div id="contrastFill"></div></div>
@@ -299,6 +314,21 @@ import { MT_CONFIG } from './config.js';
 import { supabase } from './supabase.js';
 
 let currentLogo = null;
+let popupTimeout = null;
+
+async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { location.href = "index.html"; return; }
+
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+    if (!profile || profile.role === 'owner') {
+        alert("No tienes permiso para usar esta herramienta.");
+        location.href = "index.html";
+    } else {
+        document.body.classList.add('ready');
+    }
+}
+checkAuth();
 
 /* ==== PREVIEW QR ==== */
 const fakeQR = new QRCodeStyling({
@@ -314,11 +344,19 @@ fakeQR.append(document.getElementById("fakeQR"));
 let realQR = null;
 
 /* ==== POPUP ==== */
-function showPopup(msg){
+function showPopup(msg, persistent = false){
+  if (popupTimeout) clearTimeout(popupTimeout);
   const popup = document.getElementById("popup");
   popup.querySelector("h3").innerText = msg;
   popup.classList.add("show");
-  setTimeout(()=> popup.classList.remove("show"), 2000);
+
+  if (!persistent) {
+      popupTimeout = setTimeout(()=> popup.classList.remove("show"), 3000);
+  }
+}
+function hidePopup() {
+    if (popupTimeout) clearTimeout(popupTimeout);
+    document.getElementById("popup").classList.remove("show");
 }
 
 /* ======== BARRA DE CONTRASTE ======== */
@@ -367,7 +405,6 @@ function updateFake(){
     backgroundOptions:{color:colorLight.value},
     image: currentLogo || undefined
   });
-
   updateContrast();
 }
 
@@ -386,6 +423,7 @@ drop.ondrop = e=>{ e.preventDefault(); loadLogo(e.dataTransfer.files[0]); };
 fileInp.onchange = e=> loadLogo(e.target.files[0]);
 
 function loadLogo(file){
+  if (!file) return;
   const img = new Image();
   img.src = URL.createObjectURL(file);
   img.onload = ()=>{
@@ -406,6 +444,7 @@ async function uploadToCloudinary(blob) {
       method: 'POST',
       body: fd
     });
+    if (!res.ok) throw new Error("Cloudinary response not ok");
     const d = await res.json();
     return d.secure_url;
   } catch (e) {
@@ -423,14 +462,13 @@ async function registrarQR(id, urlReal, restaurantName, qrImageUrl) {
     url: urlReal,
     restaurant_name: restaurantName,
     qr_image_url: qrImageUrl,
-    user_id: userId
+    user_id: userId,
+    is_active: true
   });
 
   if (error) {
     console.error("Supabase insert error:", error);
-    showPopup("Error guardando en base de datos");
-  } else {
-    console.log("QR registrado en Supabase");
+    throw new Error(error.message);
   }
 }
 
@@ -442,36 +480,45 @@ generate.onclick = async () => {
   if (!name) { showPopup("Ingresa el nombre del restaurante."); return; }
   if (!url || !url.startsWith('http')) { showPopup("Ingresa una URL válida (http/https)."); return; }
 
-  const id = crypto.randomUUID().split('-')[0];
-  const qrUrl = `https://menutech.io/r.html?id=${encodeURIComponent(id)}`;
+  generate.disabled = true;
+  showPopup("Generando...", true);
 
-  realQR = new QRCodeStyling({
-    width: 600,
-    height: 600,
-    data: qrUrl,
-    margin: 10,
-    dotsOptions: { color: colorDark.value, type: dotStyle.value },
-    backgroundOptions: { color: colorLight.value },
-    qrOptions: { errorCorrectionLevel: "H" },
-    imageOptions: { imageSize: 0.2, margin: 6 },
-    image: currentLogo || undefined
-  });
+  try {
+      const id = crypto.randomUUID().split('-')[0];
+      const qrUrl = `https://menutech.io/r.html?id=${encodeURIComponent(id)}`;
 
-  const real = document.getElementById("realQR");
-  real.innerHTML = "";
-  realQR.append(real);
-  real.style.display = "block";
+      realQR = new QRCodeStyling({
+        width: 400,
+        height: 400,
+        data: qrUrl,
+        margin: 10,
+        dotsOptions: { color: colorDark.value, type: dotStyle.value },
+        backgroundOptions: { color: colorLight.value },
+        qrOptions: { errorCorrectionLevel: "H" },
+        imageOptions: { imageSize: 0.2, margin: 6 },
+        image: currentLogo || undefined
+      });
 
-  // Upload to Cloudinary and Save to Supabase
-  showPopup("Generando y guardando...");
+      const realArea = document.getElementById("realQR");
+      realArea.innerHTML = "";
+      realQR.append(realArea);
+      realArea.style.display = "block";
 
-  const blob = await realQR.getRawData("png");
-  const qrImageUrl = await uploadToCloudinary(blob);
+      const blob = await realQR.getRawData("png");
+      const qrImageUrl = await uploadToCloudinary(blob);
 
-  await registrarQR(id, url, name, qrImageUrl);
+      if (!qrImageUrl) throw new Error("No se pudo subir la imagen del QR.");
 
-  download.disabled = false;
-  showPopup("QR generado y guardado correctamente");
+      await registrarQR(id, url, name, qrImageUrl);
+
+      showPopup("¡Éxito! QR guardado.");
+      download.disabled = false;
+  } catch (err) {
+      console.error(err);
+      showPopup("Error: " + err.message);
+  } finally {
+      generate.disabled = false;
+  }
 };
 
 download.onclick = () => {
@@ -479,16 +526,8 @@ download.onclick = () => {
     showPopup("Primero genera un QR.");
     return;
   }
-
-  realQR.download({
-    name: "QR",
-    extension: "png"
-  });
-  showPopup("QR descargado correctamente");
+  realQR.download({ name: "QR_Menutech", extension: "png" });
 };
-
-
 </script>
-<script src="https://menutech.xyz/menutechUI.min.js"></script>
 </body>
 </html>
