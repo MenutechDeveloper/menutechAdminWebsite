@@ -24,48 +24,68 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #debug { position: fixed; bottom: 20px; font-size: 10px; color: #444; }
     </style>
 </head>
 <body>
     <div class="loader"></div>
+    <div id="debug"></div>
 
     <script type="module">
-        import { supabase } from './supabase.js';
+        import { MT_CONFIG } from './config.js';
 
-        async function redirect() {
+        async function init() {
+            const debug = document.getElementById('debug');
+            const log = (msg) => { console.log(msg); debug.textContent += msg + " | "; };
+
             const params = new URLSearchParams(window.location.search);
             const id = params.get('id');
 
             if (!id) {
+                log("No ID found in URL");
                 window.location.href = 'https://menutech.io/retention';
                 return;
             }
 
+            // Fallback timeout: if it takes more than 5s, go to retention
+            const fallback = setTimeout(() => {
+                log("Timeout triggered");
+                window.location.href = 'https://menutech.io/retention';
+            }, 6000);
+
             try {
-                const { data, error } = await supabase
+                const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
+                const sb = createClient(MT_CONFIG.SUPABASE_URL, MT_CONFIG.SUPABASE_KEY);
+
+                log("Checking ID: " + id);
+                const { data, error } = await sb
                     .from('qrcodes')
                     .select('url, is_active')
                     .eq('id', id)
                     .single();
 
+                clearTimeout(fallback);
+
                 if (error || !data) {
-                    console.error('QR not found or error:', error);
+                    log("QR Error or not found: " + (error ? error.message : "No data"));
                     window.location.href = 'https://menutech.io/retention';
                     return;
                 }
 
-                if (data.is_active) {
+                log("Active: " + data.is_active);
+                if (data.is_active && data.url) {
                     window.location.href = data.url;
                 } else {
                     window.location.href = 'https://menutech.io/retention';
                 }
             } catch (err) {
-                console.error('Redirection error:', err);
+                log("Unexpected error: " + err.message);
+                clearTimeout(fallback);
                 window.location.href = 'https://menutech.io/retention';
             }
         }
 
-        redirect();
+        init();
     </script>
 </body>
 </html>

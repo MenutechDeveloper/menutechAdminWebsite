@@ -30,7 +30,8 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; overflow-x: hidden; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; overflow-x: hidden; opacity: 0; }
+        body.ready { opacity: 1; }
 
         .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 100% 0%, rgba(255, 149, 51, 0.1) 0%, transparent 40%), radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.05) 0%, transparent 40%); }
 
@@ -97,7 +98,7 @@
         .section-title { font-family: 'Outfit', sans-serif; font-size: 1.2rem; margin-bottom: 24px; color: var(--text-dim); display: flex; align-items: center; gap: 12px; }
         .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-        .qr-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 60px; }
+        .qr-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 60px; min-height: 200px; }
         .qr-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px 32px; display: grid; grid-template-columns: 80px 1.5fr 1.5fr 1fr auto; align-items: center; gap: 24px; transition: 0.4s; }
         .qr-card:hover { border-color: var(--orange); transform: scale(1.005); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         .qr-img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border); cursor: zoom-in; }
@@ -203,8 +204,11 @@
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
-            const { data } = await supabase.from('profiles').select('role, username').eq('id', user.id).single();
-            if (!data || data.role === 'owner') { document.getElementById('no-access').classList.remove('hidden'); }
+            const { data, error } = await supabase.from('profiles').select('role, username').eq('id', user.id).single();
+            if (error || !data || data.role === 'owner') {
+                document.getElementById('no-access').classList.remove('hidden');
+                document.body.classList.add('ready');
+            }
             else {
                 const pill = document.getElementById('user-display-pill');
                 document.getElementById('user-name').textContent = data.username || user.email.split('@')[0];
@@ -214,28 +218,44 @@
 
                 document.getElementById('app').classList.remove('hidden');
                 document.getElementById('top-nav').classList.remove('hidden');
+                document.body.classList.add('ready');
                 loadQRs();
             }
         }
 
         let allQRs = [];
         async function loadQRs() {
-            const { data, error } = await supabase.from('qrcodes').select('*').order('created_at', { ascending: false });
-            document.getElementById('loading').classList.add('hidden');
-            if (error) { showToast(error.message, 'error'); return; }
-            allQRs = data;
-            renderList(allQRs);
+            const listArea = document.getElementById('qr-list');
+            const loading = document.getElementById('loading');
+            loading.classList.remove('hidden');
+            listArea.innerHTML = "";
 
-            document.getElementById('qr-search').oninput = (e) => {
-                const term = e.target.value.toLowerCase();
-                const filtered = allQRs.filter(qr => (qr.restaurant_name||'').toLowerCase().includes(term) || (qr.id||'').toLowerCase().includes(term));
-                renderList(filtered);
-            };
+            try {
+                const { data, error } = await supabase.from('qrcodes').select('*').order('created_at', { ascending: false });
+                loading.classList.add('hidden');
+                if (error) throw error;
+                allQRs = data || [];
+                renderList(allQRs);
+
+                document.getElementById('qr-search').oninput = (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const filtered = allQRs.filter(qr => (qr.restaurant_name||'').toLowerCase().includes(term) || (qr.id||'').toLowerCase().includes(term));
+                    renderList(filtered);
+                };
+            } catch (err) {
+                loading.classList.add('hidden');
+                showToast("Error cargando: " + err.message, 'error');
+                listArea.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--error);">Failed to load QR codes.</div>`;
+            }
         }
 
         function renderList(qrs) {
             const list = document.getElementById('qr-list');
-            list.innerHTML = (qrs || []).map(qr => `
+            if (qrs.length === 0) {
+                list.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-dim);">No QR codes found.</div>`;
+                return;
+            }
+            list.innerHTML = qrs.map(qr => `
                 <div class="qr-card">
                     <img src="${qr.qr_image_url || 'https://via.placeholder.com/80?text=No+QR'}" class="qr-img" onclick="window.open('${qr.qr_image_url}', '_blank')">
                     <div class="qr-info">
