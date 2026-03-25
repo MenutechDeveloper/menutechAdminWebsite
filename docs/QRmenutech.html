@@ -252,11 +252,14 @@ if (window !== window.top) {
   <div class="card">
     <h2>Generador QR</h2>
 
-    <label>Nombre del Restaurante</label>
-    <input id="restaurantName" type="text" placeholder="Ej. Restaurante Menutech">
+    <label>ID Personalizado (Opcional)</label>
+    <input id="customId" type="text">
+
+    <label style="margin-top:16px">Nombre del Restaurante</label>
+    <input id="restaurantName" type="text">
 
     <label style="margin-top:16px">URL de Destino</label>
-    <input id="urlInput" type="text" placeholder="https://example.com">
+    <input id="urlInput" type="text">
 
     <label style="margin-top:16px">Color módulos</label>
     <input id="colorDark" type="color" value="#000000">
@@ -476,15 +479,23 @@ async function registrarQR(id, urlReal, restaurantName, qrImageUrl) {
 generate.onclick = async () => {
   const url = urlInput.value.trim();
   const name = restaurantName.value.trim();
+  const cId = customId.value.trim();
 
   if (!name) { showPopup("Ingresa el nombre del restaurante."); return; }
   if (!url || !url.startsWith('http')) { showPopup("Ingresa una URL válida (http/https)."); return; }
 
   generate.disabled = true;
-  showPopup("Generando...", true);
+  showPopup("Verificando y Generando...", true);
 
   try {
-      const id = crypto.randomUUID().split('-')[0];
+      let id = cId || crypto.randomUUID().split('-')[0];
+
+      // Check if ID already exists
+      const { data: existing } = await supabase.from('qrcodes').select('id').eq('id', id).maybeSingle();
+      if (existing) {
+          throw new Error("El ID ya está en uso. Por favor elige otro.");
+      }
+
       const qrUrl = `https://menutech.io/r.html?id=${encodeURIComponent(id)}`;
 
       realQR = new QRCodeStyling({
