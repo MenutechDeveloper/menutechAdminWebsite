@@ -1,0 +1,27 @@
+-- SQL for QR Codes table
+CREATE TABLE public.qrcodes (
+    id TEXT PRIMARY KEY, -- Unique short ID for the QR
+    url TEXT NOT NULL, -- Destination URL
+    restaurant_name TEXT, -- Name for easier identification
+    qr_image_url TEXT, -- URL of the QR image in Cloudinary
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL -- Creator
+);
+
+-- Enable RLS
+ALTER TABLE public.qrcodes ENABLE ROW LEVEL SECURITY;
+
+-- Policy for redirection: allow anyone to read
+CREATE POLICY "Public read access for redirection" ON public.qrcodes
+    FOR SELECT USING (true);
+
+-- Policy for management: only admin and developer roles
+CREATE POLICY "Admin/Developer management access" ON public.qrcodes
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = auth.uid()
+            AND (profiles.role = 'admin' OR profiles.role = 'developer')
+        )
+    );
