@@ -12,55 +12,95 @@ if (window !== window.top) {
 <title>Generador QR — Menutech</title>
 
 <style>
-  :root{
-    --bg:#0d1117;
-    --card:#161b22;
-    --muted:#8b9ab5;
-    --accent:#ff7b00;
-    --border:#1f242d;
-    --error:#ff5b5b;
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+
+  :root {
+      --orange: #ff9533;
+      --bg: #fffcf0;
+      --card: #ffffff;
+      --input: #fffef5;
+      --text: #1a1c1e;
+      --text-dim: #4a5568;
+      --border: #f8e8d8;
+      --success: #059669;
+      --error: #dc2626;
+      --accent: #ff9533;
+      --muted: #4a5568;
   }
 
-  *{box-sizing:border-box;font-family:Inter,system-ui}
-
-  body{
-    margin:0;
-    background:var(--bg);
-    color:white;
-    padding:32px;
-    opacity: 0;
-    transition: opacity 0.5s;
+  body.dark-mode {
+      --bg: #121418;
+      --card: #1c1f26;
+      --input: #242933;
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+      --border: #2d333f;
+      --muted: #94a3b8;
   }
+
+  *{box-sizing:border-box;}
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; margin:0; padding:32px; opacity: 0; }
   body.ready { opacity: 1; }
 
-  .QR{
-    display:flex;
-    justify-content:center;
-}
+  .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 100% 0%, rgba(255, 149, 51, 0.1) 0%, transparent 40%), radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.05) 0%, transparent 40%); }
 
-  .wrap{
-    width:100%;
-    max-width:1200px;
-    display:grid;
-    grid-template-columns:380px 1fr;
-    gap:28px;
+  #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
+  #top-nav > * { pointer-events: auto; }
+
+  /* Premium User Pill */
+  #user-display-pill {
+      background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+      display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); min-width: 220px; justify-content: flex-start;
   }
+  #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
 
-  .card{
-    background:var(--card);
-    border:1px solid var(--border);
-    padding:22px;
-    border-radius:14px;
+  #user-display-pill.admin-glow {
+      background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
+      background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
   }
+  #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
 
-  h2{margin:0 0 10px;font-size:20px;font-weight:600}
+  #user-display-pill.dev-glow {
+      background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
+      background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+  }
+  #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
 
-  label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
+  @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+  .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+  #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
+  #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .pill-menu { position: absolute; top: calc(100% + 12px); right: 0; background: var(--card) !important; border: 1px solid var(--border); border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2); opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000; }
+  #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .pill-menu-item { padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none; }
+  .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
+  .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+
+  .theme-switch { width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+  .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+  .sun-icon { color: var(--orange); }
+  .moon-icon { color: #8b5cf6; display: none; }
+  body.dark-mode .sun-icon { display: none; }
+  body.dark-mode .moon-icon { display: block; }
+
+  .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; }
+  .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); }
+
+  .QR{ display:flex; justify-content:center; padding-top: 100px; }
+  .wrap{ width:100%; max-width:1200px; display:grid; grid-template-columns:380px 1fr; gap:28px; }
+
+  .card{ background:var(--card); border:1px solid var(--border); padding:22px; border-radius:14px; }
+  h2{margin:0 0 10px;font-size:20px;font-weight:600; font-family: 'Outfit', sans-serif;}
+
+  label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block; font-weight: 600;}
 
   input[type="text"]{
     width:100%;padding:12px;border-radius:10px;
-    background:#0d1117;border:1px solid var(--border);
-    color:white;font-size:14px;
+    background:var(--input);border:1px solid var(--border);
+    color:var(--text);font-size:14px;
   }
 
   input[type="color"]{
@@ -75,174 +115,84 @@ if (window !== window.top) {
   }
 
   select{
-    width:100%;
-    padding:12px;
-    border-radius:10px;
-    border:1px solid var(--border);
-    background:#0d1117;
-    color:white;
-    font-size:14px;
+    width:100%; padding:12px; border-radius:10px; border:1px solid var(--border);
+    background:var(--input); color:var(--text); font-size:14px;
   }
 
   #dropzone{
-    border:2px dashed var(--muted);
-    border-radius:14px;
-    padding:32px 12px;
-    text-align:center;
-    font-size:14px;
-    color:var(--muted);
-    cursor:pointer;
-	margin-bottom:10px;
+    border:2px dashed var(--muted); border-radius:14px; padding:32px 12px;
+    text-align:center; font-size:14px; color:var(--muted); cursor:pointer; margin-bottom:10px;
   }
-
   #dropzone:hover{border-color:var(--accent)}
 
-  #logo-preview{
-    width:100px;height:100px;object-fit:contain;
-    display:none;
-    margin:14px auto 0;
-  }
+  #logo-preview{ width:100px;height:100px;object-fit:contain; display:none; margin:14px auto 0; }
 
   .btn-primary{
-    background:var(--accent);border:none;
-    padding:12px 18px;border-radius:12px;
-    cursor:pointer;font-weight:600;color:white;
+    background:var(--orange); border:none; padding:12px 18px; border-radius:12px;
+    cursor:pointer; font-weight:600; color:white;
   }
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .btn-outline{
-    background:transparent;
-    border:2px solid var(--accent);
-    padding:12px 18px;
-    border-radius:12px;
-    cursor:pointer;
-    font-weight:600;
-    color:var(--accent);
+    background:transparent; border:2px solid var(--orange); padding:12px 18px;
+    border-radius:12px; cursor:pointer; font-weight:600; color:var(--orange);
   }
 
-  #download:disabled{
-    opacity:.35;
-    cursor:not-allowed;
-  }
+  #download:disabled{ opacity:.35; cursor:not-allowed; }
 
   #preview-area{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    height:420px;
-    background:#11151d;
-    border-radius:14px;
-    border:1px solid var(--border);
-    padding:20px;
-    position:relative;
-    overflow:hidden;
+    display:flex; align-items:center; justify-content:center; height:420px;
+    background:var(--input); border-radius:14px; border:1px solid var(--border);
+    padding:20px; position:relative; overflow:hidden;
   }
 
-  #fakeQR, #realQR{
-    width:400px;
-    height:400px;
-    position:absolute;
-  }
+  #fakeQR, #realQR{ width:400px; height:400px; position:absolute; }
 
   #popup {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%) scale(.7);
-    background: #161b22;
-    border: 1px solid var(--accent);
-    border-radius: 16px;
-    padding: 26px 32px;
-    z-index: 9999;
-    display: none;
-    text-align: center;
-    width: 320px;
-    opacity:0;
-    box-shadow:0 0 40px #0008;
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(.7);
+    background: var(--card); border: 1px solid var(--orange); border-radius: 16px;
+    padding: 26px 32px; z-index: 9999; display: none; text-align: center; width: 320px;
+    opacity:0; box-shadow:0 0 40px #0008;
   }
+  #popup.show { display:block; animation: popShow .35s ease forwards; }
+  @keyframes popShow { 0% { opacity:0; transform:translate(-50%, -50%) scale(.7); } 100% { opacity:1; transform:translate(-50%, -50%) scale(1); } }
+  #popup h3{ margin:0 0 8px; color:var(--text); font-size:18px; }
 
-  #popup.show {
-    display:block;
-    animation: popShow .35s ease forwards;
-  }
+  #contrastBar { width:100%; height:16px; background:var(--input); border-radius:12px; overflow:hidden; position:relative; border:1px solid var(--border); }
+  #contrastFill { height:100%; width:0%; transition: width .4s ease, background .4s ease; }
+  #contrastText { margin-top:6px; font-size:13px; text-align:center; color:var(--text-dim); font-weight:500; }
 
-  @keyframes popShow {
-    0% { opacity:0; transform:translate(-50%, -50%) scale(.7); }
-    100% { opacity:1; transform:translate(-50%, -50%) scale(1); }
-  }
-
-  #popup h3{
-    margin:0 0 8px;
-    color:white;
-    font-size:18px;
-  }
-
-  #contrastContainer {
-    margin-top: 18px;
-  }
-
-  #contrastLabel {
-    font-size: 13px;
-    margin-bottom: 6px;
-    color: var(--muted);
-  }
-
-  #contrastBar {
-    width:100%;
-    height:16px;
-    background:#2a2f3a;
-    border-radius:12px;
-    overflow:hidden;
-    position:relative;
-    border:1px solid #444;
-  }
-
-  #contrastFill {
-    height:100%;
-    width:0%;
-    transition: width .4s ease, background .4s ease;
-  }
-
-  #contrastText {
-    margin-top:6px;
-    font-size:13px;
-    text-align:center;
-    color:#ccc;
-    font-weight:500;
-  }
-
-#top-logo {
-  width: 100%;
-  text-align: center;
-  padding: 10px 0;
-  margin-bottom: 12px;
-}
-
-#top-logo img {
-  width: 10%;
-  object-fit: contain;
-}
-.card h2{
-  color:white;
-}
-
-.loader-inline {
-    width: 20px;
-    height: 20px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top: 2px solid white;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    display: inline-block;
-    vertical-align: middle;
-    margin-right: 10px;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+#top-logo-area { width: 100%; text-align: center; padding: 10px 0; margin-bottom: 12px; }
+#top-logo-img { width: 100%; max-width: 200px; object-fit: contain; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
 
 </style>
 </head>
 <body>
-<div id="top-logo">
-  <img src="https://menutech.services/assets/img/logomt.png" alt="Logo">
+<div class="bg-mesh"></div>
+
+<div id="top-nav">
+    <div><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div class="theme-switch" id="theme-toggle">
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </div>
+        <div id="user-display-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <div class="pill-info">
+                <div id="user-name">&nbsp;</div>
+                <div id="user-role-label">&nbsp;</div>
+            </div>
+            <div class="pill-menu">
+                <a href="index.html" class="pill-menu-item">Home</a>
+                <div class="pill-menu-item danger" onclick="logout()">Logout</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="top-logo-area">
+  <img src="https://menutech.services/assets/img/logomt.png" id="top-logo-img" alt="Logo">
 </div>
 
 
@@ -252,7 +202,7 @@ if (window !== window.top) {
   <div class="card">
     <h2>Generador QR</h2>
 
-    <label>ID Personalizado (Opcional)</label>
+    <label>ID</label>
     <input id="customId" type="text">
 
     <label style="margin-top:16px">Nombre del Restaurante</label>
@@ -323,15 +273,37 @@ async function checkAuth() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { location.href = "index.html"; return; }
 
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+    const { data: profile } = await supabase.from('profiles').select('role, username').eq('id', session.user.id).single();
     if (!profile || profile.role === 'owner') {
         alert("No tienes permiso para usar esta herramienta.");
         location.href = "index.html";
     } else {
+        const pill = document.getElementById('user-display-pill');
+        document.getElementById('user-name').textContent = profile.username || session.user.email.split('@')[0];
+        document.getElementById('user-role-label').textContent = profile.role;
+        if (profile.role === 'admin') pill.classList.add('admin-glow');
+        else if (profile.role === 'developer') pill.classList.add('dev-glow');
+
         document.body.classList.add('ready');
     }
 }
 checkAuth();
+
+function initTheme() {
+    const toggle = document.getElementById('theme-toggle');
+    const currentTheme = localStorage.getItem('theme');
+    if (currentTheme === 'dark') document.body.classList.add('dark-mode');
+    toggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+    });
+}
+initTheme();
+
+const pill = document.getElementById('user-display-pill');
+pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
+document.addEventListener('click', () => pill.classList.remove('active'));
+window.logout = async () => { await supabase.auth.signOut(); location.href = "index.html"; };
 
 /* ==== PREVIEW QR ==== */
 const fakeQR = new QRCodeStyling({
@@ -357,10 +329,6 @@ function showPopup(msg, persistent = false){
       popupTimeout = setTimeout(()=> popup.classList.remove("show"), 3000);
   }
 }
-function hidePopup() {
-    if (popupTimeout) clearTimeout(popupTimeout);
-    document.getElementById("popup").classList.remove("show");
-}
 
 /* ======== BARRA DE CONTRASTE ======== */
 function updateContrast(){
@@ -385,22 +353,18 @@ function updateContrast(){
 
   if(pct < 35){
     fill.style.background = "#c40000";
-    text.innerText = "MALO — Difícil de escanear";
-    text.style.color = "#ff5b5b";
+    text.innerText = "MALO";
   }
   else if(pct < 65){
     fill.style.background = "#d6b300";
-    text.innerText = "REGULAR — Aceptable";
-    text.style.color = "#e6d37a";
+    text.innerText = "REGULAR";
   }
   else{
     fill.style.background = "#11c26d";
-    text.innerText = "ÓPTIMO — Excelente legibilidad";
-    text.style.color = "#7dffb5";
+    text.innerText = "ÓPTIMO";
   }
 }
 
-/* ==== Update Fake QR Preview ==== */
 function updateFake(){
   fakeQR.update({
     data: urlInput.value || "preview",
@@ -420,7 +384,7 @@ const drop = document.getElementById("dropzone");
 const fileInp = document.getElementById("logoFile");
 
 drop.onclick = ()=> fileInp.click();
-drop.ondragover = e=>{ e.preventDefault(); drop.style.borderColor="#ff7b00"; };
+drop.ondragover = e=>{ e.preventDefault(); drop.style.borderColor=var(--orange); };
 drop.ondragleave = ()=> drop.style.borderColor="var(--muted)";
 drop.ondrop = e=>{ e.preventDefault(); loadLogo(e.dataTransfer.files[0]); };
 fileInp.onchange = e=> loadLogo(e.target.files[0]);
@@ -482,27 +446,23 @@ generate.onclick = async () => {
   const cId = customId.value.trim();
 
   if (!name) { showPopup("Ingresa el nombre del restaurante."); return; }
-  if (!url || !url.startsWith('http')) { showPopup("Ingresa una URL válida (http/https)."); return; }
+  if (!url || !url.startsWith('http')) { showPopup("Ingresa una URL válida."); return; }
 
   generate.disabled = true;
-  showPopup("Verificando y Generando...", true);
+  showPopup("Verificando...", true);
 
   try {
       let id = cId || crypto.randomUUID().split('-')[0];
 
-      // Check if ID already exists
       const { data: existing } = await supabase.from('qrcodes').select('id').eq('id', id).maybeSingle();
       if (existing) {
-          throw new Error("El ID ya está en uso. Por favor elige otro.");
+          throw new Error("ID ya está en uso.");
       }
 
       const qrUrl = `https://menutech.io/r.html?id=${encodeURIComponent(id)}`;
 
       realQR = new QRCodeStyling({
-        width: 400,
-        height: 400,
-        data: qrUrl,
-        margin: 10,
+        width: 400, height: 400, data: qrUrl, margin: 10,
         dotsOptions: { color: colorDark.value, type: dotStyle.value },
         backgroundOptions: { color: colorLight.value },
         qrOptions: { errorCorrectionLevel: "H" },
@@ -518,11 +478,11 @@ generate.onclick = async () => {
       const blob = await realQR.getRawData("png");
       const qrImageUrl = await uploadToCloudinary(blob);
 
-      if (!qrImageUrl) throw new Error("No se pudo subir la imagen del QR.");
+      if (!qrImageUrl) throw new Error("No se pudo subir a la nube.");
 
       await registrarQR(id, url, name, qrImageUrl);
 
-      showPopup("¡Éxito! QR guardado.");
+      showPopup("QR guardado.");
       download.disabled = false;
   } catch (err) {
       console.error(err);
