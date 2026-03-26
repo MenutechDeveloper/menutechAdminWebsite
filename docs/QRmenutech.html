@@ -271,7 +271,9 @@ async function checkAuth() {
         if (!session) { location.href = "index.html"; return; }
 
         const { data: profile } = await supabase.from('profiles').select('role, username').eq('id', session.user.id).single();
-        if (!profile || profile.role === 'owner') {
+        const allowedRoles = ['admin', 'developer', 'design', 'adminDesign', 'CS', 'adminCS', 'retention'];
+
+        if (!profile || !allowedRoles.includes(profile.role)) {
             alert("No tienes permiso para usar esta herramienta.");
             location.href = "index.html";
         } else {

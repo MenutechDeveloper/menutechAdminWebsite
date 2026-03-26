@@ -355,6 +355,11 @@
             }
 
             userRole = profile.role;
+            const allowedRoles = ['admin', 'developer', 'owner'];
+            if (!allowedRoles.includes(userRole)) {
+                location.href = "index.html";
+                return;
+            }
 
             if (userRole === 'admin' || userRole === 'developer') {
                 const sidebarContainer = document.getElementById('sidebar-container');

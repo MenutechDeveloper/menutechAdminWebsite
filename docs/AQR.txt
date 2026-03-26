@@ -1,0 +1,21 @@
+-- SQL to update QR Codes table management access for new roles
+-- Drop the existing policy
+DROP POLICY IF EXISTS "Admin/Developer management access" ON public.qrcodes;
+
+-- Re-create the policy including the new roles
+CREATE POLICY "Management access for authorized roles" ON public.qrcodes
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = auth.uid()
+            AND (
+                profiles.role = 'admin' OR
+                profiles.role = 'developer' OR
+                profiles.role = 'design' OR
+                profiles.role = 'adminDesign' OR
+                profiles.role = 'CS' OR
+                profiles.role = 'adminCS' OR
+                profiles.role = 'retention'
+            )
+        )
+    );
