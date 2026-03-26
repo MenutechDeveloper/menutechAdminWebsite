@@ -43,14 +43,14 @@
 
             if (!id) {
                 log("No ID found in URL");
-                window.location.href = 'https://menutech.xyz/supportqr';
+                window.location.href = 'https://menutech.io/retention';
                 return;
             }
 
-            // Fallback timeout: if it takes more than 5s, go to retention
+            // Fallback timeout: if it takes more than 6s, go to retention
             const fallback = setTimeout(() => {
                 log("Timeout triggered");
-                window.location.href = 'https://menutech.xyz/supportqr';
+                window.location.href = 'https://menutech.io/retention';
             }, 6000);
 
             try {
@@ -68,7 +68,7 @@
 
                 if (error || !data) {
                     log("QR Error or not found: " + (error ? error.message : "No data"));
-                    window.location.href = 'https://menutech.xyz/supportqr';
+                    window.location.href = 'https://menutech.io/retention';
                     return;
                 }
 
@@ -76,12 +76,12 @@
                 if (data.is_active && data.url) {
                     window.location.href = data.url;
                 } else {
-                    window.location.href = 'https://menutech.xyz/supportqr';
+                    window.location.href = 'https://menutech.io/retention';
                 }
             } catch (err) {
                 log("Unexpected error: " + err.message);
                 clearTimeout(fallback);
-                window.location.href = 'https://menutech.xyz/supportqr';
+                window.location.href = 'https://menutech.io/retention';
             }
         }
 
