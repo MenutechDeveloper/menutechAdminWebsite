@@ -189,7 +189,7 @@
 
     <script type="module">
         import { MT_CONFIG } from './config.js';
-        import { supabase } from './supabase.js';
+        import { supabase as sb } from './supabase.js';
         let user = null;
 
         window.showToast = (message, type = 'success') => {
@@ -210,10 +210,10 @@
         });
 
         async function checkAuth() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await sb.auth.getSession();
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
-            const { data, error } = await supabase.from('profiles').select('role, username').eq('id', user.id).single();
+            const { data, error } = await sb.from('profiles').select('role, username').eq('id', user.id).single();
             const allowedRoles = ['admin', 'developer', 'design', 'adminDesign', 'CS', 'adminCS', 'retention'];
 
             if (error || !data || !allowedRoles.includes(data.role)) {
@@ -242,7 +242,7 @@
             listArea.innerHTML = "";
 
             try {
-                const { data, error } = await supabase.from('qrcodes').select('*').order('created_at', { ascending: false });
+                const { data, error } = await sb.from('qrcodes').select('*').order('created_at', { ascending: false });
                 loading.classList.add('hidden');
                 if (error) throw error;
                 allQRs = data || [];
@@ -296,7 +296,7 @@
             const url = document.getElementById(`url-${id}`).value;
             const active = document.getElementById(`active-${id}`).checked;
 
-            const { error } = await supabase.from('qrcodes').update({
+            const { error } = await sb.from('qrcodes').update({
                 restaurant_name: name,
                 url: url,
                 is_active: active
@@ -312,7 +312,7 @@
 
         window.deleteQR = async (id) => {
             if (!confirm('¿Estás seguro de que quieres eliminar este código QR?')) return;
-            const { error } = await supabase.from('qrcodes').delete().eq('id', id);
+            const { error } = await sb.from('qrcodes').delete().eq('id', id);
             if (error) {
                 showToast(error.message, "error");
             } else {
@@ -361,7 +361,7 @@
             }
         };
 
-        window.logout = async () => { await supabase.auth.signOut(); location.href = "index.html"; };
+        window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
     </script>
 
     <!-- Modal for Image Preview -->

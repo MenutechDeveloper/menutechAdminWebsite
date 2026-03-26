@@ -315,7 +315,8 @@
 
     <script type="module">
         import { MT_CONFIG } from './config.js';
-        let sb = null, user = null, userRole = null, activeOwnerId = null, activeDomain = null;
+        import { supabase as sb } from './supabase.js';
+        let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
         let localGallery = [];
         let currentGalleryType = 'grid';
 
@@ -334,13 +335,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             initTheme();
             initEvents();
-            try {
-                const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
-                sb = createClient(MT_CONFIG.SUPABASE_URL, MT_CONFIG.SUPABASE_KEY);
-                await checkSession();
-            } catch (err) {
-                console.error("Initialization error:", err);
-            }
+            checkSession();
         });
 
         async function checkSession() {
