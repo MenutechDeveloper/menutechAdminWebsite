@@ -260,17 +260,17 @@ if (window !== window.top) {
 
 <script type="module">
 import { MT_CONFIG } from './config.js';
-import { supabase } from './supabase.js';
+import { supabase as sb } from './supabase.js';
 
 let currentLogo = null;
 let popupTimeout = null;
 
 async function checkAuth() {
     try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await sb.auth.getSession();
         if (!session) { location.href = "index.html"; return; }
 
-        const { data: profile } = await supabase.from('profiles').select('role, username').eq('id', session.user.id).single();
+        const { data: profile } = await sb.from('profiles').select('role, username').eq('id', session.user.id).single();
         const allowedRoles = ['admin', 'developer', 'design', 'adminDesign', 'CS', 'adminCS', 'retention'];
 
         if (!profile || !allowedRoles.includes(profile.role)) {
@@ -309,7 +309,7 @@ if (pill) {
     pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
     document.addEventListener('click', () => pill.classList.remove('active'));
 }
-window.logout = async () => { await supabase.auth.signOut(); location.href = "index.html"; };
+window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
 
 /* ==== PREVIEW QR ==== */
 const fakeQR = new QRCodeStyling({
@@ -439,10 +439,10 @@ async function uploadToCloudinary(blob) {
 }
 
 async function registrarQR(id, urlReal, restaurantName, qrImageUrl) {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sb.auth.getSession();
   const userId = session ? session.user.id : null;
 
-  const { error } = await supabase.from('qrcodes').insert({
+  const { error } = await sb.from('qrcodes').insert({
     id: id,
     url: urlReal,
     restaurant_name: restaurantName,
@@ -481,7 +481,7 @@ if (generate) {
       try {
           let id = cId || crypto.randomUUID().split('-')[0];
 
-          const { data: existing } = await supabase.from('qrcodes').select('id').eq('id', id).maybeSingle();
+          const { data: existing } = await sb.from('qrcodes').select('id').eq('id', id).maybeSingle();
           if (existing) {
               throw new Error("ID ya está en uso.");
           }

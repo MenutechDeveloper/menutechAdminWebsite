@@ -135,7 +135,7 @@
     <div class="bg-mesh"></div>
     <div id="toast-container"></div>
 
-    <div id="auth-overlay">
+    <div id="auth-overlay" style="display: none;">
         <div class="auth-card" id="signin-box">
             <h2>Welcome back</h2>
             <p class="lead">Sign in to access your dashboard.</p>
@@ -211,7 +211,8 @@
 
     <script type="module">
         import { MT_CONFIG } from './config.js';
-        let sb = null, user = null;
+        import { supabase as sb } from './supabase.js';
+        let user = null;
 
         window.showToast = (message, type = 'success') => {
             const container = document.getElementById('toast-container');
@@ -227,18 +228,19 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             initTheme(); initEvents();
-            try {
-                const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
-                sb = createClient(MT_CONFIG.SUPABASE_URL, MT_CONFIG.SUPABASE_KEY);
-                checkSession();
-            } catch (err) { console.error("Init error:", err); }
+            checkSession();
         });
 
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
             if (session) {
                 user = session.user;
-                if (!user.email_confirmed_at) { showToast("Please verify your email address before logging in.", "warning"); await sb.auth.signOut(); return; }
+                if (!user.email_confirmed_at) {
+                    showToast("Please verify your email address before logging in.", "warning");
+                    await sb.auth.signOut();
+                    document.getElementById('auth-overlay').style.display = 'flex';
+                    return;
+                }
 
                 const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
                 const pill = document.getElementById('user-display-pill');
@@ -269,10 +271,12 @@
                     }
                 }
 
-                document.getElementById('auth-overlay').classList.add('hidden');
+                document.getElementById('auth-overlay').style.display = 'none';
                 document.getElementById('main-app').classList.remove('hidden');
                 document.getElementById('nav-left').classList.remove('hidden');
                 document.getElementById('user-display-pill').classList.remove('hidden');
+            } else {
+                document.getElementById('auth-overlay').style.display = 'flex';
             }
         }
 

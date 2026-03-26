@@ -33,6 +33,7 @@
 
     <script type="module">
         import { MT_CONFIG } from './config.js';
+        import { supabase as sb } from './supabase.js';
 
         async function init() {
             const debug = document.getElementById('debug');
@@ -54,9 +55,6 @@
             }, 6000);
 
             try {
-                const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
-                const sb = createClient(MT_CONFIG.SUPABASE_URL, MT_CONFIG.SUPABASE_KEY);
-
                 log("Checking ID: " + id);
                 const { data, error } = await sb
                     .from('qrcodes')
