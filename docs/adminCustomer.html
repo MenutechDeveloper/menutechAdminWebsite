@@ -206,7 +206,8 @@
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
             const { data } = await sb.from('profiles').select('role, username').eq('id', user.id).single();
-            if (!data || data.role === 'owner') { document.getElementById('no-access').classList.remove('hidden'); }
+            const allowedRoles = ['admin', 'developer'];
+            if (!data || !allowedRoles.includes(data.role)) { document.getElementById('no-access').classList.remove('hidden'); }
             else {
                 userRole = data.role;
                 const pill = document.getElementById('user-display-pill');
@@ -255,6 +256,11 @@
                                 <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
                                 <option value="developer" ${u.role === 'developer' ? 'selected' : ''}>Developer</option>
                                 <option value="owner" ${u.role === 'owner' ? 'selected' : ''}>Owner</option>
+                                <option value="design" ${u.role === 'design' ? 'selected' : ''}>Design</option>
+                                <option value="adminDesign" ${u.role === 'adminDesign' ? 'selected' : ''}>Admin Design</option>
+                                <option value="CS" ${u.role === 'CS' ? 'selected' : ''}>CS</option>
+                                <option value="adminCS" ${u.role === 'adminCS' ? 'selected' : ''}>Admin CS</option>
+                                <option value="retention" ${u.role === 'retention' ? 'selected' : ''}>Retention</option>
                             </select>
                         ` : `<span class="badge badge-${u.role}">${u.role}</span>`}
                     </div>

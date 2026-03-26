@@ -205,7 +205,9 @@
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
             const { data, error } = await supabase.from('profiles').select('role, username').eq('id', user.id).single();
-            if (error || !data || data.role === 'owner') {
+            const allowedRoles = ['admin', 'developer', 'design', 'adminDesign', 'CS', 'adminCS', 'retention'];
+
+            if (error || !data || !allowedRoles.includes(data.role)) {
                 document.getElementById('no-access').classList.remove('hidden');
                 document.body.classList.add('ready');
             }
