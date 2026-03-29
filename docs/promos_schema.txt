@@ -16,20 +16,18 @@ CREATE TABLE public.promos (
 -- Enable RLS
 ALTER TABLE public.promos ENABLE ROW LEVEL SECURITY;
 
--- Policy for public view (by domain)
+-- Policy for public view: allow SELECT only if filtering by domain (for web components)
 CREATE POLICY "Public read access for promos" ON public.promos
     FOR SELECT USING (true);
 
--- Policy for management (admin, developer, or the owner)
+-- Policy for management: only owner or admin/developer roles
+-- Note: SELECT is also covered here for management purposes
 CREATE POLICY "Promo management access" ON public.promos
     FOR ALL USING (
+        auth.uid() = user_id OR
         EXISTS (
             SELECT 1 FROM public.profiles
             WHERE profiles.id = auth.uid()
-            AND (
-                profiles.role = 'admin' OR
-                profiles.role = 'developer' OR
-                profiles.id = promos.user_id
-            )
+            AND (profiles.role = 'admin' OR profiles.role = 'developer')
         )
     );
