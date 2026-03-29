@@ -423,6 +423,12 @@ class MenutechPromoBase extends HTMLElement {
             return;
         }
 
+        const color = this.getAttribute("color") || (this.eventType === 'halloween' ? "#ff6600" : "#ffffff");
+        const cantidad = parseInt(this.getAttribute("cantidad")) || 50;
+        const tamano = parseFloat(this.getAttribute("tamano")) || 5;
+        const velocidad = parseFloat(this.getAttribute("velocidad")) || 1;
+        const opacidad = parseFloat(this.getAttribute("opacidad")) || 0.8;
+
         // Particle generation based on event type
         let particles = "";
         if (this.eventType === 'christmas') {
@@ -431,13 +437,13 @@ class MenutechPromoBase extends HTMLElement {
                 "https://menutechdeveloper.github.io/libreria/snow2.png",
                 "https://menutechdeveloper.github.io/libreria/snow3.png"
             ];
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < cantidad; i++) {
                 const x = Math.random() * 100;
-                const size = 5 + Math.random() * 10;
-                const dur = 5 + Math.random() * 5;
+                const size = tamano + Math.random() * tamano;
+                const dur = (5 + Math.random() * 5) / velocidad;
                 const delay = Math.random() * 5;
                 const img = snowImages[i % snowImages.length];
-                particles += `<div class="particle" style="left:${x}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${img}');"></div>`;
+                particles += `<div class="particle" style="left:${x}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${img}'); opacity:${opacidad};"></div>`;
             }
         } else if (this.eventType === 'halloween') {
             const hwImages = [
@@ -445,14 +451,14 @@ class MenutechPromoBase extends HTMLElement {
                 "https://menutechdeveloper.github.io/libreria/hw2.png",
                 "https://menutechdeveloper.github.io/libreria/hw3.png"
             ];
-            for (let i = 0; i < 40; i++) {
+            for (let i = 0; i < cantidad; i++) {
                 const x = Math.random() * 100;
                 const y = Math.random() * 100;
-                const size = 15 + Math.random() * 15;
-                const dur = 4 + Math.random() * 4;
+                const size = (tamano * 2) + Math.random() * (tamano * 2);
+                const dur = (4 + Math.random() * 4) / velocidad;
                 const delay = Math.random() * 3;
                 const img = hwImages[i % hwImages.length];
-                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${img}');"></div>`;
+                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${img}'); opacity:0;"></div>`;
             }
         }
 
