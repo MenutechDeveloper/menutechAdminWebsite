@@ -423,13 +423,86 @@ class MenutechPromoBase extends HTMLElement {
             return;
         }
 
+        // Particle generation based on event type
+        let particles = "";
+        if (this.eventType === 'christmas') {
+            const snowImages = [
+                "https://menutechdeveloper.github.io/libreria/snow1.png",
+                "https://menutechdeveloper.github.io/libreria/snow2.png",
+                "https://menutechdeveloper.github.io/libreria/snow3.png"
+            ];
+            for (let i = 0; i < 50; i++) {
+                const x = Math.random() * 100;
+                const size = 5 + Math.random() * 10;
+                const dur = 5 + Math.random() * 5;
+                const delay = Math.random() * 5;
+                const img = snowImages[i % snowImages.length];
+                particles += `<div class="particle" style="left:${x}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${img}');"></div>`;
+            }
+        } else if (this.eventType === 'halloween') {
+            const hwImages = [
+                "https://menutechdeveloper.github.io/libreria/hw1.png",
+                "https://menutechdeveloper.github.io/libreria/hw2.png",
+                "https://menutechdeveloper.github.io/libreria/hw3.png"
+            ];
+            for (let i = 0; i < 40; i++) {
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const size = 15 + Math.random() * 15;
+                const dur = 4 + Math.random() * 4;
+                const delay = Math.random() * 3;
+                const img = hwImages[i % hwImages.length];
+                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${img}');"></div>`;
+            }
+        }
+
+        const isPopup = promo.display_mode === 'popup';
         const styles = `
             <style>
+                :host {
+                    position: ${isPopup ? 'fixed' : 'relative'};
+                    top: 0; left: 0; width: 100%;
+                    height: ${isPopup ? '100%' : 'auto'};
+                    pointer-events: none;
+                    z-index: 9999;
+                    overflow: ${isPopup ? 'hidden' : 'visible'};
+                    display: block;
+                }
                 .promo-container { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+                /* Particles */
+                .particle {
+                    position: absolute; top: -20px; background-size: contain; background-repeat: no-repeat;
+                    animation: fall linear infinite; will-change: transform; opacity: 0.8;
+                }
+                .particle-static {
+                    position: absolute; background-size: contain; background-repeat: no-repeat;
+                    animation: appearDisappear linear infinite; will-change: opacity, transform; opacity: 0;
+                }
+                @keyframes fall {
+                    0% { transform: translateY(0) rotate(0deg); }
+                    100% { transform: translateY(110vh) rotate(360deg); }
+                }
+                @keyframes appearDisappear {
+                    0%, 100% { opacity: 0; transform: scale(0.5); }
+                    50% { opacity: 0.8; transform: scale(1.1); }
+                }
+
+                /* Halloween Smoke */
+                .smoke-layer {
+                    position: absolute; inset: 0; background: url("https://menutechdeveloper.github.io/libreria/smoke5.png") repeat;
+                    background-size: cover; opacity: 0.15; filter: blur(4px); animation: moveSmoke 60s linear infinite;
+                }
+                @keyframes moveSmoke {
+                    0% { background-position: 0 0; }
+                    100% { background-position: 2000px 1000px; }
+                }
+
                 .promo-popup-overlay {
                     position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
                     display: flex; align-items: center; justify-content: center; z-index: 10000;
                     animation: fadeIn 0.5s ease;
+                    pointer-events: auto;
                 }
                 .promo-popup-card {
                     position: relative; max-width: 90%; max-height: 90%; border-radius: 30px;
@@ -453,6 +526,8 @@ class MenutechPromoBase extends HTMLElement {
         if (promo.display_mode === 'popup') {
             this.shadowRoot.innerHTML = `
                 ${styles}
+                ${this.eventType === 'halloween' ? '<div class="smoke-layer"></div>' : ''}
+                ${particles}
                 <div class="promo-popup-overlay" id="promo-overlay">
                     <div class="promo-popup-card">
                         <button class="close-btn" id="close-promo">
@@ -468,6 +543,8 @@ class MenutechPromoBase extends HTMLElement {
         } else {
             this.shadowRoot.innerHTML = `
                 ${styles}
+                ${this.eventType === 'halloween' ? '<div class="smoke-layer"></div>' : ''}
+                ${particles}
                 <div class="promo-section">
                     <img src="${promo.image_url}" alt="${this.eventType} promotion">
                 </div>
