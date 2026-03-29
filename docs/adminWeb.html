@@ -391,22 +391,19 @@
                 <div id="section-promos">
                     <div class="component-header">
                         <h2>Event Promotions</h2>
+                        <button id="btn-copy-promo" class="btn-copy hidden" style="width: auto; margin-top: 0; padding: 12px 24px;">COPY PROMO CODE</button>
                     </div>
                     <div class="promo-grid">
                         <div class="promo-slot" id="slot-christmas" onclick="openPromoModal('christmas')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L5 19h14L12 2z"/><path d="M12 22v-3"/><path d="M9 19l-2 2h10l-2-2"/></svg>
                             <span>Christmas</span>
                         </div>
                         <div class="promo-slot" id="slot-halloween" onclick="openPromoModal('halloween')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 10c.5-1 1.5-1 2 0"/><path d="M13 10c.5-1 1.5-1 2 0"/><path d="M8 15s1.5 2 4 2 4-2 4-2"/></svg>
                             <span>Halloween</span>
                         </div>
                         <div class="promo-slot" id="slot-valentine" onclick="openPromoModal('valentine')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.72-8.72 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                             <span>Valentine's</span>
                         </div>
                         <div class="promo-slot" id="slot-president" onclick="openPromoModal('president')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                             <span>President's Day</span>
                         </div>
                     </div>
@@ -536,6 +533,7 @@
                 sidebarContainer.classList.remove('hidden');
                 sidebarContainer.classList.add('collapsed');
                 document.getElementById('btn-copy-code').classList.remove('hidden');
+                document.getElementById('btn-copy-promo').classList.remove('hidden');
                 await setupContextSwitcher();
                 if (!activeOwnerId) { activeOwnerId = user.id; activeDomain = profile.domain; document.getElementById('view-domain-title').textContent = activeDomain || "Admin Workspace"; }
                 showApp(profile);
@@ -599,6 +597,22 @@
                 if (!activeDomain) return showToast("Assign a domain to this project first.", "warning");
                 const snippet = `<!-- Menutech Gallery -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-gallery domain="${activeDomain}"></menutech-gallery>`;
                 navigator.clipboard.writeText(snippet).then(() => { const btn = document.getElementById('btn-copy-code'); const old = btn.textContent; btn.textContent = "COPIED!"; setTimeout(() => btn.textContent = old, 2000); });
+            };
+
+            document.getElementById('btn-copy-promo').onclick = () => {
+                if (!activeDomain) return showToast("Assign a domain to this project first.", "warning");
+                const activeEvents = localPromos.filter(p => p.is_active).map(p => p.event_type);
+                if (activeEvents.length === 0) return showToast("No active promos to copy.", "warning");
+
+                const tags = activeEvents.map(ev => `<menutech-${ev} domain="${activeDomain}"></menutech-${ev}>`).join('\n');
+                const snippet = `<!-- Menutech Promotions -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n${tags}`;
+
+                navigator.clipboard.writeText(snippet).then(() => {
+                    const btn = document.getElementById('btn-copy-promo');
+                    const old = btn.textContent;
+                    btn.textContent = "COPIED!";
+                    setTimeout(() => btn.textContent = old, 2000);
+                });
             };
 
             window.setGalleryType = (type) => {
@@ -705,6 +719,7 @@
                 preview.classList.remove('hidden');
                 placeholder.classList.add('hidden');
             } else {
+                preview.src = "";
                 preview.classList.add('hidden');
                 placeholder.classList.remove('hidden');
             }
