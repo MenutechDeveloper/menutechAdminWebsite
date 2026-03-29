@@ -222,6 +222,109 @@
         .btn-save-all:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255,149,51,0.4); }
         .btn-visit { background: var(--input); color: var(--text); border: 1px solid var(--border); }
         .btn-visit:hover { background: var(--border); transform: translateY(-3px); }
+
+        /* Promotions Styles */
+        .promo-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        @media (max-width: 480px) {
+            .promo-grid { gap: 10px; }
+            .promo-slot { padding: 5px; border-radius: 16px; }
+            .promo-slot svg { width: 30px; height: 30px; margin-bottom: 5px; }
+            .promo-slot span { font-size: 0.6rem; letter-spacing: 0.5px; }
+        }
+        .promo-slot {
+            aspect-ratio: 1/1;
+            background: var(--input);
+            border: 2px dashed var(--border);
+            border-radius: 24px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            filter: grayscale(1);
+            opacity: 0.6;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            padding: 10px;
+        }
+        .promo-slot:hover {
+            border-color: var(--orange);
+            transform: translateY(-5px);
+            opacity: 1;
+        }
+        .promo-slot.active {
+            filter: none;
+            opacity: 1;
+            border: 2px solid var(--orange);
+            background: rgba(255, 149, 51, 0.05);
+            animation: promo-pulse 2s infinite;
+        }
+        @keyframes promo-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 149, 51, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 149, 51, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 149, 51, 0); }
+        }
+        .promo-slot svg {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 10px;
+            color: var(--text-dim);
+            transition: color 0.4s;
+        }
+        .promo-slot.active svg { color: var(--orange); }
+        .promo-slot span {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+        }
+        .promo-slot.active span { color: var(--text); }
+
+        /* Promo Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);
+            z-index: 10000; display: none; align-items: center; justify-content: center; padding: 24px;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-card {
+            background: var(--card); width: 100%; max-width: 500px; border-radius: 32px;
+            padding: 40px; border: 1.5px solid var(--border); box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            position: relative; animation: modalSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modalSlideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-card h3 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-bottom: 25px; color: var(--text); }
+        .modal-close { position: absolute; top: 25px; right: 25px; cursor: pointer; color: var(--text-dim); border: none; background: none; }
+
+        .promo-form-group { margin-bottom: 20px; }
+        .promo-form-group label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--orange); text-transform: uppercase; margin-bottom: 8px; }
+        .promo-form-group input, .promo-form-group select {
+            width: 100%; padding: 14px; border-radius: 16px; border: 1px solid var(--border);
+            background: var(--input); color: var(--text); font-family: inherit;
+        }
+
+        .promo-drop-zone {
+            width: 100%; height: 150px; border-radius: 20px; border: 2px dashed var(--border);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s; margin-bottom: 20px; overflow: hidden; position: relative;
+        }
+        .promo-drop-zone:hover { border-color: var(--orange); background: rgba(255,149,51,0.03); }
+        .promo-drop-zone img { width: 100%; height: 100%; object-fit: cover; }
+        .promo-drop-zone p { font-size: 0.85rem; font-weight: 600; color: var(--text-dim); }
+
+        .modal-actions { display: flex; gap: 15px; margin-top: 30px; }
+        .btn-modal { flex: 1; padding: 16px; border-radius: 16px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; border: none; transition: 0.3s; }
+        .btn-modal-save { background: var(--orange); color: #fff; }
+        .btn-modal-cancel { background: var(--input); color: var(--text); border: 1px solid var(--border); }
     </style>
 </head>
 <body>
@@ -284,6 +387,31 @@
             </div>
 
             <div class="main-content">
+                <!-- Promotions Section -->
+                <div id="section-promos">
+                    <div class="component-header">
+                        <h2>Event Promotions</h2>
+                    </div>
+                    <div class="promo-grid">
+                        <div class="promo-slot" id="slot-christmas" onclick="openPromoModal('christmas')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L5 19h14L12 2z"/><path d="M12 22v-3"/><path d="M9 19l-2 2h10l-2-2"/></svg>
+                            <span>Christmas</span>
+                        </div>
+                        <div class="promo-slot" id="slot-halloween" onclick="openPromoModal('halloween')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 10c.5-1 1.5-1 2 0"/><path d="M13 10c.5-1 1.5-1 2 0"/><path d="M8 15s1.5 2 4 2 4-2 4-2"/></svg>
+                            <span>Halloween</span>
+                        </div>
+                        <div class="promo-slot" id="slot-valentine" onclick="openPromoModal('valentine')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.72-8.72 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                            <span>Valentine's</span>
+                        </div>
+                        <div class="promo-slot" id="slot-president" onclick="openPromoModal('president')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <span>President's Day</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Gallery Section -->
                 <div id="section-gallery">
                     <div class="component-header">
@@ -313,12 +441,59 @@
         </div>
     </div>
 
+    <!-- Promo Modal -->
+    <div id="promo-modal" class="modal-overlay">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closePromoModal()"><svg style="width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <h3 id="promo-modal-title">Configure Promo</h3>
+
+            <div class="promo-drop-zone" id="promo-drop-zone">
+                <img id="promo-preview" class="hidden">
+                <div id="promo-drop-placeholder">
+                    <p>Drag & Drop Promo Image</p>
+                    <span style="font-size:0.75rem; color:var(--text-dim)">or click to select</span>
+                </div>
+                <input type="file" id="promo-file-input" class="hidden" accept="image/*">
+            </div>
+
+            <div class="promo-form-group">
+                <label>Start Date</label>
+                <input type="date" id="promo-start-date">
+            </div>
+
+            <div class="promo-form-group">
+                <label>End Date</label>
+                <input type="date" id="promo-end-date">
+            </div>
+
+            <div class="promo-form-group">
+                <label>Display Mode</label>
+                <select id="promo-display-mode">
+                    <option value="popup">Popup on Load</option>
+                    <option value="section">Integrated Section</option>
+                </select>
+            </div>
+
+            <div class="promo-form-group" style="display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" id="promo-active" style="width:auto;">
+                <label style="margin:0">Active Promo</label>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-modal btn-modal-cancel" onclick="closePromoModal()">Cancel</button>
+                <button class="btn-modal btn-modal-save" id="btn-save-promo">Save Promo</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { MT_CONFIG } from './config.js';
         import { supabase as sb } from './supabase.js';
         let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
         let localGallery = [];
+        let localPromos = [];
         let currentGalleryType = 'grid';
+        let currentPromoEvent = null;
 
         window.showToast = (message, type = 'success') => {
             const container = document.getElementById('toast-container');
@@ -393,7 +568,7 @@
             document.getElementById('view-domain-title').textContent = activeDomain || "No Domain Set";
             document.getElementById('active-project-name').textContent = owner.username || owner.email;
             document.getElementById('project-info').classList.remove('hidden');
-            renderOwners(allOwners); loadGallery();
+            renderOwners(allOwners); loadGallery(); loadPromos();
         }
 
         async function showApp(profile) {
@@ -411,7 +586,7 @@
 
             if (main) main.classList.remove('hidden');
             if (nav) nav.classList.remove('hidden');
-            if (activeOwnerId) loadGallery();
+            if (activeOwnerId) { loadGallery(); loadPromos(); }
         }
 
         function initEvents() {
@@ -446,6 +621,15 @@
             dz.ondragover = e => { e.preventDefault(); dz.style.borderColor = "var(--orange)"; };
             ['dragleave', 'dragend'].forEach(t => dz.addEventListener(t, () => dz.style.borderColor = "var(--border)"));
             dz.ondrop = e => { e.preventDefault(); dz.style.borderColor = "var(--border)"; if(e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files); };
+
+            // Promo Modal Events
+            const pdz = document.getElementById('promo-drop-zone'), pfi = document.getElementById('promo-file-input');
+            pdz.onclick = () => pfi.click();
+            pfi.onchange = () => { if(pfi.files.length) handlePromoFileUpload(pfi.files[0]); };
+            pdz.ondragover = e => { e.preventDefault(); pdz.style.borderColor = "var(--orange)"; };
+            ['dragleave', 'dragend'].forEach(t => pdz.addEventListener(t, () => pdz.style.borderColor = "var(--border)"));
+            pdz.ondrop = e => { e.preventDefault(); pdz.style.borderColor = "var(--border)"; if(e.dataTransfer.files.length) handlePromoFileUpload(e.dataTransfer.files[0]); };
+            document.getElementById('btn-save-promo').onclick = savePromo;
         }
 
         async function uploadFiles(files) {
@@ -479,6 +663,124 @@
 
             syncGalleryComponent();
             document.getElementById('floating-footer').classList.add('hidden');
+        }
+
+        async function loadPromos() {
+            if (!activeOwnerId) return;
+            const { data, error } = await sb.from('promos').select('*').eq('user_id', activeOwnerId);
+            localPromos = data || [];
+            updatePromoGrid();
+        }
+
+        function updatePromoGrid() {
+            const events = ['christmas', 'halloween', 'valentine', 'president'];
+            events.forEach(ev => {
+                const slot = document.getElementById(`slot-${ev}`);
+                const promo = localPromos.find(p => p.event_type === ev);
+                if (promo && promo.is_active) {
+                    slot.classList.add('active');
+                } else {
+                    slot.classList.remove('active');
+                }
+            });
+        }
+
+        window.openPromoModal = (eventType) => {
+            currentPromoEvent = eventType;
+            const promo = localPromos.find(p => p.event_type === eventType) || {
+                event_type: eventType,
+                image_url: '',
+                start_date: '',
+                end_date: '',
+                display_mode: 'popup',
+                is_active: false
+            };
+
+            document.getElementById('promo-modal-title').textContent = `Configure ${eventType.charAt(0).toUpperCase() + eventType.slice(1)} Promo`;
+            const preview = document.getElementById('promo-preview');
+            const placeholder = document.getElementById('promo-drop-placeholder');
+
+            if (promo.image_url) {
+                preview.src = promo.image_url;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            } else {
+                preview.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+
+            document.getElementById('promo-start-date').value = promo.start_date || '';
+            document.getElementById('promo-end-date').value = promo.end_date || '';
+            document.getElementById('promo-display-mode').value = promo.display_mode || 'popup';
+            document.getElementById('promo-active').checked = promo.is_active;
+
+            document.getElementById('promo-modal').classList.add('active');
+        };
+
+        window.closePromoModal = () => {
+            document.getElementById('promo-modal').classList.remove('active');
+            currentPromoEvent = null;
+        };
+
+        async function handlePromoFileUpload(file) {
+            const placeholder = document.getElementById('promo-drop-placeholder');
+            placeholder.innerHTML = '<div class="loader"></div>';
+
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
+
+            try {
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
+                const d = await res.json();
+                const preview = document.getElementById('promo-preview');
+                preview.src = d.secure_url;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                placeholder.innerHTML = '<p>Drag & Drop Promo Image</p><span style="font-size:0.75rem; color:var(--text-dim)">or click to select</span>';
+            } catch (e) {
+                console.error("Upload error", e);
+                showToast("Error uploading image", "error");
+                placeholder.innerHTML = '<p>Upload Failed</p>';
+            }
+        }
+
+        async function savePromo() {
+            if (!activeOwnerId || !currentPromoEvent) return;
+            const btn = document.getElementById('btn-save-promo');
+            const oldText = btn.textContent;
+            btn.textContent = "SAVING...";
+            btn.disabled = true;
+
+            const imageUrl = document.getElementById('promo-preview').src;
+            const startDate = document.getElementById('promo-start-date').value;
+            const endDate = document.getElementById('promo-end-date').value;
+            const displayMode = document.getElementById('promo-display-mode').value;
+            const isActive = document.getElementById('promo-active').checked;
+
+            try {
+                const { error } = await sb.from('promos').upsert({
+                    user_id: activeOwnerId,
+                    domain: activeDomain || 'undetermined',
+                    event_type: currentPromoEvent,
+                    image_url: imageUrl,
+                    start_date: startDate || null,
+                    end_date: endDate || null,
+                    display_mode: displayMode,
+                    is_active: isActive
+                }, { onConflict: 'user_id, event_type' });
+
+                if (error) throw error;
+                showToast("Promo saved successfully!", "success");
+                closePromoModal();
+                loadPromos();
+            } catch (e) {
+                console.error(e);
+                showToast("Error saving promo: " + (e.message || e), "error");
+            } finally {
+                btn.textContent = oldText;
+                btn.disabled = false;
+            }
         }
 
         function syncGalleryComponent() {
