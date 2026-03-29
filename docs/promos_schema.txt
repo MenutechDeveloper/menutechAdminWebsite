@@ -1,0 +1,35 @@
+-- SQL for Promotions table
+CREATE TABLE public.promos (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    domain TEXT NOT NULL,
+    event_type TEXT NOT NULL, -- 'christmas', 'halloween', 'valentine', 'president'
+    image_url TEXT,
+    start_date DATE,
+    end_date DATE,
+    display_mode TEXT DEFAULT 'popup', -- 'popup' or 'section'
+    is_active BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, event_type)
+);
+
+-- Enable RLS
+ALTER TABLE public.promos ENABLE ROW LEVEL SECURITY;
+
+-- Policy for public view (by domain)
+CREATE POLICY "Public read access for promos" ON public.promos
+    FOR SELECT USING (true);
+
+-- Policy for management (admin, developer, or the owner)
+CREATE POLICY "Promo management access" ON public.promos
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = auth.uid()
+            AND (
+                profiles.role = 'admin' OR
+                profiles.role = 'developer' OR
+                profiles.id = promos.user_id
+            )
+        )
+    );

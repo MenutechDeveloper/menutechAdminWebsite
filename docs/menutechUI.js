@@ -341,3 +341,142 @@ window.MenutechGallery = MenutechGallery;
 if (!customElements.get('menutech-gallery')) {
     customElements.define('menutech-gallery', MenutechGallery);
 }
+
+/**
+ * Menutech Promotions Web Component Base Class
+ */
+class MenutechPromoBase extends HTMLElement {
+    constructor(eventType) {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.eventType = eventType;
+        this.config = {
+            url: "https://eemqyrysdgasfjlitads.supabase.co",
+            key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY"
+        };
+        this.supabase = null;
+    }
+
+    async connectedCallback() {
+        await this.initSupabase();
+        this.render();
+    }
+
+    async initSupabase() {
+        if (this.supabase) return;
+        try {
+            const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
+            this.supabase = createClient(this.config.url, this.config.key);
+        } catch (err) {
+            console.error("MenutechPromo Supabase Init Error:", err);
+        }
+    }
+
+    async fetchPromoData(domain) {
+        if (!this.supabase) await this.initSupabase();
+        try {
+            const { data, error } = await this.supabase
+                .from('promos')
+                .select('*')
+                .eq('domain', domain)
+                .eq('event_type', this.eventType)
+                .eq('is_active', true)
+                .single();
+
+            if (error) return null;
+            return data;
+        } catch (err) {
+            return null;
+        }
+    }
+
+    isPromoValid(promo) {
+        if (!promo) return false;
+        const now = new Date();
+        const start = promo.start_date ? new Date(promo.start_date) : null;
+        const end = promo.end_date ? new Date(promo.end_date) : null;
+
+        // Default event dates fallback if no dates provided
+        if (!start && !end) {
+            const currentYear = now.getFullYear();
+            let eventDate;
+            switch(this.eventType) {
+                case 'christmas': eventDate = new Date(currentYear, 11, 25); break;
+                case 'halloween': eventDate = new Date(currentYear, 9, 31); break;
+                case 'valentine': eventDate = new Date(currentYear, 1, 14); break;
+                case 'president': eventDate = new Date(currentYear, 1, 15); break; // Simplified
+            }
+            return now.toDateString() === eventDate.toDateString();
+        }
+
+        if (start && now < start) return false;
+        if (end && now > end) return false;
+        return true;
+    }
+
+    async render() {
+        let domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
+        const promo = await this.fetchPromoData(domain);
+
+        if (!this.isPromoValid(promo)) {
+            this.shadowRoot.innerHTML = '';
+            return;
+        }
+
+        const styles = `
+            <style>
+                .promo-container { font-family: 'Plus Jakarta Sans', sans-serif; }
+                .promo-popup-overlay {
+                    position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+                    display: flex; align-items: center; justify-content: center; z-index: 10000;
+                    animation: fadeIn 0.5s ease;
+                }
+                .promo-popup-card {
+                    position: relative; max-width: 90%; max-height: 90%; border-radius: 30px;
+                    overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+                    animation: scaleUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                .promo-popup-card img { display: block; max-width: 100%; max-height: 80vh; object-fit: contain; }
+                .close-btn {
+                    position: absolute; top: 20px; right: 20px; width: 40px; height: 40px;
+                    border-radius: 50%; background: white; border: none; cursor: pointer;
+                    display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+                }
+                .promo-section { width: 100%; max-width: 1200px; margin: 40px auto; padding: 0 24px; }
+                .promo-section img { width: 100%; border-radius: 28px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); }
+
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+            </style>
+        `;
+
+        if (promo.display_mode === 'popup') {
+            this.shadowRoot.innerHTML = `
+                ${styles}
+                <div class="promo-popup-overlay" id="promo-overlay">
+                    <div class="promo-popup-card">
+                        <button class="close-btn" id="close-promo">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;color:#000"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                        <img src="${promo.image_url}" alt="${this.eventType} promotion">
+                    </div>
+                </div>
+            `;
+            this.shadowRoot.getElementById('close-promo').onclick = () => {
+                this.shadowRoot.getElementById('promo-overlay').style.display = 'none';
+            };
+        } else {
+            this.shadowRoot.innerHTML = `
+                ${styles}
+                <div class="promo-section">
+                    <img src="${promo.image_url}" alt="${this.eventType} promotion">
+                </div>
+            `;
+        }
+    }
+}
+
+customElements.define('menutech-christmas', class extends MenutechPromoBase { constructor() { super('christmas'); } });
+customElements.define('menutech-halloween', class extends MenutechPromoBase { constructor() { super('halloween'); } });
+customElements.define('menutech-valentine', class extends MenutechPromoBase { constructor() { super('valentine'); } });
+customElements.define('menutech-president', class extends MenutechPromoBase { constructor() { super('president'); } });
