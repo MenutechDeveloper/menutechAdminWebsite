@@ -159,10 +159,10 @@ class MenutechGallery extends HTMLElement {
 
                     .gallery-bento {
                         display: grid;
-                        grid-template-columns: repeat(4, 1fr);
-                        grid-auto-rows: minmax(200px, auto);
+                        grid-template-columns: repeat(6, 1fr);
+                        grid-auto-rows: 160px;
                         grid-auto-flow: dense;
-                        gap: 20px;
+                        gap: 15px;
                         padding: 0;
                         margin: 0 auto;
                     }
@@ -170,36 +170,51 @@ class MenutechGallery extends HTMLElement {
                     .gallery-item {
                         position: relative;
                         border-radius: 28px;
-                        overflow: hidden;
                         background: #14161d;
                         box-shadow: 0 12px 30px -10px rgba(0,0,0,0.3);
-                        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                        transition: transform 0.5s ease;
                         aspect-ratio: 1/1;
+                        z-index: 1;
                     }
 
-                    .gallery-bento .gallery-item { aspect-ratio: auto; min-height: 200px; }
-                    .gallery-item:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4); }
-                    .gallery-item img {
+                    .gallery-bento .gallery-item { aspect-ratio: auto; border-radius: 32px; }
+                    .gallery-item:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4); z-index: 50; }
+
+                    .item-inner {
+                        width: 100%;
+                        height: 100%;
+                        border-radius: 28px;
+                        overflow: hidden;
+                        position: relative;
+                        background: #14161d;
+                        pointer-events: none;
+                    }
+                    .gallery-bento .item-inner { border-radius: 32px; }
+
+                    .item-inner img {
                         width: 100%;
                         height: 100%;
                         object-fit: cover;
-                        transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+                        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                        pointer-events: none;
                     }
-                    .gallery-item:hover img { transform: scale(1.06); }
+                    .gallery-item:hover .item-inner img { transform: scale(1.05); }
 
                     /* Admin Styles */
                     .admin-overlay {
                         position: absolute;
                         inset: 0;
-                        background: rgba(0,0,0,0.6);
+                        background: rgba(0,0,0,0.3);
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         opacity: 0;
                         transition: 0.3s;
-                        backdrop-filter: blur(4px);
                         z-index: 10;
+                        border-radius: 28px;
+                        pointer-events: none;
                     }
+                    .gallery-bento .admin-overlay { border-radius: 32px; }
                     .gallery-item:hover .admin-overlay, .swiper-slide:hover .admin-overlay {
                         opacity: 1;
                     }
@@ -207,13 +222,14 @@ class MenutechGallery extends HTMLElement {
                         background: #ef4444;
                         color: white;
                         border: none;
-                        padding: 10px 20px;
+                        padding: 8px 16px;
                         border-radius: 12px;
                         font-weight: 700;
-                        font-size: 0.8rem;
+                        font-size: 0.75rem;
                         cursor: pointer;
                         transform: translateY(10px);
                         transition: 0.3s;
+                        pointer-events: auto;
                     }
                     .gallery-item:hover .btn-delete, .swiper-slide:hover .btn-delete {
                         transform: translateY(0);
@@ -223,59 +239,67 @@ class MenutechGallery extends HTMLElement {
                         transform: scale(1.05);
                     }
 
-                    /* Bento Controls */
-                    .bento-controls {
+                    /* Bento Pro Controls */
+                    .resize-handle {
                         position: absolute;
-                        bottom: 15px;
-                        left: 15px;
-                        right: 15px;
+                        bottom: 10px;
+                        right: 10px;
+                        width: 24px;
+                        height: 24px;
+                        background: white;
+                        border-radius: 8px;
+                        cursor: nwse-resize;
+                        z-index: 60;
                         display: flex;
-                        flex-direction: column;
-                        gap: 8px;
+                        align-items: center;
+                        justify-content: center;
                         opacity: 0;
                         transition: 0.3s;
-                        z-index: 20;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
                     }
-                    .gallery-item:hover .bento-controls { opacity: 1; }
-                    .bento-row { display: flex; gap: 8px; justify-content: center; }
-                    .btn-bento {
-                        background: rgba(255, 255, 255, 0.2);
-                        backdrop-filter: blur(10px);
-                        border: 1px solid rgba(255, 255, 255, 0.3);
-                        color: white;
-                        padding: 6px 12px;
-                        border-radius: 10px;
-                        font-size: 0.7rem;
-                        font-weight: 700;
-                        cursor: pointer;
-                        transition: 0.2s;
+                    .resize-handle::after {
+                        content: '';
+                        width: 10px;
+                        height: 10px;
+                        border-right: 2px solid #1a1c1e;
+                        border-bottom: 2px solid #1a1c1e;
                     }
-                    .btn-bento:hover { background: #ff9533; border-color: transparent; }
+                    .gallery-item:hover .resize-handle { opacity: 1; }
 
                     .slant-handle {
                         position: absolute;
-                        top: 0;
-                        width: 12px;
-                        height: 30px;
-                        background: #ff9533;
+                        top: -8px;
+                        width: 24px;
+                        height: 24px;
+                        background: white;
                         cursor: ns-resize;
-                        z-index: 30;
-                        border-radius: 6px;
+                        z-index: 60;
+                        border-radius: 50%;
                         opacity: 0;
                         transition: 0.3s;
-                        border: 2px solid white;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                        border: 2px solid #ff9533;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    .slant-handle::after {
+                        content: '';
+                        width: 8px;
+                        height: 2px;
+                        background: #ff9533;
+                        border-radius: 1px;
                     }
                     .gallery-item:hover .slant-handle { opacity: 1; }
-                    .handle-left { left: 15px; }
-                    .handle-right { right: 15px; }
+                    .handle-left { left: 25px; }
+                    .handle-right { right: 25px; }
 
                     .loader { text-align: center; padding: 60px; color: #ff9533; font-weight: 600; letter-spacing: 1px; }
 
                     @media (max-width: 768px) {
                         :host { margin: 40px auto; padding: 0 16px; }
                         .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-                        .gallery-bento { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-                        .gallery-bento .gallery-item { min-height: 150px; }
+                        .gallery-bento { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 100px; gap: 12px; }
                     }
 
                     /* Slider specific styles */
@@ -366,30 +390,33 @@ class MenutechGallery extends HTMLElement {
             } else {
                 const isBento = type === 'bento';
                 const itemsHtml = images.map((img, i) => {
-                    let style = '';
-                    let bentoData = { s: '1x1', l: 0, r: 0 };
+                    let outerStyle = '';
+                    let innerStyle = '';
+                    let bentoData = { s: '2x2', l: 0, r: 0 };
 
                     if (isBento) {
                         try {
                             const hash = img.image_url.split('#')[1];
                             if (hash) {
                                 const params = new URLSearchParams(hash);
-                                bentoData.s = params.get('s') || '1x1';
+                                bentoData.s = params.get('s') || '2x2';
                                 bentoData.l = parseInt(params.get('l')) || 0;
                                 bentoData.r = parseInt(params.get('r')) || 0;
                             }
                         } catch(e) {}
 
                         const [w, h] = bentoData.s.split('x').map(Number);
-                        style = `grid-column: span ${w}; grid-row: span ${h};`;
+                        outerStyle = `grid-column: span ${w}; grid-row: span ${h};`;
                         if (bentoData.l !== 0 || bentoData.r !== 0) {
-                            style += ` clip-path: polygon(0 ${bentoData.l}%, 100% ${bentoData.r}%, 100% 100%, 0% 100%);`;
+                            innerStyle = `clip-path: polygon(0 ${bentoData.l}%, 100% ${bentoData.r}%, 100% 100%, 0% 100%);`;
                         }
                     }
 
                     return `
-                    <div class="gallery-item ${this.getPattern(i)}" style="${style}" data-index="${i}" data-s="${bentoData.s}" data-l="${bentoData.l}" data-r="${bentoData.r}">
-                        <img src="${img.image_url.split('#')[0]}" loading="lazy">
+                    <div class="gallery-item ${this.getPattern(i)}" style="${outerStyle}" data-index="${i}" data-s="${bentoData.s}" data-l="${bentoData.l}" data-r="${bentoData.r}">
+                        <div class="item-inner" style="${innerStyle}">
+                            <img src="${img.image_url.split('#')[0]}" loading="lazy">
+                        </div>
                         ${isAdmin ? `
                             <div class="admin-overlay">
                                 <button class="btn-delete" data-index="${i}">Remove</button>
@@ -397,12 +424,7 @@ class MenutechGallery extends HTMLElement {
                             ${isBento ? `
                                 <div class="slant-handle handle-left" data-side="l"></div>
                                 <div class="slant-handle handle-right" data-side="r"></div>
-                                <div class="bento-controls">
-                                    <div class="bento-row">
-                                        <button class="btn-bento btn-size" data-index="${i}">Size: ${bentoData.s}</button>
-                                        <button class="btn-bento btn-reset" data-index="${i}">Reset</button>
-                                    </div>
-                                </div>
+                                <div class="resize-handle" data-index="${i}"></div>
                             ` : ''}
                         ` : ''}
                     </div>
@@ -413,56 +435,93 @@ class MenutechGallery extends HTMLElement {
 
             if (isAdmin) {
                 if (type === 'bento') {
-                    const sizes = ['1x1', '2x1', '1x2', '2x2'];
-                    this.shadowRoot.querySelectorAll('.btn-size').forEach(btn => {
-                        btn.onclick = (e) => {
-                            e.stopPropagation();
-                            const idx = btn.getAttribute('data-index');
-                            const item = this.shadowRoot.querySelector(`.gallery-item[data-index="${idx}"]`);
-                            let current = item.getAttribute('data-s');
-                            let next = sizes[(sizes.indexOf(current) + 1) % sizes.length];
-                            this.updateBentoItem(idx, { s: next });
-                        };
-                    });
-                    this.shadowRoot.querySelectorAll('.btn-reset').forEach(btn => {
-                        btn.onclick = (e) => {
-                            e.stopPropagation();
-                            this.updateBentoItem(btn.getAttribute('data-index'), { l: 0, r: 0, s: '1x1' });
-                        };
-                    });
+                    let draggingSlant = null;
+                    let draggingResize = null;
 
-                    let dragging = null;
                     const onMove = (e) => {
-                        if (!dragging) return;
+                        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                        const deltaY = clientY - dragging.initialY;
-                        const rect = dragging.item.getBoundingClientRect();
-                        const deltaPercent = Math.round((deltaY / rect.height) * 100);
-                        let newVal = Math.max(0, Math.min(50, dragging.initialVal + deltaPercent));
-                        this.updateBentoItem(dragging.item.getAttribute('data-index'), { [dragging.side]: newVal }, false);
-                    };
-                    const onEnd = () => {
-                        if (dragging) {
-                            const idx = dragging.item.getAttribute('data-index');
-                            dragging = null;
-                            this.updateBentoItem(idx, {}, true);
-                            window.removeEventListener('mousemove', onMove);
-                            window.removeEventListener('mouseup', onEnd);
+
+                        if (draggingSlant) {
+                            const deltaY = clientY - draggingSlant.initialY;
+                            const rect = draggingSlant.item.getBoundingClientRect();
+                            const deltaPercent = Math.round((deltaY / rect.height) * 100);
+                            let newVal = Math.max(0, Math.min(60, draggingSlant.initialVal + deltaPercent));
+                            this.updateBentoItem(draggingSlant.item.getAttribute('data-index'), { [draggingSlant.side]: newVal }, false);
+                        }
+
+                        if (draggingResize) {
+                            const deltaX = clientX - draggingResize.initialX;
+                            const deltaY = clientY - draggingResize.initialY;
+
+                            // Estimate grid cell dimensions
+                            const parent = draggingResize.item.parentElement;
+                            const gridGap = 15;
+                            const isMobile = window.innerWidth <= 768;
+                            const cols = isMobile ? 3 : 6;
+                            const cellW = (parent.offsetWidth - ((cols - 1) * gridGap)) / cols;
+                            const cellH = isMobile ? 100 : 160;
+
+                            const newW = Math.max(1, Math.min(cols, Math.round((draggingResize.initialW + deltaX) / (cellW + gridGap))));
+                            const newH = Math.max(1, Math.min(8, Math.round((draggingResize.initialH + deltaY) / (cellH + gridGap))));
+
+                            this.updateBentoItem(draggingResize.item.getAttribute('data-index'), { s: `${newW}x${newH}` }, false);
                         }
                     };
-                    this.shadowRoot.querySelectorAll('.slant-handle').forEach(handle => {
-                        handle.onmousedown = (e) => {
+
+                    const onEnd = () => {
+                        if (draggingSlant || draggingResize) {
+                            const item = (draggingSlant || draggingResize).item;
+                            draggingSlant = null;
+                            draggingResize = null;
+                            this.updateBentoItem(item.getAttribute('data-index'), {}, true);
+                            window.removeEventListener('mousemove', onMove);
+                            window.removeEventListener('mouseup', onEnd);
+                            window.removeEventListener('touchmove', onMove);
+                            window.removeEventListener('touchend', onEnd);
+                        }
+                    };
+
+                    this.shadowRoot.querySelectorAll('.resize-handle').forEach(handle => {
+                        const startDrag = (e) => {
                             e.preventDefault(); e.stopPropagation();
                             const item = handle.closest('.gallery-item');
-                            dragging = {
+                            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                            draggingResize = {
                                 item,
-                                side: handle.getAttribute('data-side'),
-                                initialY: e.clientY,
-                                initialVal: parseInt(item.getAttribute(`data-${handle.getAttribute('data-side')}`))
+                                initialX: clientX,
+                                initialY: clientY,
+                                initialW: item.offsetWidth,
+                                initialH: item.offsetHeight
                             };
                             window.addEventListener('mousemove', onMove);
                             window.addEventListener('mouseup', onEnd);
+                            window.addEventListener('touchmove', onMove, { passive: false });
+                            window.addEventListener('touchend', onEnd);
                         };
+                        handle.onmousedown = startDrag;
+                        handle.ontouchstart = startDrag;
+                    });
+
+                    this.shadowRoot.querySelectorAll('.slant-handle').forEach(handle => {
+                        const startDrag = (e) => {
+                            e.preventDefault(); e.stopPropagation();
+                            const item = handle.closest('.gallery-item');
+                            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                            draggingSlant = {
+                                item,
+                                side: handle.getAttribute('data-side'),
+                                initialY: clientY,
+                                initialVal: parseInt(item.getAttribute(`data-${handle.getAttribute('data-side')}`)) || 0
+                            };
+                            window.addEventListener('mousemove', onMove);
+                            window.addEventListener('mouseup', onEnd);
+                            window.addEventListener('touchmove', onMove, { passive: false });
+                            window.addEventListener('touchend', onEnd);
+                        };
+                        handle.onmousedown = startDrag;
+                        handle.ontouchstart = startDrag;
                     });
                 }
                 this.shadowRoot.querySelectorAll('.btn-delete').forEach(btn => {
@@ -484,23 +543,21 @@ class MenutechGallery extends HTMLElement {
 
     updateBentoItem(idx, updates, shouldDispatch = true) {
         const item = this.shadowRoot.querySelector(`.gallery-item[data-index="${idx}"]`);
-        if (!item) return;
+        const inner = item ? item.querySelector('.item-inner') : null;
+        if (!item || !inner) return;
 
         if (updates.s) item.setAttribute('data-s', updates.s);
         if (updates.l !== undefined) item.setAttribute('data-l', updates.l);
         if (updates.r !== undefined) item.setAttribute('data-r', updates.r);
 
-        const s = item.getAttribute('data-s');
-        const l = item.getAttribute('data-l');
-        const r = item.getAttribute('data-r');
+        const s = item.getAttribute('data-s') || '2x2';
+        const l = item.getAttribute('data-l') || '0';
+        const r = item.getAttribute('data-r') || '0';
 
         const [w, h] = s.split('x').map(Number);
         item.style.gridColumn = `span ${w}`;
         item.style.gridRow = `span ${h}`;
-        item.style.clipPath = `polygon(0 ${l}%, 100% ${r}%, 100% 100%, 0% 100%)`;
-
-        const btnSize = item.querySelector('.btn-size');
-        if (btnSize) btnSize.textContent = `Size: ${s}`;
+        inner.style.clipPath = `polygon(0 ${l}%, 100% ${r}%, 100% 100%, 0% 100%)`;
 
         if (shouldDispatch) {
             this.dispatchEvent(new CustomEvent('update-layout', {
