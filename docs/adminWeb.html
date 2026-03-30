@@ -634,9 +634,17 @@
                 const { index, layout } = e.detail;
                 if (localGallery[index]) {
                     const baseUrl = localGallery[index].image_url.split('#')[0];
-                    localGallery[index].image_url = `${baseUrl}#s=${layout.s}&l=${layout.l}&r=${layout.r}`;
+                    localGallery[index].image_url = `${baseUrl}#s=${layout.s}`;
                     document.getElementById('floating-footer').classList.remove('hidden');
                 }
+            });
+
+            mainGallery.addEventListener('reorder-images', (e) => {
+                const { from, to } = e.detail;
+                const item = localGallery.splice(from, 1)[0];
+                localGallery.splice(to, 0, item);
+                syncGalleryComponent();
+                document.getElementById('floating-footer').classList.remove('hidden');
             });
 
             const dz = document.getElementById('drop-zone'), fi = document.getElementById('file-input');
