@@ -164,15 +164,22 @@ class MenutechGallery extends HTMLElement {
                     const rect = target.getBoundingClientRect();
                     const next = (e.clientX - rect.left) > (rect.width / 2);
                     container.insertBefore(ghost, next ? target.nextSibling : target);
-                    container.insertBefore(dragItem, ghost);
                 }
             };
 
             item.ondrop = (e) => {
                 e.preventDefault();
+                if (!dragItem) return;
+
+                if (ghost.parentNode) {
+                    container.insertBefore(dragItem, ghost);
+                    ghost.parentNode.removeChild(ghost);
+                }
+
                 const newItems = Array.from(container.querySelectorAll('.gallery-item:not(.ghost)'));
                 const from = parseInt(dragItem.getAttribute('data-index'));
                 const to = newItems.indexOf(dragItem);
+
                 if (from !== -1 && to !== -1 && from !== to) {
                     this.dispatchEvent(new CustomEvent('reorder-images', {
                         detail: { from, to },
@@ -187,7 +194,6 @@ class MenutechGallery extends HTMLElement {
         let startX, startY, startW, startH, activeItem = null, activeHandle = null;
         let resizeGhost = document.createElement('div');
         resizeGhost.className = 'gallery-item ghost resize-ghost';
-        // Non-absolute so it follows grid flow
         resizeGhost.style.zIndex = '1000';
         resizeGhost.style.pointerEvents = 'none';
 
@@ -205,7 +211,6 @@ class MenutechGallery extends HTMLElement {
             let newW = startW;
             let newH = startH;
 
-            // Resize Logic (All 4 Corners)
             if (activeHandle.classList.contains('handle-br')) {
                 newW = startW + Math.round(deltaX / gridColWidth);
                 newH = startH + Math.round(deltaY / gridRowHeight);
@@ -223,18 +228,26 @@ class MenutechGallery extends HTMLElement {
             newW = Math.max(1, Math.min(isMobile ? 3 : 6, newW));
             newH = Math.max(1, Math.min(6, newH));
 
-            resizeGhost.style.gridColumn = `span ${newW}`;
-            resizeGhost.style.gridRow = `span ${newH}`;
+            const rect = activeItem.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            const colStart = Math.round((rect.left - containerRect.left) / gridColWidth) + 1;
+            const rowStart = Math.round((rect.top - containerRect.top) / gridRowHeight) + 1;
+
+            resizeGhost.style.gridColumn = `${colStart} / span ${newW}`;
+            resizeGhost.style.gridRow = `${rowStart} / span ${newH}`;
         };
 
         const onMouseUp = () => {
             if (activeItem) {
                 const idx = parseInt(activeItem.getAttribute('data-index'));
-                const sw = resizeGhost.style.gridColumn.split(' ')[1];
-                const sh = resizeGhost.style.gridRow.split(' ')[1];
+                const colPart = resizeGhost.style.gridColumn.split('span ')[1];
+                const rowPart = resizeGhost.style.gridRow.split('span ')[1];
+                const sw = colPart ? colPart.trim() : '2';
+                const sh = rowPart ? rowPart.trim() : '2';
 
                 activeItem.style.gridColumn = `span ${sw}`;
                 activeItem.style.gridRow = `span ${sh}`;
+                activeItem.style.opacity = '1';
 
                 this.dispatchEvent(new CustomEvent('update-layout', {
                     detail: { index: idx, layout: { s: `${sw}x${sh}` } },
@@ -261,16 +274,28 @@ class MenutechGallery extends HTMLElement {
                 activeHandle = handle;
                 activeItem.classList.add('is-resizing');
 
+                const isMobile = window.innerWidth <= 768;
+                const gridColWidth = container.offsetWidth / (isMobile ? 3 : 6);
+                const gridRowHeight = isMobile ? 100 : 150;
+
                 startX = e.clientX || (e.touches && e.touches[0].clientX);
                 startY = e.clientY || (e.touches && e.touches[0].clientY);
-                startW = parseInt(activeItem.style.gridColumn.split(' ')[1]) || 2;
-                startH = parseInt(activeItem.style.gridRow.split(' ')[1]) || 2;
 
-                resizeGhost.style.gridColumn = activeItem.style.gridColumn;
-                resizeGhost.style.gridRow = activeItem.style.gridRow;
+                const colMatch = activeItem.style.gridColumn.match(/span (\d+)/);
+                const rowMatch = activeItem.style.gridRow.match(/span (\d+)/);
+                startW = colMatch ? parseInt(colMatch[1]) : 2;
+                startH = rowMatch ? parseInt(rowMatch[1]) : 2;
 
-                // Insert ghost AFTER active item to avoid shifting it initially
-                activeItem.parentNode.insertBefore(resizeGhost, activeItem.nextSibling);
+                const rect = activeItem.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                const colStart = Math.round((rect.left - containerRect.left) / gridColWidth) + 1;
+                const rowStart = Math.round((rect.top - containerRect.top) / gridRowHeight) + 1;
+
+                resizeGhost.style.gridColumn = `${colStart} / span ${startW}`;
+                resizeGhost.style.gridRow = `${rowStart} / span ${startH}`;
+
+                container.appendChild(resizeGhost);
+                activeItem.style.opacity = '0.3';
 
                 window.addEventListener('mousemove', onMouseMove);
                 window.addEventListener('mouseup', onMouseUp);
@@ -301,7 +326,7 @@ class MenutechGallery extends HTMLElement {
             const styles = `
                 <style>
                     :host { display: block; width: 100%; max-width: 1200px; margin: 80px auto; padding: 0 24px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; clear: both; text-align: center; }
-                    :host([admin-mode]) { margin: 20px auto; }
+                    :host([admin-mode]) { margin: 20px auto; margin-bottom: 120px; }
                     .gallery-grid {
                         display: grid;
                         grid-template-columns: repeat(4, 1fr);
@@ -319,6 +344,13 @@ class MenutechGallery extends HTMLElement {
                         gap: 20px;
                         padding: 0;
                         margin: 0 auto;
+                        position: relative;
+                    }
+                    :host([admin-mode]) .gallery-bento {
+                        background-image:
+                            linear-gradient(to right, rgba(255,149,51,0.05) 1px, transparent 1px),
+                            linear-gradient(to bottom, rgba(255,149,51,0.05) 1px, transparent 1px);
+                        background-size: calc((100% + 20px) / 6) 170px;
                     }
 
                     .gallery-item {
@@ -407,12 +439,19 @@ class MenutechGallery extends HTMLElement {
                     }
                     .gallery-item:hover .resize-handle { display: block; }
 
-                    /* Corners */
-                    .handle-corner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; }
-                    .handle-tl { top: -5px; left: -5px; cursor: nwse-resize; }
-                    .handle-tr { top: -5px; right: -5px; cursor: nesw-resize; }
-                    .handle-bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
-                    .handle-br { bottom: -5px; right: -5px; cursor: nwse-resize; }
+                    /* Corners - Professional minimalist dots */
+                    .handle-corner {
+                        width: 12px; height: 12px;
+                        background: #fff;
+                        border: 2px solid var(--orange, #ff9533);
+                        border-radius: 50%;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                        z-index: 30;
+                    }
+                    .handle-tl { top: -6px; left: -6px; cursor: nwse-resize; }
+                    .handle-tr { top: -6px; right: -6px; cursor: nesw-resize; }
+                    .handle-bl { bottom: -6px; left: -6px; cursor: nesw-resize; }
+                    .handle-br { bottom: -6px; right: -6px; cursor: nwse-resize; }
 
                     @media (max-width: 768px) {
                         :host { margin: 40px auto; padding: 0 16px; }
