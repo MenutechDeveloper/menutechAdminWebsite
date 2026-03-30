@@ -156,6 +156,17 @@ class MenutechGallery extends HTMLElement {
                         padding: 0;
                         margin: 0 auto;
                     }
+
+                    .gallery-bento {
+                        display: grid;
+                        grid-template-columns: repeat(4, 1fr);
+                        grid-auto-rows: minmax(200px, auto);
+                        grid-auto-flow: dense;
+                        gap: 20px;
+                        padding: 0;
+                        margin: 0 auto;
+                    }
+
                     .gallery-item {
                         position: relative;
                         border-radius: 28px;
@@ -165,6 +176,8 @@ class MenutechGallery extends HTMLElement {
                         transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
                         aspect-ratio: 1/1;
                     }
+
+                    .gallery-bento .gallery-item { aspect-ratio: auto; min-height: 200px; }
                     .gallery-item:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4); }
                     .gallery-item img {
                         width: 100%;
@@ -210,11 +223,59 @@ class MenutechGallery extends HTMLElement {
                         transform: scale(1.05);
                     }
 
+                    /* Bento Controls */
+                    .bento-controls {
+                        position: absolute;
+                        bottom: 15px;
+                        left: 15px;
+                        right: 15px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                        opacity: 0;
+                        transition: 0.3s;
+                        z-index: 20;
+                    }
+                    .gallery-item:hover .bento-controls { opacity: 1; }
+                    .bento-row { display: flex; gap: 8px; justify-content: center; }
+                    .btn-bento {
+                        background: rgba(255, 255, 255, 0.2);
+                        backdrop-filter: blur(10px);
+                        border: 1px solid rgba(255, 255, 255, 0.3);
+                        color: white;
+                        padding: 6px 12px;
+                        border-radius: 10px;
+                        font-size: 0.7rem;
+                        font-weight: 700;
+                        cursor: pointer;
+                        transition: 0.2s;
+                    }
+                    .btn-bento:hover { background: #ff9533; border-color: transparent; }
+
+                    .slant-handle {
+                        position: absolute;
+                        top: 0;
+                        width: 12px;
+                        height: 30px;
+                        background: #ff9533;
+                        cursor: ns-resize;
+                        z-index: 30;
+                        border-radius: 6px;
+                        opacity: 0;
+                        transition: 0.3s;
+                        border: 2px solid white;
+                    }
+                    .gallery-item:hover .slant-handle { opacity: 1; }
+                    .handle-left { left: 15px; }
+                    .handle-right { right: 15px; }
+
                     .loader { text-align: center; padding: 60px; color: #ff9533; font-weight: 600; letter-spacing: 1px; }
 
                     @media (max-width: 768px) {
                         :host { margin: 40px auto; padding: 0 16px; }
                         .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+                        .gallery-bento { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+                        .gallery-bento .gallery-item { min-height: 150px; }
                     }
 
                     /* Slider specific styles */
@@ -303,21 +364,107 @@ class MenutechGallery extends HTMLElement {
                     });
                 }
             } else {
-                const itemsHtml = images.map((img, i) => `
-                    <div class="gallery-item ${this.getPattern(i)}">
-                        <img src="${img.image_url}" loading="lazy">
+                const isBento = type === 'bento';
+                const itemsHtml = images.map((img, i) => {
+                    let style = '';
+                    let bentoData = { s: '1x1', l: 0, r: 0 };
+
+                    if (isBento) {
+                        try {
+                            const hash = img.image_url.split('#')[1];
+                            if (hash) {
+                                const params = new URLSearchParams(hash);
+                                bentoData.s = params.get('s') || '1x1';
+                                bentoData.l = parseInt(params.get('l')) || 0;
+                                bentoData.r = parseInt(params.get('r')) || 0;
+                            }
+                        } catch(e) {}
+
+                        const [w, h] = bentoData.s.split('x').map(Number);
+                        style = `grid-column: span ${w}; grid-row: span ${h};`;
+                        if (bentoData.l !== 0 || bentoData.r !== 0) {
+                            style += ` clip-path: polygon(0 ${bentoData.l}%, 100% ${bentoData.r}%, 100% 100%, 0% 100%);`;
+                        }
+                    }
+
+                    return `
+                    <div class="gallery-item ${this.getPattern(i)}" style="${style}" data-index="${i}" data-s="${bentoData.s}" data-l="${bentoData.l}" data-r="${bentoData.r}">
+                        <img src="${img.image_url.split('#')[0]}" loading="lazy">
                         ${isAdmin ? `
                             <div class="admin-overlay">
                                 <button class="btn-delete" data-index="${i}">Remove</button>
                             </div>
+                            ${isBento ? `
+                                <div class="slant-handle handle-left" data-side="l"></div>
+                                <div class="slant-handle handle-right" data-side="r"></div>
+                                <div class="bento-controls">
+                                    <div class="bento-row">
+                                        <button class="btn-bento btn-size" data-index="${i}">Size: ${bentoData.s}</button>
+                                        <button class="btn-bento btn-reset" data-index="${i}">Reset</button>
+                                    </div>
+                                </div>
+                            ` : ''}
                         ` : ''}
                     </div>
-                `).join('');
+                `}).join('');
 
-                this.shadowRoot.innerHTML = `${styles}<div class="gallery-grid">${itemsHtml}</div>`;
+                this.shadowRoot.innerHTML = `${styles}<div class="${isBento ? 'gallery-bento' : 'gallery-grid'}">${itemsHtml}</div>`;
             }
 
             if (isAdmin) {
+                if (type === 'bento') {
+                    const sizes = ['1x1', '2x1', '1x2', '2x2'];
+                    this.shadowRoot.querySelectorAll('.btn-size').forEach(btn => {
+                        btn.onclick = (e) => {
+                            e.stopPropagation();
+                            const idx = btn.getAttribute('data-index');
+                            const item = this.shadowRoot.querySelector(`.gallery-item[data-index="${idx}"]`);
+                            let current = item.getAttribute('data-s');
+                            let next = sizes[(sizes.indexOf(current) + 1) % sizes.length];
+                            this.updateBentoItem(idx, { s: next });
+                        };
+                    });
+                    this.shadowRoot.querySelectorAll('.btn-reset').forEach(btn => {
+                        btn.onclick = (e) => {
+                            e.stopPropagation();
+                            this.updateBentoItem(btn.getAttribute('data-index'), { l: 0, r: 0, s: '1x1' });
+                        };
+                    });
+
+                    let dragging = null;
+                    const onMove = (e) => {
+                        if (!dragging) return;
+                        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                        const deltaY = clientY - dragging.initialY;
+                        const rect = dragging.item.getBoundingClientRect();
+                        const deltaPercent = Math.round((deltaY / rect.height) * 100);
+                        let newVal = Math.max(0, Math.min(50, dragging.initialVal + deltaPercent));
+                        this.updateBentoItem(dragging.item.getAttribute('data-index'), { [dragging.side]: newVal }, false);
+                    };
+                    const onEnd = () => {
+                        if (dragging) {
+                            const idx = dragging.item.getAttribute('data-index');
+                            dragging = null;
+                            this.updateBentoItem(idx, {}, true);
+                            window.removeEventListener('mousemove', onMove);
+                            window.removeEventListener('mouseup', onEnd);
+                        }
+                    };
+                    this.shadowRoot.querySelectorAll('.slant-handle').forEach(handle => {
+                        handle.onmousedown = (e) => {
+                            e.preventDefault(); e.stopPropagation();
+                            const item = handle.closest('.gallery-item');
+                            dragging = {
+                                item,
+                                side: handle.getAttribute('data-side'),
+                                initialY: e.clientY,
+                                initialVal: parseInt(item.getAttribute(`data-${handle.getAttribute('data-side')}`))
+                            };
+                            window.addEventListener('mousemove', onMove);
+                            window.addEventListener('mouseup', onEnd);
+                        };
+                    });
+                }
                 this.shadowRoot.querySelectorAll('.btn-delete').forEach(btn => {
                     btn.onclick = (e) => {
                         e.stopPropagation();
@@ -332,6 +479,35 @@ class MenutechGallery extends HTMLElement {
             }
         } finally {
             this._rendering = false;
+        }
+    }
+
+    updateBentoItem(idx, updates, shouldDispatch = true) {
+        const item = this.shadowRoot.querySelector(`.gallery-item[data-index="${idx}"]`);
+        if (!item) return;
+
+        if (updates.s) item.setAttribute('data-s', updates.s);
+        if (updates.l !== undefined) item.setAttribute('data-l', updates.l);
+        if (updates.r !== undefined) item.setAttribute('data-r', updates.r);
+
+        const s = item.getAttribute('data-s');
+        const l = item.getAttribute('data-l');
+        const r = item.getAttribute('data-r');
+
+        const [w, h] = s.split('x').map(Number);
+        item.style.gridColumn = `span ${w}`;
+        item.style.gridRow = `span ${h}`;
+        item.style.clipPath = `polygon(0 ${l}%, 100% ${r}%, 100% 100%, 0% 100%)`;
+
+        const btnSize = item.querySelector('.btn-size');
+        if (btnSize) btnSize.textContent = `Size: ${s}`;
+
+        if (shouldDispatch) {
+            this.dispatchEvent(new CustomEvent('update-layout', {
+                detail: { index: parseInt(idx), layout: { s, l, r } },
+                bubbles: true,
+                composed: true
+            }));
         }
     }
 }

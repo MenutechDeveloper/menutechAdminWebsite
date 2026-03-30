@@ -417,6 +417,7 @@
                             <div class="segmented-control">
                                 <button class="segment-btn active" data-value="grid" onclick="setGalleryType('grid')">Grid</button>
                                 <button class="segment-btn" data-value="slider" onclick="setGalleryType('slider')">Slider</button>
+                                <button class="segment-btn" data-value="bento" onclick="setGalleryType('bento')">Bento</button>
                             </div>
                         </div>
                         <button id="btn-copy-code" class="btn-copy hidden" style="width: auto; margin-top: 0; padding: 12px 24px;">COPY GALLERY CODE</button>
@@ -627,6 +628,15 @@
             const mainGallery = document.getElementById('main-gallery');
             mainGallery.addEventListener('delete-image', (e) => {
                 removeLocalImage(e.detail.index);
+            });
+
+            mainGallery.addEventListener('update-layout', (e) => {
+                const { index, layout } = e.detail;
+                if (localGallery[index]) {
+                    const baseUrl = localGallery[index].image_url.split('#')[0];
+                    localGallery[index].image_url = `${baseUrl}#s=${layout.s}&l=${layout.l}&r=${layout.r}`;
+                    document.getElementById('floating-footer').classList.remove('hidden');
+                }
             });
 
             const dz = document.getElementById('drop-zone'), fi = document.getElementById('file-input');
