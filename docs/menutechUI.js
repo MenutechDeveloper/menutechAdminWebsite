@@ -127,6 +127,155 @@ class MenutechGallery extends HTMLElement {
         await Promise.all([loadCSS(), loadJS()]);
     }
 
+    initBentoAdmin() {
+        const container = this.shadowRoot.querySelector('.gallery-bento');
+        const items = this.shadowRoot.querySelectorAll('.gallery-item');
+        let dragItem = null;
+        let ghost = document.createElement('div');
+        ghost.className = 'gallery-item ghost';
+
+        // --- Drag and Drop Reordering ---
+        items.forEach(item => {
+            item.ondragstart = (e) => {
+                const isHandle = e.target.closest('.drag-handle');
+                if (!isHandle || item.classList.contains('is-resizing')) {
+                    e.preventDefault();
+                    return;
+                }
+                dragItem = item;
+                item.classList.add('is-dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                ghost.style.gridColumn = item.style.gridColumn;
+                ghost.style.gridRow = item.style.gridRow;
+            };
+
+            item.ondragend = () => {
+                item.classList.remove('is-dragging');
+                if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
+                dragItem = null;
+            };
+
+            item.ondragover = (e) => {
+                e.preventDefault();
+                const target = e.target.closest('.gallery-item');
+                if (target && target !== dragItem && target !== ghost) {
+                    const rect = target.getBoundingClientRect();
+                    const next = (e.clientX - rect.left) > (rect.width / 2);
+                    container.insertBefore(ghost, next ? target.nextSibling : target);
+                    container.insertBefore(dragItem, ghost);
+                }
+            };
+
+            item.ondrop = (e) => {
+                e.preventDefault();
+                const newItems = Array.from(container.querySelectorAll('.gallery-item:not(.ghost)'));
+                const from = parseInt(dragItem.getAttribute('data-index'));
+                const to = newItems.indexOf(dragItem);
+                if (from !== to) {
+                    this.dispatchEvent(new CustomEvent('reorder-images', {
+                        detail: { from, to },
+                        bubbles: true,
+                        composed: true
+                    }));
+                }
+            };
+        });
+
+        // --- Fluid Resizing logic ---
+        let startX, startY, startW, startH, activeItem = null, activeHandle = null;
+        let resizeGhost = document.createElement('div');
+        resizeGhost.className = 'gallery-item ghost resize-ghost';
+        resizeGhost.style.position = 'absolute';
+        resizeGhost.style.zIndex = '1000';
+        resizeGhost.style.pointerEvents = 'none';
+
+        const onMouseMove = (e) => {
+            if (!activeItem) return;
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            const deltaX = clientX - startX;
+            const deltaY = clientY - startY;
+
+            const isMobile = window.innerWidth <= 768;
+            const gridColWidth = container.offsetWidth / (isMobile ? 3 : 6);
+            const gridRowHeight = isMobile ? 100 : 150;
+
+            let newW = startW;
+            let newH = startH;
+
+            // Corners
+            if (activeHandle.classList.contains('handle-br')) {
+                newW = Math.round((startW * gridColWidth + deltaX) / gridColWidth);
+                newH = Math.round((startH * gridRowHeight + deltaY) / gridRowHeight);
+            } else if (activeHandle.classList.contains('handle-bl')) {
+                newW = Math.round((startW * gridColWidth - deltaX) / gridColWidth);
+                newH = Math.round((startH * gridRowHeight + deltaY) / gridRowHeight);
+            } else if (activeHandle.classList.contains('handle-tr')) {
+                newW = Math.round((startW * gridColWidth + deltaX) / gridColWidth);
+                newH = Math.round((startH * gridRowHeight - deltaY) / gridRowHeight);
+            } else if (activeHandle.classList.contains('handle-tl')) {
+                newW = Math.round((startW * gridColWidth - deltaX) / gridColWidth);
+                newH = Math.round((startH * gridRowHeight - deltaY) / gridRowHeight);
+            }
+
+            newW = Math.max(1, Math.min(isMobile ? 3 : 6, newW));
+            newH = Math.max(1, Math.min(6, newH));
+
+            resizeGhost.style.gridColumn = `span ${newW}`;
+            resizeGhost.style.gridRow = `span ${newH}`;
+        };
+
+        const onMouseUp = () => {
+            if (activeItem) {
+                const idx = parseInt(activeItem.getAttribute('data-index'));
+                const sw = resizeGhost.style.gridColumn.split(' ')[1];
+                const sh = resizeGhost.style.gridRow.split(' ')[1];
+
+                activeItem.style.gridColumn = `span ${sw}`;
+                activeItem.style.gridRow = `span ${sh}`;
+
+                this.dispatchEvent(new CustomEvent('update-layout', {
+                    detail: { index: idx, layout: { s: `${sw}x${sh}` } },
+                    bubbles: true,
+                    composed: true
+                }));
+
+                activeItem.classList.remove('is-resizing');
+                if (resizeGhost.parentNode) resizeGhost.parentNode.removeChild(resizeGhost);
+                activeItem = null;
+                activeHandle = null;
+            }
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+            window.removeEventListener('touchmove', onMouseMove);
+            window.removeEventListener('touchend', onMouseUp);
+        };
+
+        this.shadowRoot.querySelectorAll('.resize-handle').forEach(handle => {
+            handle.onmousedown = handle.ontouchstart = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                activeItem = handle.closest('.gallery-item');
+                activeHandle = handle;
+                activeItem.classList.add('is-resizing');
+
+                startX = e.clientX || (e.touches && e.touches[0].clientX);
+                startY = e.clientY || (e.touches && e.touches[0].clientY);
+                startW = parseInt(activeItem.style.gridColumn.split(' ')[1]) || 2;
+                startH = parseInt(activeItem.style.gridRow.split(' ')[1]) || 2;
+
+                resizeGhost.style.gridColumn = activeItem.style.gridColumn;
+                resizeGhost.style.gridRow = activeItem.style.gridRow;
+                container.appendChild(resizeGhost);
+
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+                window.addEventListener('touchmove', onMouseMove);
+                window.addEventListener('touchend', onMouseUp);
+            };
+        });
+    }
+
     async render() {
         if (this._rendering) return;
         this._rendering = true;
@@ -157,12 +306,13 @@ class MenutechGallery extends HTMLElement {
                         margin: 0 auto;
                     }
 
+                    /* Bento Grid Styles */
                     .gallery-bento {
                         display: grid;
                         grid-template-columns: repeat(6, 1fr);
-                        grid-auto-rows: 160px;
+                        grid-auto-rows: 150px;
                         grid-auto-flow: dense;
-                        gap: 15px;
+                        gap: 20px;
                         padding: 0;
                         margin: 0 auto;
                     }
@@ -172,51 +322,52 @@ class MenutechGallery extends HTMLElement {
                         border-radius: 28px;
                         background: #14161d;
                         box-shadow: 0 12px 30px -10px rgba(0,0,0,0.3);
-                        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+                        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s;
                         aspect-ratio: 1/1;
-                        z-index: 1;
+                        user-select: none;
                     }
-
-                    .gallery-bento .gallery-item { aspect-ratio: auto; border-radius: 32px; }
-                    .gallery-item:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4); z-index: 50; }
+                    .gallery-bento .gallery-item { aspect-ratio: auto; }
+                    .gallery-item:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4); }
 
                     .item-inner {
+                        position: relative;
                         width: 100%;
                         height: 100%;
                         border-radius: 28px;
                         overflow: hidden;
-                        position: relative;
-                        background: #14161d;
-                        pointer-events: none;
-                        transition: clip-path 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                        z-index: 1;
                     }
-                    .gallery-bento .item-inner { border-radius: 32px; }
 
-                    .item-inner img {
+                    /* Bento Specific Admin States */
+                    .gallery-item.is-dragging { opacity: 0.5; transform: scale(0.95); z-index: 100; pointer-events: none; }
+                    .gallery-item.is-resizing { transition: none; z-index: 101; }
+                    .ghost { background: var(--orange, #ff9533) !important; opacity: 0.2 !important; border: 2px dashed var(--orange, #ff9533); }
+
+                    .gallery-item img {
                         width: 100%;
                         height: 100%;
                         object-fit: cover;
-                        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                        transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
                         pointer-events: none;
+                        display: block;
                     }
-                    .gallery-item:hover .item-inner img { transform: scale(1.05); }
+                    .gallery-item:hover img { transform: scale(1.06); }
 
                     /* Admin Styles */
                     .admin-overlay {
                         position: absolute;
                         inset: 0;
-                        background: rgba(0,0,0,0.4);
-                        backdrop-filter: blur(8px);
+                        background: rgba(0,0,0,0.6);
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         opacity: 0;
-                        transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                        transition: 0.3s;
+                        backdrop-filter: blur(4px);
                         z-index: 10;
-                        border-radius: 28px;
                         pointer-events: none;
                     }
-                    .gallery-bento .admin-overlay { border-radius: 32px; }
+                    .admin-overlay > * { pointer-events: auto; }
                     .gallery-item:hover .admin-overlay, .swiper-slide:hover .admin-overlay {
                         opacity: 1;
                     }
@@ -224,14 +375,13 @@ class MenutechGallery extends HTMLElement {
                         background: #ef4444;
                         color: white;
                         border: none;
-                        padding: 8px 16px;
+                        padding: 10px 20px;
                         border-radius: 12px;
                         font-weight: 700;
-                        font-size: 0.75rem;
+                        font-size: 0.8rem;
                         cursor: pointer;
                         transform: translateY(10px);
                         transition: 0.3s;
-                        pointer-events: auto;
                     }
                     .gallery-item:hover .btn-delete, .swiper-slide:hover .btn-delete {
                         transform: translateY(0);
@@ -241,83 +391,49 @@ class MenutechGallery extends HTMLElement {
                         transform: scale(1.05);
                     }
 
-                    /* Bento Pro Controls */
-                    .resize-handle {
-                        position: absolute;
-                        bottom: 10px;
-                        right: 10px;
-                        width: 24px;
-                        height: 24px;
-                        background: white;
-                        border-radius: 8px;
-                        cursor: nwse-resize;
-                        z-index: 60;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        opacity: 0;
-                        transition: 0.3s;
-                        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-                    }
-                    .resize-handle::after {
-                        content: '';
-                        width: 10px;
-                        height: 10px;
-                        border-right: 2px solid #1a1c1e;
-                        border-bottom: 2px solid #1a1c1e;
-                    }
-                    .gallery-item:hover .resize-handle { opacity: 1; }
-
-                    .slant-handle {
-                        position: absolute;
-                        top: 10px;
-                        width: 28px;
-                        height: 28px;
-                        background: #ff9533;
-                        cursor: ns-resize;
-                        z-index: 100;
+                    .drag-handle {
+                        width: 44px;
+                        height: 44px;
+                        background: var(--orange, #ff9533);
                         border-radius: 50%;
-                        opacity: 0;
-                        transition: opacity 0.3s, top 0.1s;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        border: 2px solid white;
-                        pointer-events: auto;
+                        cursor: grab;
+                        margin-bottom: 10px;
+                        color: white;
+                        box-shadow: 0 8px 20px rgba(255,149,51,0.3);
                     }
-                    .slant-handle::after {
-                        content: '';
-                        width: 12px;
-                        height: 2px;
-                        background: white;
-                        border-radius: 1px;
-                    }
-                    .gallery-item:hover .slant-handle { opacity: 1; }
-                    .handle-left { left: 10px; }
-                    .handle-right { right: 10px; }
-
-                    .resize-ghost {
-                        position: absolute;
-                        border: 2px dashed #ff9533;
-                        background: rgba(255, 149, 51, 0.1);
-                        pointer-events: none;
-                        z-index: 1000;
-                        display: none;
-                        border-radius: 32px;
-                        transition: none;
-                    }
+                    .drag-handle:active { cursor: grabbing; }
+                    .drag-handle svg { width: 20px; height: 20px; transform: rotate(-45deg); }
 
                     .loader { text-align: center; padding: 60px; color: #ff9533; font-weight: 600; letter-spacing: 1px; }
+
+                    /* Resize Handles - Bento */
+                    .resize-handle {
+                        position: absolute;
+                        background: var(--orange, #ff9533);
+                        z-index: 20;
+                        display: none;
+                        transition: transform 0.2s;
+                    }
+                    .gallery-item:hover .resize-handle { display: block; }
+
+                    /* Corners */
+                    .handle-corner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; }
+                    .handle-tl { top: -5px; left: -5px; cursor: nwse-resize; }
+                    .handle-tr { top: -5px; right: -5px; cursor: nesw-resize; }
+                    .handle-bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
+                    .handle-br { bottom: -5px; right: -5px; cursor: nwse-resize; }
 
                     @media (max-width: 768px) {
                         :host { margin: 40px auto; padding: 0 16px; }
                         .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-                        .gallery-bento { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 100px; gap: 12px; }
+                        .gallery-bento { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 100px; gap: 10px; }
                     }
 
                     /* Slider specific styles */
-                    .swiper { width: 100%; max-width: 800px; margin: 0 auto; padding: 50px 0; overflow: hidden; position: relative; }
+                    .swiper { width: 100%; max-width: 1200px; margin: 0 auto; padding: 50px 0; overflow: hidden; position: relative; }
                     .swiper-wrapper { display: flex; align-items: center; }
                     .swiper-slide {
                         width: 450px;
@@ -401,181 +517,56 @@ class MenutechGallery extends HTMLElement {
                         },
                     });
                 }
-            } else {
-                const isBento = type === 'bento';
+            } else if (type === 'bento') {
                 const itemsHtml = images.map((img, i) => {
-                    let outerStyle = '';
-                    let innerStyle = '';
-                    let bentoData = { s: '2x2', l: 0, r: 0 };
-
-                    if (isBento) {
-                        try {
-                            const hash = img.image_url.split('#')[1];
-                            if (hash) {
-                                const params = new URLSearchParams(hash);
-                                bentoData.s = params.get('s') || '2x2';
-                                bentoData.l = parseInt(params.get('l')) || 0;
-                                bentoData.r = parseInt(params.get('r')) || 0;
-                            }
-                        } catch(e) {}
-
-                        const [w, h] = bentoData.s.split('x').map(Number);
-                        outerStyle = `grid-column: span ${w}; grid-row: span ${h};`;
-                        if (bentoData.l !== 0 || bentoData.r !== 0) {
-                            innerStyle = `clip-path: polygon(0 ${bentoData.l}%, 100% ${bentoData.r}%, 100% 100%, 0% 100%);`;
-                        }
-                    }
+                    const match = img.image_url.match(/#s=(\d)x(\d)/);
+                    const sw = match ? match[1] : 2;
+                    const sh = match ? match[2] : 2;
 
                     return `
-                    <div class="gallery-item ${this.getPattern(i)}" style="${outerStyle}" data-index="${i}" data-s="${bentoData.s}" data-l="${bentoData.l}" data-r="${bentoData.r}">
-                        <div class="item-inner" style="${innerStyle}">
-                            <img src="${img.image_url.split('#')[0]}" loading="lazy">
-                        </div>
-                        ${isAdmin ? `
-                            <div class="admin-overlay">
-                                <button class="btn-delete" data-index="${i}">Remove</button>
+                        <div class="gallery-item" data-index="${i}" style="grid-column: span ${sw}; grid-row: span ${sh};" draggable="${isAdmin}">
+                            <div class="item-inner">
+                                <img src="${img.image_url}" loading="lazy">
+                                ${isAdmin ? `
+                                    <div class="admin-overlay">
+                                        <div class="drag-handle">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 9l7 7 7-7"/></svg>
+                                        </div>
+                                        <button class="btn-delete" data-index="${i}">Remove</button>
+                                    </div>
+                                ` : ''}
                             </div>
-                            ${isBento ? `
-                                <div class="slant-handle handle-left" data-side="l" style="top: calc(${bentoData.l}% + 10px)"></div>
-                                <div class="slant-handle handle-right" data-side="r" style="top: calc(${bentoData.r}% + 10px)"></div>
-                                <div class="resize-handle" data-index="${i}"></div>
+                            ${isAdmin ? `
+                                <div class="resize-handle handle-corner handle-tl" data-index="${i}"></div>
+                                <div class="resize-handle handle-corner handle-tr" data-index="${i}"></div>
+                                <div class="resize-handle handle-corner handle-bl" data-index="${i}"></div>
+                                <div class="resize-handle handle-corner handle-br" data-index="${i}"></div>
                             ` : ''}
-                        ` : ''}
-                    </div>
-                `}).join('');
+                        </div>
+                    `;
+                }).join('');
 
-            this.shadowRoot.innerHTML = `${styles}<div class="${isBento ? 'gallery-bento' : 'gallery-grid'}">${itemsHtml}</div><div class="resize-ghost"></div>`;
+                this.shadowRoot.innerHTML = `${styles}<div class="gallery-bento">${itemsHtml}</div>`;
+                if (isAdmin) this.initBentoAdmin();
+
+            } else {
+                const itemsHtml = images.map((img, i) => `
+                    <div class="gallery-item ${this.getPattern(i)}">
+                        <div class="item-inner">
+                            <img src="${img.image_url}" loading="lazy">
+                            ${isAdmin ? `
+                                <div class="admin-overlay">
+                                    <button class="btn-delete" data-index="${i}">Remove</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+
+                this.shadowRoot.innerHTML = `${styles}<div class="gallery-grid">${itemsHtml}</div>`;
             }
 
             if (isAdmin) {
-                if (type === 'bento') {
-                    let draggingSlant = null;
-                    let draggingResize = null;
-                    const ghost = this.shadowRoot.querySelector('.resize-ghost');
-
-                    const onMove = (e) => {
-                        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-                        if (draggingSlant) {
-                            const deltaY = clientY - draggingSlant.initialY;
-                            const rect = draggingSlant.item.getBoundingClientRect();
-                            const deltaPercent = Math.round((deltaY / rect.height) * 100);
-                            let newVal = Math.max(0, Math.min(60, draggingSlant.initialVal + deltaPercent));
-                            this.updateBentoItem(draggingSlant.item.getAttribute('data-index'), { [draggingSlant.side]: newVal }, false);
-                        }
-
-                        if (draggingResize) {
-                            const deltaX = clientX - draggingResize.initialX;
-                            const deltaY = clientY - draggingResize.initialY;
-
-                            const newW_px = Math.max(50, draggingResize.initialW + deltaX);
-                            const newH_px = Math.max(50, draggingResize.initialH + deltaY);
-
-                            ghost.style.width = `${newW_px}px`;
-                            ghost.style.height = `${newH_px}px`;
-
-                            // Snapping logic for visual cue (optional, but let's keep ghost smooth)
-                            // To actually update the grid item only on end or periodically:
-                            const parent = draggingResize.item.parentElement;
-                            const gridGap = 15;
-                            const isMobile = window.innerWidth <= 768;
-                            const cols = isMobile ? 3 : 6;
-                            const cellW = (parent.offsetWidth - ((cols - 1) * gridGap)) / cols;
-                            const cellH = isMobile ? 100 : 160;
-
-                            const snapW = Math.max(1, Math.min(cols, Math.round(newW_px / (cellW + gridGap))));
-                            const snapH = Math.max(1, Math.min(8, Math.round(newH_px / (cellH + gridGap))));
-
-                            // We don't updateBentoItem here to keep it smooth,
-                            // OR we update it but with a transition?
-                            // Actually the user said "abrupt", so ghost should be smooth.
-                        }
-                    };
-
-                    const onEnd = () => {
-                        if (draggingSlant || draggingResize) {
-                            const item = (draggingSlant || draggingResize).item;
-
-                            if (draggingResize) {
-                                ghost.style.display = 'none';
-                                const parent = item.parentElement;
-                                const gridGap = 15;
-                                const isMobile = window.innerWidth <= 768;
-                                const cols = isMobile ? 3 : 6;
-                                const cellW = (parent.offsetWidth - ((cols - 1) * gridGap)) / cols;
-                                const cellH = isMobile ? 100 : 160;
-
-                                const finalW = Math.max(1, Math.min(cols, Math.round(parseFloat(ghost.style.width) / (cellW + gridGap))));
-                                const finalH = Math.max(1, Math.min(8, Math.round(parseFloat(ghost.style.height) / (cellH + gridGap))));
-
-                                this.updateBentoItem(item.getAttribute('data-index'), { s: `${finalW}x${finalH}` }, true);
-                            } else {
-                                this.updateBentoItem(item.getAttribute('data-index'), {}, true);
-                            }
-
-                            draggingSlant = null;
-                            draggingResize = null;
-                            window.removeEventListener('mousemove', onMove);
-                            window.removeEventListener('mouseup', onEnd);
-                            window.removeEventListener('touchmove', onMove);
-                            window.removeEventListener('touchend', onEnd);
-                        }
-                    };
-
-                    this.shadowRoot.querySelectorAll('.resize-handle').forEach(handle => {
-                        const startDrag = (e) => {
-                            e.preventDefault(); e.stopPropagation();
-                            const item = handle.closest('.gallery-item');
-                            const rect = item.getBoundingClientRect();
-                            const parentRect = item.parentElement.getBoundingClientRect();
-
-                            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-                            draggingResize = {
-                                item,
-                                initialX: clientX,
-                                initialY: clientY,
-                                initialW: item.offsetWidth,
-                                initialH: item.offsetHeight
-                            };
-
-                            ghost.style.display = 'block';
-                            ghost.style.width = `${item.offsetWidth}px`;
-                            ghost.style.height = `${item.offsetHeight}px`;
-                            ghost.style.left = `${rect.left - parentRect.left}px`;
-                            ghost.style.top = `${rect.top - parentRect.top}px`;
-
-                            window.addEventListener('mousemove', onMove);
-                            window.addEventListener('mouseup', onEnd);
-                            window.addEventListener('touchmove', onMove, { passive: false });
-                            window.addEventListener('touchend', onEnd);
-                        };
-                        handle.onmousedown = startDrag;
-                        handle.ontouchstart = startDrag;
-                    });
-
-                    this.shadowRoot.querySelectorAll('.slant-handle').forEach(handle => {
-                        const startDrag = (e) => {
-                            e.preventDefault(); e.stopPropagation();
-                            const item = handle.closest('.gallery-item');
-                            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                            draggingSlant = {
-                                item,
-                                side: handle.getAttribute('data-side'),
-                                initialY: clientY,
-                                initialVal: parseInt(item.getAttribute(`data-${handle.getAttribute('data-side')}`)) || 0
-                            };
-                            window.addEventListener('mousemove', onMove);
-                            window.addEventListener('mouseup', onEnd);
-                            window.addEventListener('touchmove', onMove, { passive: false });
-                            window.addEventListener('touchend', onEnd);
-                        };
-                        handle.onmousedown = startDrag;
-                        handle.ontouchstart = startDrag;
-                    });
-                }
                 this.shadowRoot.querySelectorAll('.btn-delete').forEach(btn => {
                     btn.onclick = (e) => {
                         e.stopPropagation();
@@ -590,42 +581,6 @@ class MenutechGallery extends HTMLElement {
             }
         } finally {
             this._rendering = false;
-        }
-    }
-
-    updateBentoItem(idx, updates, shouldDispatch = true) {
-        const item = this.shadowRoot.querySelector(`.gallery-item[data-index="${idx}"]`);
-        const inner = item ? item.querySelector('.item-inner') : null;
-        if (!item || !inner) return;
-
-        if (updates.s) item.setAttribute('data-s', updates.s);
-        if (updates.l !== undefined) item.setAttribute('data-l', updates.l);
-        if (updates.r !== undefined) item.setAttribute('data-r', updates.r);
-
-        const s = item.getAttribute('data-s') || '2x2';
-        const l = item.getAttribute('data-l') || '0';
-        const r = item.getAttribute('data-r') || '0';
-
-        const [w, h] = s.split('x').map(Number);
-        item.style.gridColumn = `span ${w}`;
-        item.style.gridRow = `span ${h}`;
-        inner.style.clipPath = `polygon(0 ${l}%, 100% ${r}%, 100% 100%, 0% 100%)`;
-
-        const hl = item.querySelector('.handle-left');
-        const hr = item.querySelector('.handle-right');
-        if (hl) hl.style.top = `calc(${l}% + 10px)`;
-        if (hr) hr.style.top = `calc(${r}% + 10px)`;
-
-        // Ensure handles are always above everything else during slanting
-        if (hl) hl.style.zIndex = '1000';
-        if (hr) hr.style.zIndex = '1000';
-
-        if (shouldDispatch) {
-            this.dispatchEvent(new CustomEvent('update-layout', {
-                detail: { index: parseInt(idx), layout: { s, l, r } },
-                bubbles: true,
-                composed: true
-            }));
         }
     }
 }
