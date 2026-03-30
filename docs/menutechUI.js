@@ -172,7 +172,7 @@ class MenutechGallery extends HTMLElement {
                         border-radius: 28px;
                         background: #14161d;
                         box-shadow: 0 12px 30px -10px rgba(0,0,0,0.3);
-                        transition: transform 0.5s ease;
+                        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
                         aspect-ratio: 1/1;
                         z-index: 1;
                     }
@@ -188,6 +188,7 @@ class MenutechGallery extends HTMLElement {
                         position: relative;
                         background: #14161d;
                         pointer-events: none;
+                        transition: clip-path 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                     }
                     .gallery-bento .item-inner { border-radius: 32px; }
 
@@ -204,12 +205,13 @@ class MenutechGallery extends HTMLElement {
                     .admin-overlay {
                         position: absolute;
                         inset: 0;
-                        background: rgba(0,0,0,0.3);
+                        background: rgba(0,0,0,0.4);
+                        backdrop-filter: blur(8px);
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         opacity: 0;
-                        transition: 0.3s;
+                        transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                         z-index: 10;
                         border-radius: 28px;
                         pointer-events: none;
@@ -268,31 +270,43 @@ class MenutechGallery extends HTMLElement {
 
                     .slant-handle {
                         position: absolute;
-                        top: -8px;
-                        width: 24px;
-                        height: 24px;
-                        background: white;
+                        top: 10px;
+                        width: 28px;
+                        height: 28px;
+                        background: #ff9533;
                         cursor: ns-resize;
-                        z-index: 60;
+                        z-index: 100;
                         border-radius: 50%;
                         opacity: 0;
-                        transition: 0.3s;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-                        border: 2px solid #ff9533;
+                        transition: opacity 0.3s, top 0.1s;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
                         display: flex;
                         align-items: center;
                         justify-content: center;
+                        border: 2px solid white;
+                        pointer-events: auto;
                     }
                     .slant-handle::after {
                         content: '';
-                        width: 8px;
+                        width: 12px;
                         height: 2px;
-                        background: #ff9533;
+                        background: white;
                         border-radius: 1px;
                     }
                     .gallery-item:hover .slant-handle { opacity: 1; }
-                    .handle-left { left: 25px; }
-                    .handle-right { right: 25px; }
+                    .handle-left { left: 10px; }
+                    .handle-right { right: 10px; }
+
+                    .resize-ghost {
+                        position: absolute;
+                        border: 2px dashed #ff9533;
+                        background: rgba(255, 149, 51, 0.1);
+                        pointer-events: none;
+                        z-index: 1000;
+                        display: none;
+                        border-radius: 32px;
+                        transition: none;
+                    }
 
                     .loader { text-align: center; padding: 60px; color: #ff9533; font-weight: 600; letter-spacing: 1px; }
 
@@ -422,21 +436,22 @@ class MenutechGallery extends HTMLElement {
                                 <button class="btn-delete" data-index="${i}">Remove</button>
                             </div>
                             ${isBento ? `
-                                <div class="slant-handle handle-left" data-side="l"></div>
-                                <div class="slant-handle handle-right" data-side="r"></div>
+                                <div class="slant-handle handle-left" data-side="l" style="top: calc(${bentoData.l}% + 10px)"></div>
+                                <div class="slant-handle handle-right" data-side="r" style="top: calc(${bentoData.r}% + 10px)"></div>
                                 <div class="resize-handle" data-index="${i}"></div>
                             ` : ''}
                         ` : ''}
                     </div>
                 `}).join('');
 
-                this.shadowRoot.innerHTML = `${styles}<div class="${isBento ? 'gallery-bento' : 'gallery-grid'}">${itemsHtml}</div>`;
+            this.shadowRoot.innerHTML = `${styles}<div class="${isBento ? 'gallery-bento' : 'gallery-grid'}">${itemsHtml}</div><div class="resize-ghost"></div>`;
             }
 
             if (isAdmin) {
                 if (type === 'bento') {
                     let draggingSlant = null;
                     let draggingResize = null;
+                    const ghost = this.shadowRoot.querySelector('.resize-ghost');
 
                     const onMove = (e) => {
                         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -454,7 +469,14 @@ class MenutechGallery extends HTMLElement {
                             const deltaX = clientX - draggingResize.initialX;
                             const deltaY = clientY - draggingResize.initialY;
 
-                            // Estimate grid cell dimensions
+                            const newW_px = Math.max(50, draggingResize.initialW + deltaX);
+                            const newH_px = Math.max(50, draggingResize.initialH + deltaY);
+
+                            ghost.style.width = `${newW_px}px`;
+                            ghost.style.height = `${newH_px}px`;
+
+                            // Snapping logic for visual cue (optional, but let's keep ghost smooth)
+                            // To actually update the grid item only on end or periodically:
                             const parent = draggingResize.item.parentElement;
                             const gridGap = 15;
                             const isMobile = window.innerWidth <= 768;
@@ -462,19 +484,38 @@ class MenutechGallery extends HTMLElement {
                             const cellW = (parent.offsetWidth - ((cols - 1) * gridGap)) / cols;
                             const cellH = isMobile ? 100 : 160;
 
-                            const newW = Math.max(1, Math.min(cols, Math.round((draggingResize.initialW + deltaX) / (cellW + gridGap))));
-                            const newH = Math.max(1, Math.min(8, Math.round((draggingResize.initialH + deltaY) / (cellH + gridGap))));
+                            const snapW = Math.max(1, Math.min(cols, Math.round(newW_px / (cellW + gridGap))));
+                            const snapH = Math.max(1, Math.min(8, Math.round(newH_px / (cellH + gridGap))));
 
-                            this.updateBentoItem(draggingResize.item.getAttribute('data-index'), { s: `${newW}x${newH}` }, false);
+                            // We don't updateBentoItem here to keep it smooth,
+                            // OR we update it but with a transition?
+                            // Actually the user said "abrupt", so ghost should be smooth.
                         }
                     };
 
                     const onEnd = () => {
                         if (draggingSlant || draggingResize) {
                             const item = (draggingSlant || draggingResize).item;
+
+                            if (draggingResize) {
+                                ghost.style.display = 'none';
+                                const parent = item.parentElement;
+                                const gridGap = 15;
+                                const isMobile = window.innerWidth <= 768;
+                                const cols = isMobile ? 3 : 6;
+                                const cellW = (parent.offsetWidth - ((cols - 1) * gridGap)) / cols;
+                                const cellH = isMobile ? 100 : 160;
+
+                                const finalW = Math.max(1, Math.min(cols, Math.round(parseFloat(ghost.style.width) / (cellW + gridGap))));
+                                const finalH = Math.max(1, Math.min(8, Math.round(parseFloat(ghost.style.height) / (cellH + gridGap))));
+
+                                this.updateBentoItem(item.getAttribute('data-index'), { s: `${finalW}x${finalH}` }, true);
+                            } else {
+                                this.updateBentoItem(item.getAttribute('data-index'), {}, true);
+                            }
+
                             draggingSlant = null;
                             draggingResize = null;
-                            this.updateBentoItem(item.getAttribute('data-index'), {}, true);
                             window.removeEventListener('mousemove', onMove);
                             window.removeEventListener('mouseup', onEnd);
                             window.removeEventListener('touchmove', onMove);
@@ -486,8 +527,12 @@ class MenutechGallery extends HTMLElement {
                         const startDrag = (e) => {
                             e.preventDefault(); e.stopPropagation();
                             const item = handle.closest('.gallery-item');
+                            const rect = item.getBoundingClientRect();
+                            const parentRect = item.parentElement.getBoundingClientRect();
+
                             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
                             draggingResize = {
                                 item,
                                 initialX: clientX,
@@ -495,6 +540,13 @@ class MenutechGallery extends HTMLElement {
                                 initialW: item.offsetWidth,
                                 initialH: item.offsetHeight
                             };
+
+                            ghost.style.display = 'block';
+                            ghost.style.width = `${item.offsetWidth}px`;
+                            ghost.style.height = `${item.offsetHeight}px`;
+                            ghost.style.left = `${rect.left - parentRect.left}px`;
+                            ghost.style.top = `${rect.top - parentRect.top}px`;
+
                             window.addEventListener('mousemove', onMove);
                             window.addEventListener('mouseup', onEnd);
                             window.addEventListener('touchmove', onMove, { passive: false });
@@ -558,6 +610,15 @@ class MenutechGallery extends HTMLElement {
         item.style.gridColumn = `span ${w}`;
         item.style.gridRow = `span ${h}`;
         inner.style.clipPath = `polygon(0 ${l}%, 100% ${r}%, 100% 100%, 0% 100%)`;
+
+        const hl = item.querySelector('.handle-left');
+        const hr = item.querySelector('.handle-right');
+        if (hl) hl.style.top = `calc(${l}% + 10px)`;
+        if (hr) hr.style.top = `calc(${r}% + 10px)`;
+
+        // Ensure handles are always above everything else during slanting
+        if (hl) hl.style.zIndex = '1000';
+        if (hr) hr.style.zIndex = '1000';
 
         if (shouldDispatch) {
             this.dispatchEvent(new CustomEvent('update-layout', {
