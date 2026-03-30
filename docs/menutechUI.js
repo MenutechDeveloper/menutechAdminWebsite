@@ -137,8 +137,10 @@ class MenutechGallery extends HTMLElement {
         // --- Drag and Drop Reordering ---
         items.forEach(item => {
             item.ondragstart = (e) => {
-                const isHandle = e.target.closest('.drag-handle');
-                if (!isHandle || item.classList.contains('is-resizing')) {
+                const isResizeHandle = e.target.closest('.resize-handle');
+                const isDeleteBtn = e.target.closest('.btn-delete');
+
+                if (isResizeHandle || isDeleteBtn || item.classList.contains('is-resizing')) {
                     e.preventDefault();
                     return;
                 }
@@ -171,7 +173,7 @@ class MenutechGallery extends HTMLElement {
                 const newItems = Array.from(container.querySelectorAll('.gallery-item:not(.ghost)'));
                 const from = parseInt(dragItem.getAttribute('data-index'));
                 const to = newItems.indexOf(dragItem);
-                if (from !== to) {
+                if (from !== -1 && to !== -1 && from !== to) {
                     this.dispatchEvent(new CustomEvent('reorder-images', {
                         detail: { from, to },
                         bubbles: true,
@@ -185,7 +187,7 @@ class MenutechGallery extends HTMLElement {
         let startX, startY, startW, startH, activeItem = null, activeHandle = null;
         let resizeGhost = document.createElement('div');
         resizeGhost.className = 'gallery-item ghost resize-ghost';
-        resizeGhost.style.position = 'absolute';
+        // Non-absolute so it follows grid flow
         resizeGhost.style.zIndex = '1000';
         resizeGhost.style.pointerEvents = 'none';
 
@@ -203,19 +205,19 @@ class MenutechGallery extends HTMLElement {
             let newW = startW;
             let newH = startH;
 
-            // Corners
+            // Resize Logic (All 4 Corners)
             if (activeHandle.classList.contains('handle-br')) {
-                newW = Math.round((startW * gridColWidth + deltaX) / gridColWidth);
-                newH = Math.round((startH * gridRowHeight + deltaY) / gridRowHeight);
+                newW = startW + Math.round(deltaX / gridColWidth);
+                newH = startH + Math.round(deltaY / gridRowHeight);
             } else if (activeHandle.classList.contains('handle-bl')) {
-                newW = Math.round((startW * gridColWidth - deltaX) / gridColWidth);
-                newH = Math.round((startH * gridRowHeight + deltaY) / gridRowHeight);
+                newW = startW - Math.round(deltaX / gridColWidth);
+                newH = startH + Math.round(deltaY / gridRowHeight);
             } else if (activeHandle.classList.contains('handle-tr')) {
-                newW = Math.round((startW * gridColWidth + deltaX) / gridColWidth);
-                newH = Math.round((startH * gridRowHeight - deltaY) / gridRowHeight);
+                newW = startW + Math.round(deltaX / gridColWidth);
+                newH = startH - Math.round(deltaY / gridRowHeight);
             } else if (activeHandle.classList.contains('handle-tl')) {
-                newW = Math.round((startW * gridColWidth - deltaX) / gridColWidth);
-                newH = Math.round((startH * gridRowHeight - deltaY) / gridRowHeight);
+                newW = startW - Math.round(deltaX / gridColWidth);
+                newH = startH - Math.round(deltaY / gridRowHeight);
             }
 
             newW = Math.max(1, Math.min(isMobile ? 3 : 6, newW));
@@ -266,7 +268,9 @@ class MenutechGallery extends HTMLElement {
 
                 resizeGhost.style.gridColumn = activeItem.style.gridColumn;
                 resizeGhost.style.gridRow = activeItem.style.gridRow;
-                container.appendChild(resizeGhost);
+
+                // Insert ghost AFTER active item to avoid shifting it initially
+                activeItem.parentNode.insertBefore(resizeGhost, activeItem.nextSibling);
 
                 window.addEventListener('mousemove', onMouseMove);
                 window.addEventListener('mouseup', onMouseUp);
@@ -391,22 +395,6 @@ class MenutechGallery extends HTMLElement {
                         transform: scale(1.05);
                     }
 
-                    .drag-handle {
-                        width: 44px;
-                        height: 44px;
-                        background: var(--orange, #ff9533);
-                        border-radius: 50%;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        cursor: grab;
-                        margin-bottom: 10px;
-                        color: white;
-                        box-shadow: 0 8px 20px rgba(255,149,51,0.3);
-                    }
-                    .drag-handle:active { cursor: grabbing; }
-                    .drag-handle svg { width: 20px; height: 20px; transform: rotate(-45deg); }
-
                     .loader { text-align: center; padding: 60px; color: #ff9533; font-weight: 600; letter-spacing: 1px; }
 
                     /* Resize Handles - Bento */
@@ -529,9 +517,6 @@ class MenutechGallery extends HTMLElement {
                                 <img src="${img.image_url}" loading="lazy">
                                 ${isAdmin ? `
                                     <div class="admin-overlay">
-                                        <div class="drag-handle">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 9l7 7 7-7"/></svg>
-                                        </div>
                                         <button class="btn-delete" data-index="${i}">Remove</button>
                                     </div>
                                 ` : ''}
