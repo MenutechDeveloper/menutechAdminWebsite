@@ -191,7 +191,7 @@ class MenutechGallery extends HTMLElement {
         });
 
         // --- Fluid Resizing logic ---
-        let startX, startY, startW, startH, activeItem = null, activeHandle = null;
+        let startX, startY, startW, startH, startCol, startRow, activeItem = null, activeHandle = null;
         let resizeGhost = document.createElement('div');
         resizeGhost.className = 'gallery-item ghost resize-ghost';
         resizeGhost.style.zIndex = '1000';
@@ -201,40 +201,65 @@ class MenutechGallery extends HTMLElement {
             if (!activeItem) return;
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            const deltaX = clientX - startX;
-            const deltaY = clientY - startY;
 
             const isMobile = window.innerWidth <= 768;
-            const gridColWidth = container.offsetWidth / (isMobile ? 3 : 6);
+            const maxCols = isMobile ? 3 : 6;
+            const gap = isMobile ? 10 : 20;
+            const gridColWidth = (container.offsetWidth - (maxCols - 1) * gap) / maxCols;
             const gridRowHeight = isMobile ? 100 : 150;
 
             let newW = startW;
             let newH = startH;
+            let newColStart = startCol;
+            let newRowStart = startRow;
 
-            if (activeHandle.classList.contains('handle-br')) {
-                newW = startW + Math.round(deltaX / gridColWidth);
-                newH = startH + Math.round(deltaY / gridRowHeight);
+            const deltaX = Math.round((clientX - startX) / (gridColWidth + gap));
+            const deltaY = Math.round((clientY - startY) / (gridRowHeight + gap));
+
+            if (activeHandle.classList.contains('handle-r')) {
+                newW = startW + deltaX;
+            } else if (activeHandle.classList.contains('handle-l')) {
+                newW = startW - deltaX;
+                newColStart = startCol + deltaX;
+            } else if (activeHandle.classList.contains('handle-b')) {
+                newH = startH + deltaY;
+            } else if (activeHandle.classList.contains('handle-t')) {
+                newH = startH - deltaY;
+                newRowStart = startRow + deltaY;
+            } else if (activeHandle.classList.contains('handle-br')) {
+                newW = startW + deltaX;
+                newH = startH + deltaY;
             } else if (activeHandle.classList.contains('handle-bl')) {
-                newW = startW - Math.round(deltaX / gridColWidth);
-                newH = startH + Math.round(deltaY / gridRowHeight);
+                newW = startW - deltaX;
+                newH = startH + deltaY;
+                newColStart = startCol + deltaX;
             } else if (activeHandle.classList.contains('handle-tr')) {
-                newW = startW + Math.round(deltaX / gridColWidth);
-                newH = startH - Math.round(deltaY / gridRowHeight);
+                newW = startW + deltaX;
+                newH = startH - deltaY;
+                newRowStart = startRow + deltaY;
             } else if (activeHandle.classList.contains('handle-tl')) {
-                newW = startW - Math.round(deltaX / gridColWidth);
-                newH = startH - Math.round(deltaY / gridRowHeight);
+                newW = startW - deltaX;
+                newH = startH - deltaY;
+                newColStart = startCol + deltaX;
+                newRowStart = startRow + deltaY;
             }
 
-            newW = Math.max(1, Math.min(isMobile ? 3 : 6, newW));
-            newH = Math.max(1, Math.min(6, newH));
+            // Boundary constraints
+            newW = Math.max(1, newW);
+            newH = Math.max(1, newH);
+            newColStart = Math.max(1, Math.min(maxCols, newColStart));
+            newRowStart = Math.max(1, newRowStart);
 
-            const rect = activeItem.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
-            const colStart = Math.round((rect.left - containerRect.left) / gridColWidth) + 1;
-            const rowStart = Math.round((rect.top - containerRect.top) / gridRowHeight) + 1;
+            if (newColStart + newW - 1 > maxCols) {
+                if (activeHandle.classList.contains('handle-l') || activeHandle.classList.contains('handle-bl') || activeHandle.classList.contains('handle-tl')) {
+                    newW = startCol + startW - newColStart;
+                } else {
+                    newW = maxCols - newColStart + 1;
+                }
+            }
 
-            resizeGhost.style.gridColumn = `${colStart} / span ${newW}`;
-            resizeGhost.style.gridRow = `${rowStart} / span ${newH}`;
+            resizeGhost.style.gridColumn = `${newColStart} / span ${newW}`;
+            resizeGhost.style.gridRow = `${newRowStart} / span ${newH}`;
         };
 
         const onMouseUp = () => {
@@ -275,7 +300,9 @@ class MenutechGallery extends HTMLElement {
                 activeItem.classList.add('is-resizing');
 
                 const isMobile = window.innerWidth <= 768;
-                const gridColWidth = container.offsetWidth / (isMobile ? 3 : 6);
+                const cols = isMobile ? 3 : 6;
+                const gap = isMobile ? 10 : 20;
+                const gridColWidth = (container.offsetWidth - (cols - 1) * gap) / cols;
                 const gridRowHeight = isMobile ? 100 : 150;
 
                 startX = e.clientX || (e.touches && e.touches[0].clientX);
@@ -288,11 +315,11 @@ class MenutechGallery extends HTMLElement {
 
                 const rect = activeItem.getBoundingClientRect();
                 const containerRect = container.getBoundingClientRect();
-                const colStart = Math.round((rect.left - containerRect.left) / gridColWidth) + 1;
-                const rowStart = Math.round((rect.top - containerRect.top) / gridRowHeight) + 1;
+                startCol = Math.round((rect.left - containerRect.left) / (gridColWidth + gap)) + 1;
+                startRow = Math.round((rect.top - containerRect.top) / (gridRowHeight + gap)) + 1;
 
-                resizeGhost.style.gridColumn = `${colStart} / span ${startW}`;
-                resizeGhost.style.gridRow = `${rowStart} / span ${startH}`;
+                resizeGhost.style.gridColumn = `${startCol} / span ${startW}`;
+                resizeGhost.style.gridRow = `${startRow} / span ${startH}`;
 
                 container.appendChild(resizeGhost);
                 activeItem.style.opacity = '0.3';
@@ -361,8 +388,9 @@ class MenutechGallery extends HTMLElement {
                         transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s;
                         aspect-ratio: 1/1;
                         user-select: none;
+                        overflow: hidden;
                     }
-                    .gallery-bento .gallery-item { aspect-ratio: auto; }
+                    .gallery-bento .gallery-item { aspect-ratio: auto; overflow: visible; }
                     .gallery-item:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4); }
 
                     .item-inner {
@@ -432,10 +460,8 @@ class MenutechGallery extends HTMLElement {
                     /* Resize Handles - Bento */
                     .resize-handle {
                         position: absolute;
-                        background: var(--orange, #ff9533);
                         z-index: 20;
                         display: none;
-                        transition: transform 0.2s;
                     }
                     .gallery-item:hover .resize-handle { display: block; }
 
@@ -452,6 +478,15 @@ class MenutechGallery extends HTMLElement {
                     .handle-tr { top: -6px; right: -6px; cursor: nesw-resize; }
                     .handle-bl { bottom: -6px; left: -6px; cursor: nesw-resize; }
                     .handle-br { bottom: -6px; right: -6px; cursor: nwse-resize; }
+
+                    /* Side handles - Professional bars */
+                    .handle-side { background: transparent; transition: background 0.3s; }
+                    .handle-side:hover { background: rgba(255,149,51,0.2); }
+
+                    .handle-t { top: -4px; left: 10px; right: 10px; height: 8px; cursor: ns-resize; }
+                    .handle-b { bottom: -4px; left: 10px; right: 10px; height: 8px; cursor: ns-resize; }
+                    .handle-l { left: -4px; top: 10px; bottom: 10px; width: 8px; cursor: ew-resize; }
+                    .handle-r { right: -4px; top: 10px; bottom: 10px; width: 8px; cursor: ew-resize; }
 
                     @media (max-width: 768px) {
                         :host { margin: 40px auto; padding: 0 16px; }
@@ -499,7 +534,7 @@ class MenutechGallery extends HTMLElement {
             if (type === 'slider') {
                 await this.loadSwiper();
                 const slidesHtml = images.map((img, i) => `
-                    <div class="swiper-slide" style="position: relative;">
+                    <div class="swiper-slide">
                         <img src="${img.image_url}" />
                         ${isAdmin ? `
                             <div class="admin-overlay">
@@ -565,6 +600,10 @@ class MenutechGallery extends HTMLElement {
                                 <div class="resize-handle handle-corner handle-tr" data-index="${i}"></div>
                                 <div class="resize-handle handle-corner handle-bl" data-index="${i}"></div>
                                 <div class="resize-handle handle-corner handle-br" data-index="${i}"></div>
+                                <div class="resize-handle handle-side handle-t" data-index="${i}"></div>
+                                <div class="resize-handle handle-side handle-b" data-index="${i}"></div>
+                                <div class="resize-handle handle-side handle-l" data-index="${i}"></div>
+                                <div class="resize-handle handle-side handle-r" data-index="${i}"></div>
                             ` : ''}
                         </div>
                     `;
@@ -576,14 +615,12 @@ class MenutechGallery extends HTMLElement {
             } else {
                 const itemsHtml = images.map((img, i) => `
                     <div class="gallery-item ${this.getPattern(i)}">
-                        <div class="item-inner">
-                            <img src="${img.image_url}" loading="lazy">
-                            ${isAdmin ? `
-                                <div class="admin-overlay">
-                                    <button class="btn-delete" data-index="${i}">Remove</button>
-                                </div>
-                            ` : ''}
-                        </div>
+                        <img src="${img.image_url}" loading="lazy">
+                        ${isAdmin ? `
+                            <div class="admin-overlay">
+                                <button class="btn-delete" data-index="${i}">Remove</button>
+                            </div>
+                        ` : ''}
                     </div>
                 `).join('');
 
