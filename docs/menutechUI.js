@@ -515,14 +515,25 @@ class MenutechPromoBase extends HTMLElement {
                     overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.5);
                     animation: scaleUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
                 }
-                .promo-popup-card img { display: block; max-width: 100%; max-height: 80vh; object-fit: contain; }
+                .promo-popup-card img { display: block; max-width: 100%; max-height: 85vh; object-fit: contain; }
                 .close-btn {
                     position: absolute; top: 20px; right: 20px; width: 40px; height: 40px;
                     border-radius: 50%; background: white; border: none; cursor: pointer;
                     display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
                 }
-                .promo-section { width: 100%; max-width: 1200px; margin: 40px auto; padding: 0 24px; }
-                .promo-section img { width: 100%; border-radius: 28px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); }
+                .promo-section {
+                    width: 100%; max-width: 650px; margin: 40px auto; padding: 0 24px;
+                    display: flex; flex-direction: column; align-items: center; box-sizing: border-box;
+                }
+                .promo-section img {
+                    display: block; width: auto; max-width: 100%; max-height: 80vh;
+                    object-fit: contain; border-radius: 28px; box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+                }
+
+                @media (max-width: 768px) {
+                    .promo-section { margin: 20px auto; padding: 0 16px; }
+                    .promo-section img { max-height: 70vh; }
+                }
 
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
