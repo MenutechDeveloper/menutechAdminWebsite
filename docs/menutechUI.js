@@ -147,6 +147,8 @@ class MenutechGallery extends HTMLElement {
                 dragItem = item;
                 item.classList.add('is-dragging');
                 e.dataTransfer.effectAllowed = 'move';
+
+                // Ensure ghost matches dimensions of dragging item
                 ghost.style.gridColumn = item.style.gridColumn;
                 ghost.style.gridRow = item.style.gridRow;
             };
@@ -156,39 +158,58 @@ class MenutechGallery extends HTMLElement {
                 if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
                 dragItem = null;
             };
-
-            item.ondragover = (e) => {
-                e.preventDefault();
-                const target = e.target.closest('.gallery-item');
-                if (target && target !== dragItem && target !== ghost) {
-                    const rect = target.getBoundingClientRect();
-                    const next = (e.clientX - rect.left) > (rect.width / 2);
-                    container.insertBefore(ghost, next ? target.nextSibling : target);
-                }
-            };
-
-            item.ondrop = (e) => {
-                e.preventDefault();
-                if (!dragItem) return;
-
-                if (ghost.parentNode) {
-                    container.insertBefore(dragItem, ghost);
-                    ghost.parentNode.removeChild(ghost);
-                }
-
-                const newItems = Array.from(container.querySelectorAll('.gallery-item:not(.ghost)'));
-                const from = parseInt(dragItem.getAttribute('data-index'));
-                const to = newItems.indexOf(dragItem);
-
-                if (from !== -1 && to !== -1 && from !== to) {
-                    this.dispatchEvent(new CustomEvent('reorder-images', {
-                        detail: { from, to },
-                        bubbles: true,
-                        composed: true
-                    }));
-                }
-            };
         });
+
+        container.ondragover = (e) => {
+            e.preventDefault();
+            if (!dragItem) return;
+
+            const itemsList = Array.from(container.querySelectorAll('.gallery-item:not(.is-dragging):not(.ghost)'));
+            let closestItem = null;
+            let minDistance = Infinity;
+            let insertAfter = false;
+
+            itemsList.forEach(item => {
+                const rect = item.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                const distance = Math.hypot(e.clientX - centerX, e.clientY - centerY);
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestItem = item;
+                    // Check if mouse is more to the right or bottom of the center
+                    insertAfter = e.clientX > centerX || e.clientY > centerY;
+                }
+            });
+
+            if (closestItem && closestItem !== ghost) {
+                container.insertBefore(ghost, insertAfter ? closestItem.nextSibling : closestItem);
+            }
+        };
+
+        container.ondrop = (e) => {
+            e.preventDefault();
+            if (!dragItem) return;
+
+            if (ghost.parentNode) {
+                container.insertBefore(dragItem, ghost);
+                ghost.parentNode.removeChild(ghost);
+            }
+
+            const newItems = Array.from(container.querySelectorAll('.gallery-item:not(.ghost)'));
+            const from = parseInt(dragItem.getAttribute('data-index'));
+            const to = newItems.indexOf(dragItem);
+
+            if (from !== -1 && to !== -1 && from !== to) {
+                this.dispatchEvent(new CustomEvent('reorder-images', {
+                    detail: { from, to },
+                    bubbles: true,
+                    composed: true
+                }));
+            }
+        };
 
         // --- Fluid Resizing logic ---
         let startX, startY, startW, startH, startCol, startRow, activeItem = null, activeHandle = null;
@@ -492,6 +513,7 @@ class MenutechGallery extends HTMLElement {
                         :host { margin: 40px auto; padding: 0 16px; }
                         .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
                         .gallery-bento { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 100px; gap: 10px; }
+                        :host([admin-mode]) .gallery-bento { background-size: calc((100% + 10px) / 3) 110px; }
                     }
 
                     /* Slider specific styles */
