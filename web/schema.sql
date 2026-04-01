@@ -1,4 +1,4 @@
--- SQL Schema for Menutech Admin System
+-- SQL Schema for Menutech Admin Website Module
 
 -- 1. Profiles Table
 CREATE TABLE public.profiles (
@@ -35,22 +35,11 @@ CREATE TABLE public.promos (
     UNIQUE(user_id, event_type)
 );
 
--- 4. Developer Access Table
+-- 4. Developer Access Table (Optional: for admins to assign owners to developers)
 CREATE TABLE public.developer_access (
     developer_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     owner_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     PRIMARY KEY (developer_id, owner_id)
-);
-
--- 5. QR Codes Table
-CREATE TABLE public.qrcodes (
-    id TEXT PRIMARY KEY, -- Unique short ID for the QR
-    url TEXT NOT NULL, -- Destination URL
-    restaurant_name TEXT, -- Name for easier identification
-    qr_image_url TEXT, -- URL of the QR image in Cloudinary
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL -- Creator
 );
 
 -- --- INDEXES ---
@@ -65,10 +54,9 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.galeria ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.promos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.developer_access ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.qrcodes ENABLE ROW LEVEL SECURITY;
 
 -- Profiles Policies
-CREATE POLICY "Permitir lectura pública de perfiles por dominio" ON public.profiles FOR SELECT USING (true);
+CREATE POLICY "Public read access for profiles by domain" ON public.profiles FOR SELECT USING (true);
 CREATE POLICY "Admins can update roles" ON public.profiles FOR UPDATE TO authenticated USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin') WITH CHECK ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
 
 -- Galeria Policies
@@ -79,16 +67,9 @@ CREATE POLICY "Management access for galeria" ON public.galeria FOR ALL USING (a
 CREATE POLICY "Public read access for promos" ON public.promos FOR SELECT USING (true);
 CREATE POLICY "Promo management access" ON public.promos FOR ALL USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND (profiles.role = 'admin' OR profiles.role = 'developer')));
 
--- QR Codes Policies
-CREATE POLICY "Public read access for redirection" ON public.qrcodes FOR SELECT USING (true);
-CREATE POLICY "Management access for authorized roles" ON public.qrcodes FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND (profiles.role = 'admin' OR profiles.role = 'developer' OR profiles.role = 'design' OR profiles.role = 'adminDesign' OR profiles.role = 'CS' OR profiles.role = 'adminCS' OR profiles.role = 'retention')));
-
--- Developer Access Policies
-CREATE POLICY "Admins and developers can manage access" ON public.developer_access FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND (profiles.role = 'admin' OR profiles.role = 'developer')));
-
 -- --- TRIGGERS ---
 
--- Automatic Synchronization Trigger for Profiles
+-- Automatic Synchronization Trigger for Profiles from Auth.Users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN

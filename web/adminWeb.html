@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gallery Admin | Menutech</title>
     <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
-<link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
+    <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
 
@@ -36,6 +36,22 @@
 
         .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
 
+        /* Auth Overlay Styles */
+        #auth-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 24px; }
+        .auth-card { background: var(--card); width: 100%; max-width: 440px; padding: 60px 45px; border-radius: 40px; border: 1.5px solid var(--border); box-shadow: 0 24px 64px -12px rgba(0,0,0,0.5); position: relative; text-align: center; animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .auth-card h2 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+        .auth-card p.lead { color: var(--text-dim); margin-bottom: 40px; font-size: 0.95rem; font-weight: 500; line-height: 1.6; }
+        .group { margin-bottom: 24px; text-align: left; }
+        .group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--orange); letter-spacing: 0.5px; margin-bottom: 10px; margin-left: 4px; opacity: 0.9; }
+        input { width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 18px 22px; color: var(--text); font-size: 1rem; transition: all 0.3s; }
+        input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 4px rgba(255, 149, 51, 0.08); }
+        .btn-orange { width: 100%; padding: 20px; border-radius: 22px; border: none; background: var(--orange); color: #000; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.4s; margin-top: 12px; }
+        .btn-orange:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(255, 149, 51, 0.25); }
+        .auth-nav { margin-top: 36px; display: flex; flex-direction: column; gap: 14px; }
+        .link { background: none; border: none; color: var(--text-dim); font-size: 0.85rem; cursor: pointer; text-decoration: none; font-weight: 500; }
+        .link:hover { color: var(--orange); }
+
         .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 80px 24px; animation: fadeIn 1s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -44,13 +60,11 @@
 
         .dashboard-layout { display: flex; min-height: calc(100vh - 160px); gap: 40px; }
 
-        /* Unified Sidebar Container */
         .sidebar-container {
             position: fixed; left: 0; top: 120px; z-index: 6000; pointer-events: none; display: flex; align-items: flex-start;
             transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .sidebar-container > * { pointer-events: auto; }
-        /* Collapsed state hides most of it to the left */
         .sidebar-container.collapsed { transform: translateX(-340px) !important; }
 
         .sidebar { width: 340px; height: 600px; display: flex; flex-direction: column; gap: 20px; }
@@ -87,38 +101,19 @@
         .drop-zone p { font-weight: 700; font-size: 1.1rem; color: var(--text); }
         .drop-zone span { font-size: 0.85rem; color: var(--text-dim); margin-top: 10px; font-weight: 500; }
 
-
         #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
         #top-nav > * { pointer-events: auto; }
 
-        /* Premium User Pill */
+        /* User Pill */
         #user-display-pill {
             background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
             display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; min-width: 220px; justify-content: flex-start;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); min-width: 220px; justify-content: flex-start;
         }
         #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
-
-        #user-display-pill.admin-glow {
-            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
-            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
-        }
-        #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
-
-        #user-display-pill.dev-glow {
-            background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
-            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
-        }
-        #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
-
-        #user-display-pill.owner-glow {
-            background: #000;
-            background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 20%, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 80%, rgba(255,255,255,0.1) 100%);
-            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
-        }
-        #user-display-pill.owner-glow #user-name, #user-display-pill.owner-glow #user-role-label { color: #fff !important; }
-
-        #user-display-pill #user-name, #user-display-pill #user-role-label { color: var(--text); transition: color 0.3s; }
+        #user-display-pill.admin-glow { background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%); background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important; }
+        #user-display-pill.dev-glow { background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%); background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important; }
+        #user-display-pill.owner-glow { background: #000; background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 20%, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 80%, rgba(255,255,255,0.1) 100%); background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important; }
 
         @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
@@ -130,7 +125,6 @@
             position: absolute; top: calc(100% + 12px); right: 0; background: var(--card) !important; border: 1px solid var(--border);
             border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
             opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
-            animation: none !important;
         }
         #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
@@ -142,48 +136,20 @@
         .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
 
         .theme-switch {
-            width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); pointer-events: auto; }
+            width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
         .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
-
         .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
         .sun-icon { color: var(--orange); }
         .moon-icon { color: #8b5cf6; display: none; }
         body.dark-mode .sun-icon { display: none; }
         body.dark-mode .moon-icon { display: block; }
 
-        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
-        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
         .btn-copy { background: rgba(255, 149, 51, 0.1); border: 1px solid rgba(255, 149, 51, 0.3); color: var(--orange); padding: 8px 16px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 15px; width: 100%; }
         .btn-copy:hover { background: var(--orange); color: #000; }
 
-        /* Segmented Control for Gallery Style */
-        .segmented-control {
-            display: flex;
-            background: var(--input);
-            padding: 4px;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            gap: 4px;
-        }
-        .segment-btn {
-            flex: 1;
-            padding: 8px 16px;
-            border-radius: 12px;
-            border: none;
-            background: transparent;
-            color: var(--text-dim);
-            font-size: 0.8rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
-            white-space: nowrap;
-        }
-        .segment-btn.active {
-            background: var(--card);
-            color: var(--orange);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
+        .segmented-control { display: flex; background: var(--input); padding: 4px; border-radius: 16px; border: 1px solid var(--border); gap: 4px; }
+        .segment-btn { flex: 1; padding: 8px 16px; border-radius: 12px; border: none; background: transparent; color: var(--text-dim); font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.3s; white-space: nowrap; }
+        .segment-btn.active { background: var(--card); color: var(--orange); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
         #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
         .toast { min-width: 320px; max-width: 440px; padding: 18px 24px; border-radius: 24px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.9rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1), toastFadeOut 0.5s 5.5s forwards; line-height: 1.4; }
@@ -193,18 +159,6 @@
         @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes toastFadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-        .loader { border: 3px solid rgba(255, 149, 51, 0.1); width: 28px; height: 28px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 1s linear infinite; margin: 0 auto; }
-        @keyframes rotate { to { transform: rotate(360deg); } }
-        .hidden { display: none !important; }
-
-        @media (max-width: 640px) {
-            header h1 { font-size: 2.6rem; }
-            .dashboard-layout { flex-direction: column; }
-            .sidebar { width: 100%; }
-            .bento { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-        }
-
-        /* Floating Footer */
         #floating-footer {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px);
@@ -213,145 +167,65 @@
             z-index: 7000; animation: footerSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
         body.dark-mode #floating-footer { background: rgba(28, 31, 38, 0.8); }
-
         @keyframes footerSlideUp { from { bottom: -100px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
 
-        .btn-footer {
-            padding: 14px 28px; border-radius: 18px; font-weight: 800; font-size: 0.85rem;
-            text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 1px;
-        }
+        .btn-footer { padding: 14px 28px; border-radius: 18px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 1px; }
         .btn-save-all { background: var(--orange); color: #fff; box-shadow: 0 8px 20px rgba(255,149,51,0.3); }
         .btn-save-all:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255,149,51,0.4); }
         .btn-visit { background: var(--input); color: var(--text); border: 1px solid var(--border); }
         .btn-visit:hover { background: var(--border); transform: translateY(-3px); }
 
-        /* Promotions Styles */
-        .promo-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-        @media (max-width: 480px) {
-            .promo-grid { gap: 10px; }
-            .promo-slot { padding: 5px; border-radius: 16px; }
-            .promo-slot svg { width: 30px; height: 30px; margin-bottom: 5px; }
-            .promo-slot span { font-size: 0.6rem; letter-spacing: 0.5px; }
-        }
-        .promo-slot {
-            aspect-ratio: 1/1;
-            background: var(--input);
-            border: 2px dashed var(--border);
-            border-radius: 24px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            filter: grayscale(1);
-            opacity: 0.6;
-            position: relative;
-            overflow: hidden;
-            text-align: center;
-            padding: 10px;
-        }
-        .promo-slot:hover {
-            border-color: var(--orange);
-            transform: translateY(-5px);
-            opacity: 1;
-        }
-        .promo-slot.active {
-            filter: none;
-            opacity: 1;
-            border: 2px solid var(--orange);
-            background: rgba(255, 149, 51, 0.05);
-            animation: promo-pulse 2s infinite;
-        }
-        @keyframes promo-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 149, 51, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(255, 149, 51, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 149, 51, 0); }
-        }
-        .promo-slot svg {
-            width: 40px;
-            height: 40px;
-            margin-bottom: 10px;
-            color: var(--text-dim);
-            transition: color 0.4s;
-        }
-        .promo-slot.active svg { color: var(--orange); }
-        .promo-slot span {
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-dim);
-        }
-        .promo-slot.active span { color: var(--text); }
+        .promo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
+        .promo-slot { aspect-ratio: 1/1; background: var(--input); border: 2px dashed var(--border); border-radius: 24px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.4s; filter: grayscale(1); opacity: 0.6; position: relative; overflow: hidden; text-align: center; padding: 10px; }
+        .promo-slot:hover { border-color: var(--orange); transform: translateY(-5px); opacity: 1; }
+        .promo-slot.active { filter: none; opacity: 1; border: 2px solid var(--orange); background: rgba(255, 149, 51, 0.05); animation: promo-pulse 2s infinite; }
+        @keyframes promo-pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 149, 51, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 149, 51, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 149, 51, 0); } }
 
-        /* Promo Modal */
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);
-            z-index: 10000; display: none; align-items: center; justify-content: center; padding: 24px;
-            opacity: 0; transition: opacity 0.3s;
-        }
+        /* Modal Styles */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 24px; opacity: 0; transition: opacity 0.3s; }
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-card {
-            background: var(--card); width: 100%; max-width: 500px; border-radius: 32px;
-            padding: 40px; border: 1.5px solid var(--border); box-shadow: 0 30px 60px rgba(0,0,0,0.3);
-            position: relative; animation: modalSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes modalSlideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        .modal-card h3 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-bottom: 25px; color: var(--text); }
-        .modal-close { position: absolute; top: 25px; right: 25px; cursor: pointer; color: var(--text-dim); border: none; background: none; }
-
-        .promo-form-group { margin-bottom: 20px; }
-        .promo-form-group label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--orange); text-transform: uppercase; margin-bottom: 8px; }
-        .promo-form-group input, .promo-form-group select {
-            width: 100%; padding: 14px; border-radius: 16px; border: 1px solid var(--border);
-            background: var(--input); color: var(--text); font-family: inherit;
-        }
-
-        .promo-drop-zone {
-            width: 100%; height: 150px; border-radius: 20px; border: 2px dashed var(--border);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.3s; margin-bottom: 20px; overflow: hidden; position: relative;
-        }
-        .promo-drop-zone:hover { border-color: var(--orange); background: rgba(255,149,51,0.03); }
-        .promo-drop-zone img { width: 100%; height: 100%; object-fit: cover; }
-        .promo-drop-zone p { font-size: 0.85rem; font-weight: 600; color: var(--text-dim); }
-
-        .modal-actions { display: flex; gap: 15px; margin-top: 30px; }
-        .btn-modal { flex: 1; padding: 16px; border-radius: 16px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; border: none; transition: 0.3s; }
-        .btn-modal-save { background: var(--orange); color: #fff; }
-        .btn-modal-cancel { background: var(--input); color: var(--text); border: 1px solid var(--border); }
+        .modal-card { background: var(--card); width: 100%; max-width: 500px; border-radius: 32px; padding: 40px; border: 1.5px solid var(--border); box-shadow: 0 30px 60px rgba(0,0,0,0.3); position: relative; animation: modalSlideUp 0.5s; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
     <div class="bg-mesh"></div>
     <div id="toast-container"></div>
 
-    <div id="top-nav" class="hidden">
-        <div>
-             <button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button>
+    <div id="auth-overlay" style="display: none;">
+        <div class="auth-card" id="signin-box">
+            <h2>Welcome back</h2>
+            <p class="lead">Sign in to access your gallery.</p>
+            <div class="group"><label>Email Address</label><input type="email" id="login-email"></div>
+            <div class="group"><label>Password</label><input type="password" id="login-pass"></div>
+            <button id="btn-signin" class="btn-orange">Sign In</button>
+            <div id="login-msg" style="margin-top:20px; font-size: 0.85rem;"></div>
+            <div class="auth-nav"><button class="link" onclick="toggleAuth('signup')">Don't have an account? Sign Up</button></div>
         </div>
+        <div class="auth-card hidden" id="signup-box" style="max-width: 540px;">
+            <h2>Get Started</h2>
+            <p class="lead">Create your account to start managing.</p>
+            <div class="group"><label for="reg-user">Username</label><input type="text" id="reg-user"></div>
+            <div class="group"><label for="reg-email">Email Address</label><input type="email" id="reg-email"></div>
+            <div class="group"><label for="reg-pass">Password</label><input type="password" id="reg-pass"></div>
+            <div class="group"><label for="reg-domain">Domain</label><input type="text" id="reg-domain"></div>
+            <button id="btn-signup" class="btn-orange">Create Account</button>
+            <div id="reg-msg" style="margin-top:20px; font-size: 0.85rem;"></div>
+            <div class="auth-nav"><button class="link" onclick="toggleAuth('signin')">Already have an account? Sign In</button></div>
+        </div>
+    </div>
+
+    <div id="top-nav" class="hidden">
+        <div><img src="https://menutech.services/assets/img/logomt.png" style="height:35px" alt="Logo"></div>
         <div style="display: flex; align-items: center; gap: 15px;">
             <div class="theme-switch" id="theme-toggle">
-                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </div>
             <div id="user-display-pill">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <div class="pill-info">
-                    <div id="user-name">&nbsp;</div>
-                    <div id="user-role-label">&nbsp;</div>
-                </div>
-                <div class="pill-menu">
-                    <a href="index.html" class="pill-menu-item">Home</a>
-                    <div class="pill-menu-item danger" onclick="logout()">Logout</div>
-                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div class="pill-info"><div id="user-name">&nbsp;</div><div id="user-role-label">&nbsp;</div></div>
+                <div class="pill-menu"><div class="pill-menu-item danger" onclick="logout()">Logout</div></div>
             </div>
         </div>
     </div>
@@ -362,56 +236,32 @@
     </div>
 
     <div class="container hidden" id="main-app">
-        <header>
-            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
-            <p id="view-domain-title" style="font-weight: 700; color: var(--orange); font-size: 0.85rem; letter-spacing: 1px;"></p>
-        </header>
-
+        <header><p id="view-domain-title" style="font-weight: 700; color: var(--orange); font-size: 0.85rem; letter-spacing: 1px;"></p></header>
         <div class="dashboard-layout">
-            <!-- Sidebar with Searchable List -->
             <div class="sidebar-container hidden" id="sidebar-container">
                 <div class="sidebar" id="sidebar">
                     <div class="search-box">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <label style="margin:0">Find Project</label>
-                        </div>
+                        <label>Find Project</label>
                         <input type="text" id="client-search" placeholder="Domain or Name...">
-                        <div class="client-list" id="client-list">
-                            <!-- Items injected here -->
-                        </div>
-                        <div id="project-info" class="switcher-box hidden" style="width: 100%; margin: 0; padding-top: 15px; border-top: 1px solid var(--border); margin-top: auto;">
+                        <div class="client-list" id="client-list"></div>
+                        <div id="project-info" class="hidden" style="width: 100%; padding-top: 15px; border-top: 1px solid var(--border); margin-top: auto;">
                             <label style="font-size: 0.6rem; color: var(--orange); font-weight: 800; text-transform: uppercase;">Active Project</label>
                             <div id="active-project-name" style="font-weight: 700; padding: 12px; background: var(--input); border-radius: 14px; border: 1px solid var(--border); font-size: 0.8rem; margin-top: 8px;">None Selected</div>
                         </div>
                     </div>
                 </div>
-                <div class="sidebar-tab" id="sidebar-tab">Find Project</div>
+                <div class="sidebar-tab" id="sidebar-tab">Projects</div>
             </div>
-
             <div class="main-content">
-                <!-- Promotions Section -->
                 <div id="section-promos">
-                    <div class="component-header">
-                        <h2>Event Promotions</h2>
-                        <button id="btn-copy-promo" class="btn-copy hidden" style="width: auto; margin-top: 0; padding: 12px 24px;">COPY PROMO CODE</button>
-                    </div>
+                    <div class="component-header"><h2>Event Promotions</h2><button id="btn-copy-promo" class="btn-copy hidden" style="width: auto; margin-top: 0; padding: 12px 24px;">COPY PROMO CODE</button></div>
                     <div class="promo-grid">
-                        <div class="promo-slot" id="slot-christmas" onclick="openPromoModal('christmas')">
-                            <span>Christmas</span>
-                        </div>
-                        <div class="promo-slot" id="slot-halloween" onclick="openPromoModal('halloween')">
-                            <span>Halloween</span>
-                        </div>
-                        <div class="promo-slot" id="slot-valentine" onclick="openPromoModal('valentine')">
-                            <span>Valentine's</span>
-                        </div>
-                        <div class="promo-slot" id="slot-president" onclick="openPromoModal('president')">
-                            <span>President's Day</span>
-                        </div>
+                        <div class="promo-slot" id="slot-christmas" onclick="openPromoModal('christmas')"><span>Christmas</span></div>
+                        <div class="promo-slot" id="slot-halloween" onclick="openPromoModal('halloween')"><span>Halloween</span></div>
+                        <div class="promo-slot" id="slot-valentine" onclick="openPromoModal('valentine')"><span>Valentine's</span></div>
+                        <div class="promo-slot" id="slot-president" onclick="openPromoModal('president')"><span>President's Day</span></div>
                     </div>
                 </div>
-
-                <!-- Gallery Section -->
                 <div id="section-gallery">
                     <div class="component-header">
                         <div style="display: flex; align-items: center; gap: 20px;">
@@ -424,14 +274,8 @@
                         </div>
                         <button id="btn-copy-code" class="btn-copy hidden" style="width: auto; margin-top: 0; padding: 12px 24px;">COPY GALLERY CODE</button>
                     </div>
-
-                    <div class="drop-zone" id="drop-zone">
-                        <p>Upload Images</p>
-                        <span>Click to select or drag files here</span>
-                        <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
-                    </div>
-
-                    <div id="upload-status" style="text-align:center; margin-bottom:40px; font-weight: 600; font-size: 0.9rem;"></div>
+                    <div class="drop-zone" id="drop-zone"><p>Upload Images</p><span>Click to select or drag files here</span><input type="file" id="file-input" class="hidden" accept="image/*" multiple></div>
+                    <div id="upload-status" style="text-align:center; margin-bottom:40px; font-weight: 600;"></div>
                     <div id="gallery-container">
                         <script src="./menutechUI.js"></script>
                         <menutech-gallery id="main-gallery" admin-mode></menutech-gallery>
@@ -446,446 +290,206 @@
         <div class="modal-card">
             <button class="modal-close" onclick="closePromoModal()"><svg style="width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             <h3 id="promo-modal-title">Configure Promo</h3>
-
-            <div class="promo-drop-zone" id="promo-drop-zone">
-                <img id="promo-preview" class="hidden">
-                <div id="promo-drop-placeholder">
-                    <p>Drag & Drop Promo Image</p>
-                    <span style="font-size:0.75rem; color:var(--text-dim)">or click to select</span>
-                </div>
-                <input type="file" id="promo-file-input" class="hidden" accept="image/*">
-            </div>
-
-            <div class="promo-form-group">
-                <label>Start Date</label>
-                <input type="date" id="promo-start-date">
-            </div>
-
-            <div class="promo-form-group">
-                <label>End Date</label>
-                <input type="date" id="promo-end-date">
-            </div>
-
-            <div class="promo-form-group">
-                <label>Display Mode</label>
-                <select id="promo-display-mode">
-                    <option value="popup">Popup on Load</option>
-                    <option value="section">Integrated Section</option>
-                </select>
-            </div>
-
-            <div class="promo-form-group" style="display:flex; align-items:center; gap:10px;">
-                <input type="checkbox" id="promo-active" style="width:auto;">
-                <label style="margin:0">Active Promo</label>
-            </div>
-
-            <div class="modal-actions">
-                <button class="btn-modal btn-modal-cancel" onclick="closePromoModal()">Cancel</button>
-                <button class="btn-modal btn-modal-save" id="btn-save-promo">Save Promo</button>
-            </div>
+            <div class="promo-drop-zone" id="promo-drop-zone"><img id="promo-preview" class="hidden"><div id="promo-drop-placeholder"><p>Drag & Drop Promo Image</p><span style="font-size:0.75rem; color:var(--text-dim)">or click to select</span></div><input type="file" id="promo-file-input" class="hidden" accept="image/*"></div>
+            <div class="promo-form-group"><label>Start Date</label><input type="date" id="promo-start-date"></div>
+            <div class="promo-form-group"><label>End Date</label><input type="date" id="promo-end-date"></div>
+            <div class="promo-form-group"><label>Display Mode</label><select id="promo-display-mode"><option value="popup">Popup on Load</option><option value="section">Integrated Section</option></select></div>
+            <div class="promo-form-group" style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="promo-active" style="width:auto;"><label style="margin:0">Active Promo</label></div>
+            <div class="modal-actions"><button class="btn-modal btn-modal-cancel" onclick="closePromoModal()">Cancel</button><button class="btn-modal btn-modal-save" id="btn-save-promo">Save Promo</button></div>
         </div>
     </div>
 
     <script type="module">
         import { MT_CONFIG } from './config.js';
         import { supabase as sb } from './supabase.js';
-        let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
-        let localGallery = [];
-        let localPromos = [];
-        let currentGalleryType = 'grid';
-        let currentPromoEvent = null;
+        let user = null, userRole = null, activeOwnerId = null, activeDomain = null, localGallery = [], localPromos = [], currentGalleryType = 'grid', currentPromoEvent = null;
 
         window.showToast = (message, type = 'success') => {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            const icon = document.createElement('div');
-            icon.innerHTML = type === 'success' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><polyline points="20 6 9 17 4 12"/></svg>' : type === 'error' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
-            const msg = document.createElement('div');
-            msg.textContent = message;
-            toast.appendChild(icon); toast.appendChild(msg); container.appendChild(toast);
+            toast.textContent = message;
+            container.appendChild(toast);
             setTimeout(() => toast.remove(), 6000);
         };
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            initTheme();
-            initEvents();
-            checkSession();
-        });
+        document.addEventListener('DOMContentLoaded', async () => { initTheme(); initEvents(); checkSession(); });
 
         async function checkSession() {
-            const { data: { session }, error } = await sb.auth.getSession();
-            if (error || !session) { location.href = "index.html"; return; }
-
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { document.getElementById('auth-overlay').style.display = 'flex'; return; }
             user = session.user;
-            const { data: profile, error: pError } = await sb.from('profiles').select('*').eq('id', user.id).single();
-
-            if (pError || !profile) {
-                userRole = 'owner'; activeOwnerId = user.id; showApp(null); return;
-            }
-
+            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            if (!profile) { userRole = 'owner'; activeOwnerId = user.id; showApp(null); return; }
             userRole = profile.role;
-            const allowedRoles = ['admin', 'developer', 'owner'];
-            if (!allowedRoles.includes(userRole)) {
-                location.href = "index.html";
-                return;
-            }
-
             if (userRole === 'admin' || userRole === 'developer') {
                 const sidebarContainer = document.getElementById('sidebar-container');
-                sidebarContainer.classList.remove('hidden');
-                sidebarContainer.classList.add('collapsed');
+                sidebarContainer.classList.remove('hidden'); sidebarContainer.classList.add('collapsed');
                 document.getElementById('btn-copy-code').classList.remove('hidden');
                 document.getElementById('btn-copy-promo').classList.remove('hidden');
                 await setupContextSwitcher();
-                if (!activeOwnerId) { activeOwnerId = user.id; activeDomain = profile.domain; document.getElementById('view-domain-title').textContent = activeDomain || "Admin Workspace"; }
-                showApp(profile);
-            } else {
-                activeOwnerId = user.id; activeDomain = profile.domain; showApp(profile);
             }
+            activeOwnerId = user.id; activeDomain = profile.domain; showApp(profile);
         }
 
-        let allOwners = [];
         async function setupContextSwitcher() {
-            const list = document.getElementById('client-list');
-            const search = document.getElementById('client-search');
+            const list = document.getElementById('client-list'), search = document.getElementById('client-search');
+            let allOwners = [];
             if (userRole === 'admin') { const { data } = await sb.from('profiles').select('*'); allOwners = data || []; }
             else { const { data: access } = await sb.from('developer_access').select('owner_id').eq('developer_id', user.id); const ids = (access || []).map(a => a.owner_id); const { data } = await sb.from('profiles').select('*').in('id', ids); allOwners = data || []; }
-            renderOwners(allOwners);
-            search.oninput = () => { const term = search.value.toLowerCase(); const filtered = allOwners.filter(o => (o.username || '').toLowerCase().includes(term) || (o.domain || '').toLowerCase().includes(term)); renderOwners(filtered); };
-            const passedId = sessionStorage.getItem('mt_edit_owner_id');
-            if (passedId) { sessionStorage.removeItem('mt_edit_owner_id'); window.switchContext(passedId); }
+            const render = (owners) => { list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.username || 'User'}</span><span class="domain">${o.domain || ''}</span></div>`).join(''); };
+            render(allOwners);
+            search.oninput = () => { render(allOwners.filter(o => (o.username||'').toLowerCase().includes(search.value.toLowerCase()) || (o.domain||'').toLowerCase().includes(search.value.toLowerCase()))); };
+            window.switchContext = (id) => { const o = allOwners.find(x => x.id === id); activeOwnerId = id; activeDomain = o.domain; document.getElementById('view-domain-title').textContent = activeDomain; document.getElementById('active-project-name').textContent = o.username || o.domain; document.getElementById('project-info').classList.remove('hidden'); render(allOwners); loadGallery(); loadPromos(); };
         }
 
-        function renderOwners(owners) {
-            const list = document.getElementById('client-list');
-            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.username || 'User'}</span><span class="domain">${o.domain || (o.username ? '' : o.id.substring(0,8))}</span></div>`).join('');
-        }
-
-        window.switchContext = (ownerId) => {
-            const owner = allOwners.find(o => o.id === ownerId);
-            if (!owner) return;
-            activeOwnerId = ownerId; activeDomain = owner.domain;
-            document.getElementById('view-domain-title').textContent = activeDomain || "No Domain Set";
-            document.getElementById('active-project-name').textContent = owner.username || owner.email;
-            document.getElementById('project-info').classList.remove('hidden');
-            renderOwners(allOwners); loadGallery(); loadPromos();
-        }
-
-        async function showApp(profile) {
-            const main = document.getElementById('main-app');
-            const nav = document.getElementById('top-nav');
-            const pill = document.getElementById('user-display-pill');
-
+        function showApp(profile) {
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('top-nav').classList.remove('hidden');
             if (profile) {
                 document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
-                document.getElementById('user-role-label').textContent = profile.role || 'User';
+                document.getElementById('user-role-label').textContent = profile.role;
+                const pill = document.getElementById('user-display-pill');
                 if (profile.role === 'admin') pill.classList.add('admin-glow');
                 else if (profile.role === 'developer') pill.classList.add('dev-glow');
                 else pill.classList.add('owner-glow');
             }
+            loadGallery(); loadPromos();
+        }
 
-            if (main) main.classList.remove('hidden');
-            if (nav) nav.classList.remove('hidden');
-            if (activeOwnerId) { loadGallery(); loadPromos(); }
+        window.toggleAuth = (mode) => { document.getElementById('signin-box').classList.toggle('hidden', mode !== 'signin'); document.getElementById('signup-box').classList.toggle('hidden', mode !== 'signup'); };
+        window.logout = async () => { await sb.auth.signOut(); location.reload(); };
+        async function signIn() {
+            const e = document.getElementById('login-email').value, p = document.getElementById('login-pass').value;
+            const { error } = await sb.auth.signInWithPassword({ email: e, password: p });
+            if (error) showToast(error.message, "error"); else location.reload();
+        }
+        async function signUp() {
+            const u = document.getElementById('reg-user').value, e = document.getElementById('reg-email').value, p = document.getElementById('reg-pass').value, d = document.getElementById('reg-domain').value;
+            const { error } = await sb.auth.signUp({ email: e, password: p, options: { data: { username: u, domain: d } } });
+            if (error) showToast(error.message, "error"); else showToast("Check your email", "success");
         }
 
         function initEvents() {
+            document.getElementById('btn-signin').onclick = signIn; document.getElementById('btn-signup').onclick = signUp;
             document.getElementById('sidebar-tab').onclick = () => document.getElementById('sidebar-container').classList.toggle('collapsed');
             const pill = document.getElementById('user-display-pill');
             pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
             document.addEventListener('click', () => pill.classList.remove('active'));
-            window.logout = async () => { if(sb) await sb.auth.signOut(); location.href = "index.html"; };
+
             document.getElementById('btn-copy-code').onclick = () => {
-                if (!activeDomain) return showToast("Assign a domain to this project first.", "warning");
                 const snippet = `<!-- Menutech Gallery -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-gallery domain="${activeDomain}"></menutech-gallery>`;
-                navigator.clipboard.writeText(snippet).then(() => { const btn = document.getElementById('btn-copy-code'); const old = btn.textContent; btn.textContent = "COPIED!"; setTimeout(() => btn.textContent = old, 2000); });
+                navigator.clipboard.writeText(snippet); showToast("Copied!", "success");
             };
-
             document.getElementById('btn-copy-promo').onclick = () => {
-                if (!activeDomain) return showToast("Assign a domain to this project first.", "warning");
                 const activeEvents = localPromos.filter(p => p.is_active).map(p => p.event_type);
-                if (activeEvents.length === 0) return showToast("No active promos to copy.", "warning");
-
                 const tags = activeEvents.map(ev => `<menutech-${ev} domain="${activeDomain}"></menutech-${ev}>`).join('\n');
                 const snippet = `<!-- Menutech Promotions -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n${tags}`;
-
-                navigator.clipboard.writeText(snippet).then(() => {
-                    const btn = document.getElementById('btn-copy-promo');
-                    const old = btn.textContent;
-                    btn.textContent = "COPIED!";
-                    setTimeout(() => btn.textContent = old, 2000);
-                });
+                navigator.clipboard.writeText(snippet); showToast("Copied!", "success");
             };
 
             window.setGalleryType = (type) => {
                 currentGalleryType = type;
-                document.querySelectorAll('.segment-btn').forEach(b => {
-                    b.classList.toggle('active', b.getAttribute('data-value') === type);
-                });
+                document.querySelectorAll('.segment-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-value') === type));
                 document.getElementById('floating-footer').classList.remove('hidden');
                 syncGalleryComponent();
             };
 
-            const mainGallery = document.getElementById('main-gallery');
-            mainGallery.addEventListener('delete-image', (e) => {
-                removeLocalImage(e.detail.index);
-            });
-
-            mainGallery.addEventListener('update-layout', (e) => {
-                const { index, layout } = e.detail;
-                if (localGallery[index]) {
-                    const baseUrl = localGallery[index].image_url.split('#')[0];
-                    localGallery[index].image_url = `${baseUrl}#s=${layout.s}`;
-                    document.getElementById('floating-footer').classList.remove('hidden');
-                }
-            });
-
-            mainGallery.addEventListener('reorder-images', (e) => {
-                const { from, to } = e.detail;
-                const item = localGallery.splice(from, 1)[0];
-                localGallery.splice(to, 0, item);
-                syncGalleryComponent();
-                document.getElementById('floating-footer').classList.remove('hidden');
-            });
+            const gallery = document.getElementById('main-gallery');
+            gallery.addEventListener('delete-image', (e) => { localGallery.splice(e.detail.index, 1); syncGalleryComponent(); document.getElementById('floating-footer').classList.remove('hidden'); });
+            gallery.addEventListener('update-layout', (e) => { if (localGallery[e.detail.index]) { localGallery[e.detail.index].image_url = localGallery[e.detail.index].image_url.split('#')[0] + '#s=' + e.detail.layout.s; document.getElementById('floating-footer').classList.remove('hidden'); } });
+            gallery.addEventListener('reorder-images', (e) => { const item = localGallery.splice(e.detail.from, 1)[0]; localGallery.splice(e.detail.to, 0, item); syncGalleryComponent(); document.getElementById('floating-footer').classList.remove('hidden'); });
 
             const dz = document.getElementById('drop-zone'), fi = document.getElementById('file-input');
             dz.onclick = () => fi.click();
-            fi.onchange = () => uploadFiles(fi.files);
-            dz.ondragover = e => { e.preventDefault(); dz.style.borderColor = "var(--orange)"; };
-            ['dragleave', 'dragend'].forEach(t => dz.addEventListener(t, () => dz.style.borderColor = "var(--border)"));
-            dz.ondrop = e => { e.preventDefault(); dz.style.borderColor = "var(--border)"; if(e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files); };
+            fi.onchange = async () => {
+                for (const f of fi.files) {
+                    const fd = new FormData(); fd.append('file', f); fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
+                    const d = await res.json();
+                    localGallery.unshift({ image_url: d.secure_url });
+                }
+                syncGalleryComponent(); document.getElementById('floating-footer').classList.remove('hidden');
+            };
 
-            // Promo Modal Events
-            const pdz = document.getElementById('promo-drop-zone'), pfi = document.getElementById('promo-file-input');
-            pdz.onclick = () => pfi.click();
-            pfi.onchange = () => { if(pfi.files.length) handlePromoFileUpload(pfi.files[0]); };
-            pdz.ondragover = e => { e.preventDefault(); pdz.style.borderColor = "var(--orange)"; };
-            ['dragleave', 'dragend'].forEach(t => pdz.addEventListener(t, () => pdz.style.borderColor = "var(--border)"));
-            pdz.ondrop = e => { e.preventDefault(); pdz.style.borderColor = "var(--border)"; if(e.dataTransfer.files.length) handlePromoFileUpload(e.dataTransfer.files[0]); };
+            document.getElementById('promo-drop-zone').onclick = () => document.getElementById('promo-file-input').click();
+            document.getElementById('promo-file-input').onchange = async (e) => {
+                const fd = new FormData(); fd.append('file', e.target.files[0]); fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
+                const d = await res.json();
+                document.getElementById('promo-preview').src = d.secure_url;
+                document.getElementById('promo-preview').classList.remove('hidden');
+                document.getElementById('promo-drop-placeholder').classList.add('hidden');
+            };
             document.getElementById('btn-save-promo').onclick = savePromo;
         }
 
-        async function uploadFiles(files) {
-            if (!activeOwnerId) return showToast("Select a project first.", "warning");
-            const s = document.getElementById('upload-status');
-            s.innerHTML = '<div class="loader"></div>';
-            for (const f of files) {
-                const fd = new FormData(); fd.append('file', f); fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
-                try {
-                    const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
-                    const d = await res.json();
-                    localGallery.unshift({ image_url: d.secure_url, isNew: true });
-                } catch (e) { console.error("Upload error", e); }
-            }
-            s.textContent = "Images added locally"; setTimeout(() => s.textContent = "", 3000);
-            syncGalleryComponent();
-            document.getElementById('floating-footer').classList.remove('hidden');
-        }
-
         async function loadGallery() {
-            const { data, error } = await sb.from('galeria').select('*').eq('user_id', activeOwnerId).order('created_at', { ascending: false });
+            const { data } = await sb.from('galeria').select('*').eq('user_id', activeOwnerId).order('created_at', { ascending: false });
             localGallery = data || [];
-
-            // Load gallery type from profile
-            const { data: profile } = await sb.from('profiles').select('gallery_type').eq('id', activeOwnerId).maybeSingle();
-            currentGalleryType = (profile && profile.gallery_type) ? profile.gallery_type : 'grid';
-
-            document.querySelectorAll('.segment-btn').forEach(b => {
-                b.classList.toggle('active', b.getAttribute('data-value') === currentGalleryType);
-            });
-
+            const { data: prof } = await sb.from('profiles').select('gallery_type').eq('id', activeOwnerId).single();
+            currentGalleryType = prof?.gallery_type || 'grid';
+            document.querySelectorAll('.segment-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-value') === currentGalleryType));
             syncGalleryComponent();
-            document.getElementById('floating-footer').classList.add('hidden');
         }
 
         async function loadPromos() {
-            if (!activeOwnerId) return;
-            const { data, error } = await sb.from('promos').select('*').eq('user_id', activeOwnerId);
+            const { data } = await sb.from('promos').select('*').eq('user_id', activeOwnerId);
             localPromos = data || [];
-            updatePromoGrid();
-        }
-
-        function updatePromoGrid() {
-            const events = ['christmas', 'halloween', 'valentine', 'president'];
-            events.forEach(ev => {
-                const slot = document.getElementById(`slot-${ev}`);
-                const promo = localPromos.find(p => p.event_type === ev);
-                if (promo && promo.is_active) {
-                    slot.classList.add('active');
-                } else {
-                    slot.classList.remove('active');
-                }
+            ['christmas', 'halloween', 'valentine', 'president'].forEach(ev => {
+                const active = localPromos.find(p => p.event_type === ev)?.is_active;
+                document.getElementById(`slot-${ev}`).classList.toggle('active', !!active);
             });
         }
 
-        window.openPromoModal = (eventType) => {
-            currentPromoEvent = eventType;
-            const promo = localPromos.find(p => p.event_type === eventType) || {
-                event_type: eventType,
-                image_url: '',
-                start_date: '',
-                end_date: '',
-                display_mode: 'popup',
-                is_active: false
-            };
-
-            document.getElementById('promo-modal-title').textContent = `Configure ${eventType.charAt(0).toUpperCase() + eventType.slice(1)} Promo`;
-            const preview = document.getElementById('promo-preview');
-            const placeholder = document.getElementById('promo-drop-placeholder');
-
-            if (promo.image_url) {
-                preview.src = promo.image_url;
-                preview.classList.remove('hidden');
-                placeholder.classList.add('hidden');
-            } else {
-                preview.src = "";
-                preview.classList.add('hidden');
-                placeholder.classList.remove('hidden');
-            }
-
-            document.getElementById('promo-start-date').value = promo.start_date || '';
-            document.getElementById('promo-end-date').value = promo.end_date || '';
-            document.getElementById('promo-display-mode').value = promo.display_mode || 'popup';
-            document.getElementById('promo-active').checked = promo.is_active;
-
+        window.openPromoModal = (ev) => {
+            currentPromoEvent = ev;
+            const p = localPromos.find(x => x.event_type === ev) || { event_type: ev, is_active: false };
+            document.getElementById('promo-modal-title').textContent = `Configure ${ev} Promo`;
+            document.getElementById('promo-preview').src = p.image_url || '';
+            document.getElementById('promo-preview').classList.toggle('hidden', !p.image_url);
+            document.getElementById('promo-drop-placeholder').classList.toggle('hidden', !!p.image_url);
+            document.getElementById('promo-start-date').value = p.start_date || '';
+            document.getElementById('promo-end-date').value = p.end_date || '';
+            document.getElementById('promo-display-mode').value = p.display_mode || 'popup';
+            document.getElementById('promo-active').checked = p.is_active;
             document.getElementById('promo-modal').classList.add('active');
         };
-
-        window.closePromoModal = () => {
-            document.getElementById('promo-modal').classList.remove('active');
-            currentPromoEvent = null;
-        };
-
-        async function handlePromoFileUpload(file) {
-            const placeholder = document.getElementById('promo-drop-placeholder');
-            placeholder.innerHTML = '<div class="loader"></div>';
-
-            const fd = new FormData();
-            fd.append('file', file);
-            fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
-
-            try {
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
-                const d = await res.json();
-                const preview = document.getElementById('promo-preview');
-                preview.src = d.secure_url;
-                preview.classList.remove('hidden');
-                placeholder.classList.add('hidden');
-                placeholder.innerHTML = '<p>Drag & Drop Promo Image</p><span style="font-size:0.75rem; color:var(--text-dim)">or click to select</span>';
-            } catch (e) {
-                console.error("Upload error", e);
-                showToast("Error uploading image", "error");
-                placeholder.innerHTML = '<p>Upload Failed</p>';
-            }
-        }
+        window.closePromoModal = () => document.getElementById('promo-modal').classList.remove('active');
 
         async function savePromo() {
-            if (!activeOwnerId || !currentPromoEvent) return;
-            const btn = document.getElementById('btn-save-promo');
-            const oldText = btn.textContent;
-            btn.textContent = "SAVING...";
-            btn.disabled = true;
-
-            const imageUrl = document.getElementById('promo-preview').src;
-            const startDate = document.getElementById('promo-start-date').value;
-            const endDate = document.getElementById('promo-end-date').value;
-            const displayMode = document.getElementById('promo-display-mode').value;
-            const isActive = document.getElementById('promo-active').checked;
-
-            try {
-                const { error } = await sb.from('promos').upsert({
-                    user_id: activeOwnerId,
-                    domain: activeDomain || 'undetermined',
-                    event_type: currentPromoEvent,
-                    image_url: imageUrl,
-                    start_date: startDate || null,
-                    end_date: endDate || null,
-                    display_mode: displayMode,
-                    is_active: isActive
-                }, { onConflict: 'user_id, event_type' });
-
-                if (error) throw error;
-                showToast("Promo saved successfully!", "success");
-                closePromoModal();
-                loadPromos();
-            } catch (e) {
-                console.error(e);
-                showToast("Error saving promo: " + (e.message || e), "error");
-            } finally {
-                btn.textContent = oldText;
-                btn.disabled = false;
-            }
+            const p = {
+                user_id: activeOwnerId, domain: activeDomain || 'undetermined', event_type: currentPromoEvent,
+                image_url: document.getElementById('promo-preview').src,
+                start_date: document.getElementById('promo-start-date').value || null,
+                end_date: document.getElementById('promo-end-date').value || null,
+                display_mode: document.getElementById('promo-display-mode').value,
+                is_active: document.getElementById('promo-active').checked
+            };
+            await sb.from('promos').upsert(p, { onConflict: 'user_id, event_type' });
+            showToast("Saved!", "success"); closePromoModal(); loadPromos();
         }
 
         function syncGalleryComponent() {
-            const gallery = document.getElementById('main-gallery');
-            if (localGallery.length === 0) {
-                gallery.setAttribute('images-list', '');
-                gallery.setAttribute('type', currentGalleryType);
-                return;
-            }
-            const imagesList = localGallery.map(it => it.image_url).join(',');
-            gallery.setAttribute('type', currentGalleryType);
-            gallery.setAttribute('images-list', imagesList);
+            const g = document.getElementById('main-gallery');
+            g.setAttribute('type', currentGalleryType);
+            g.setAttribute('images-list', localGallery.map(x => x.image_url).join(','));
         }
 
-        window.removeLocalImage = (idx) => {
-            localGallery.splice(idx, 1);
-            syncGalleryComponent();
-            document.getElementById('floating-footer').classList.remove('hidden');
-        };
-
         window.saveChanges = async () => {
-            if (!activeOwnerId) return;
-            const btn = document.querySelector('.btn-save-all');
-            const oldText = btn.textContent;
-            btn.textContent = "SAVING...";
-            btn.disabled = true;
-
-            try {
-                // 1. Delete all current for this user
-                const { error: delError } = await sb.from('galeria').delete().eq('user_id', activeOwnerId);
-                if (delError) throw delError;
-
-                // 2. Insert all from localGallery
-                if (localGallery.length > 0) {
-                    const toInsert = localGallery.map(it => ({
-                        user_id: activeOwnerId,
-                        domain: activeDomain || 'undetermined',
-                        image_url: it.image_url
-                    }));
-                    const { error: insError } = await sb.from('galeria').insert(toInsert);
-                    if (insError) throw insError;
-                }
-
-                // 3. Save gallery style to profile
-                const { error: upError } = await sb.from('profiles').update({ gallery_type: currentGalleryType }).eq('id', activeOwnerId);
-                if (upError) throw upError;
-
-                showToast("Changes saved successfully!", "success");
-
-                document.getElementById('floating-footer').classList.add('hidden');
-                setTimeout(() => loadGallery(), 500); // Small delay to ensure DB propagation
-            } catch (e) {
-                console.error(e);
-                showToast("Error saving changes: " + (e.message || e), "error");
-            } finally {
-                btn.textContent = oldText;
-                btn.disabled = false;
+            await sb.from('galeria').delete().eq('user_id', activeOwnerId);
+            if (localGallery.length > 0) {
+                await sb.from('galeria').insert(localGallery.map(x => ({ user_id: activeOwnerId, domain: activeDomain || 'undetermined', image_url: x.image_url })));
             }
+            await sb.from('profiles').update({ gallery_type: currentGalleryType }).eq('id', activeOwnerId);
+            showToast("Changes saved!", "success"); document.getElementById('floating-footer').classList.add('hidden');
         };
 
-        window.visitSite = () => {
-            if (!activeDomain) return showToast("No domain assigned.", "warning");
-            const url = activeDomain.startsWith('http') ? activeDomain : `https://${activeDomain}`;
-            window.open(url, '_blank');
-        };
-
+        window.visitSite = () => { if (activeDomain) window.open(activeDomain.startsWith('http') ? activeDomain : 'https://' + activeDomain, '_blank'); };
         function initTheme() {
-            const toggle = document.getElementById('theme-toggle');
             if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
-            toggle.onclick = () => { document.body.classList.toggle('dark-mode'); localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); };
+            document.getElementById('theme-toggle').onclick = () => { document.body.classList.toggle('dark-mode'); localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); };
         }
     </script>
 </body>

@@ -2,14 +2,16 @@
  * Menutech Gallery Web Component
  * Usage: <menutech-gallery domain="yoursite.com"></menutech-gallery>
  */
+const MT_UI_CONFIG = {
+    url: "https://eemqyrysdgasfjlitads.supabase.co",
+    key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY"
+};
+
 class MenutechGallery extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this.config = {
-            url: "https://eemqyrysdgasfjlitads.supabase.co",
-            key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY"
-        };
+        this.config = MT_UI_CONFIG;
         this.supabase = null;
     }
 
@@ -682,10 +684,7 @@ class MenutechPromoBase extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.eventType = eventType;
-        this.config = {
-            url: "https://eemqyrysdgasfjlitads.supabase.co",
-            key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY"
-        };
+        this.config = MT_UI_CONFIG;
         this.supabase = null;
     }
 
