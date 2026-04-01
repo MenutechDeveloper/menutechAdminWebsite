@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+<link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #059669;
+            --error: #dc2626;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.1) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.05) 0%, transparent 40%); }
+
+        #auth-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 4000; padding: 24px; }
+        .auth-card { background: var(--card); width: 100%; max-width: 440px; padding: 60px 45px; border-radius: 40px; border: 1.5px solid var(--border); box-shadow: 0 24px 64px -12px rgba(0,0,0,0.5); position: relative; text-align: center; animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .auth-card h2 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+        .auth-card p.lead { color: var(--text-dim); margin-bottom: 40px; font-size: 0.95rem; font-weight: 500; line-height: 1.6; }
+        .group { margin-bottom: 24px; text-align: left; }
+        .group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--orange); letter-spacing: 0.5px; margin-bottom: 10px; margin-left: 4px; opacity: 0.9; }
+        input { width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 18px 22px; color: var(--text); font-size: 1rem; transition: all 0.3s; }
+        input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 4px rgba(255, 149, 51, 0.08); }
+        .btn-orange { width: 100%; padding: 20px; border-radius: 22px; border: none; background: var(--orange); color: #000; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.4s; margin-top: 12px; }
+        .btn-orange:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(255, 149, 51, 0.25); }
+        .auth-nav { margin-top: 36px; display: flex; flex-direction: column; gap: 14px; }
+        .link { background: none; border: none; color: var(--text-dim); font-size: 0.85rem; cursor: pointer; text-decoration: none; font-weight: 500; }
+        .link:hover { color: var(--orange); }
+
+        .container { width: 100%; max-width: 1000px; margin: 0 auto; padding: 100px 24px; animation: fadeIn 1s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        header { text-align: center; margin-bottom: 80px; }
+        .logo-main { width: 100%; max-width: 320px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
+        header p { color: var(--text-dim); font-size: 1.1rem; }
+        .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; margin-top: 40px; }
+        @media (min-width: 1024px) { .bento-grid.extended { grid-template-columns: repeat(2, 1fr); } }
+        .bento-card { background: var(--card); border: 1px solid var(--border); border-radius: 40px; padding: 60px 40px; text-align: center; cursor: pointer; transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1); text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .bento-card:hover { transform: translateY(-10px); border-color: var(--orange); box-shadow: 0 30px 60px -12px rgba(0,0,0,0.5); }
+        .bento-card h3 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; margin-bottom: 15px; color: var(--text); font-weight: 700; }
+        .bento-card p { color: var(--text-dim); font-size: 0.95rem; line-height: 1.6; font-weight: 500; }
+        .bento-card .icon-box { width: 80px; height: 80px; background: rgba(255,149,51,0.1); border-radius: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 30px; color: var(--orange); font-size: 2rem; border: 1px solid rgba(255,149,51,0.2); }
+
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
+        #top-nav > * { pointer-events: auto; }
+
+        /* Premium User Pill */
+        #user-display-pill {
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); min-width: 220px; justify-content: flex-start;
+        }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
+
+        #user-display-pill.admin-glow {
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
+
+        #user-display-pill.dev-glow {
+            background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
+
+        #user-display-pill.owner-glow {
+            background: #000;
+            background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 20%, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 80%, rgba(255,255,255,0.1) 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.owner-glow #user-name, #user-display-pill.owner-glow #user-role-label { color: #fff !important; }
+
+        #user-display-pill #user-name, #user-display-pill #user-role-label { color: var(--text); transition: color 0.3s; }
+
+        @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
+        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .pill-menu { position: absolute; top: calc(100% + 12px); right: 0; background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2); opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000; }
+        #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .pill-menu-item { padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none; }
+        .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
+        .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+
+        .theme-switch { width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; }
+        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); }
+
+        .loader { border: 3px solid rgba(255, 149, 51, 0.1); width: 28px; height: 28px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 1s linear infinite; margin: 0 auto; }
+        @keyframes rotate { to { transform: rotate(360deg); } }
+        .hidden { display: none !important; }
+
+        @media (max-width: 768px) { .bento-grid { grid-template-columns: 1fr; } header h1 { font-size: 2.8rem; } }
+
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast { min-width: 320px; max-width: 440px; padding: 18px 24px; border-radius: 24px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.9rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1), toastFadeOut 0.5s 5.5s forwards; line-height: 1.4; }
+        .toast.success { border-left: 6px solid var(--success); }
+        .toast.error { border-left: 6px solid var(--error); }
+        .toast.warning { border-left: 6px solid var(--orange); }
+        @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastFadeOut { from { opacity: 1; } to { opacity: 0; } }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
+
+    <div id="auth-overlay" style="display: none;">
+        <div class="auth-card" id="signin-box">
+            <h2>Welcome back</h2>
+            <p class="lead">Sign in to access your dashboard.</p>
+            <div class="group"><label>Email Address</label><input type="email" id="login-email"></div>
+            <div class="group"><label>Password</label><input type="password" id="login-pass"></div>
+            <button id="btn-signin" class="btn-orange">Sign In</button>
+            <div id="login-msg" style="margin-top:20px; font-size: 0.85rem;"></div>
+            <div class="auth-nav"><button class="link" onclick="toggleAuth('signup')">Don't have an account? Sign Up</button></div>
+        </div>
+
+        <div class="auth-card hidden" id="signup-box" style="max-width: 540px;">
+            <h2>Get Started</h2>
+            <p class="lead">Create your account to start managing.</p>
+            <div class="group"><label for="reg-user">Username</label><input type="text" id="reg-user"></div>
+            <div class="group"><label for="reg-email">Email Address</label><input type="email" id="reg-email"></div>
+            <div class="group"><label for="reg-pass">Password</label><input type="password" id="reg-pass"></div>
+            <div class="group"><label for="reg-domain">Domain</label><input type="text" id="reg-domain"></div>
+            <button id="btn-signup" class="btn-orange">Create Account</button>
+            <div id="reg-msg" style="margin-top:20px; font-size: 0.85rem;"></div>
+            <div class="auth-nav"><button class="link" onclick="toggleAuth('signin')">Already have an account? Sign In</button></div>
+        </div>
+    </div>
+
+    <div id="top-nav">
+        <div id="nav-left" class="hidden"><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="theme-switch" id="theme-toggle">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+            <div id="user-display-pill" class="hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div class="pill-info">
+                    <div id="user-name">&nbsp;</div>
+                    <div id="user-role-label">&nbsp;</div>
+                </div>
+                <div class="pill-menu">
+                    <a href="index.html" class="pill-menu-item">Home</a>
+                    <div class="pill-menu-item danger" onclick="logout()">Logout</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container hidden" id="main-app">
+        <header>
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
+            <p>Select a module to manage your digital assets.</p>
+        </header>
+        <div class="bento-grid" id="main-bento">
+            <a href="adminCustomer.html" class="bento-card" id="card-users">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                <h3>Users</h3>
+                <p>Manage clients, domains, and global platform permissions.</p>
+            </a>
+            <a href="adminWeb.html" class="bento-card" id="card-web">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+                <h3>Website Edit</h3>
+                <p>Customize your gallery, upload images, and manage domain content.</p>
+            </a>
+            <a href="QRmenutech.html" class="bento-card" id="card-qr-gen">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M7 7h4v4H7zM7 13h4v4H7zM13 7h4v4h-4zM13 13h1v1h-1zM16 13h1v1h-1zM15 14h1v1h-1zM13 15h1v1h-1zM14 16h1v1h-1zM16 16h1v1h-1z"/></svg></div>
+                <h3>QR Generator</h3>
+                <p>Create custom QR codes with logos and premium styling.</p>
+            </a>
+            <a href="adminQR.html" class="bento-card" id="card-qr-admin">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/><path d="m12 13 4 4 4-4"/><path d="m16 17v-8"/><circle cx="16" cy="17" r="2"/></svg></div>
+                <h3>QR Manager</h3>
+                <p>Manage, track, and update your generated QR codes.</p>
+            </a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { MT_CONFIG } from './config.js';
+        import { supabase as sb } from './supabase.js';
+        let user = null;
+
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = document.createElement('div');
+            icon.innerHTML = type === 'success' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><polyline points="20 6 9 17 4 12"/></svg>' : type === 'error' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+            const msg = document.createElement('div');
+            msg.textContent = message;
+            toast.appendChild(icon); toast.appendChild(msg); container.appendChild(toast);
+            setTimeout(() => toast.remove(), 6000);
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initTheme(); initEvents();
+            checkSession();
+        });
+
+        async function checkSession() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (session) {
+                user = session.user;
+                if (!user.email_confirmed_at) {
+                    showToast("Please verify your email address before logging in.", "warning");
+                    await sb.auth.signOut();
+                    document.getElementById('auth-overlay').style.display = 'flex';
+                    return;
+                }
+
+                const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+                const pill = document.getElementById('user-display-pill');
+                const nameEl = document.getElementById('user-name'), roleEl = document.getElementById('user-role-label');
+
+                if (profile) {
+                    nameEl.textContent = profile.username || user.email.split('@')[0];
+                    roleEl.textContent = profile.role || 'User';
+                    if (profile.role === 'admin') pill.classList.add('admin-glow');
+                    else if (profile.role === 'developer') pill.classList.add('dev-glow');
+                    else pill.classList.add('owner-glow');
+
+                    const role = profile.role || 'user';
+                    const qrRoles = ['design', 'adminDesign', 'CS', 'adminCS', 'retention'];
+
+                    if (role === 'owner') {
+                        document.getElementById('card-users').style.display = 'none';
+                        document.getElementById('card-qr-gen').style.display = 'none';
+                        document.getElementById('card-qr-admin').style.display = 'none';
+                        const grid = document.getElementById('main-bento');
+                        grid.style.gridTemplateColumns = '1fr';
+                        grid.style.maxWidth = '500px';
+                        grid.style.margin = '40px auto 0 auto';
+                    } else if (qrRoles.includes(role)) {
+                        document.getElementById('card-users').style.display = 'none';
+                        document.getElementById('card-web').style.display = 'none';
+                        // QR Generator and QR Manager stay visible
+                    }
+                }
+
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('main-app').classList.remove('hidden');
+                document.getElementById('nav-left').classList.remove('hidden');
+                document.getElementById('user-display-pill').classList.remove('hidden');
+            } else {
+                document.getElementById('auth-overlay').style.display = 'flex';
+            }
+        }
+
+        window.toggleAuth = (mode) => { document.getElementById('signin-box').classList.add('hidden'); document.getElementById('signup-box').classList.add('hidden'); document.getElementById(mode + '-box').classList.remove('hidden'); };
+        function initTheme() {
+            const toggle = document.getElementById('theme-toggle');
+            const currentTheme = localStorage.getItem('theme');
+            if (currentTheme === 'dark') document.body.classList.add('dark-mode');
+            toggle.addEventListener('click', () => { document.body.classList.toggle('dark-mode'); localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); });
+        }
+        function initEvents() {
+            document.getElementById('btn-signin').onclick = signIn; document.getElementById('btn-signup').onclick = signUp;
+            const pill = document.getElementById('user-display-pill');
+            pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
+            document.addEventListener('click', () => pill.classList.remove('active'));
+        }
+        window.logout = async () => { await sb.auth.signOut(); location.reload(); };
+        async function signIn() {
+            const e = document.getElementById('login-email').value.trim(), p = document.getElementById('login-pass').value, m = document.getElementById('login-msg');
+            if (!e || !p) { showToast("Please fill all fields.", "error"); return; }
+            m.innerHTML = '<div class="loader"></div>';
+            const { error } = await sb.auth.signInWithPassword({ email: e, password: p });
+            if (error) { m.textContent = ""; showToast(error.message, "error"); } else location.reload();
+        }
+        async function signUp() {
+            const u = document.getElementById('reg-user').value.trim(), e = document.getElementById('reg-email').value.trim(), p = document.getElementById('reg-pass').value, d = document.getElementById('reg-domain').value.trim(), m = document.getElementById('reg-msg');
+            if (!u || !e || !p) { showToast("Please fill all required fields.", "error"); return; }
+            m.innerHTML = '<div class="loader"></div>';
+            const { error } = await sb.auth.signUp({ email: e, password: p, options: { data: { username: u, domain: d } } });
+            if (error) { m.textContent = ""; if (error.message.includes("Database error saving new user")) showToast("Account created! Profile save failed.", "warning"); else showToast(error.message, "error"); }
+            else { m.textContent = ""; showToast("Check your email to confirm.", "success"); setTimeout(() => toggleAuth('signin'), 3000); }
+        }
+    </script>
+</body>
+</html>
