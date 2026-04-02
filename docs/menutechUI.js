@@ -354,7 +354,10 @@ class MenutechGallery extends HTMLElement {
     }
 
     async render() {
-        if (this._rendering) return;
+        if (this._rendering) {
+            this._needsRender = true;
+            return;
+        }
         this._rendering = true;
 
         try {
@@ -664,6 +667,10 @@ class MenutechGallery extends HTMLElement {
             }
         } finally {
             this._rendering = false;
+            if (this._needsRender) {
+                this._needsRender = false;
+                this.render();
+            }
         }
     }
 }
