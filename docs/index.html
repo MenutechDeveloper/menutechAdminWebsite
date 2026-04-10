@@ -208,6 +208,11 @@
                 <h3>QR Manager</h3>
                 <p>Manage, track, and update your generated QR codes.</p>
             </a>
+            <a href="laboratorio.html" class="bento-card hidden" id="card-lab">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M4.93 4.93l14.14 14.14M2 8l6-6 6 6M16 16l6 6-6 6M8 2l6 6-6 6M16 2l6 6-6 6"/><circle cx="12" cy="12" r="10"/></svg></div>
+                <h3>Laboratorio</h3>
+                <p>Prueba tus QR y compila código en tiempo real.</p>
+            </a>
         </div>
     </div>
 
@@ -257,6 +262,10 @@
 
                     const role = profile.role || 'user';
                     const qrRoles = ['design', 'adminDesign', 'CS', 'adminCS', 'retention'];
+
+                    if (role === 'admin') {
+                        document.getElementById('card-lab').classList.remove('hidden');
+                    }
 
                     if (role === 'owner') {
                         document.getElementById('card-users').style.display = 'none';
