@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #059669;
+            --error: #dc2626;
+            --dev: #8b5cf6;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
+
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 80px 24px; animation: fadeIn 1s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        header { text-align: center; margin-bottom: 72px; }
+        .logo-main { width: 100%; max-width: 280px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
+
+        .dashboard-layout { display: flex; min-height: calc(100vh - 160px); gap: 40px; }
+
+        .sidebar { width: 300px; display: flex; flex-direction: column; gap: 20px; }
+        .main-content { flex: 1; min-width: 0; }
+
+        .panel-card { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
+
+        .menu-list { display: flex; flex-direction: column; gap: 10px; }
+        .menu-item { padding: 18px 22px; border-radius: 20px; background: var(--input); border: 1px solid var(--border); cursor: pointer; transition: 0.3s; font-weight: 700; font-size: 0.9rem; color: var(--text-dim); display: flex; align-items: center; gap: 12px; }
+        .menu-item:hover { border-color: var(--orange); color: var(--text); }
+        .menu-item.active { border-color: var(--orange); background: rgba(255,149,51,0.08); color: var(--orange); }
+        .menu-item svg { width: 20px; height: 20px; }
+
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
+        #top-nav > * { pointer-events: auto; }
+
+        #user-display-pill {
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); min-width: 220px; justify-content: flex-start;
+        }
+        #user-display-pill.admin-glow {
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
+        @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
+        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .pill-menu {
+            position: absolute; top: calc(100% + 12px); right: 0; background: var(--card); border: 1px solid var(--border);
+            border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
+        }
+        #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .pill-menu-item { padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none; }
+        .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
+
+        .theme-switch { width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; }
+
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast { min-width: 320px; max-width: 440px; padding: 18px 24px; border-radius: 24px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.9rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1), toastFadeOut 0.5s 5.5s forwards; line-height: 1.4; }
+        .toast.error { border-left: 6px solid var(--error); }
+        @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        .hidden { display: none !important; }
+
+        /* Compiler Specific Styles */
+        .compiler-container { display: flex; flex-direction: column; height: 700px; gap: 20px; position: relative; }
+        .editor-area { display: flex; flex-direction: column; gap: 15px; flex: 1; min-height: 100px; }
+        .editor-group { flex: 1; display: flex; flex-direction: column; }
+        .editor-group label { font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 8px; margin-left: 5px; }
+        textarea { flex: 1; background: var(--input); border: 1px solid var(--border); border-radius: 16px; padding: 15px; color: var(--text); font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; resize: none; outline: none; transition: 0.3s; }
+        textarea:focus { border-color: var(--orange); }
+
+        .resizer { height: 10px; cursor: ns-resize; background: var(--border); border-radius: 5px; margin: 10px 0; transition: 0.3s; }
+        .resizer:hover { background: var(--orange); }
+
+        .result-area { flex: 1; min-height: 100px; display: flex; flex-direction: column; }
+        .result-area label { font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 8px; margin-left: 5px; }
+
+        .neomorph-box {
+            flex: 1; border-radius: 32px; background: var(--bg);
+            box-shadow: 20px 20px 60px rgba(0,0,0,0.05), -20px -20px 60px rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.2); overflow: hidden; position: relative;
+        }
+        body.dark-mode .neomorph-box {
+            box-shadow: 10px 10px 30px rgba(0,0,0,0.4), -10px -10px 30px rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        iframe { width: 100%; height: 100%; border: none; background: #fff; }
+
+        .compiler-actions { display: flex; gap: 15px; margin-top: 20px; }
+        .btn-action { padding: 14px 28px; border-radius: 18px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 1px; }
+        .btn-run { background: var(--orange); color: #fff; box-shadow: 0 8px 20px rgba(255,149,51,0.3); }
+        .btn-run:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255,149,51,0.4); }
+        .btn-clear { background: var(--input); color: var(--text); border: 1px solid var(--border); }
+
+        /* QR Reader Specific */
+        .qr-section { text-align: center; }
+        #drop-area { border: 3px dashed var(--border); border-radius: 32px; padding: 80px 40px; cursor: pointer; transition: 0.3s; background: var(--input); }
+        #drop-area.highlight { border-color: var(--orange); background: rgba(255,149,51,0.05); }
+        #drop-area p { font-size: 1.2rem; font-weight: 700; color: var(--text-dim); }
+
+        .qr-result-popup { margin-top: 30px; padding: 25px; border-radius: 24px; background: var(--card); border: 1px solid var(--border); display: none; animation: slideUp 0.5s ease; }
+        .qr-result-popup.show { display: block; }
+        #qr-result-text { font-size: 1.1rem; font-weight: 600; word-break: break-all; }
+        #qr-result-text a { color: var(--orange); text-decoration: none; }
+
+        @media (max-width: 768px) {
+            .dashboard-layout { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .compiler-container { height: 1000px; }
+            .editor-area { flex: 2; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
+
+    <div id="top-nav">
+        <div><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="theme-switch" id="theme-toggle">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+            <div id="user-display-pill" class="hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div class="pill-info"><div id="user-name"></div><div id="user-role-label"></div></div>
+                <div class="pill-menu">
+                    <a href="index.html" class="pill-menu-item">Home</a>
+                    <div class="pill-menu-item" onclick="logout()" style="color: var(--error)">Logout</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container hidden" id="main-app">
+        <header>
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
+            <h2 style="font-family: 'Outfit'; font-size: 2.5rem; font-weight: 800; letter-spacing: -1px;">Laboratorio</h2>
+        </header>
+
+        <div class="dashboard-layout">
+            <aside class="sidebar">
+                <div class="panel-card">
+                    <div class="menu-list">
+                        <div class="menu-item active" onclick="switchTab('qr', this)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h4v4H7zM7 13h4v4H7zM13 7h4v4h-4zM13 13h1v1h-1zM16 13h1v1h-1zM15 14h1v1h-1zM13 15h1v1h-1zM14 16h1v1h-1zM16 16h1v1h-1z"/></svg>
+                            Lector QR
+                        </div>
+                        <div class="menu-item" onclick="switchTab('compiler', this)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                            Compilar Código
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="main-content">
+                <!-- QR Section -->
+                <div id="tab-qr" class="tab-content">
+                    <div class="panel-card qr-section">
+                        <h3 style="margin-bottom: 25px; font-family: 'Outfit'; font-size: 1.5rem;">Lector de Códigos QR</h3>
+                        <div id="drop-area">
+                            <p>Arrastra y suelta una imagen de QR aquí</p>
+                            <span style="font-size: 0.9rem; color: var(--text-dim)">o haz clic para seleccionar</span>
+                            <input type="file" id="qr-input" class="hidden" accept="image/*">
+                        </div>
+                        <div id="qr-result" class="qr-result-popup">
+                            <p style="font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 10px;">Resultado Escaneo</p>
+                            <div id="qr-result-text"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compiler Section -->
+                <div id="tab-compiler" class="tab-content hidden">
+                    <div class="panel-card">
+                        <div class="compiler-container">
+                            <div class="editor-area" id="editor-area">
+                                <div class="editor-group">
+                                    <label>HTML</label>
+                                    <textarea id="html-code" placeholder="<div>Hola Mundo</div>"></textarea>
+                                </div>
+                                <div style="display: flex; gap: 15px; flex: 1;">
+                                    <div class="editor-group">
+                                        <label>CSS</label>
+                                        <textarea id="css-code" placeholder="div { color: orange; }"></textarea>
+                                    </div>
+                                    <div class="editor-group">
+                                        <label>JS</label>
+                                        <textarea id="js-code" placeholder="console.log('Test');"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="resizer" id="resizer"></div>
+
+                            <div class="result-area" id="result-area">
+                                <label>Resultado</label>
+                                <div class="neomorph-box">
+                                    <iframe id="preview-iframe"></iframe>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="compiler-actions">
+                            <button class="btn-action btn-run" onclick="runCode()">Run Code</button>
+                            <button class="btn-action btn-clear" onclick="clearCode()">Clear</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+    <script type="module">
+        import { supabase as sb } from './supabase.js';
+        let user = null;
+
+        window.showToast = (message, type = 'error') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
+            checkSession();
+            initQR();
+            initResizer();
+        });
+
+        async function checkSession() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { location.href = "index.html"; return; }
+
+            user = session.user;
+            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+
+            if (!profile || profile.role !== 'admin') {
+                location.href = "index.html";
+                return;
+            }
+
+            document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
+            document.getElementById('user-role-label').textContent = profile.role;
+            if (profile.role === 'admin') document.getElementById('user-display-pill').classList.add('admin-glow');
+
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('user-display-pill').classList.remove('hidden');
+
+            const pill = document.getElementById('user-display-pill');
+            pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
+            document.addEventListener('click', () => pill.classList.remove('active'));
+        }
+
+        window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
+
+        window.switchTab = (tab, el) => {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            el.classList.add('active');
+        };
+
+        function initTheme() {
+            const toggle = document.getElementById('theme-toggle');
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            toggle.onclick = () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            };
+        }
+
+        // QR Reader Logic
+        function initQR() {
+            const area = document.getElementById('drop-area');
+            const input = document.getElementById('qr-input');
+
+            area.onclick = () => input.click();
+            input.onchange = () => handleQRFiles(input.files);
+
+            area.ondragover = e => { e.preventDefault(); area.classList.add('highlight'); };
+            area.ondragleave = () => area.classList.remove('highlight');
+            area.ondrop = e => {
+                e.preventDefault();
+                area.classList.remove('highlight');
+                if (e.dataTransfer.files.length) handleQRFiles(e.dataTransfer.files);
+            };
+        }
+
+        function handleQRFiles(files) {
+            const file = files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width; canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+                    const resultBox = document.getElementById('qr-result');
+                    const resultText = document.getElementById('qr-result-text');
+                    resultBox.classList.add('show');
+
+                    if (code) {
+                        const urlPattern = /^(https?:\/\/[^\s]+)/g;
+                        if (urlPattern.test(code.data)) {
+                            resultText.innerHTML = `<a href="${code.data}" target="_blank">${code.data}</a>`;
+                        } else {
+                            resultText.textContent = code.data;
+                        }
+                    } else {
+                        resultText.textContent = "No se encontró ningún código QR.";
+                    }
+                };
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Compiler Logic
+        window.runCode = () => {
+            const html = document.getElementById('html-code').value;
+            const css = document.getElementById('css-code').value;
+            const js = document.getElementById('js-code').value;
+            const iframe = document.getElementById('preview-iframe');
+
+            const combined = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>${css}</style>
+                </head>
+                <body>
+                    ${html}
+                    <script>${js}<\/script>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([combined], { type: 'text/html' });
+            iframe.src = URL.createObjectURL(blob);
+        };
+
+        window.clearCode = () => {
+            document.getElementById('html-code').value = '';
+            document.getElementById('css-code').value = '';
+            document.getElementById('js-code').value = '';
+            document.getElementById('preview-iframe').src = 'about:blank';
+        };
+
+        function initResizer() {
+            const resizer = document.getElementById('resizer');
+            const editor = document.getElementById('editor-area');
+            const result = document.getElementById('result-area');
+            const iframe = document.getElementById('preview-iframe');
+            let isResizing = false;
+
+            resizer.onmousedown = () => {
+                isResizing = true;
+                iframe.style.pointerEvents = 'none'; // Prevent iframe from stealing events
+            };
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                const containerRect = editor.parentElement.getBoundingClientRect();
+                const relativeY = e.clientY - containerRect.top;
+                const percentage = (relativeY / containerRect.height) * 100;
+
+                if (percentage > 10 && percentage < 90) {
+                    editor.style.flex = percentage;
+                    result.style.flex = 100 - percentage;
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isResizing = false;
+                iframe.style.pointerEvents = 'auto';
+            });
+        }
+    </script>
+</body>
+</html>
