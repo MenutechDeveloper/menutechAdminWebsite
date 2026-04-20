@@ -48,5 +48,5 @@ EXCEPTION WHEN others THEN NULL; END $$;
 
 DO $$ BEGIN
     DROP POLICY IF EXISTS "Management access for responses" ON public.menutech_forms_respuestas;
-    CREATE POLICY "Management access for responses" ON public.menutech_forms_respuestas FOR SELECT USING (EXISTS (SELECT 1 FROM public.menutech_forms WHERE menutech_forms.id = form_id AND (menutech_forms.user_id = auth.uid() OR EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND (profiles.role = 'admin' OR profiles.role = 'developer')))));
+    CREATE POLICY "Management access for responses" ON public.menutech_forms_respuestas FOR ALL USING (EXISTS (SELECT 1 FROM public.menutech_forms WHERE menutech_forms.id = form_id AND (menutech_forms.user_id = auth.uid() OR EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND (profiles.role = 'admin' OR profiles.role = 'developer')))));
 EXCEPTION WHEN others THEN NULL; END $$;
