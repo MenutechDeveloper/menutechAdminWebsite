@@ -1,0 +1,33 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Form Test</title>
+    <script src="./menutechUI.js"></script>
+</head>
+<body style="background: #f8f9fa; padding: 50px;">
+    <menutech-forms id="test-form" domain="test.com"></menutech-forms>
+    <script>
+        // Use a timeout to ensure the component is upgraded
+        setTimeout(() => {
+            const form = document.getElementById('test-form');
+            if (form) {
+                form.fetchFormConfig = async () => {
+                    return {
+                        id: 'fake-id',
+                        config: {
+                            questions: [
+                                { id: 1, label: 'Name', type: 'text', required: true },
+                                { id: 2, label: 'Experience', type: 'select', required: false, options: 'Good, Great, Awesome' }
+                            ],
+                            primaryColor: '#ff9533',
+                            successMsg: 'Success!'
+                        }
+                    };
+                };
+                form.render();
+            }
+        }, 500);
+    </script>
+</body>
+</html>
