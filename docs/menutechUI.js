@@ -971,7 +971,7 @@ class MenutechForms extends HTMLElement {
 
         this.formId = fullData.id;
         this.formConfig = fullData.config;
-        const { questions, primaryColor, successMsg } = this.formConfig;
+        const { questions, primaryColor, successMsg, buttonText } = this.formConfig;
 
         const styles = `
             <style>
@@ -1054,8 +1054,8 @@ class MenutechForms extends HTMLElement {
                     animation: slideUp 0.5s ease;
                 }
                 @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-                .message.success { display: block; background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
-                .message.error { display: block; background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+                .message.success { display: none; background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
+                .message.error { display: none; background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
 
                 .error-shake { animation: shake 0.4s ease; border-color: #dc2626 !important; }
                 @keyframes shake {
@@ -1100,7 +1100,7 @@ class MenutechForms extends HTMLElement {
             <div class="form-container">
                 <form id="mt-form">
                     ${questionsHtml}
-                    <button type="submit" class="btn-submit">SEND RESPONSE</button>
+                    <button type="submit" class="btn-submit">${buttonText || 'SEND RESPONSE'}</button>
                 </form>
                 <div id="msg-success" class="message success">${successMsg}</div>
                 <div id="msg-error" class="message error">Please fill all required fields correctly.</div>
