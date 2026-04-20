@@ -961,7 +961,9 @@ class MenutechForms extends HTMLElement {
     }
 
     async render() {
-        let domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
+        let domain = this.getAttribute('domain') || window.location.hostname;
+        if (domain) domain = domain.replace(/^www\./, '').toLowerCase().trim();
+
         const fullData = await this.fetchFormConfig(domain);
 
         if (!fullData) {
@@ -1147,11 +1149,14 @@ class MenutechForms extends HTMLElement {
         btn.textContent = 'SENDING...';
 
         try {
+            let domain = this.getAttribute('domain') || window.location.hostname;
+            if (domain) domain = domain.replace(/^www\./, '').toLowerCase().trim();
+
             const { error } = await this.supabase
                 .from('menutech_forms_respuestas')
                 .insert({
                     form_id: this.formId,
-                    domain: this.getAttribute('domain') || window.location.hostname.replace(/^www\./, ''),
+                    domain: domain,
                     respuestas: respuestas
                 });
 
