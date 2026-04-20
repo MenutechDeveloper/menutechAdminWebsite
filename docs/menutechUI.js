@@ -913,3 +913,262 @@ customElements.define('menutech-christmas', class extends MenutechPromoBase { co
 customElements.define('menutech-halloween', class extends MenutechPromoBase { constructor() { super('halloween'); } });
 customElements.define('menutech-valentine', class extends MenutechPromoBase { constructor() { super('valentine'); } });
 customElements.define('menutech-president', class extends MenutechPromoBase { constructor() { super('president'); } });
+
+/**
+ * Menutech Forms Web Component
+ * Usage: <menutech-forms domain="yoursite.com"></menutech-forms>
+ */
+class MenutechForms extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.config = {
+            url: "https://eemqyrysdgasfjlitads.supabase.co",
+            key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY"
+        };
+        this.supabase = null;
+        this.formConfig = null;
+    }
+
+    async connectedCallback() {
+        await this.initSupabase();
+        this.render();
+    }
+
+    async initSupabase() {
+        if (this.supabase) return;
+        try {
+            const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
+            this.supabase = createClient(this.config.url, this.config.key);
+        } catch (err) {
+            console.error("MenutechForms Supabase Init Error:", err);
+        }
+    }
+
+    async fetchFormConfig(domain) {
+        if (!this.supabase) await this.initSupabase();
+        try {
+            const { data, error } = await this.supabase
+                .from('menutech_forms')
+                .select('*')
+                .eq('domain', domain)
+                .single();
+            if (error) return null;
+            return data;
+        } catch (err) {
+            return null;
+        }
+    }
+
+    async render() {
+        let domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
+        const fullData = await this.fetchFormConfig(domain);
+
+        if (!fullData) {
+            this.shadowRoot.innerHTML = '';
+            return;
+        }
+
+        this.formId = fullData.id;
+        this.formConfig = fullData.config;
+        const { questions, primaryColor, successMsg } = this.formConfig;
+
+        const styles = `
+            <style>
+                :host {
+                    display: block;
+                    width: 100%;
+                    max-width: 600px;
+                    margin: 40px auto;
+                    font-family: 'Plus Jakarta Sans', sans-serif;
+                    color: #1a1c1e;
+                }
+                .form-container {
+                    background: #ffffff;
+                    padding: 40px;
+                    border-radius: 32px;
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+                    border: 1px solid #f0f0f0;
+                    animation: fadeIn 0.8s ease;
+                }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+                .form-group { margin-bottom: 24px; text-align: left; }
+                .form-group label {
+                    display: block;
+                    font-size: 0.8rem;
+                    font-weight: 700;
+                    color: ${primaryColor};
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    margin-bottom: 10px;
+                    margin-left: 4px;
+                }
+                .form-control {
+                    width: 100%;
+                    padding: 18px 22px;
+                    border-radius: 20px;
+                    border: 1.5px solid #eee;
+                    background: #fcfcfc;
+                    font-family: inherit;
+                    font-size: 1rem;
+                    box-sizing: border-box;
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                .form-control:focus {
+                    outline: none;
+                    border-color: ${primaryColor};
+                    background: #fff;
+                    box-shadow: 0 0 0 5px ${primaryColor}15;
+                }
+                textarea.form-control { min-height: 120px; resize: vertical; }
+
+                .btn-submit {
+                    width: 100%;
+                    padding: 20px;
+                    border-radius: 22px;
+                    border: none;
+                    background: ${primaryColor};
+                    color: #fff;
+                    font-weight: 800;
+                    font-size: 1rem;
+                    cursor: pointer;
+                    transition: 0.4s;
+                    margin-top: 10px;
+                    box-shadow: 0 10px 25px ${primaryColor}40;
+                }
+                .btn-submit:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 15px 30px ${primaryColor}60;
+                }
+                .btn-submit:active { transform: translateY(-1px); }
+                .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+                .message {
+                    margin-top: 25px;
+                    padding: 20px;
+                    border-radius: 20px;
+                    font-weight: 600;
+                    text-align: center;
+                    display: none;
+                    animation: slideUp 0.5s ease;
+                }
+                @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                .message.success { display: block; background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
+                .message.error { display: block; background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+
+                .error-shake { animation: shake 0.4s ease; border-color: #dc2626 !important; }
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    25% { transform: translateX(-5px); }
+                    75% { transform: translateX(5px); }
+                }
+
+                @media (max-width: 600px) {
+                    .form-container { padding: 30px 20px; border-radius: 24px; }
+                }
+            </style>
+        `;
+
+        const questionsHtml = questions.map(q => {
+            let input = '';
+            const requiredAttr = q.required ? 'required' : '';
+            if (q.type === 'textarea') {
+                input = `<textarea class="form-control" name="${q.label}" ${requiredAttr} placeholder="Write here..."></textarea>`;
+            } else if (q.type === 'select') {
+                const options = q.options.split(',').map(o => o.trim());
+                input = `
+                    <select class="form-control" name="${q.label}" ${requiredAttr}>
+                        <option value="" disabled selected>Select an option</option>
+                        ${options.map(o => `<option value="${o}">${o}</option>`).join('')}
+                    </select>
+                `;
+            } else {
+                input = `<input type="${q.type}" class="form-control" name="${q.label}" ${requiredAttr} placeholder="Enter ${q.label.toLowerCase()}...">`;
+            }
+
+            return `
+                <div class="form-group">
+                    <label>${q.label}${q.required ? ' *' : ''}</label>
+                    ${input}
+                </div>
+            `;
+        }).join('');
+
+        this.shadowRoot.innerHTML = `
+            ${styles}
+            <div class="form-container">
+                <form id="mt-form">
+                    ${questionsHtml}
+                    <button type="submit" class="btn-submit">SEND RESPONSE</button>
+                </form>
+                <div id="msg-success" class="message success">${successMsg}</div>
+                <div id="msg-error" class="message error">Please fill all required fields correctly.</div>
+            </div>
+        `;
+
+        this.shadowRoot.getElementById('mt-form').onsubmit = (e) => this.handleSubmit(e);
+        this.shadowRoot.querySelectorAll('.form-control').forEach(input => {
+            input.oninput = () => input.classList.remove('error-shake');
+        });
+    }
+
+    async handleSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = form.querySelector('.btn-submit');
+        const successMsg = this.shadowRoot.getElementById('msg-success');
+        const errorMsg = this.shadowRoot.getElementById('msg-error');
+
+        successMsg.style.display = 'none';
+        errorMsg.style.display = 'none';
+
+        const formData = new FormData(form);
+        const respuestas = {};
+        let isValid = true;
+
+        this.formConfig.questions.forEach(q => {
+            const val = formData.get(q.label);
+            if (q.required && !val) {
+                isValid = false;
+                const input = form.querySelector(`[name="${q.label}"]`);
+                input.classList.add('error-shake');
+                setTimeout(() => input.classList.remove('error-shake'), 400);
+            }
+            respuestas[q.label] = val;
+        });
+
+        if (!isValid) {
+            errorMsg.style.display = 'block';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'SENDING...';
+
+        try {
+            const { error } = await this.supabase
+                .from('menutech_forms_respuestas')
+                .insert({
+                    form_id: this.formId,
+                    domain: this.getAttribute('domain') || window.location.hostname.replace(/^www\./, ''),
+                    respuestas: respuestas
+                });
+
+            if (error) throw error;
+
+            form.style.display = 'none';
+            successMsg.style.display = 'block';
+        } catch (err) {
+            console.error("Form submission error:", err);
+            btn.disabled = false;
+            btn.textContent = 'SEND RESPONSE';
+            errorMsg.textContent = 'An error occurred. Please try again later.';
+            errorMsg.style.display = 'block';
+        }
+    }
+}
+
+if (!customElements.get('menutech-forms')) {
+    customElements.define('menutech-forms', MenutechForms);
+}
