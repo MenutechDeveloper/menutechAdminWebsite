@@ -94,3 +94,39 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 5. Forms Table
+CREATE TABLE public.menutech_forms (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    domain TEXT NOT NULL,
+    config JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id)
+);
+
+-- 6. Form Responses Table
+CREATE TABLE public.menutech_forms_respuestas (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    form_id UUID REFERENCES public.menutech_forms(id) ON DELETE CASCADE,
+    domain TEXT NOT NULL,
+    respuestas JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- --- INDEXES ---
+CREATE INDEX IF NOT EXISTS idx_forms_domain ON public.menutech_forms(domain);
+CREATE INDEX IF NOT EXISTS idx_responses_form_id ON public.menutech_forms_respuestas(form_id);
+
+-- --- RLS POLICIES ---
+
+ALTER TABLE public.menutech_forms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.menutech_forms_respuestas ENABLE ROW LEVEL SECURITY;
+
+-- Forms Policies
+CREATE POLICY "Public read access for forms" ON public.menutech_forms FOR SELECT USING (true);
+CREATE POLICY "Management access for forms" ON public.menutech_forms FOR ALL USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND (profiles.role = 'admin' OR profiles.role = 'developer')));
+
+-- Responses Policies
+CREATE POLICY "Public insert access for responses" ON public.menutech_forms_respuestas FOR INSERT WITH CHECK (true);
+CREATE POLICY "Management access for responses" ON public.menutech_forms_respuestas FOR SELECT USING (EXISTS (SELECT 1 FROM public.menutech_forms WHERE menutech_forms.id = form_id AND (menutech_forms.user_id = auth.uid() OR EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND (profiles.role = 'admin' OR profiles.role = 'developer')))));

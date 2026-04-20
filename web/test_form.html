@@ -1,0 +1,33 @@
+
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Form Test</title>
+                <script src="./menutechUI.js"></script>
+            </head>
+            <body style="background: #f8f9fa; padding: 50px;">
+                <!-- We need to mock the fetchFormConfig in the component or rely on it failing gracefully if no DB entry exists -->
+                <!-- For verification, I will manually inject formConfig into the component instance if possible -->
+                <menutech-forms id="test-form" domain="test.com"></menutech-forms>
+
+                <script>
+                    const form = document.getElementById('test-form');
+                    // Mock the internal fetch
+                    form.fetchFormConfig = async () => {
+                        return {
+                            id: 'fake-id',
+                            config: {
+                                questions: [
+                                    { id: 1, label: 'Name', type: 'text', required: true },
+                                    { id: 2, label: 'Experience', type: 'select', required: false, options: 'Good, Great, Awesome' },
+                                    { id: 3, label: 'Message', type: 'textarea', required: false }
+                                ],
+                                primaryColor: '#ff9533',
+                                successMsg: 'Success!'
+                            }
+                        };
+                    };
+                    form.render();
+                </script>
+            </body>
+            </html>
