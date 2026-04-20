@@ -851,6 +851,13 @@
 
         async function loadResponses() {
             const container = document.getElementById('responses-container');
+            container.innerHTML = `<div style="text-align:center; padding:60px;"><div class="loader"></div></div>`;
+
+            if (!formId && activeOwnerId) {
+                // Try to reload form in case it was just created
+                await loadForm();
+            }
+
             if (!formId) {
                 container.innerHTML = `<div style="text-align:center; padding:60px; color:var(--text-dim);">No form configured yet.</div>`;
                 return;
