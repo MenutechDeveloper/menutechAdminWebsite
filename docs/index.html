@@ -208,6 +208,11 @@
                 <h3>QR Manager</h3>
                 <p>Manage, track, and update your generated QR codes.</p>
             </a>
+            <a href="adminMenus.html" class="bento-card" id="card-menus">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M3 11h18M3 16h18M3 6h18M16 12v1M16 8v1M6 12v1M6 8v1"/></svg></div>
+                <h3>Menus</h3>
+                <p>Create and manage digital menus for your restaurant.</p>
+            </a>
             <a href="laboratorio.html" class="bento-card hidden" id="card-lab">
                 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M10 2v8L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45L14 10V2M8.5 2h7M7 16h10"/></svg></div>
                 <h3>Laboratorio</h3>
@@ -272,12 +277,12 @@
                         document.getElementById('card-qr-gen').style.display = 'none';
                         document.getElementById('card-qr-admin').style.display = 'none';
                         const grid = document.getElementById('main-bento');
-                        grid.style.gridTemplateColumns = '1fr';
-                        grid.style.maxWidth = '500px';
+                        grid.style.maxWidth = '800px';
                         grid.style.margin = '40px auto 0 auto';
                     } else if (qrRoles.includes(role)) {
                         document.getElementById('card-users').style.display = 'none';
                         document.getElementById('card-web').style.display = 'none';
+                        document.getElementById('card-menus').style.display = 'none';
                         // QR Generator and QR Manager stay visible
                     }
                 }

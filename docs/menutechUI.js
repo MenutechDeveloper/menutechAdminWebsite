@@ -1,3 +1,8 @@
+const MT_UI_CONFIG = {
+    url: "https://eemqyrysdgasfjlitads.supabase.co",
+    key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY"
+};
+
 /**
  * Menutech Gallery Web Component
  * Usage: <menutech-gallery domain="yoursite.com"></menutech-gallery>
@@ -6,10 +11,7 @@ class MenutechGallery extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this.config = {
-            url: "https://eemqyrysdgasfjlitads.supabase.co",
-            key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY"
-        };
+        this.config = MT_UI_CONFIG;
         this.supabase = null;
     }
 
@@ -689,10 +691,7 @@ class MenutechPromoBase extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.eventType = eventType;
-        this.config = {
-            url: "https://eemqyrysdgasfjlitads.supabase.co",
-            key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY"
-        };
+        this.config = MT_UI_CONFIG;
         this.supabase = null;
     }
 
@@ -922,10 +921,7 @@ class MenutechForms extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this.config = {
-            url: "https://eemqyrysdgasfjlitads.supabase.co",
-            key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY"
-        };
+        this.config = MT_UI_CONFIG;
         this.supabase = null;
         this.formConfig = null;
     }
@@ -1176,4 +1172,407 @@ class MenutechForms extends HTMLElement {
 
 if (!customElements.get('menutech-forms')) {
     customElements.define('menutech-forms', MenutechForms);
+}
+
+/**
+ * Menutech Platform Orders Web Component
+ * Usage: <menutech-platform-orders domain="yoursite.com"></menutech-platform-orders>
+ */
+class MenutechPlatformOrders extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.config = MT_UI_CONFIG;
+        this.supabase = null;
+        this.menuData = null;
+    }
+
+    async connectedCallback() {
+        await this.initSupabase();
+        this.render();
+    }
+
+    async initSupabase() {
+        if (this.supabase) return;
+        try {
+            const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
+            this.supabase = createClient(this.config.url, this.config.key);
+        } catch (err) {
+            console.error("MenutechPlatformOrders Supabase Init Error:", err);
+        }
+    }
+
+    async fetchMenuData(domain) {
+        if (!this.supabase) await this.initSupabase();
+        try {
+            const { data, error } = await this.supabase
+                .from('menutech_menus')
+                .select('*')
+                .eq('domain', domain)
+                .single();
+            if (error) return null;
+            return data;
+        } catch (err) {
+            return null;
+        }
+    }
+
+    render() {
+        this.renderLoading();
+        this.loadData();
+    }
+
+    async loadData() {
+        let domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
+        const data = await this.fetchMenuData(domain);
+        if (!data) {
+            this.shadowRoot.innerHTML = '<div style="padding: 40px; text-align: center; color: #666;">Menu not found.</div>';
+            return;
+        }
+        this.menuData = data;
+        this.renderMenu();
+    }
+
+    renderLoading() {
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host { display: block; font-family: 'Plus Jakarta Sans', sans-serif; }
+                .loader { padding: 100px; text-align: center; color: #ff9533; font-weight: 600; }
+            </style>
+            <div class="loader">Loading Menu...</div>
+        `;
+    }
+
+    renderMenu() {
+        const { cover_url, cover_type, config } = this.menuData;
+        const categoriesData = config.categories || [];
+        const toppings = config.toppings || [];
+
+        const now = new Date();
+        const currentDay = now.getDay();
+        const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        const currentDate = now.toISOString().split('T')[0];
+
+        const categories = categoriesData.filter(cat => {
+            const vis = cat.visibility;
+            if (!vis) return true;
+            if (vis.startDate && currentDate < vis.startDate) return false;
+            if (vis.endDate && currentDate > vis.endDate) return false;
+            if (vis.days && vis.days.length > 0 && !vis.days.includes(currentDay)) return false;
+            if (vis.start && currentTime < vis.start) return false;
+            if (vis.end && currentTime > vis.end) return false;
+            return true;
+        });
+
+        const styles = `
+            <style>
+                :host { display: block; font-family: 'Plus Jakarta Sans', sans-serif; color: #1a1c1e; background: #fcfcfc; min-height: 100vh; }
+
+                .cover-container { width: 100%; height: 200px; position: relative; overflow: hidden; }
+                .cover-container img, .cover-container video { width: 100%; height: 100%; object-fit: cover; }
+
+                .menu-content { max-width: 800px; margin: 0 auto; padding: 20px; }
+
+                /* Category Tabs */
+                .category-tabs {
+                    position: sticky; top: 0; background: rgba(255,255,255,0.8);
+                    backdrop-filter: blur(10px); z-index: 100; margin: -20px -20px 20px -20px;
+                    padding: 15px 20px; display: flex; gap: 12px; overflow-x: auto;
+                    scrollbar-width: none; border-bottom: 1px solid #f0f0f0;
+                }
+                .category-tabs::-webkit-scrollbar { display: none; }
+                .tab {
+                    padding: 8px 18px; border-radius: 20px; background: #f0f0f0;
+                    font-size: 0.9rem; font-weight: 600; white-space: nowrap; cursor: pointer;
+                    transition: 0.3s; color: #666;
+                }
+                .tab.active { background: #ff9533; color: #fff; box-shadow: 0 4px 12px rgba(255,149,51,0.3); }
+
+                /* Category Section */
+                .category-section { margin-bottom: 40px; scroll-margin-top: 80px; }
+                .category-header { margin-bottom: 20px; }
+                .category-header h2 { margin: 0; font-size: 1.6rem; color: #1a1c1e; }
+                .category-header p { margin: 5px 0 0; color: #666; font-size: 0.95rem; }
+
+                /* Dish Grid */
+                .dish-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+                @media (max-width: 600px) { .dish-grid { grid-template-columns: 1fr; } }
+
+                .dish-card {
+                    background: #fff; border-radius: 24px; padding: 15px;
+                    display: flex; gap: 15px; cursor: pointer; transition: 0.3s;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid #f8f8f8;
+                }
+                .dish-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.06); }
+
+                .dish-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+                .dish-info h3 { margin: 0; font-size: 1.1rem; color: #1a1c1e; }
+                .dish-info p { margin: 5px 0; color: #666; font-size: 0.85rem; line-height: 1.4;
+                    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+                .dish-price { font-weight: 700; color: #ff9533; font-size: 1.1rem; margin-top: 10px; }
+
+                .dish-image { width: 100px; height: 100px; border-radius: 18px; overflow: hidden; flex-shrink: 0; }
+                .dish-image img { width: 100%; height: 100%; object-fit: cover; }
+
+                /* Popup */
+                .popup-overlay {
+                    position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+                    z-index: 1000; display: none; align-items: flex-end; justify-content: center;
+                }
+                .popup-card {
+                    background: #fff; width: 100%; max-width: 600px; border-radius: 30px 30px 0 0;
+                    max-height: 90vh; overflow-y: auto; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+                .popup-img { width: 100%; height: 250px; position: relative; }
+                .popup-img img { width: 100%; height: 100%; object-fit: cover; }
+                .close-popup {
+                    position: absolute; top: 20px; right: 20px; width: 40px; height: 40px;
+                    border-radius: 50%; background: #fff; border: none; cursor: pointer;
+                    display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                }
+
+                .popup-body { padding: 30px; }
+                .popup-body h2 { margin: 0; font-size: 1.8rem; }
+                .popup-body .desc { color: #666; margin: 10px 0 20px; font-size: 1rem; line-height: 1.5; }
+
+                .option-group { margin-bottom: 25px; }
+                .option-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 12px; display: flex; justify-content: space-between; }
+                .option-badge { font-size: 0.7rem; background: #f0f0f0; padding: 4px 10px; border-radius: 10px; color: #999; }
+
+                .option-item {
+                    display: flex; justify-content: space-between; align-items: center;
+                    padding: 12px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer;
+                }
+                .option-item:last-child { border: none; }
+                .opt-name { display: flex; align-items: center; gap: 10px; }
+                .opt-price { color: #ff9533; font-weight: 600; }
+
+                .radio, .checkbox { width: 22px; height: 22px; border: 2px solid #ddd; border-radius: 50%; position: relative; }
+                .checkbox { border-radius: 6px; }
+                .active .radio::after { content: ''; position: absolute; inset: 4px; background: #ff9533; border-radius: 50%; }
+                .active .checkbox::after { content: '✓'; position: absolute; inset: 0; color: #ff9533; display: flex; align-items: center; justify-content: center; font-weight: 900; }
+
+                .add-to-cart {
+                    padding: 20px 30px; background: #ff9533; color: #fff; border: none;
+                    border-radius: 20px; width: 100%; font-weight: 800; font-size: 1.1rem;
+                    cursor: pointer; margin-top: 20px; box-shadow: 0 10px 25px rgba(255,149,51,0.3);
+                }
+            </style>
+        `;
+
+        const coverHtml = cover_url ? `
+            <div class="cover-container">
+                ${cover_type === 'video'
+                    ? `<video src="${cover_url}" autoplay loop muted playsinline></video>`
+                    : `<img src="${cover_url}">`
+                }
+            </div>
+        ` : '';
+
+        const tabsHtml = categories.map((cat, i) => `
+            <div class="tab ${i === 0 ? 'active' : ''}" data-target="cat-${i}">${cat.name}</div>
+        `).join('');
+
+        const sectionsHtml = categories.map((cat, i) => `
+            <div class="category-section" id="cat-${i}">
+                <div class="category-header">
+                    <h2>${cat.name}</h2>
+                    ${cat.description ? `<p>${cat.description}</p>` : ''}
+                </div>
+                <div class="dish-grid">
+                    ${(cat.dishes || []).map(dish => `
+                        <div class="dish-card" data-dish='${JSON.stringify(dish).replace(/'/g, "&apos;")}'>
+                            <div class="dish-info">
+                                <div>
+                                    <h3>${dish.name}</h3>
+                                    <p>${dish.description || ''}</p>
+                                </div>
+                                <div class="dish-price">$${dish.price}</div>
+                            </div>
+                            ${dish.image ? `<div class="dish-image"><img src="${dish.image}"></div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+
+        this.shadowRoot.innerHTML = `
+            ${styles}
+            ${coverHtml}
+            <div class="menu-content">
+                <div class="category-tabs">${tabsHtml}</div>
+                <div class="sections-container">${sectionsHtml}</div>
+            </div>
+            <div class="popup-overlay" id="popup">
+                <div class="popup-card" id="popup-content"></div>
+            </div>
+        `;
+
+        this.initInteractivity();
+    }
+
+    initInteractivity() {
+        const tabs = this.shadowRoot.querySelectorAll('.tab');
+        const overlay = this.shadowRoot.getElementById('popup');
+        const popupContent = this.shadowRoot.getElementById('popup-content');
+
+        tabs.forEach(tab => {
+            tab.onclick = () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const targetId = tab.getAttribute('data-target');
+                const target = this.shadowRoot.getElementById(targetId);
+                target.scrollIntoView({ behavior: 'smooth' });
+            };
+        });
+
+        // Sticky scroll highlight
+        const sections = this.shadowRoot.querySelectorAll('.category-section');
+        const container = this.shadowRoot.querySelector('.menu-content');
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (window.pageYOffset >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('data-target') === current) {
+                    tab.classList.add('active');
+                }
+            });
+        }, { passive: true });
+
+        this.shadowRoot.querySelectorAll('.dish-card').forEach(card => {
+            card.onclick = () => {
+                const dish = JSON.parse(card.getAttribute('data-dish'));
+                this.openDishPopup(dish);
+            };
+        });
+
+        overlay.onclick = (e) => {
+            if (e.target === overlay) {
+                overlay.style.display = 'none';
+            }
+        };
+    }
+
+    openDishPopup(dish) {
+        const overlay = this.shadowRoot.getElementById('popup');
+        const popupContent = this.shadowRoot.getElementById('popup-content');
+
+        const hasSizes = dish.sizes && dish.sizes.length > 0;
+        const allToppings = this.menuData.config.toppings || [];
+        const dishToppings = allToppings.filter(t => (dish.toppings || []).includes(t.id));
+
+        popupContent.innerHTML = `
+            <div class="popup-img">
+                ${dish.image ? `<img src="${dish.image}">` : '<div style="height:100%; background:#f0f0f0;"></div>'}
+                <button class="close-popup">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="popup-body">
+                <h2>${dish.name}</h2>
+                <p class="desc">${dish.description || ''}</p>
+
+                ${hasSizes ? `
+                    <div class="option-group">
+                        <div class="option-title">CHOOSE SIZE <span class="option-badge">REQUIRED</span></div>
+                        ${dish.sizes.map((s, i) => `
+                            <div class="option-item ${i === 0 ? 'active' : ''}" data-type="size">
+                                <div class="opt-name">
+                                    <div class="radio"></div>
+                                    <span>${s.name}</span>
+                                </div>
+                                <div class="opt-price">$${s.price}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                ${dishToppings.map(group => `
+                    <div class="option-group" data-group-id="${group.id}" data-min="${group.min}" data-max="${group.max}">
+                        <div class="option-title">
+                            ${group.name.toUpperCase()}
+                            <span class="option-badge">${group.min > 0 ? 'REQUIRED' : 'OPTIONAL'}</span>
+                        </div>
+                        ${group.items.map(item => `
+                            <div class="option-item" data-type="topping" data-price="${item.price}">
+                                <div class="opt-name">
+                                    <div class="${group.max === 1 ? 'radio' : 'checkbox'}"></div>
+                                    <span>${item.name}</span>
+                                </div>
+                                <div class="opt-price">${item.price > 0 ? '+$' + item.price : 'Free'}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `).join('')}
+
+                <button class="add-to-cart">ADD TO ORDER • $${dish.price}</button>
+            </div>
+        `;
+
+        overlay.style.display = 'flex';
+
+        popupContent.querySelector('.close-popup').onclick = () => {
+            overlay.style.display = 'none';
+        };
+
+        // Size selection logic
+        popupContent.querySelectorAll('.option-item[data-type="size"]').forEach(item => {
+            item.onclick = () => {
+                popupContent.querySelectorAll('.option-item[data-type="size"]').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                this.updatePopupTotal(dish);
+            };
+        });
+
+        // Topping selection logic
+        popupContent.querySelectorAll('.option-group[data-group-id]').forEach(group => {
+            const max = parseInt(group.getAttribute('data-max'));
+            group.querySelectorAll('.option-item[data-type="topping"]').forEach(item => {
+                item.onclick = () => {
+                    if (max === 1) {
+                        group.querySelectorAll('.option-item').forEach(i => i.classList.remove('active'));
+                        item.classList.add('active');
+                    } else {
+                        const activeCount = group.querySelectorAll('.option-item.active').length;
+                        if (item.classList.contains('active')) {
+                            item.classList.remove('active');
+                        } else if (activeCount < max) {
+                            item.classList.add('active');
+                        }
+                    }
+                    this.updatePopupTotal(dish);
+                };
+            });
+        });
+    }
+
+    updatePopupTotal(dish) {
+        const popupContent = this.shadowRoot.getElementById('popup-content');
+        let total = parseFloat(dish.price);
+
+        // Check if size is selected
+        const selectedSize = popupContent.querySelector('.option-item[data-type="size"].active');
+        if (selectedSize) {
+            total = parseFloat(selectedSize.querySelector('.opt-price').textContent.replace('$', ''));
+        }
+
+        // Add toppings
+        popupContent.querySelectorAll('.option-item[data-type="topping"].active').forEach(item => {
+            total += parseFloat(item.getAttribute('data-price') || 0);
+        });
+
+        popupContent.querySelector('.add-to-cart').textContent = `ADD TO ORDER • $${total.toFixed(2)}`;
+    }
+}
+
+if (!customElements.get('menutech-platform-orders')) {
+    customElements.define('menutech-platform-orders', MenutechPlatformOrders);
 }
