@@ -18,6 +18,14 @@ CREATE TABLE IF NOT EXISTS public.menutech_menus (
     UNIQUE(user_id)
 );
 
+-- Ensure slug column exists if table was already created
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menutech_menus' AND column_name='slug') THEN
+        ALTER TABLE public.menutech_menus ADD COLUMN slug TEXT UNIQUE;
+    END IF;
+END $$;
+
 -- 2. Indexes for faster lookups
 CREATE INDEX IF NOT EXISTS idx_menus_domain ON public.menutech_menus(domain);
 CREATE INDEX IF NOT EXISTS idx_menus_slug ON public.menutech_menus(slug);
@@ -28,7 +36,7 @@ ALTER TABLE public.menutech_menus ENABLE ROW LEVEL SECURITY;
 
 -- 4. RLS Policies
 
--- Public read access: Anyone can view a menu by its domain
+-- Public read access: Anyone can view a menu by its domain or slug
 DO $$ BEGIN
     DROP POLICY IF EXISTS "Public read access for menus" ON public.menutech_menus;
     CREATE POLICY "Public read access for menus" ON public.menutech_menus FOR SELECT USING (true);
