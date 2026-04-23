@@ -1275,22 +1275,27 @@ class MenutechPlatformOrders extends HTMLElement {
 
         const styles = `
             <style>
-                :host { display: block; font-family: 'Plus Jakarta Sans', sans-serif; color: #1a1c1e; background: #f4f4f4; min-height: 100vh; padding: ${style === 'mode1' ? '40px 20px' : '0'}; }
+                :host { display: block; font-family: 'Plus Jakarta Sans', sans-serif; color: #1a1c1e; background: ${style === 'mode1' ? '#f4f4f4' : '#fff'}; min-height: 100vh; padding: ${style === 'mode1' ? '40px 20px' : '0'}; }
+
+                * { box-sizing: border-box; }
 
                 .menu-wrapper {
-                    max-width: 800px; margin: 0 auto; background: #fff; min-height: 100vh;
+                    max-width: 800px; margin: 0 auto; background: #fff; min-height: ${style === 'mode1' ? 'calc(100vh - 80px)' : '100vh'};
                     box-shadow: ${style === 'mode1' ? '0 30px 100px rgba(0,0,0,0.1)' : 'none'};
                     border-radius: ${style === 'mode1' ? '40px' : '0'}; overflow: hidden;
                     position: relative;
                 }
-                @media (max-width: 600px) { :host { padding: 0; } .menu-wrapper { border-radius: 0; } }
+                @media (max-width: 600px) {
+                    :host { padding: 0; }
+                    .menu-wrapper { border-radius: 0; min-height: 100vh; }
+                }
 
                 .cover-container { width: 100%; height: 200px; position: relative; overflow: hidden; }
                 .cover-container img, .cover-container video { width: 100%; height: 100%; object-fit: cover; }
 
                 .menu-content { padding: 20px; }
 
-                /* Mode 1 Luxury Tabs */
+                /* Mode 1 Tabs */
                 .category-tabs {
                     position: sticky; top: 0; background: rgba(255,255,255,0.8);
                     backdrop-filter: blur(10px); z-index: 100; margin: -20px -20px 20px -20px;
@@ -1421,29 +1426,6 @@ class MenutechPlatformOrders extends HTMLElement {
 
         const tabsHtml = categories.map((cat, i) => `
             <div class="tab ${i === 0 ? 'active' : ''}" data-target="cat-${i}">${cat.name}</div>
-        `).join('');
-
-        const sectionsHtml = categories.map((cat, i) => `
-            <div class="category-section" id="cat-${i}">
-                <div class="category-header">
-                    <h2>${cat.name}</h2>
-                    ${cat.description ? `<p>${cat.description}</p>` : ''}
-                </div>
-                <div class="dish-grid">
-                    ${(cat.dishes || []).map(dish => `
-                        <div class="dish-card" data-dish='${JSON.stringify(dish).replace(/'/g, "&apos;")}'>
-                            <div class="dish-info">
-                                <div>
-                                    <h3>${dish.name}</h3>
-                                    <p>${dish.description || ''}</p>
-                                </div>
-                                <div class="dish-price">$${dish.price}</div>
-                            </div>
-                            ${dish.image ? `<div class="dish-image"><img src="${dish.image}"></div>` : ''}
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
         `).join('');
 
         const sectionsHtml = categories.map((cat, i) => `
