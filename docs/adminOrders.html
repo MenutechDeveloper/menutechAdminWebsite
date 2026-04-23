@@ -70,6 +70,7 @@
         }
         .btn-accept { background: var(--success); color: #fff; }
         .btn-reject { background: var(--error); color: #fff; }
+        .btn-whatsapp { background: #25D366; color: #fff; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .status-badge {
@@ -206,12 +207,13 @@
 
                     <div class="order-footer">
                         <div class="total-price">Total: $${order.total.toFixed(2)}</div>
-                        ${order.status === 'pending' ? `
-                            <div class="actions">
+                        <div class="actions">
+                            <button class="btn btn-whatsapp" onclick="sendWhatsApp('${order.id}')">WhatsApp</button>
+                            ${order.status === 'pending' ? `
                                 <button class="btn btn-reject" onclick="updateOrderStatus('${order.id}', 'rejected')">Reject</button>
                                 <button class="btn btn-accept" onclick="updateOrderStatus('${order.id}', 'accepted')">Accept</button>
-                            </div>
-                        ` : ''}
+                            ` : ''}
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -223,6 +225,30 @@
                 .eq('id', id);
 
             if (error) alert('Error updating order: ' + error.message);
+        };
+
+        window.sendWhatsApp = (orderId) => {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            let text = `*NUEVO PEDIDO - ${order.customer_name}*\n\n`;
+            order.items.forEach(item => {
+                text += `• ${item.quantity}x ${item.name} ($${(item.total || item.price).toFixed(2)})\n`;
+                if (item.size) text += `  _Size: ${item.size}_\n`;
+                if (item.toppings && item.toppings.length > 0) text += `  _Toppings: ${item.toppings.join(', ')}_\n`;
+                if (item.instructions) text += `  _Nota: ${item.instructions}_\n`;
+            });
+
+            text += `\n*TOTAL: $${order.total.toFixed(2)}*\n`;
+            text += `\n*DETALLES DE ENTREGA*\n`;
+            text += `Tipo: ${order.order_type === 'delivery' ? 'Domicilio' : 'Recoger'}\n`;
+            if (order.address) text += `Dir: ${order.address}\n`;
+            if (order.reference) text += `Ref: ${order.reference}\n`;
+            text += `Hora: ${order.delivery_time_mode === 'later' ? `${order.delivery_date} ${order.delivery_time}` : 'Lo antes posible'}\n`;
+            text += `Pago: ${order.payment_method === 'cash' ? 'Efectivo' : 'Transferencia'}\n`;
+
+            const phone = order.customer_phone.replace(/\D/g, '');
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
         };
 
         function playNotification() {
