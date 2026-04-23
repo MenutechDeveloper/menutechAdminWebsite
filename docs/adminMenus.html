@@ -286,7 +286,15 @@
         <header>
             <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
             <p id="view-domain-title" style="font-weight: 700; color: var(--orange); font-size: 0.85rem; letter-spacing: 1px;"></p>
-            <div id="subdomain-link" style="margin-top: 10px; font-size: 0.9rem; font-weight: 600; color: var(--text-dim);"></div>
+
+            <div style="margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                <label style="font-size: 0.65rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase;">Menu URL Slug</label>
+                <div style="display: flex; align-items: center; background: var(--input); padding: 5px 15px; border-radius: 12px; border: 1px solid var(--border);">
+                    <span style="font-size: 0.85rem; color: var(--text-dim); font-weight: 600;">menutech.io/menu.html?n=</span>
+                    <input type="text" id="slug-input" style="background:transparent; border:none; color:var(--orange); font-weight:800; font-size:0.85rem; padding:5px 0; outline:none; width: 150px;" oninput="updateSlug(this.value)">
+                </div>
+                <div id="subdomain-link" style="margin-top: 5px; font-size: 0.8rem; font-weight: 600;"></div>
+            </div>
         </header>
 
         <div class="dashboard-layout">
@@ -315,10 +323,10 @@
                         <h2>Menu Design</h2>
                         <div style="display:flex; gap:10px;">
                             <label style="cursor:pointer; padding:8px 16px; border-radius:12px; border:1px solid var(--border); font-size:0.75rem; font-weight:700;" id="label-mode1">
-                                <input type="radio" name="menu-style" value="mode1" onchange="updateStyle(this.value)" style="display:none"> Mode 1 (Luxury)
+                                <input type="radio" name="menu-style" value="mode1" onchange="updateStyle(this.value)" style="display:none"> Mode 1
                             </label>
                             <label style="cursor:pointer; padding:8px 16px; border-radius:12px; border:1px solid var(--border); font-size:0.75rem; font-weight:700;" id="label-mode2">
-                                <input type="radio" name="menu-style" value="mode2" onchange="updateStyle(this.value)" style="display:none"> Mode 2 (Minimal)
+                                <input type="radio" name="menu-style" value="mode2" onchange="updateStyle(this.value)" style="display:none"> Mode 2
                             </label>
                         </div>
                     </div>
@@ -439,12 +447,6 @@
         });
 
         async function checkSession() {
-            if (window.sessionStorage.getItem('bypass_auth')) {
-                userRole = 'admin';
-                activeOwnerId = 'mock-id';
-                showApp({ username: 'Test Restaurant', domain: 'test.com', id: 'mock-id-123456' });
-                return;
-            }
             const { data: { session } } = await sb.auth.getSession();
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
@@ -491,9 +493,17 @@
         function updateSubdomainLink(profile) {
             if (!profile) return;
             const slug = menuData.slug || (profile.username || 'restaurant').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            menuData.slug = slug;
+            document.getElementById('slug-input').value = slug;
             const link = `menutech.io/menu.html?n=${slug}`;
-            document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none;">${link}</a>`;
+            document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none;">Go to Menu</a>`;
         }
+
+        window.updateSlug = (val) => {
+            menuData.slug = val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            const link = `menutech.io/menu.html?n=${menuData.slug}`;
+            document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none;">Go to Menu</a>`;
+        };
 
         async function loadMenu() {
             const { data } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
@@ -902,8 +912,8 @@
 
             // Ensure we have a slug
             if (!menuData.slug) {
-                const profile = allOwners.find(o => o.id === activeOwnerId) || { username: 'restaurant' };
-                menuData.slug = (profile.username || 'restaurant').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                const slugInput = document.getElementById('slug-input');
+                menuData.slug = slugInput.value || 'restaurant';
             }
 
             try {
