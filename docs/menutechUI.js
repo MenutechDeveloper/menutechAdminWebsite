@@ -1185,6 +1185,7 @@ class MenutechPlatformOrders extends HTMLElement {
         this.config = MT_UI_CONFIG;
         this.supabase = null;
         this.menuData = null;
+        this.cart = [];
     }
 
     async connectedCallback() {
@@ -1251,7 +1252,8 @@ class MenutechPlatformOrders extends HTMLElement {
     }
 
     renderMenu() {
-        const { cover_url, cover_type, config } = this.menuData;
+        const { cover_url, cover_type, config, menu_style } = this.menuData;
+        const style = menu_style || 'mode1';
         const categoriesData = config.categories || [];
         const toppings = config.toppings || [];
 
@@ -1273,14 +1275,22 @@ class MenutechPlatformOrders extends HTMLElement {
 
         const styles = `
             <style>
-                :host { display: block; font-family: 'Plus Jakarta Sans', sans-serif; color: #1a1c1e; background: #fcfcfc; min-height: 100vh; }
+                :host { display: block; font-family: 'Plus Jakarta Sans', sans-serif; color: #1a1c1e; background: #f4f4f4; min-height: 100vh; padding: ${style === 'mode1' ? '40px 20px' : '0'}; }
+
+                .menu-wrapper {
+                    max-width: 800px; margin: 0 auto; background: #fff; min-height: 100vh;
+                    box-shadow: ${style === 'mode1' ? '0 30px 100px rgba(0,0,0,0.1)' : 'none'};
+                    border-radius: ${style === 'mode1' ? '40px' : '0'}; overflow: hidden;
+                    position: relative;
+                }
+                @media (max-width: 600px) { :host { padding: 0; } .menu-wrapper { border-radius: 0; } }
 
                 .cover-container { width: 100%; height: 200px; position: relative; overflow: hidden; }
                 .cover-container img, .cover-container video { width: 100%; height: 100%; object-fit: cover; }
 
-                .menu-content { max-width: 800px; margin: 0 auto; padding: 20px; }
+                .menu-content { padding: 20px; }
 
-                /* Category Tabs */
+                /* Mode 1 Luxury Tabs */
                 .category-tabs {
                     position: sticky; top: 0; background: rgba(255,255,255,0.8);
                     backdrop-filter: blur(10px); z-index: 100; margin: -20px -20px 20px -20px;
@@ -1298,10 +1308,13 @@ class MenutechPlatformOrders extends HTMLElement {
                 /* Category Section */
                 .category-section { margin-bottom: 40px; scroll-margin-top: 80px; }
                 .category-header { margin-bottom: 20px; }
-                .category-header h2 { margin: 0; font-size: 1.6rem; color: #1a1c1e; }
+                .category-header h2 {
+                    margin: 0; font-size: 1.6rem; color: #1a1c1e;
+                    ${style === 'mode2' ? 'border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; text-transform: uppercase; font-size: 1.4rem; letter-spacing: 1px;' : ''}
+                }
                 .category-header p { margin: 5px 0 0; color: #666; font-size: 0.95rem; }
 
-                /* Dish Grid */
+                /* Dish Grid - Mode 1 */
                 .dish-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
                 @media (max-width: 600px) { .dish-grid { grid-template-columns: 1fr; } }
 
@@ -1312,6 +1325,19 @@ class MenutechPlatformOrders extends HTMLElement {
                 }
                 .dish-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.06); }
 
+                /* Mode 2 Styles */
+                .mode2-list { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+                @media (max-width: 768px) { .mode2-list { grid-template-columns: 1fr; gap: 10px; } }
+                .mode2-item {
+                    display: flex; flex-direction: column; padding: 15px 0;
+                    border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s;
+                }
+                .mode2-item:hover { background: #fafafa; padding-left: 5px; }
+                .mode2-header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+                .mode2-name { font-weight: 800; text-transform: uppercase; font-size: 0.95rem; color: #1a1c1e; }
+                .mode2-price { font-weight: 800; color: #1a1c1e; font-size: 1rem; }
+                .mode2-desc { font-size: 0.8rem; color: #666; margin-top: 6px; line-height: 1.4; }
+
                 .dish-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
                 .dish-info h3 { margin: 0; font-size: 1.1rem; color: #1a1c1e; }
                 .dish-info p { margin: 5px 0; color: #666; font-size: 0.85rem; line-height: 1.4;
@@ -1320,6 +1346,21 @@ class MenutechPlatformOrders extends HTMLElement {
 
                 .dish-image { width: 100px; height: 100px; border-radius: 18px; overflow: hidden; flex-shrink: 0; }
                 .dish-image img { width: 100%; height: 100%; object-fit: cover; }
+
+                /* Cart Button */
+                .cart-btn {
+                    position: fixed; bottom: 30px; right: 30px;
+                    background: #ff9533; color: #fff; width: 60px; height: 60px;
+                    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                    box-shadow: 0 15px 35px rgba(255,149,51,0.4); cursor: pointer; z-index: 500;
+                    transition: 0.3s;
+                }
+                .cart-btn:hover { transform: scale(1.1); }
+                .cart-count {
+                    position: absolute; top: -5px; right: -5px; background: #000;
+                    color: #fff; width: 22px; height: 22px; border-radius: 50%;
+                    font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+                }
 
                 /* Popup */
                 .popup-overlay {
@@ -1405,12 +1446,55 @@ class MenutechPlatformOrders extends HTMLElement {
             </div>
         `).join('');
 
+        const sectionsHtml = categories.map((cat, i) => `
+            <div class="category-section" id="cat-${i}">
+                <div class="category-header">
+                    <h2>${cat.name}</h2>
+                    ${cat.description ? `<p>${cat.description}</p>` : ''}
+                </div>
+                ${style === 'mode1' ? `
+                    <div class="dish-grid">
+                        ${(cat.dishes || []).map(dish => `
+                            <div class="dish-card" data-dish='${JSON.stringify(dish).replace(/'/g, "&apos;")}'>
+                                <div class="dish-info">
+                                    <div>
+                                        <h3>${dish.name}</h3>
+                                        <p>${dish.description || ''}</p>
+                                    </div>
+                                    <div class="dish-price">$${dish.price}</div>
+                                </div>
+                                ${dish.image ? `<div class="dish-image"><img src="${dish.image}"></div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : `
+                    <div class="mode2-list">
+                        ${(cat.dishes || []).map(dish => `
+                            <div class="mode2-item" data-dish='${JSON.stringify(dish).replace(/'/g, "&apos;")}'>
+                                <div class="mode2-header">
+                                    <span class="mode2-name">${dish.name}</span>
+                                    <span class="mode2-price">$${dish.price}</span>
+                                </div>
+                                <p class="mode2-desc">${dish.description || ''}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
+            </div>
+        `).join('');
+
         this.shadowRoot.innerHTML = `
             ${styles}
-            ${coverHtml}
-            <div class="menu-content">
-                <div class="category-tabs">${tabsHtml}</div>
-                <div class="sections-container">${sectionsHtml}</div>
+            <div class="menu-wrapper">
+                ${coverHtml}
+                <div class="menu-content">
+                    ${style === 'mode1' ? `<div class="category-tabs">${tabsHtml}</div>` : ''}
+                    <div class="sections-container">${sectionsHtml}</div>
+                </div>
+            </div>
+            <div class="cart-btn" id="cart-btn" style="display:none">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:24px;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                <div class="cart-count" id="cart-count">0</div>
             </div>
             <div class="popup-overlay" id="popup">
                 <div class="popup-card" id="popup-content"></div>
@@ -1454,7 +1538,8 @@ class MenutechPlatformOrders extends HTMLElement {
             });
         }, { passive: true });
 
-        this.shadowRoot.querySelectorAll('.dish-card').forEach(card => {
+        const cards = this.shadowRoot.querySelectorAll('.dish-card, .mode2-item');
+        cards.forEach(card => {
             card.onclick = () => {
                 const dish = JSON.parse(card.getAttribute('data-dish'));
                 this.openDishPopup(dish);
@@ -1576,7 +1661,122 @@ class MenutechPlatformOrders extends HTMLElement {
             total += parseFloat(item.getAttribute('data-price') || 0);
         });
 
-        popupContent.querySelector('.add-to-cart').textContent = `ADD TO ORDER • $${total.toFixed(2)}`;
+        const btn = popupContent.querySelector('.add-to-cart');
+        btn.textContent = `ADD TO ORDER • $${total.toFixed(2)}`;
+
+        btn.onclick = () => {
+            const item = {
+                name: dish.name,
+                price: total,
+                size: selectedSize ? selectedSize.querySelector('span').textContent : null,
+                toppings: Array.from(popupContent.querySelectorAll('.option-item[data-type="topping"].active')).map(i => i.querySelector('span').textContent)
+            };
+            this.addToCart(item);
+            this.shadowRoot.getElementById('popup').style.display = 'none';
+        };
+    }
+
+    addToCart(item) {
+        this.cart.push(item);
+        this.updateCartUI();
+    }
+
+    updateCartUI() {
+        const btn = this.shadowRoot.getElementById('cart-btn');
+        const count = this.shadowRoot.getElementById('cart-count');
+        if (this.cart.length > 0) {
+            btn.style.display = 'flex';
+            count.textContent = this.cart.length;
+        } else {
+            btn.style.display = 'none';
+        }
+
+        btn.onclick = () => this.openCartPopup();
+    }
+
+    openCartPopup() {
+        const overlay = this.shadowRoot.getElementById('popup');
+        const popupContent = this.shadowRoot.getElementById('popup-content');
+
+        const total = this.cart.reduce((sum, item) => sum + item.price, 0);
+
+        popupContent.innerHTML = `
+            <div class="popup-body">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h2 style="margin:0">Your Order</h2>
+                    <button class="close-popup" style="position:static; box-shadow:none; border:1px solid #f0f0f0;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+
+                <div style="max-height:300px; overflow-y:auto; margin-bottom:20px;">
+                    ${this.cart.map((item, i) => `
+                        <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f0f0f0;">
+                            <div>
+                                <div style="font-weight:700;">${item.name}</div>
+                                <div style="font-size:0.75rem; color:#888;">
+                                    ${item.size ? item.size : ''} ${item.toppings.length > 0 ? '• ' + item.toppings.join(', ') : ''}
+                                </div>
+                            </div>
+                            <div style="font-weight:700;">$${item.price.toFixed(2)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <input type="text" id="cust-name" placeholder="Your Name" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px; box-sizing:border-box;">
+                    <input type="text" id="cust-phone" placeholder="Phone Number" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px; box-sizing:border-box;">
+                    <textarea id="cust-notes" placeholder="Special notes..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; box-sizing:border-box; min-height:60px;"></textarea>
+                </div>
+
+                <button class="add-to-cart" id="send-order-btn">SEND ORDER • $${total.toFixed(2)}</button>
+            </div>
+        `;
+
+        overlay.style.display = 'flex';
+        popupContent.querySelector('.close-popup').onclick = () => overlay.style.display = 'none';
+
+        popupContent.querySelector('#send-order-btn').onclick = () => this.sendOrder();
+    }
+
+    async sendOrder() {
+        const name = this.shadowRoot.getElementById('cust-name').value;
+        const phone = this.shadowRoot.getElementById('cust-phone').value;
+        const notes = this.shadowRoot.getElementById('cust-notes').value;
+
+        if (!name || !phone) {
+            alert('Please provide name and phone number.');
+            return;
+        }
+
+        const total = this.cart.reduce((sum, item) => sum + item.price, 0);
+        const btn = this.shadowRoot.getElementById('send-order-btn');
+        btn.textContent = 'SENDING...';
+        btn.disabled = true;
+
+        if (!this.supabase) await this.initSupabase();
+
+        try {
+            const { error } = await this.supabase.from('menutech_orders').insert({
+                user_id: this.menuData.user_id,
+                items: this.cart,
+                total: total,
+                customer_name: name,
+                customer_phone: phone,
+                customer_notes: notes
+            });
+
+            if (error) throw error;
+
+            alert('Order sent successfully!');
+            this.cart = [];
+            this.updateCartUI();
+            this.shadowRoot.getElementById('popup').style.display = 'none';
+        } catch (e) {
+            alert('Error sending order: ' + e.message);
+            btn.textContent = `SEND ORDER • $${total.toFixed(2)}`;
+            btn.disabled = false;
+        }
     }
 }
 
