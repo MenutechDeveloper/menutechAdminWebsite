@@ -146,13 +146,14 @@ if (window !== window.top) {
 
   #popup {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(.7);
-    background: var(--card); border: 1px solid var(--orange); border-radius: 16px;
-    padding: 26px 32px; z-index: 9999; display: none; text-align: center; width: 320px;
-    opacity:0; box-shadow:0 0 40px #0008;
+    background: var(--card); border: 2px solid var(--orange); border-radius: 24px;
+    padding: 32px; z-index: 9999; display: none; text-align: center; width: 340px;
+    opacity:0; box-shadow:0 20px 60px rgba(0,0,0,0.2);
+    transition: 0.3s;
   }
-  #popup.show { display:block; animation: popShow .35s ease forwards; }
-  @keyframes popShow { 0% { opacity:0; transform:translate(-50%, -50%) scale(.7); } 100% { opacity:1; transform:translate(-50%, -50%) scale(1); } }
-  #popup h3{ margin:0 0 8px; color:var(--text); font-size:18px; }
+  #popup.show { display:block; animation: popShow .4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  @keyframes popShow { 0% { opacity:0; transform:translate(-50%, -50%) scale(.8); } 100% { opacity:1; transform:translate(-50%, -50%) scale(1); } }
+  #popup h3{ margin:0; color:var(--text); font-size:1.1rem; font-weight: 700; line-height: 1.4; text-transform: uppercase; }
 
   #contrastBar { width:100%; height:16px; background:var(--input); border-radius:12px; overflow:hidden; position:relative; border:1px solid var(--border); }
   #contrastFill { height:100%; width:0%; transition: width .4s ease, background .4s ease; }
@@ -274,8 +275,10 @@ async function checkAuth() {
         const allowedRoles = ['admin', 'developer', 'design', 'adminDesign', 'CS', 'adminCS', 'retention'];
 
         if (!profile || !allowedRoles.includes(profile.role)) {
-            alert("No tienes permiso para usar esta herramienta.");
-            location.href = "index.html";
+            showPopup("No tienes permiso para usar esta herramienta.");
+            setTimeout(() => {
+                location.href = "index.html";
+            }, 2000);
         } else {
             const pill = document.getElementById('user-display-pill');
             if (pill) {

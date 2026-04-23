@@ -1651,6 +1651,31 @@ class MenutechPlatformOrders extends HTMLElement {
                     text-transform: uppercase; transition: 0.3s;
                 }
                 .add-to-cart:hover { background: #f08a28; transform: translateY(-2px); }
+
+                /* Custom Modal */
+                .modal-overlay {
+                    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+                    backdrop-filter: blur(4px); z-index: 10000;
+                    display: none; align-items: center; justify-content: center;
+                    animation: fadeIn 0.3s ease;
+                    padding: 20px;
+                }
+                .modal-card {
+                    background: #fff; border-radius: 24px; padding: 30px;
+                    width: 100%; max-width: 400px; text-align: center;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+                    animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    box-sizing: border-box;
+                }
+                .modal-card h3 { margin: 0 0 10px; font-family: 'Outfit', sans-serif; font-size: 1.3rem; color: #1a1c1e; text-transform: uppercase; }
+                .modal-card p { margin: 0 0 25px; color: #666; line-height: 1.5; font-size: 0.95rem; }
+                .modal-btn {
+                    background: #ff9533; color: #fff; border: none; padding: 14px 30px;
+                    border-radius: 14px; font-weight: 800; cursor: pointer; width: 100%;
+                    transition: 0.3s; text-transform: uppercase; letter-spacing: 0.5px;
+                }
+                .modal-btn:hover { background: #f08a28; transform: translateY(-2px); }
+                @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
             </style>
         `;
 
@@ -1742,6 +1767,13 @@ class MenutechPlatformOrders extends HTMLElement {
             <div class="popup-overlay" id="popup">
                 <div class="popup-card" id="popup-content"></div>
             </div>
+            <div class="modal-overlay" id="custom-modal">
+                <div class="modal-card">
+                    <h3 id="modal-title"></h3>
+                    <p id="modal-message"></p>
+                    <button class="modal-btn" id="modal-close-btn">ACEPTAR</button>
+                </div>
+            </div>
         `;
 
         if (isPopupView) {
@@ -1803,7 +1835,7 @@ class MenutechPlatformOrders extends HTMLElement {
         const headerInfoBtn = this.shadowRoot.getElementById('header-info-btn');
         if (headerInfoBtn) {
             headerInfoBtn.onclick = () => {
-                alert(this.menuData.config.restaurant_name || 'Menutech Restaurant Information');
+                this.showModal('INFORMACIÓN', this.menuData.config.restaurant_name || 'Menutech Restaurant Information');
             };
         }
 
@@ -1819,6 +1851,21 @@ class MenutechPlatformOrders extends HTMLElement {
                 overlay.style.display = 'none';
             }
         };
+
+        const modal = this.shadowRoot.getElementById('custom-modal');
+        this.shadowRoot.getElementById('modal-close-btn').onclick = () => {
+            modal.style.display = 'none';
+        };
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        };
+    }
+
+    showModal(title, message) {
+        const modal = this.shadowRoot.getElementById('custom-modal');
+        this.shadowRoot.getElementById('modal-title').textContent = title;
+        this.shadowRoot.getElementById('modal-message').textContent = message;
+        modal.style.display = 'flex';
     }
 
     openDishPopup(dish, cardEl) {
@@ -2226,7 +2273,7 @@ class MenutechPlatformOrders extends HTMLElement {
         const phone = popupContent.querySelector('#cust-phone').value;
 
         if (!name || !phone) {
-            alert('Por favor completa tu nombre y teléfono.');
+            this.showModal('DATOS FALTANTES', 'Por favor completa tu nombre y teléfono.');
             return;
         }
 
@@ -2269,7 +2316,7 @@ class MenutechPlatformOrders extends HTMLElement {
             this.updateCartUI();
             this.shadowRoot.getElementById('popup').style.display = 'none';
         } catch (e) {
-            alert('Error al enviar pedido: ' + e.message);
+            this.showModal('ERROR', 'Error al enviar pedido: ' + e.message);
             btn.textContent = `ENVIAR PEDIDO • $${total.toFixed(2)}`;
             btn.disabled = false;
         }
