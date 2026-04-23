@@ -189,14 +189,14 @@
                     <div class="order-items">
                         ${order.items.map(item => `
                             <div class="item-row">
-                                <span>${item.name}</span>
-                                <strong>$${item.price.toFixed(2)}</strong>
+                                <span>${item.quantity > 1 ? item.quantity + 'x ' : ''}${item.name}</span>
+                                <strong>$${(item.total || (item.price * (item.quantity || 1))).toFixed(2)}</strong>
                             </div>
-                            ${item.size || item.toppings.length > 0 || item.instructions ? `
+                            ${item.size || (item.toppings && item.toppings.length > 0) || item.instructions ? `
                                 <div class="item-details">
-                                    ${item.size ? `Size: ${item.size}` : ''}
-                                    ${item.toppings.length > 0 ? `<br>Toppings: ${item.toppings.join(', ')}` : ''}
-                                    ${item.instructions ? `<br><span style="color:var(--orange); font-style:italic;">"${item.instructions}"</span>` : ''}
+                                    ${item.size ? `Talla: ${item.size}` : ''}
+                                    ${item.toppings && item.toppings.length > 0 ? `<br>Toppings: ${item.toppings.join(', ')}` : ''}
+                                    ${item.instructions ? `<br><span style="color:var(--orange); font-style:italic;">Instrucciones: "${item.instructions}"</span>` : ''}
                                 </div>
                             ` : ''}
                         `).join('')}
