@@ -311,6 +311,18 @@
                 </div>
 
                 <div id="menu-editor">
+                    <div class="component-header">
+                        <h2>Menu Design</h2>
+                        <div style="display:flex; gap:10px;">
+                            <label style="cursor:pointer; padding:8px 16px; border-radius:12px; border:1px solid var(--border); font-size:0.75rem; font-weight:700;" id="label-mode1">
+                                <input type="radio" name="menu-style" value="mode1" onchange="updateStyle(this.value)" style="display:none"> Mode 1 (Luxury)
+                            </label>
+                            <label style="cursor:pointer; padding:8px 16px; border-radius:12px; border:1px solid var(--border); font-size:0.75rem; font-weight:700;" id="label-mode2">
+                                <input type="radio" name="menu-style" value="mode2" onchange="updateStyle(this.value)" style="display:none"> Mode 2 (Minimal)
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="component-header"><h2>Menu Cover</h2></div>
                     <div class="cover-section" id="cover-drop-zone">
                         <div class="placeholder" id="cover-placeholder">
@@ -488,15 +500,26 @@
             if (data) {
                 menuData = data;
                 if (!menuData.config) menuData.config = { categories: [], toppings: [] };
+                if (!menuData.menu_style) menuData.menu_style = 'mode1';
                 // Ensure Topping IDs
                 (menuData.config.toppings || []).forEach(tg => {
                     if (!tg.id) tg.id = 'tg-' + Math.random().toString(36).substr(2, 9);
                 });
             } else {
-                menuData = { cover_url: '', cover_type: 'image', config: { categories: [], toppings: [] } };
+                menuData = { cover_url: '', cover_type: 'image', menu_style: 'mode1', config: { categories: [], toppings: [] } };
             }
             renderMenuEditor();
         }
+
+        window.updateStyle = (style) => {
+            menuData.menu_style = style;
+            const l1 = document.getElementById('label-mode1');
+            const l2 = document.getElementById('label-mode2');
+            l1.style.background = style === 'mode1' ? 'var(--orange)' : 'var(--input)';
+            l1.style.color = style === 'mode1' ? '#000' : 'var(--text-dim)';
+            l2.style.background = style === 'mode2' ? 'var(--orange)' : 'var(--input)';
+            l2.style.color = style === 'mode2' ? '#000' : 'var(--text-dim)';
+        };
 
         function showApp(profile) {
             document.getElementById('main-app').classList.remove('hidden');
@@ -557,6 +580,7 @@
         }
 
         function renderMenuEditor() {
+            updateStyle(menuData.menu_style || 'mode1');
             renderCover();
             renderCategories();
             renderToppings();
@@ -887,6 +911,7 @@
                     user_id: activeOwnerId,
                     domain: activeDomain || 'undetermined',
                     slug: menuData.slug,
+                    menu_style: menuData.menu_style,
                     cover_url: menuData.cover_url,
                     cover_type: menuData.cover_type,
                     config: menuData.config

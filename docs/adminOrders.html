@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Management | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #059669;
+            --error: #dc2626;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; }
+
+        .container { width: 100%; max-width: 1000px; margin: 0 auto; padding: 60px 24px; }
+        header { text-align: center; margin-bottom: 40px; }
+        .logo-main { width: 100%; max-width: 200px; height: auto; margin-bottom: 20px; }
+
+        .orders-grid { display: grid; gap: 24px; }
+        .order-card {
+            background: var(--card); border: 1.5px solid var(--border); border-radius: 24px;
+            padding: 30px; transition: 0.3s; position: relative; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+        }
+        .order-card.pending { border-left: 8px solid var(--orange); }
+        .order-card.accepted { border-left: 8px solid var(--success); }
+        .order-card.rejected { border-left: 8px solid var(--error); opacity: 0.7; }
+
+        .order-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .cust-info h3 { font-family: 'Outfit', sans-serif; font-size: 1.4rem; margin-bottom: 5px; }
+        .cust-info p { font-size: 0.9rem; color: var(--text-dim); }
+
+        .order-items { margin: 20px 0; padding: 20px; background: var(--input); border-radius: 18px; }
+        .item-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95rem; }
+        .item-details { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 5px; padding-left: 10px; }
+
+        .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
+        .total-price { font-size: 1.5rem; font-weight: 800; color: var(--orange); }
+
+        .actions { display: flex; gap: 15px; }
+        .btn {
+            padding: 12px 24px; border-radius: 14px; border: none; font-weight: 800;
+            text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.85rem;
+        }
+        .btn-accept { background: var(--success); color: #fff; }
+        .btn-reject { background: var(--error); color: #fff; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .status-badge {
+            position: absolute; top: 20px; right: 20px; padding: 6px 14px;
+            border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+        }
+        .pending .status-badge { background: rgba(255,149,51,0.15); color: var(--orange); }
+        .accepted .status-badge { background: rgba(5,150,105,0.15); color: var(--success); }
+        .rejected .status-badge { background: rgba(220,38,38,0.15); color: var(--error); }
+
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; }
+        .btn-panel { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; }
+
+        .empty-state { text-align: center; padding: 100px 20px; color: var(--text-dim); }
+        .empty-state svg { width: 64px; height: 64px; margin-bottom: 20px; opacity: 0.3; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="top-nav">
+        <button class="btn-panel" onclick="location.href='index.html'">PANEL</button>
+    </div>
+
+    <div class="container">
+        <header>
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
+            <h1 style="font-family:'Outfit';">Real-time Orders</h1>
+            <p id="orders-subtitle" style="color:var(--text-dim); margin-top:10px;">Waiting for new orders...</p>
+        </header>
+
+        <div id="orders-list" class="orders-grid">
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <p>No orders yet. They will appear here in real-time.</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase as sb } from './supabase.js';
+
+        let user = null;
+        let orders = [];
+
+        async function init() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { location.href = 'index.html'; return; }
+            user = session.user;
+
+            loadOrders();
+            subscribeToOrders();
+        }
+
+        async function loadOrders() {
+            const { data, error } = await sb.from('menutech_orders')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            if (data) {
+                orders = data;
+                renderOrders();
+            }
+        }
+
+        function subscribeToOrders() {
+            sb.channel('menutech_orders')
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'menutech_orders',
+                    filter: `user_id=eq.${user.id}`
+                }, (payload) => {
+                    orders.unshift(payload.new);
+                    renderOrders();
+                    playNotification();
+                })
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'menutech_orders',
+                    filter: `user_id=eq.${user.id}`
+                }, (payload) => {
+                    const idx = orders.findIndex(o => o.id === payload.new.id);
+                    if (idx !== -1) {
+                        orders[idx] = payload.new;
+                        renderOrders();
+                    }
+                })
+                .subscribe();
+        }
+
+        function renderOrders() {
+            const list = document.getElementById('orders-list');
+            if (orders.length === 0) return;
+
+            list.innerHTML = orders.map(order => `
+                <div class="order-card ${order.status}">
+                    <div class="status-badge">${order.status}</div>
+                    <div class="order-header">
+                        <div class="cust-info">
+                            <h3>${order.customer_name}</h3>
+                            <p>${order.customer_phone}</p>
+                            <p>${new Date(order.created_at).toLocaleString()}</p>
+                        </div>
+                    </div>
+
+                    <div class="order-items">
+                        ${order.items.map(item => `
+                            <div class="item-row">
+                                <span>${item.name}</span>
+                                <strong>$${item.price.toFixed(2)}</strong>
+                            </div>
+                            ${item.size || item.toppings.length > 0 ? `
+                                <div class="item-details">
+                                    ${item.size ? `Size: ${item.size}` : ''}
+                                    ${item.toppings.length > 0 ? `<br>Toppings: ${item.toppings.join(', ')}` : ''}
+                                </div>
+                            ` : ''}
+                        `).join('')}
+                    </div>
+
+                    ${order.customer_notes ? `<p style="font-size:0.85rem; color:var(--text-dim); margin-bottom:20px;"><strong>Notes:</strong> ${order.customer_notes}</p>` : ''}
+
+                    <div class="order-footer">
+                        <div class="total-price">Total: $${order.total.toFixed(2)}</div>
+                        ${order.status === 'pending' ? `
+                            <div class="actions">
+                                <button class="btn btn-reject" onclick="updateOrderStatus('${order.id}', 'rejected')">Reject</button>
+                                <button class="btn btn-accept" onclick="updateOrderStatus('${order.id}', 'accepted')">Accept</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.updateOrderStatus = async (id, status) => {
+            const { error } = await sb.from('menutech_orders')
+                .update({ status })
+                .eq('id', id);
+
+            if (error) alert('Error updating order: ' + error.message);
+        };
+
+        function playNotification() {
+            const audio = new Audio('https://menutech.services/assets/audio/notification.mp3');
+            audio.play().catch(e => console.log('Audio play blocked'));
+        }
+
+        init();
+    </script>
+</body>
+</html>
