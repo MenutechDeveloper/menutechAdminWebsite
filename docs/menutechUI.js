@@ -1333,33 +1333,38 @@ class MenutechPlatformOrders extends HTMLElement {
                 /* Mode 2 Styles */
                 .mode2-main-header {
                     display: flex; justify-content: space-between; align-items: center;
-                    padding: 20px; background: #fff; border-bottom: 1px solid #f0f0f0;
+                    padding: 12px 20px; background: #fff; border-bottom: 1px solid #eee;
                 }
-                .restaurant-name { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin: 0; color: #1a1c1e; }
-                .header-icons { display: flex; gap: 20px; }
-                .header-icon { cursor: pointer; position: relative; color: #1a1c1e; }
-                .header-icon svg { width: 24px; height: 24px; }
+                .restaurant-name { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 1.3rem; font-weight: 800; margin: 0; color: #444; text-transform: uppercase; letter-spacing: -0.5px; }
+                .header-icons { display: flex; border: 1.5px solid #eee; border-radius: 6px; overflow: hidden; }
+                .header-icon {
+                    padding: 10px 14px; border-right: 1.5px solid #eee; display: flex; align-items: center; justify-content: center;
+                    background: #fff; color: #333; cursor: pointer; position: relative;
+                }
+                .header-icon:last-child { border-right: none; }
+                .header-icon svg { width: 22px; height: 22px; stroke-width: 1.8; }
+                .header-icon.active { background: #f0f0f0; }
                 .cart-count-badge {
-                    position: absolute; top: -8px; right: -8px; background: #ff9533;
-                    color: #fff; width: 18px; height: 18px; border-radius: 50%;
-                    font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+                    position: absolute; top: 4px; right: 4px; background: #ff9533;
+                    color: #fff; width: 16px; height: 16px; border-radius: 50%;
+                    font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center;
                 }
 
-                .mode2-list { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 40px; }
-                @media (max-width: 768px) { .mode2-list { grid-template-columns: 1fr; gap: 10px; } }
+                .mode2-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0 40px; padding: 0 20px; }
+                @media (max-width: 768px) { .mode2-list { grid-template-columns: 1fr; gap: 0; } }
                 .mode2-item {
-                    display: flex; flex-direction: column; padding: 20px 0;
-                    border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: 0.2s;
+                    display: flex; flex-direction: column; padding: 18px 0;
+                    border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s;
                 }
-                .mode2-item:hover { background: #fafafa; }
+                .mode2-item:hover { background: #fcfcfc; }
                 .mode2-top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
                 .mode2-left { flex: 1; }
-                .mode2-name-price { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
-                .mode2-name { font-weight: 700; font-size: 1.05rem; color: #1a1c1e; }
-                .mode2-price { font-weight: 700; color: #1a1c1e; font-size: 1.05rem; }
-                .mode2-image { width: 90px; height: 90px; border-radius: 16px; overflow: hidden; flex-shrink: 0; }
+                .mode2-name-price { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+                .mode2-name { font-weight: 800; font-size: 1.05rem; color: #333; text-transform: uppercase; font-family: 'Helvetica', 'Arial', sans-serif; }
+                .mode2-price { font-weight: 800; color: #333; font-size: 1.05rem; font-family: 'Helvetica', 'Arial', sans-serif; }
+                .mode2-image { width: 80px; height: 80px; border-radius: 12px; overflow: hidden; flex-shrink: 0; margin-top: 5px; }
                 .mode2-image img { width: 100%; height: 100%; object-fit: cover; }
-                .mode2-desc { font-size: 0.85rem; color: #666; line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+                .mode2-desc { font-size: 0.88rem; color: #777; line-height: 1.4; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; }
 
                 .dish-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
                 .dish-info h3 { margin: 0; font-size: 1.1rem; color: #1a1c1e; }
@@ -1394,17 +1399,19 @@ class MenutechPlatformOrders extends HTMLElement {
                 .popup-overlay.side-popup { align-items: center; justify-content: center; }
 
                 .popup-card {
-                    background: #fff; width: 100%; max-width: 600px; border-radius: 30px;
+                    background: #fff; width: 100%; max-width: 500px; border-radius: 24px;
                     max-height: 90vh; overflow-y: auto; position: relative;
-                    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
                 }
 
                 /* Cart Styles */
-                .cart-section { margin-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
+                .cart-section { margin-bottom: 0; border-bottom: 1.5px solid #eee; }
+                .cart-section:last-child { border-bottom: none; }
                 .cart-section-header {
-                    padding: 20px; display: flex; justify-content: space-between; align-items: center;
-                    cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: 0.9rem;
-                    letter-spacing: 0.5px; color: #1a1c1e;
+                    padding: 18px 20px; display: flex; justify-content: space-between; align-items: center;
+                    cursor: pointer; font-weight: 800; text-transform: uppercase; font-size: 0.82rem;
+                    letter-spacing: 0.8px; color: #333; font-family: 'Helvetica', 'Arial', sans-serif;
                 }
                 .cart-section-content { padding: 0 20px 20px; display: none; }
                 .cart-section.active .cart-section-content { display: block; }
@@ -1426,12 +1433,13 @@ class MenutechPlatformOrders extends HTMLElement {
                 .cart-input:focus { outline: none; border-color: #ff9533; background: #fffefb; }
 
                 .payment-option, .type-option, .time-option {
-                    display: flex; align-items: center; gap: 12px; padding: 14px;
-                    border-radius: 12px; border: 1.5px solid #eee; margin-bottom: 10px;
-                    cursor: pointer; transition: 0.3s; font-weight: 600;
+                    display: flex; align-items: center; gap: 12px; padding: 16px;
+                    border-radius: 12px; border: 1.5px solid #eee; margin-bottom: 12px;
+                    cursor: pointer; transition: 0.2s; font-weight: 700; font-size: 0.9rem;
+                    color: #555;
                 }
                 .payment-option.active, .type-option.active, .time-option.active {
-                    border-color: #ff9533; background: rgba(255,149,51,0.05); color: #ff9533;
+                    border-color: #ff9533; background: #fffcf5; color: #ff9533;
                 }
 
                 .order-summary { background: #fafafa; padding: 20px; border-radius: 20px; margin-top: 20px; }
@@ -1469,17 +1477,17 @@ class MenutechPlatformOrders extends HTMLElement {
                     display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
                 }
 
-                .popup-body { padding: 30px; }
-                .popup-body h2 { margin: 0; font-size: 1.8rem; }
-                .popup-body .desc { color: #666; margin: 10px 0 20px; font-size: 1rem; line-height: 1.5; }
+                .popup-body { padding: 25px; font-family: 'Helvetica', 'Arial', sans-serif; }
+                .popup-body h2 { margin: 0; font-size: 1.4rem; font-weight: 800; text-transform: uppercase; color: #333; }
+                .popup-body .desc { color: #777; margin: 8px 0 24px; font-size: 0.95rem; line-height: 1.5; }
 
-                .option-group { margin-bottom: 25px; }
-                .option-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 12px; display: flex; justify-content: space-between; }
-                .option-badge { font-size: 0.7rem; background: #f0f0f0; padding: 4px 10px; border-radius: 10px; color: #999; }
+                .option-group { margin-bottom: 24px; }
+                .option-title { font-weight: 800; font-size: 0.85rem; margin-bottom: 12px; display: flex; justify-content: space-between; color: #444; text-transform: uppercase; letter-spacing: 0.5px; }
+                .option-badge { font-size: 0.65rem; background: #eee; padding: 3px 8px; border-radius: 4px; color: #888; font-weight: 700; }
 
                 .option-item {
                     display: flex; justify-content: space-between; align-items: center;
-                    padding: 12px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer;
+                    padding: 14px 0; border-bottom: 1px solid #eee; cursor: pointer;
                 }
                 .option-item:last-child { border: none; }
                 .opt-name { display: flex; align-items: center; gap: 10px; }
@@ -1491,10 +1499,12 @@ class MenutechPlatformOrders extends HTMLElement {
                 .active .checkbox::after { content: '✓'; position: absolute; inset: 0; color: #ff9533; display: flex; align-items: center; justify-content: center; font-weight: 900; }
 
                 .add-to-cart {
-                    padding: 20px 30px; background: #ff9533; color: #fff; border: none;
-                    border-radius: 20px; width: 100%; font-weight: 800; font-size: 1.1rem;
-                    cursor: pointer; margin-top: 20px; box-shadow: 0 10px 25px rgba(255,149,51,0.3);
+                    padding: 18px 24px; background: #ff9533; color: #fff; border: none;
+                    border-radius: 12px; width: 100%; font-weight: 800; font-size: 1rem;
+                    cursor: pointer; margin-top: 20px; box-shadow: 0 8px 20px rgba(255,149,51,0.25);
+                    text-transform: uppercase; transition: 0.3s;
                 }
+                .add-to-cart:hover { background: #f08a28; transform: translateY(-2px); }
             </style>
         `;
 
@@ -1560,8 +1570,11 @@ class MenutechPlatformOrders extends HTMLElement {
                     <div class="mode2-main-header">
                         <h1 class="restaurant-name">${config.restaurant_name || 'Menutech'}</h1>
                         <div class="header-icons">
-                            <div class="header-icon" id="header-menu-btn">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                            <div class="header-icon active" id="header-menu-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                            </div>
+                            <div class="header-icon" id="header-info-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                             </div>
                             <div class="header-icon" id="header-cart-btn-top">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
@@ -1635,10 +1648,16 @@ class MenutechPlatformOrders extends HTMLElement {
             headerCartBtn.onclick = () => this.openCartPopup();
         }
 
+        const headerInfoBtn = this.shadowRoot.getElementById('header-info-btn');
+        if (headerInfoBtn) {
+            headerInfoBtn.onclick = () => {
+                alert(this.menuData.config.restaurant_name || 'Menutech Restaurant Information');
+            };
+        }
+
         const headerMenuBtn = this.shadowRoot.getElementById('header-menu-btn');
         if (headerMenuBtn) {
             headerMenuBtn.onclick = () => {
-                // Potential side menu logic or scroll to top
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
         }
@@ -1723,14 +1742,14 @@ class MenutechPlatformOrders extends HTMLElement {
 
                 <div class="option-group">
                     <div class="option-title">INSTRUCCIONES ESPECIALES</div>
-                    <textarea id="dish-instructions" placeholder="Ejem: Sin cebolla, extra salsa..." style="width:100%; padding:15px; border-radius:15px; border:1px solid #eee; font-family:inherit; min-height:80px; resize:none; box-sizing:border-box;"></textarea>
+                    <textarea id="dish-instructions" placeholder="Ejem: Sin cebolla, extra salsa..." style="width:100%; padding:15px; border-radius:12px; border:1.5px solid #eee; font-family:inherit; min-height:80px; resize:none; box-sizing:border-box; font-size:0.9rem;"></textarea>
                 </div>
 
-                <div style="display:flex; align-items:center; gap:20px; margin-top:20px;">
-                    <div style="display:flex; align-items:center; background:#f5f5f5; border-radius:15px; padding:5px;">
-                        <button class="qty-btn" id="qty-minus" style="width:40px; height:40px; border:none; background:none; font-size:1.5rem; cursor:pointer;">-</button>
-                        <span id="dish-qty" style="width:40px; text-align:center; font-weight:700; font-size:1.1rem;">1</span>
-                        <button class="qty-btn" id="qty-plus" style="width:40px; height:40px; border:none; background:none; font-size:1.5rem; cursor:pointer;">+</button>
+                <div style="display:flex; align-items:center; gap:15px; margin-top:25px;">
+                    <div style="display:flex; align-items:center; background:#f8f8f8; border-radius:12px; padding:4px; border:1.5px solid #eee;">
+                        <button class="qty-btn" id="qty-minus" style="width:36px; height:36px; border:none; background:none; font-size:1.2rem; cursor:pointer; color:#333; font-weight:800;">-</button>
+                        <span id="dish-qty" style="width:36px; text-align:center; font-weight:800; font-size:1rem; color:#333;">1</span>
+                        <button class="qty-btn" id="qty-plus" style="width:36px; height:36px; border:none; background:none; font-size:1.2rem; cursor:pointer; color:#333; font-weight:800;">+</button>
                     </div>
                     <button class="add-to-cart" style="margin-top:0; flex:1;">AGREGAR AL CARRITO • $${basePrice}</button>
                 </div>
