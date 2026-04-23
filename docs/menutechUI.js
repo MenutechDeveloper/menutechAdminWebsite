@@ -1179,6 +1179,16 @@ if (!customElements.get('menutech-forms')) {
  * Usage: <menutech-platform-orders domain="yoursite.com"></menutech-platform-orders>
  */
 class MenutechPlatformOrders extends HTMLElement {
+    static get observedAttributes() {
+        return ['domain', 'restaurant', 'view'];
+    }
+
+    attributeChangedCallback(name, oldVal, newVal) {
+        if (oldVal !== newVal) {
+            this.render();
+        }
+    }
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -1221,8 +1231,110 @@ class MenutechPlatformOrders extends HTMLElement {
     }
 
     render() {
-        this.renderLoading();
-        this.loadData();
+        const view = this.getAttribute('view');
+        if (view === 'popup') {
+            this.renderPopupTrigger();
+        } else {
+            this.renderLoading();
+            this.loadData();
+        }
+    }
+
+    renderPopupTrigger() {
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host { display: block; font-family: 'Helvetica', 'Arial', sans-serif; }
+                .btn-see-menu {
+                    background: #ff9533;
+                    color: #fff;
+                    padding: 18px 36px;
+                    border-radius: 40px;
+                    font-weight: 800;
+                    border: none;
+                    cursor: pointer;
+                    box-shadow: 0 10px 30px rgba(255,149,51,0.3);
+                    text-transform: uppercase;
+                    font-size: 1rem;
+                    transition: 0.3s;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .btn-see-menu:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 15px 40px rgba(255,149,51,0.4);
+                    filter: brightness(1.1);
+                }
+                .btn-see-menu svg { width: 20px; height: 20px; stroke-width: 2.5; }
+
+                .main-popup-overlay {
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(0,0,0,0.85);
+                    backdrop-filter: blur(10px);
+                    z-index: 100000;
+                    display: none;
+                    align-items: center;
+                    justify-content: center;
+                    animation: fadeIn 0.4s ease;
+                }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+                .main-popup-content {
+                    width: 100%;
+                    height: 100%;
+                    position: relative;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .close-main-popup {
+                    position: absolute;
+                    top: 25px;
+                    right: 25px;
+                    width: 45px;
+                    height: 45px;
+                    border-radius: 50%;
+                    background: #fff;
+                    border: none;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+                    z-index: 100001;
+                    transition: 0.3s;
+                }
+                .close-main-popup:hover { transform: scale(1.1); }
+            </style>
+            <button class="btn-see-menu" id="trigger-popup">
+                <span>See MENU & Order Now!</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8L22 12L18 16"/><path d="M2 12H22"/></svg>
+            </button>
+            <div class="main-popup-overlay" id="main-menu-popup">
+                <div class="main-popup-content">
+                    <button class="close-main-popup" id="close-main-menu">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;color:#000"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                    <div id="menu-container-inner" style="height: 100%; overflow-y: auto;">
+                        <div class="loader" style="padding: 100px; text-align: center; color: #ff9533; font-weight: 600;">Loading Menu...</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        this.shadowRoot.getElementById('trigger-popup').onclick = () => {
+            this.shadowRoot.getElementById('main-menu-popup').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            if (!this.menuData) {
+                this.loadData();
+            }
+        };
+
+        this.shadowRoot.getElementById('close-main-menu').onclick = () => {
+            this.shadowRoot.getElementById('main-menu-popup').style.display = 'none';
+            document.body.style.overflow = '';
+        };
     }
 
     async loadData() {
@@ -1234,7 +1346,12 @@ class MenutechPlatformOrders extends HTMLElement {
             : await this.fetchMenuData(domain, false);
 
         if (!data) {
-            this.shadowRoot.innerHTML = '<div style="padding: 40px; text-align: center; color: #666;">Menu not found.</div>';
+            const errorMsg = '<div style="padding: 40px; text-align: center; color: #666;">Menu not found.</div>';
+            if (this.getAttribute('view') === 'popup') {
+                this.shadowRoot.getElementById('menu-container-inner').innerHTML = errorMsg;
+            } else {
+                this.shadowRoot.innerHTML = errorMsg;
+            }
             return;
         }
         this.menuData = data;
@@ -1253,6 +1370,7 @@ class MenutechPlatformOrders extends HTMLElement {
 
     renderMenu() {
         const { cover_url, cover_type, config, menu_style } = this.menuData;
+        const isPopupView = this.getAttribute('view') === 'popup';
         const style = menu_style || 'mode1';
         const categoriesData = config.categories || [];
         const toppings = config.toppings || [];
@@ -1364,12 +1482,12 @@ class MenutechPlatformOrders extends HTMLElement {
                     border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s;
                 }
                 .mode2-item:hover { background: #fcfcfc; }
-                .mode2-top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
+                .mode2-top-row { display: flex; justify-content: flex-start; align-items: flex-start; gap: 15px; }
                 .mode2-left { flex: 1; }
                 .mode2-name-price { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
                 .mode2-name { font-weight: 800; font-size: 1.05rem; color: #333; text-transform: uppercase; font-family: 'Helvetica', 'Arial', sans-serif; }
                 .mode2-price { font-weight: 800; color: #333; font-size: 1.05rem; font-family: 'Helvetica', 'Arial', sans-serif; }
-                .mode2-image { width: 80px; height: 80px; border-radius: 12px; overflow: hidden; flex-shrink: 0; margin-top: 5px; }
+                .mode2-image { width: 80px; height: 80px; border-radius: 12px; overflow: hidden; flex-shrink: 0; }
                 .mode2-image img { width: 100%; height: 100%; object-fit: cover; }
                 .mode2-desc { font-size: 0.88rem; color: #777; line-height: 1.4; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; }
 
@@ -1575,6 +1693,7 @@ class MenutechPlatformOrders extends HTMLElement {
                         ${(cat.dishes || []).map(dish => `
                             <div class="mode2-item" data-dish='${JSON.stringify(dish).replace(/'/g, "&apos;")}'>
                                 <div class="mode2-top-row">
+                                    ${dish.image ? `<div class="mode2-image"><img src="${dish.image}"></div>` : ''}
                                     <div class="mode2-left">
                                         <div class="mode2-name-price">
                                             <span class="mode2-name">${dish.name}</span>
@@ -1582,7 +1701,6 @@ class MenutechPlatformOrders extends HTMLElement {
                                         </div>
                                         <p class="mode2-desc">${dish.description || ''}</p>
                                     </div>
-                                    ${dish.image ? `<div class="mode2-image"><img src="${dish.image}"></div>` : ''}
                                 </div>
                             </div>
                         `).join('')}
@@ -1591,9 +1709,9 @@ class MenutechPlatformOrders extends HTMLElement {
             </div>
         `).join('');
 
-        this.shadowRoot.innerHTML = `
+        const menuHtml = `
             ${styles}
-            <div class="menu-wrapper">
+            <div class="menu-wrapper" style="${isPopupView ? 'height: 100vh; margin: 0; max-width: 100%; border-radius: 0;' : ''}">
                 ${style === 'mode2' ? `
                     <div class="mode2-main-header">
                         <h1 class="restaurant-name">${config.restaurant_name || 'Menutech'}</h1>
@@ -1625,6 +1743,12 @@ class MenutechPlatformOrders extends HTMLElement {
                 <div class="popup-card" id="popup-content"></div>
             </div>
         `;
+
+        if (isPopupView) {
+            this.shadowRoot.getElementById('menu-container-inner').innerHTML = menuHtml;
+        } else {
+            this.shadowRoot.innerHTML = menuHtml;
+        }
 
         this.initInteractivity();
     }

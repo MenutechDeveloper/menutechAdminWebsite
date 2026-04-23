@@ -688,7 +688,7 @@
             window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
             document.getElementById('btn-copy-snippet').onclick = () => {
                 if (!activeDomain) return showToast("Assign a domain first.", "warning");
-                const snippet = `<!-- Menutech Menu -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-platform-orders domain="${activeDomain}"></menutech-platform-orders>`;
+                const snippet = `<!-- Menutech Menu -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-platform-orders domain="${activeDomain}" view="popup"></menutech-platform-orders>`;
                 navigator.clipboard.writeText(snippet).then(() => {
                     const btn = document.getElementById('btn-copy-snippet');
                     btn.textContent = "COPIED!";
