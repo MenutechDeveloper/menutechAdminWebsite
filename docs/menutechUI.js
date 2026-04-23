@@ -1288,6 +1288,9 @@ class MenutechPlatformOrders extends HTMLElement {
                     -ms-overflow-style: none;
                 }
                 .menu-wrapper::-webkit-scrollbar { display: none; }
+                .cart-left-col::-webkit-scrollbar, .cart-right-col > div::-webkit-scrollbar { display: none; }
+                .popup-card::-webkit-scrollbar { display: none; }
+                .popup-card { scrollbar-width: none; }
 
                 @media (max-width: 1024px) {
                     :host { background: #fff; }
@@ -1405,6 +1408,7 @@ class MenutechPlatformOrders extends HTMLElement {
                 .popup-card {
                     background: #fff; width: 100%; max-width: 500px; border-radius: 24px;
                     max-height: 90vh; overflow-y: auto; position: relative;
+                    scrollbar-width: none; -ms-overflow-style: none;
                     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
                     transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
                 }
@@ -1421,6 +1425,17 @@ class MenutechPlatformOrders extends HTMLElement {
                 .cart-section.active .cart-section-content { display: block; }
                 .cart-section.active .cart-section-header svg { transform: rotate(180deg); }
                 .cart-section-header svg { transition: 0.3s; width: 18px; height: 18px; }
+
+                /* Cart PC Two-Column Layout */
+                .cart-pc-container { display: flex; flex-direction: row; gap: 0; align-items: stretch; min-height: 500px; }
+                .cart-left-col { flex: 1; border-right: 1.5px solid #eee; padding: 0; }
+                .cart-right-col { width: 380px; background: #fcfcfc; padding: 0; display: flex; flex-direction: column; }
+
+                @media (max-width: 1024px) {
+                    .cart-pc-container { flex-direction: column; }
+                    .cart-left-col { border-right: none; border-bottom: 1.5px solid #eee; }
+                    .cart-right-col { width: 100%; }
+                }
 
                 .cart-item { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #f9f9f9; }
                 .cart-item:last-child { border: none; }
@@ -1805,6 +1820,8 @@ class MenutechPlatformOrders extends HTMLElement {
                 };
             });
         });
+
+        this.updatePopupTotal(dish, qty);
     }
 
     updatePopupTotal(dish, qty = 1) {
@@ -1874,120 +1891,130 @@ class MenutechPlatformOrders extends HTMLElement {
         overlay.classList.remove('side-popup');
         popupContent.classList.remove('open-left', 'open-right');
 
+        // Set width for two-column layout on PC
+        if (window.innerWidth > 1024) {
+            popupContent.style.maxWidth = '900px';
+        }
+
         const total = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
         const subtotal = total;
 
         popupContent.innerHTML = `
             <div class="popup-body" style="padding:0">
                 <div style="padding:20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f0f0f0;">
-                    <h2 style="margin:0; font-size:1.4rem;">Tu Pedido</h2>
+                    <h2 style="margin:0; font-size:1.4rem;">FINALIZAR PEDIDO</h2>
                     <button class="close-popup" style="position:static; border:1px solid #eee;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                 </div>
 
-                <!-- Section: Order Items -->
-                <div class="cart-section active">
-                    <div class="cart-section-header">Artículos <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
-                    <div class="cart-section-content">
-                        ${this.cart.map((item, i) => `
-                            <div class="cart-item">
-                                <div class="cart-item-info">
-                                    <h4>${item.quantity > 1 ? item.quantity + 'x ' : ''}${item.name}</h4>
-                                    <p>${item.size ? item.size : ''} ${item.toppings.length > 0 ? '• ' + item.toppings.join(', ') : ''}</p>
-                                    ${item.instructions ? `<p style="color:#ff9533; font-style:italic;">"${item.instructions}"</p>` : ''}
+                <div class="cart-pc-container">
+                    <!-- Left Column: Information (Accordions) -->
+                    <div class="cart-left-col" style="overflow-y:auto; scrollbar-width:none; height: 100%;">
+                        <!-- Section: Contact Info -->
+                        <div class="cart-section">
+                            <div class="cart-section-header">1. DATOS DE CONTACTO <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                            <div class="cart-section-content">
+                                <div class="cart-input-group">
+                                    <label>NOMBRE COMPLETO</label>
+                                    <input type="text" id="cust-name" class="cart-input" placeholder="Tu nombre...">
                                 </div>
-                                <div class="cart-item-price">$${(item.total || item.price).toFixed(2)}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-
-                <!-- Section: Type of Order -->
-                <div class="cart-section active">
-                    <div class="cart-section-header">Tipo de Pedido <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
-                    <div class="cart-section-content">
-                        <div class="type-option active" data-type="pickup">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-                            Recoger en Restaurante
-                        </div>
-                        <div class="type-option" data-type="delivery">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                            Entrega a Domicilio
-                        </div>
-                        <div id="delivery-fields" style="display:none; margin-top:15px;">
-                            <div class="cart-input-group">
-                                <label>Dirección Completa</label>
-                                <input type="text" id="order-address" class="cart-input" placeholder="Calle, número, colonia...">
-                            </div>
-                            <div class="cart-input-group">
-                                <label>Referencia / Indicaciones</label>
-                                <input type="text" id="order-reference" class="cart-input" placeholder="Portón azul, junto al Oxxo...">
+                                <div class="cart-input-group">
+                                    <label>TELÉFONO (WHATSAPP)</label>
+                                    <input type="tel" id="cust-phone" class="cart-input" placeholder="10 dígitos...">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Section: Schedule -->
-                <div class="cart-section active">
-                    <div class="cart-section-header">¿Cuándo lo quieres? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
-                    <div class="cart-section-content">
-                        <div class="time-option active" data-time="asap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                            Lo antes posible (30 min aprox.)
-                        </div>
-                        <div class="time-option" data-time="later">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                            Programar para más tarde
-                        </div>
-                        <div id="later-fields" style="display:none; margin-top:15px; gap:10px;">
-                            <div class="cart-input-group" style="flex:1">
-                                <label>Fecha</label>
-                                <input type="date" id="order-date" class="cart-input">
+                        <!-- Section: Type of Order -->
+                        <div class="cart-section">
+                            <div class="cart-section-header">2. TIPO DE PEDIDO <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                            <div class="cart-section-content">
+                                <div class="type-option active" data-type="pickup">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                                    RECOGER EN RESTAURANTE
+                                </div>
+                                <div class="type-option" data-type="delivery">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                                    ENTREGA A DOMICILIO
+                                </div>
+                                <div id="delivery-fields" style="display:none; margin-top:15px;">
+                                    <div class="cart-input-group">
+                                        <label>DIRECCIÓN COMPLETA</label>
+                                        <input type="text" id="order-address" class="cart-input" placeholder="Calle, número, colonia...">
+                                    </div>
+                                    <div class="cart-input-group">
+                                        <label>REFERENCIA / INDICACIONES</label>
+                                        <input type="text" id="order-reference" class="cart-input" placeholder="Portón azul, junto al Oxxo...">
+                                    </div>
+                                </div>
                             </div>
-                            <div class="cart-input-group" style="flex:1">
-                                <label>Hora</label>
-                                <input type="time" id="order-time" class="cart-input">
+                        </div>
+
+                        <!-- Section: Schedule -->
+                        <div class="cart-section">
+                            <div class="cart-section-header">3. ¿CUÁNDO LO QUIERES? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                            <div class="cart-section-content">
+                                <div class="time-option active" data-time="asap">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    LO ANTES POSIBLE (30 MIN APROX.)
+                                </div>
+                                <div class="time-option" data-time="later">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                    PROGRAMAR PARA MÁS TARDE
+                                </div>
+                                <div id="later-fields" style="display:none; margin-top:15px; gap:10px;">
+                                    <div class="cart-input-group" style="flex:1">
+                                        <label>FECHA</label>
+                                        <input type="date" id="order-date" class="cart-input">
+                                    </div>
+                                    <div class="cart-input-group" style="flex:1">
+                                        <label>HORA</label>
+                                        <input type="time" id="order-time" class="cart-input">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section: Payment Method -->
+                        <div class="cart-section">
+                            <div class="cart-section-header">4. MÉTODO DE PAGO <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                            <div class="cart-section-content">
+                                <div class="payment-option active" data-pay="cash">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                                    EFECTIVO
+                                </div>
+                                <div class="payment-option" data-pay="transfer">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                                    TRANSFERENCIA BANCARIA
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Section: Contact Info -->
-                <div class="cart-section active">
-                    <div class="cart-section-header">Datos de Contacto <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
-                    <div class="cart-section-content">
-                        <div class="cart-input-group">
-                            <label>Nombre Completo</label>
-                            <input type="text" id="cust-name" class="cart-input" placeholder="Tu nombre...">
+                    <!-- Right Column: Summary & Items -->
+                    <div class="cart-right-col">
+                        <div style="padding:20px; flex:1; overflow-y:auto; scrollbar-width:none;">
+                            <div style="font-weight:800; font-size:0.8rem; color:#888; text-transform:uppercase; margin-bottom:15px; letter-spacing:0.5px;">RESUMEN DE PRODUCTOS</div>
+                            ${this.cart.map((item, i) => `
+                                <div class="cart-item">
+                                    <div class="cart-item-info">
+                                        <h4 style="text-transform:uppercase; font-family:'Helvetica', 'Arial', sans-serif;">${item.quantity > 1 ? item.quantity + 'x ' : ''}${item.name}</h4>
+                                        <p style="font-size:0.75rem;">${item.size ? item.size : ''} ${item.toppings.length > 0 ? '• ' + item.toppings.join(', ') : ''}</p>
+                                        ${item.instructions ? `<p style="color:#ff9533; font-style:italic; font-size:0.75rem;">"${item.instructions}"</p>` : ''}
+                                    </div>
+                                    <div class="cart-item-price" style="font-family:'Helvetica', 'Arial', sans-serif;">$${(item.total || item.price).toFixed(2)}</div>
+                                </div>
+                            `).join('')}
                         </div>
-                        <div class="cart-input-group">
-                            <label>Teléfono de Contacto (WhatsApp)</label>
-                            <input type="tel" id="cust-phone" class="cart-input" placeholder="10 dígitos...">
+
+                        <div class="order-summary" style="margin:0; padding:20px; background:#f0f0f0; border-top:1.5px solid #eee;">
+                            <div class="summary-row"><span>SUBTOTAL</span><span>$${subtotal.toFixed(2)}</span></div>
+                            <div class="summary-row"><span>ENVÍO</span><span>$0.00</span></div>
+                            <div class="summary-row total" style="border-top-color:#ddd;"><span>TOTAL</span><span>$${total.toFixed(2)}</span></div>
+                            <button class="add-to-cart" id="send-order-btn" style="margin-top:20px; width:100%;">ENVIAR PEDIDO • $${total.toFixed(2)}</button>
                         </div>
                     </div>
-                </div>
-
-                <!-- Section: Payment Method -->
-                <div class="cart-section active">
-                    <div class="cart-section-header">Método de Pago <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
-                    <div class="cart-section-content">
-                        <div class="payment-option active" data-pay="cash">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-                            Efectivo
-                        </div>
-                        <div class="payment-option" data-pay="transfer">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-                            Transferencia Bancaria
-                        </div>
-                    </div>
-                </div>
-
-                <div class="order-summary" style="margin: 20px;">
-                    <div class="summary-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
-                    <div class="summary-row"><span>Envío</span><span>$0.00</span></div>
-                    <div class="summary-row total"><span>Total</span><span>$${total.toFixed(2)}</span></div>
-                    <button class="add-to-cart" id="send-order-btn" style="margin-top:20px; width:100%;">ENVIAR PEDIDO • $${total.toFixed(2)}</button>
                 </div>
             </div>
         `;
