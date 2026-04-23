@@ -1202,14 +1202,16 @@ class MenutechPlatformOrders extends HTMLElement {
         }
     }
 
-    async fetchMenuData(domain) {
+    async fetchMenuData(identifier, isSlug = false) {
         if (!this.supabase) await this.initSupabase();
         try {
-            const { data, error } = await this.supabase
-                .from('menutech_menus')
-                .select('*')
-                .eq('domain', domain)
-                .single();
+            const query = this.supabase.from('menutech_menus').select('*');
+            if (isSlug) {
+                query.eq('slug', identifier);
+            } else {
+                query.eq('domain', identifier);
+            }
+            const { data, error } = await query.single();
             if (error) return null;
             return data;
         } catch (err) {
@@ -1223,8 +1225,13 @@ class MenutechPlatformOrders extends HTMLElement {
     }
 
     async loadData() {
-        let domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
-        const data = await this.fetchMenuData(domain);
+        const slug = this.getAttribute('restaurant');
+        const domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
+
+        const data = slug
+            ? await this.fetchMenuData(slug, true)
+            : await this.fetchMenuData(domain, false);
+
         if (!data) {
             this.shadowRoot.innerHTML = '<div style="padding: 40px; text-align: center; color: #666;">Menu not found.</div>';
             return;
