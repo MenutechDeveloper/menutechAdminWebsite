@@ -85,9 +85,42 @@ CREATE TABLE IF NOT EXISTS public.menutech_orders (
     customer_name TEXT,
     customer_phone TEXT,
     customer_notes TEXT,
+    order_type TEXT DEFAULT 'pickup', -- 'pickup' or 'delivery'
+    address TEXT,
+    reference TEXT,
+    delivery_time_mode TEXT DEFAULT 'asap', -- 'asap' or 'later'
+    delivery_date TEXT,
+    delivery_time TEXT,
+    payment_method TEXT DEFAULT 'cash', -- 'cash' or 'transfer'
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Update existing table if needed
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menutech_orders' AND column_name='order_type') THEN
+        ALTER TABLE public.menutech_orders ADD COLUMN order_type TEXT DEFAULT 'pickup';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menutech_orders' AND column_name='address') THEN
+        ALTER TABLE public.menutech_orders ADD COLUMN address TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menutech_orders' AND column_name='reference') THEN
+        ALTER TABLE public.menutech_orders ADD COLUMN reference TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menutech_orders' AND column_name='delivery_time_mode') THEN
+        ALTER TABLE public.menutech_orders ADD COLUMN delivery_time_mode TEXT DEFAULT 'asap';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menutech_orders' AND column_name='delivery_date') THEN
+        ALTER TABLE public.menutech_orders ADD COLUMN delivery_date TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menutech_orders' AND column_name='delivery_time') THEN
+        ALTER TABLE public.menutech_orders ADD COLUMN delivery_time TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menutech_orders' AND column_name='payment_method') THEN
+        ALTER TABLE public.menutech_orders ADD COLUMN payment_method TEXT DEFAULT 'cash';
+    END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON public.menutech_orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON public.menutech_orders(status);
