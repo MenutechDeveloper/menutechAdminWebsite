@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.menutech_menus (
     domain TEXT NOT NULL,
     cover_url TEXT,
     cover_type TEXT DEFAULT 'image', -- 'image' or 'video'
+    slug TEXT UNIQUE,
     config JSONB DEFAULT '{
         "categories": [],
         "toppings": []
@@ -19,6 +20,7 @@ CREATE TABLE IF NOT EXISTS public.menutech_menus (
 
 -- 2. Indexes for faster lookups
 CREATE INDEX IF NOT EXISTS idx_menus_domain ON public.menutech_menus(domain);
+CREATE INDEX IF NOT EXISTS idx_menus_slug ON public.menutech_menus(slug);
 CREATE INDEX IF NOT EXISTS idx_menus_user_id ON public.menutech_menus(user_id);
 
 -- 3. Enable Row Level Security

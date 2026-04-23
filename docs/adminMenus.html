@@ -478,9 +478,9 @@
 
         function updateSubdomainLink(profile) {
             if (!profile) return;
-            const name = (profile.username || 'restaurant').toLowerCase().replace(/\s+/g, '-');
-            const link = `${name}-${profile.id.substring(0,6)}.menutech.io`;
-            document.getElementById('subdomain-link').textContent = link;
+            const slug = menuData.slug || (profile.username || 'restaurant').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            const link = `menutech.io/menu.html?n=${slug}`;
+            document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none;">${link}</a>`;
         }
 
         async function loadMenu() {
@@ -866,7 +866,8 @@
         }
 
         window.openPreview = () => {
-            const url = `./preview-menu.html?user=${activeOwnerId}`;
+            const slug = menuData.slug || 'preview';
+            const url = `./menu.html?n=${slug}`;
             window.open(url, '_blank');
         };
 
@@ -874,10 +875,18 @@
             if (!activeOwnerId) return;
             const btn = document.querySelector('.btn-save-all');
             btn.textContent = "SAVING...";
+
+            // Ensure we have a slug
+            if (!menuData.slug) {
+                const profile = allOwners.find(o => o.id === activeOwnerId) || { username: 'restaurant' };
+                menuData.slug = (profile.username || 'restaurant').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            }
+
             try {
                 const { error } = await sb.from('menutech_menus').upsert({
                     user_id: activeOwnerId,
                     domain: activeDomain || 'undetermined',
+                    slug: menuData.slug,
                     cover_url: menuData.cover_url,
                     cover_type: menuData.cover_type,
                     config: menuData.config
