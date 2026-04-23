@@ -1452,7 +1452,7 @@ class MenutechPlatformOrders extends HTMLElement {
                 .cart-input:focus { outline: none; border-color: #ff9533; background: #fffefb; }
 
                 .payment-option, .type-option, .time-option {
-                    display: flex; align-items: center; gap: 12px; padding: 16px;
+                    display: flex; align-items: center; justify-content: space-between; padding: 16px;
                     border-radius: 12px; border: 1.5px solid #eee; margin-bottom: 12px;
                     cursor: pointer; transition: 0.2s; font-weight: 700; font-size: 0.9rem;
                     color: #555;
@@ -1460,6 +1460,11 @@ class MenutechPlatformOrders extends HTMLElement {
                 .payment-option.active, .type-option.active, .time-option.active {
                     border-color: #ff9533; background: #fffcf5; color: #ff9533;
                 }
+                .option-check {
+                    width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #ddd;
+                    display: flex; align-items: center; justify-content: center; font-size: 12px; color: transparent;
+                }
+                .active .option-check { background: #ff9533; border-color: #ff9533; color: #fff; }
 
                 .order-summary { background: #fafafa; padding: 20px; border-radius: 20px; margin-top: 20px; }
                 .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
@@ -1931,12 +1936,18 @@ class MenutechPlatformOrders extends HTMLElement {
                             <div class="cart-section-header">2. TIPO DE PEDIDO <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                             <div class="cart-section-content">
                                 <div class="type-option active" data-type="pickup">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-                                    RECOGER EN RESTAURANTE
+                                    <div style="display:flex; align-items:center; gap:12px;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                                        RECOGER EN RESTAURANTE
+                                    </div>
+                                    <div class="option-check">✓</div>
                                 </div>
                                 <div class="type-option" data-type="delivery">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                                    ENTREGA A DOMICILIO
+                                    <div style="display:flex; align-items:center; gap:12px;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                                        ENTREGA A DOMICILIO
+                                    </div>
+                                    <div class="option-check">✓</div>
                                 </div>
                                 <div id="delivery-fields" style="display:none; margin-top:15px;">
                                     <div class="cart-input-group">
@@ -1953,15 +1964,21 @@ class MenutechPlatformOrders extends HTMLElement {
 
                         <!-- Section: Schedule -->
                         <div class="cart-section">
-                            <div class="cart-section-header">3. ¿CUÁNDO LO QUIERES? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                            <div class="cart-section-header">3. ELEGIR HORA DISPONIBLE <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                             <div class="cart-section-content">
                                 <div class="time-option active" data-time="asap">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                    LO ANTES POSIBLE (30 MIN APROX.)
+                                    <div style="display:flex; align-items:center; gap:12px;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        LO ANTES POSIBLE (30 MIN APROX.)
+                                    </div>
+                                    <div class="option-check">✓</div>
                                 </div>
                                 <div class="time-option" data-time="later">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                    PROGRAMAR PARA MÁS TARDE
+                                    <div style="display:flex; align-items:center; gap:12px;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                        PROGRAMAR PARA MÁS TARDE
+                                    </div>
+                                    <div class="option-check">✓</div>
                                 </div>
                                 <div id="later-fields" style="display:none; margin-top:15px; gap:10px;">
                                     <div class="cart-input-group" style="flex:1">
@@ -1981,12 +1998,18 @@ class MenutechPlatformOrders extends HTMLElement {
                             <div class="cart-section-header">4. MÉTODO DE PAGO <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                             <div class="cart-section-content">
                                 <div class="payment-option active" data-pay="cash">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-                                    EFECTIVO
+                                    <div style="display:flex; align-items:center; gap:12px;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                                        EFECTIVO
+                                    </div>
+                                    <div class="option-check">✓</div>
                                 </div>
                                 <div class="payment-option" data-pay="transfer">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-                                    TRANSFERENCIA BANCARIA
+                                    <div style="display:flex; align-items:center; gap:12px;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                                        TRANSFERENCIA BANCARIA
+                                    </div>
+                                    <div class="option-check">✓</div>
                                 </div>
                             </div>
                         </div>
@@ -2022,32 +2045,41 @@ class MenutechPlatformOrders extends HTMLElement {
         overlay.style.display = 'flex';
         popupContent.querySelector('.close-popup').onclick = () => overlay.style.display = 'none';
 
-        // Accordion logic
+        // Exclusive Accordion logic
         popupContent.querySelectorAll('.cart-section-header').forEach(header => {
             header.onclick = () => {
-                header.parentElement.classList.toggle('active');
+                const currentSection = header.parentElement;
+                const wasActive = currentSection.classList.contains('active');
+
+                // Close all sections
+                popupContent.querySelectorAll('.cart-section').forEach(sec => sec.classList.remove('active'));
+
+                // Toggle current if it wasn't active
+                if (!wasActive) {
+                    currentSection.classList.add('active');
+                }
             };
         });
 
         // Type of Order toggles
         const typeOptions = popupContent.querySelectorAll('.type-option');
-        const deliveryFields = popupContent.getElementById('delivery-fields');
+        const deliveryFields = popupContent.querySelector('#delivery-fields');
         typeOptions.forEach(opt => {
             opt.onclick = () => {
                 typeOptions.forEach(o => o.classList.remove('active'));
                 opt.classList.add('active');
-                deliveryFields.style.display = opt.dataset.type === 'delivery' ? 'block' : 'none';
+                if (deliveryFields) deliveryFields.style.display = opt.dataset.type === 'delivery' ? 'block' : 'none';
             };
         });
 
         // Time selection toggles
         const timeOptions = popupContent.querySelectorAll('.time-option');
-        const laterFields = popupContent.getElementById('later-fields');
+        const laterFields = popupContent.querySelector('#later-fields');
         timeOptions.forEach(opt => {
             opt.onclick = () => {
                 timeOptions.forEach(o => o.classList.remove('active'));
                 opt.classList.add('active');
-                laterFields.style.display = opt.dataset.time === 'later' ? 'flex' : 'none';
+                if (laterFields) laterFields.style.display = opt.dataset.time === 'later' ? 'flex' : 'none';
             };
         });
 
@@ -2060,28 +2092,30 @@ class MenutechPlatformOrders extends HTMLElement {
             };
         });
 
-        popupContent.querySelector('#send-order-btn').onclick = () => this.sendOrder();
+        const sendBtn = popupContent.querySelector('#send-order-btn');
+        if (sendBtn) sendBtn.onclick = () => this.sendOrder();
     }
 
     async sendOrder() {
-        const name = this.shadowRoot.getElementById('cust-name').value;
-        const phone = this.shadowRoot.getElementById('cust-phone').value;
+        const popupContent = this.shadowRoot.getElementById('popup-content');
+        const name = popupContent.querySelector('#cust-name').value;
+        const phone = popupContent.querySelector('#cust-phone').value;
 
         if (!name || !phone) {
             alert('Por favor completa tu nombre y teléfono.');
             return;
         }
 
-        const orderType = this.shadowRoot.querySelector('.type-option.active').dataset.type;
-        const address = this.shadowRoot.getElementById('order-address')?.value || '';
-        const reference = this.shadowRoot.getElementById('order-reference')?.value || '';
-        const timeMode = this.shadowRoot.querySelector('.time-option.active').dataset.time;
-        const date = this.shadowRoot.getElementById('order-date')?.value || '';
-        const time = this.shadowRoot.getElementById('order-time')?.value || '';
-        const payment = this.shadowRoot.querySelector('.payment-option.active').dataset.pay;
+        const orderType = popupContent.querySelector('.type-option.active').dataset.type;
+        const address = popupContent.querySelector('#order-address')?.value || '';
+        const reference = popupContent.querySelector('#order-reference')?.value || '';
+        const timeMode = popupContent.querySelector('.time-option.active').dataset.time;
+        const date = popupContent.querySelector('#order-date')?.value || '';
+        const time = popupContent.querySelector('#order-time')?.value || '';
+        const payment = popupContent.querySelector('.payment-option.active').dataset.pay;
 
         const total = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
-        const btn = this.shadowRoot.getElementById('send-order-btn');
+        const btn = popupContent.querySelector('#send-order-btn');
         btn.textContent = 'ENVIANDO...';
         btn.disabled = true;
 
