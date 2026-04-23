@@ -1331,17 +1331,35 @@ class MenutechPlatformOrders extends HTMLElement {
                 .dish-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.06); }
 
                 /* Mode 2 Styles */
-                .mode2-list { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+                .mode2-main-header {
+                    display: flex; justify-content: space-between; align-items: center;
+                    padding: 20px; background: #fff; border-bottom: 1px solid #f0f0f0;
+                }
+                .restaurant-name { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin: 0; color: #1a1c1e; }
+                .header-icons { display: flex; gap: 20px; }
+                .header-icon { cursor: pointer; position: relative; color: #1a1c1e; }
+                .header-icon svg { width: 24px; height: 24px; }
+                .cart-count-badge {
+                    position: absolute; top: -8px; right: -8px; background: #ff9533;
+                    color: #fff; width: 18px; height: 18px; border-radius: 50%;
+                    font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+                }
+
+                .mode2-list { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 40px; }
                 @media (max-width: 768px) { .mode2-list { grid-template-columns: 1fr; gap: 10px; } }
                 .mode2-item {
-                    display: flex; flex-direction: column; padding: 15px 0;
-                    border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s;
+                    display: flex; flex-direction: column; padding: 20px 0;
+                    border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: 0.2s;
                 }
-                .mode2-item:hover { background: #fafafa; padding-left: 5px; }
-                .mode2-header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-                .mode2-name { font-weight: 800; text-transform: uppercase; font-size: 0.95rem; color: #1a1c1e; }
-                .mode2-price { font-weight: 800; color: #1a1c1e; font-size: 1rem; }
-                .mode2-desc { font-size: 0.8rem; color: #666; margin-top: 6px; line-height: 1.4; }
+                .mode2-item:hover { background: #fafafa; }
+                .mode2-top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
+                .mode2-left { flex: 1; }
+                .mode2-name-price { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+                .mode2-name { font-weight: 700; font-size: 1.05rem; color: #1a1c1e; }
+                .mode2-price { font-weight: 700; color: #1a1c1e; font-size: 1.05rem; }
+                .mode2-image { width: 90px; height: 90px; border-radius: 16px; overflow: hidden; flex-shrink: 0; }
+                .mode2-image img { width: 100%; height: 100%; object-fit: cover; }
+                .mode2-desc { font-size: 0.85rem; color: #666; line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
                 .dish-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
                 .dish-info h3 { margin: 0; font-size: 1.1rem; color: #1a1c1e; }
@@ -1370,13 +1388,78 @@ class MenutechPlatformOrders extends HTMLElement {
                 /* Popup */
                 .popup-overlay {
                     position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-                    z-index: 1000; display: none; align-items: flex-end; justify-content: center;
+                    z-index: 1000; display: none; align-items: center; justify-content: center;
+                    transition: 0.3s;
                 }
+                .popup-overlay.side-popup { align-items: center; justify-content: center; }
+
                 .popup-card {
-                    background: #fff; width: 100%; max-width: 600px; border-radius: 30px 30px 0 0;
-                    max-height: 90vh; overflow-y: auto; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                    background: #fff; width: 100%; max-width: 600px; border-radius: 30px;
+                    max-height: 90vh; overflow-y: auto; position: relative;
+                    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                 }
-                @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+                /* Cart Styles */
+                .cart-section { margin-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
+                .cart-section-header {
+                    padding: 20px; display: flex; justify-content: space-between; align-items: center;
+                    cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: 0.9rem;
+                    letter-spacing: 0.5px; color: #1a1c1e;
+                }
+                .cart-section-content { padding: 0 20px 20px; display: none; }
+                .cart-section.active .cart-section-content { display: block; }
+                .cart-section.active .cart-section-header svg { transform: rotate(180deg); }
+                .cart-section-header svg { transition: 0.3s; width: 18px; height: 18px; }
+
+                .cart-item { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #f9f9f9; }
+                .cart-item:last-child { border: none; }
+                .cart-item-info h4 { margin: 0; font-size: 1rem; }
+                .cart-item-info p { margin: 4px 0 0; font-size: 0.8rem; color: #888; }
+                .cart-item-price { font-weight: 700; }
+
+                .cart-input-group { margin-bottom: 15px; }
+                .cart-input-group label { display: block; font-size: 0.75rem; font-weight: 700; margin-bottom: 8px; color: #666; }
+                .cart-input {
+                    width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid #eee;
+                    font-family: inherit; font-size: 0.95rem; box-sizing: border-box; transition: 0.3s;
+                }
+                .cart-input:focus { outline: none; border-color: #ff9533; background: #fffefb; }
+
+                .payment-option, .type-option, .time-option {
+                    display: flex; align-items: center; gap: 12px; padding: 14px;
+                    border-radius: 12px; border: 1.5px solid #eee; margin-bottom: 10px;
+                    cursor: pointer; transition: 0.3s; font-weight: 600;
+                }
+                .payment-option.active, .type-option.active, .time-option.active {
+                    border-color: #ff9533; background: rgba(255,149,51,0.05); color: #ff9533;
+                }
+
+                .order-summary { background: #fafafa; padding: 20px; border-radius: 20px; margin-top: 20px; }
+                .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
+                .summary-row.total { font-weight: 800; font-size: 1.2rem; color: #1a1c1e; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
+
+                .sending-animation {
+                    position: fixed; inset: 0; background: #fff; z-index: 2000;
+                    display: flex; flex-direction: column; align-items: center; justify-content: center;
+                    text-align: center; padding: 40px; animation: fadeIn 0.5s ease;
+                }
+                .check-mark {
+                    width: 80px; height: 80px; background: #059669; border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center;
+                    color: #fff; font-size: 40px; margin-bottom: 20px;
+                    box-shadow: 0 10px 25px rgba(5,150,105,0.3);
+                }
+
+                @media (min-width: 1024px) {
+                    .popup-overlay.side-popup { background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); }
+                    .popup-card.open-right { transform: translateX(250px); }
+                    .popup-card.open-left { transform: translateX(-250px); }
+                }
+
+                @media (max-width: 600px) {
+                    .popup-overlay { align-items: flex-end; }
+                    .popup-card { border-radius: 30px 30px 0 0; width: 100%; }
+                }
 
                 .popup-img { width: 100%; height: 250px; position: relative; }
                 .popup-img img { width: 100%; height: 100%; object-fit: cover; }
@@ -1453,11 +1536,16 @@ class MenutechPlatformOrders extends HTMLElement {
                     <div class="mode2-list">
                         ${(cat.dishes || []).map(dish => `
                             <div class="mode2-item" data-dish='${JSON.stringify(dish).replace(/'/g, "&apos;")}'>
-                                <div class="mode2-header">
-                                    <span class="mode2-name">${dish.name}</span>
-                                    <span class="mode2-price">$${dish.price}</span>
+                                <div class="mode2-top-row">
+                                    <div class="mode2-left">
+                                        <div class="mode2-name-price">
+                                            <span class="mode2-name">${dish.name}</span>
+                                            <span class="mode2-price">$${dish.price}</span>
+                                        </div>
+                                        <p class="mode2-desc">${dish.description || ''}</p>
+                                    </div>
+                                    ${dish.image ? `<div class="mode2-image"><img src="${dish.image}"></div>` : ''}
                                 </div>
-                                <p class="mode2-desc">${dish.description || ''}</p>
                             </div>
                         `).join('')}
                     </div>
@@ -1468,6 +1556,20 @@ class MenutechPlatformOrders extends HTMLElement {
         this.shadowRoot.innerHTML = `
             ${styles}
             <div class="menu-wrapper">
+                ${style === 'mode2' ? `
+                    <div class="mode2-main-header">
+                        <h1 class="restaurant-name">${config.restaurant_name || 'Menutech'}</h1>
+                        <div class="header-icons">
+                            <div class="header-icon" id="header-menu-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                            </div>
+                            <div class="header-icon" id="header-cart-btn-top">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                                <div class="cart-count-badge" id="cart-count-top" style="display:none">0</div>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
                 ${coverHtml}
                 <div class="menu-content">
                     ${style === 'mode1' ? `<div class="category-tabs">${tabsHtml}</div>` : ''}
@@ -1522,11 +1624,24 @@ class MenutechPlatformOrders extends HTMLElement {
 
         const cards = this.shadowRoot.querySelectorAll('.dish-card, .mode2-item');
         cards.forEach(card => {
-            card.onclick = () => {
+            card.onclick = (e) => {
                 const dish = JSON.parse(card.getAttribute('data-dish'));
-                this.openDishPopup(dish);
+                this.openDishPopup(dish, card);
             };
         });
+
+        const headerCartBtn = this.shadowRoot.getElementById('header-cart-btn-top');
+        if (headerCartBtn) {
+            headerCartBtn.onclick = () => this.openCartPopup();
+        }
+
+        const headerMenuBtn = this.shadowRoot.getElementById('header-menu-btn');
+        if (headerMenuBtn) {
+            headerMenuBtn.onclick = () => {
+                // Potential side menu logic or scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+        }
 
         overlay.onclick = (e) => {
             if (e.target === overlay) {
@@ -1535,13 +1650,32 @@ class MenutechPlatformOrders extends HTMLElement {
         };
     }
 
-    openDishPopup(dish) {
+    openDishPopup(dish, cardEl) {
         const overlay = this.shadowRoot.getElementById('popup');
         const popupContent = this.shadowRoot.getElementById('popup-content');
+
+        if (window.innerWidth > 1024 && cardEl) {
+            const rect = cardEl.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const screenCenter = window.innerWidth / 2;
+
+            overlay.classList.add('side-popup');
+            popupContent.classList.remove('open-left', 'open-right');
+            if (centerX < screenCenter) {
+                popupContent.classList.add('open-right');
+            } else {
+                popupContent.classList.add('open-left');
+            }
+        } else {
+            overlay.classList.remove('side-popup');
+            popupContent.classList.remove('open-left', 'open-right');
+        }
 
         const hasSizes = dish.sizes && dish.sizes.length > 0;
         const allToppings = this.menuData.config.toppings || [];
         const dishToppings = allToppings.filter(t => (dish.toppings || []).includes(t.id));
+
+        const basePrice = hasSizes ? dish.sizes[0].price : dish.price;
 
         popupContent.innerHTML = `
             <div class="popup-img">
@@ -1587,7 +1721,19 @@ class MenutechPlatformOrders extends HTMLElement {
                     </div>
                 `).join('')}
 
-                <button class="add-to-cart">ADD TO ORDER • $${dish.price}</button>
+                <div class="option-group">
+                    <div class="option-title">INSTRUCCIONES ESPECIALES</div>
+                    <textarea id="dish-instructions" placeholder="Ejem: Sin cebolla, extra salsa..." style="width:100%; padding:15px; border-radius:15px; border:1px solid #eee; font-family:inherit; min-height:80px; resize:none; box-sizing:border-box;"></textarea>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:20px; margin-top:20px;">
+                    <div style="display:flex; align-items:center; background:#f5f5f5; border-radius:15px; padding:5px;">
+                        <button class="qty-btn" id="qty-minus" style="width:40px; height:40px; border:none; background:none; font-size:1.5rem; cursor:pointer;">-</button>
+                        <span id="dish-qty" style="width:40px; text-align:center; font-weight:700; font-size:1.1rem;">1</span>
+                        <button class="qty-btn" id="qty-plus" style="width:40px; height:40px; border:none; background:none; font-size:1.5rem; cursor:pointer;">+</button>
+                    </div>
+                    <button class="add-to-cart" style="margin-top:0; flex:1;">AGREGAR AL CARRITO • $${basePrice}</button>
+                </div>
             </div>
         `;
 
@@ -1606,6 +1752,12 @@ class MenutechPlatformOrders extends HTMLElement {
             };
         });
 
+        // Quantity logic
+        let qty = 1;
+        const qtyEl = popupContent.querySelector('#dish-qty');
+        popupContent.querySelector('#qty-plus').onclick = () => { qty++; qtyEl.textContent = qty; this.updatePopupTotal(dish, qty); };
+        popupContent.querySelector('#qty-minus').onclick = () => { if(qty > 1) { qty--; qtyEl.textContent = qty; this.updatePopupTotal(dish, qty); } };
+
         // Topping selection logic
         popupContent.querySelectorAll('.option-group[data-group-id]').forEach(group => {
             const max = parseInt(group.getAttribute('data-max'));
@@ -1622,34 +1774,38 @@ class MenutechPlatformOrders extends HTMLElement {
                             item.classList.add('active');
                         }
                     }
-                    this.updatePopupTotal(dish);
+                    this.updatePopupTotal(dish, qty);
                 };
             });
         });
     }
 
-    updatePopupTotal(dish) {
+    updatePopupTotal(dish, qty = 1) {
         const popupContent = this.shadowRoot.getElementById('popup-content');
-        let total = parseFloat(dish.price);
+        let baseTotal = parseFloat(dish.price);
 
         // Check if size is selected
         const selectedSize = popupContent.querySelector('.option-item[data-type="size"].active');
         if (selectedSize) {
-            total = parseFloat(selectedSize.querySelector('.opt-price').textContent.replace('$', ''));
+            baseTotal = parseFloat(selectedSize.querySelector('.opt-price').textContent.replace('$', ''));
         }
 
         // Add toppings
         popupContent.querySelectorAll('.option-item[data-type="topping"].active').forEach(item => {
-            total += parseFloat(item.getAttribute('data-price') || 0);
+            baseTotal += parseFloat(item.getAttribute('price') || item.getAttribute('data-price') || 0);
         });
 
+        const total = baseTotal * qty;
         const btn = popupContent.querySelector('.add-to-cart');
-        btn.textContent = `ADD TO ORDER • $${total.toFixed(2)}`;
+        btn.textContent = `AGREGAR AL CARRITO • $${total.toFixed(2)}`;
 
         btn.onclick = () => {
             const item = {
                 name: dish.name,
-                price: total,
+                price: baseTotal,
+                total: total,
+                quantity: qty,
+                instructions: popupContent.querySelector('#dish-instructions').value,
                 size: selectedSize ? selectedSize.querySelector('span').textContent : null,
                 toppings: Array.from(popupContent.querySelectorAll('.option-item[data-type="topping"].active')).map(i => i.querySelector('span').textContent)
             };
@@ -1666,57 +1822,189 @@ class MenutechPlatformOrders extends HTMLElement {
     updateCartUI() {
         const btn = this.shadowRoot.getElementById('cart-btn');
         const count = this.shadowRoot.getElementById('cart-count');
+        const countTop = this.shadowRoot.getElementById('cart-count-top');
+
+        const totalItems = this.cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
         if (this.cart.length > 0) {
-            btn.style.display = 'flex';
-            count.textContent = this.cart.length;
+            if (btn) btn.style.display = 'flex';
+            if (count) count.textContent = totalItems;
+            if (countTop) {
+                countTop.style.display = 'flex';
+                countTop.textContent = totalItems;
+            }
         } else {
-            btn.style.display = 'none';
+            if (btn) btn.style.display = 'none';
+            if (countTop) countTop.style.display = 'none';
         }
 
-        btn.onclick = () => this.openCartPopup();
+        if (btn) btn.onclick = () => this.openCartPopup();
     }
 
     openCartPopup() {
         const overlay = this.shadowRoot.getElementById('popup');
         const popupContent = this.shadowRoot.getElementById('popup-content');
+        overlay.classList.remove('side-popup');
+        popupContent.classList.remove('open-left', 'open-right');
 
-        const total = this.cart.reduce((sum, item) => sum + item.price, 0);
+        const total = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
+        const subtotal = total;
 
         popupContent.innerHTML = `
-            <div class="popup-body">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h2 style="margin:0">Your Order</h2>
-                    <button class="close-popup" style="position:static; box-shadow:none; border:1px solid #f0f0f0;">
+            <div class="popup-body" style="padding:0">
+                <div style="padding:20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f0f0f0;">
+                    <h2 style="margin:0; font-size:1.4rem;">Tu Pedido</h2>
+                    <button class="close-popup" style="position:static; border:1px solid #eee;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                 </div>
 
-                <div style="max-height:300px; overflow-y:auto; margin-bottom:20px;">
-                    ${this.cart.map((item, i) => `
-                        <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f0f0f0;">
-                            <div>
-                                <div style="font-weight:700;">${item.name}</div>
-                                <div style="font-size:0.75rem; color:#888;">
-                                    ${item.size ? item.size : ''} ${item.toppings.length > 0 ? '• ' + item.toppings.join(', ') : ''}
+                <!-- Section: Order Items -->
+                <div class="cart-section active">
+                    <div class="cart-section-header">Artículos <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                    <div class="cart-section-content">
+                        ${this.cart.map((item, i) => `
+                            <div class="cart-item">
+                                <div class="cart-item-info">
+                                    <h4>${item.quantity > 1 ? item.quantity + 'x ' : ''}${item.name}</h4>
+                                    <p>${item.size ? item.size : ''} ${item.toppings.length > 0 ? '• ' + item.toppings.join(', ') : ''}</p>
+                                    ${item.instructions ? `<p style="color:#ff9533; font-style:italic;">"${item.instructions}"</p>` : ''}
                                 </div>
+                                <div class="cart-item-price">$${(item.total || item.price).toFixed(2)}</div>
                             </div>
-                            <div style="font-weight:700;">$${item.price.toFixed(2)}</div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Section: Type of Order -->
+                <div class="cart-section active">
+                    <div class="cart-section-header">Tipo de Pedido <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                    <div class="cart-section-content">
+                        <div class="type-option active" data-type="pickup">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                            Recoger en Restaurante
                         </div>
-                    `).join('')}
+                        <div class="type-option" data-type="delivery">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                            Entrega a Domicilio
+                        </div>
+                        <div id="delivery-fields" style="display:none; margin-top:15px;">
+                            <div class="cart-input-group">
+                                <label>Dirección Completa</label>
+                                <input type="text" id="order-address" class="cart-input" placeholder="Calle, número, colonia...">
+                            </div>
+                            <div class="cart-input-group">
+                                <label>Referencia / Indicaciones</label>
+                                <input type="text" id="order-reference" class="cart-input" placeholder="Portón azul, junto al Oxxo...">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div style="margin-bottom:20px;">
-                    <input type="text" id="cust-name" placeholder="Your Name" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px; box-sizing:border-box;">
-                    <input type="text" id="cust-phone" placeholder="Phone Number" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px; box-sizing:border-box;">
-                    <textarea id="cust-notes" placeholder="Special notes..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; box-sizing:border-box; min-height:60px;"></textarea>
+                <!-- Section: Schedule -->
+                <div class="cart-section active">
+                    <div class="cart-section-header">¿Cuándo lo quieres? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                    <div class="cart-section-content">
+                        <div class="time-option active" data-time="asap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            Lo antes posible (30 min aprox.)
+                        </div>
+                        <div class="time-option" data-time="later">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            Programar para más tarde
+                        </div>
+                        <div id="later-fields" style="display:none; margin-top:15px; gap:10px;">
+                            <div class="cart-input-group" style="flex:1">
+                                <label>Fecha</label>
+                                <input type="date" id="order-date" class="cart-input">
+                            </div>
+                            <div class="cart-input-group" style="flex:1">
+                                <label>Hora</label>
+                                <input type="time" id="order-time" class="cart-input">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <button class="add-to-cart" id="send-order-btn">SEND ORDER • $${total.toFixed(2)}</button>
+                <!-- Section: Contact Info -->
+                <div class="cart-section active">
+                    <div class="cart-section-header">Datos de Contacto <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                    <div class="cart-section-content">
+                        <div class="cart-input-group">
+                            <label>Nombre Completo</label>
+                            <input type="text" id="cust-name" class="cart-input" placeholder="Tu nombre...">
+                        </div>
+                        <div class="cart-input-group">
+                            <label>Teléfono de Contacto (WhatsApp)</label>
+                            <input type="tel" id="cust-phone" class="cart-input" placeholder="10 dígitos...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Payment Method -->
+                <div class="cart-section active">
+                    <div class="cart-section-header">Método de Pago <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                    <div class="cart-section-content">
+                        <div class="payment-option active" data-pay="cash">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                            Efectivo
+                        </div>
+                        <div class="payment-option" data-pay="transfer">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                            Transferencia Bancaria
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-summary" style="margin: 20px;">
+                    <div class="summary-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+                    <div class="summary-row"><span>Envío</span><span>$0.00</span></div>
+                    <div class="summary-row total"><span>Total</span><span>$${total.toFixed(2)}</span></div>
+                    <button class="add-to-cart" id="send-order-btn" style="margin-top:20px; width:100%;">ENVIAR PEDIDO • $${total.toFixed(2)}</button>
+                </div>
             </div>
         `;
 
         overlay.style.display = 'flex';
         popupContent.querySelector('.close-popup').onclick = () => overlay.style.display = 'none';
+
+        // Accordion logic
+        popupContent.querySelectorAll('.cart-section-header').forEach(header => {
+            header.onclick = () => {
+                header.parentElement.classList.toggle('active');
+            };
+        });
+
+        // Type of Order toggles
+        const typeOptions = popupContent.querySelectorAll('.type-option');
+        const deliveryFields = popupContent.getElementById('delivery-fields');
+        typeOptions.forEach(opt => {
+            opt.onclick = () => {
+                typeOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                deliveryFields.style.display = opt.dataset.type === 'delivery' ? 'block' : 'none';
+            };
+        });
+
+        // Time selection toggles
+        const timeOptions = popupContent.querySelectorAll('.time-option');
+        const laterFields = popupContent.getElementById('later-fields');
+        timeOptions.forEach(opt => {
+            opt.onclick = () => {
+                timeOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                laterFields.style.display = opt.dataset.time === 'later' ? 'flex' : 'none';
+            };
+        });
+
+        // Payment toggles
+        const payOptions = popupContent.querySelectorAll('.payment-option');
+        payOptions.forEach(opt => {
+            opt.onclick = () => {
+                payOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+            };
+        });
 
         popupContent.querySelector('#send-order-btn').onclick = () => this.sendOrder();
     }
@@ -1724,16 +2012,23 @@ class MenutechPlatformOrders extends HTMLElement {
     async sendOrder() {
         const name = this.shadowRoot.getElementById('cust-name').value;
         const phone = this.shadowRoot.getElementById('cust-phone').value;
-        const notes = this.shadowRoot.getElementById('cust-notes').value;
 
         if (!name || !phone) {
-            alert('Please provide name and phone number.');
+            alert('Por favor completa tu nombre y teléfono.');
             return;
         }
 
-        const total = this.cart.reduce((sum, item) => sum + item.price, 0);
+        const orderType = this.shadowRoot.querySelector('.type-option.active').dataset.type;
+        const address = this.shadowRoot.getElementById('order-address')?.value || '';
+        const reference = this.shadowRoot.getElementById('order-reference')?.value || '';
+        const timeMode = this.shadowRoot.querySelector('.time-option.active').dataset.time;
+        const date = this.shadowRoot.getElementById('order-date')?.value || '';
+        const time = this.shadowRoot.getElementById('order-time')?.value || '';
+        const payment = this.shadowRoot.querySelector('.payment-option.active').dataset.pay;
+
+        const total = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
         const btn = this.shadowRoot.getElementById('send-order-btn');
-        btn.textContent = 'SENDING...';
+        btn.textContent = 'ENVIANDO...';
         btn.disabled = true;
 
         if (!this.supabase) await this.initSupabase();
@@ -1745,20 +2040,48 @@ class MenutechPlatformOrders extends HTMLElement {
                 total: total,
                 customer_name: name,
                 customer_phone: phone,
-                customer_notes: notes
+                order_type: orderType,
+                address: address,
+                reference: reference,
+                delivery_time_mode: timeMode,
+                delivery_date: date,
+                delivery_time: time,
+                payment_method: payment,
+                status: 'pending'
             });
 
             if (error) throw error;
 
-            alert('Order sent successfully!');
+            this.showSuccessAnimation();
             this.cart = [];
             this.updateCartUI();
             this.shadowRoot.getElementById('popup').style.display = 'none';
         } catch (e) {
-            alert('Error sending order: ' + e.message);
-            btn.textContent = `SEND ORDER • $${total.toFixed(2)}`;
+            alert('Error al enviar pedido: ' + e.message);
+            btn.textContent = `ENVIAR PEDIDO • $${total.toFixed(2)}`;
             btn.disabled = false;
         }
+    }
+
+    showSuccessAnimation() {
+        const anim = document.createElement('div');
+        anim.className = 'sending-animation';
+        anim.innerHTML = `
+            <style>
+                @keyframes scaleIn { from { transform: scale(0); } to { transform: scale(1); } }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            </style>
+            <div class="check-mark" style="animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)">✓</div>
+            <h1 style="font-family:'Outfit'; margin:0;">¡Ya nos llegó tu pedido!</h1>
+            <p style="color:#666; margin:10px 0 30px;">Estamos procesando tu orden, por favor mantente al tanto de tu WhatsApp.</p>
+            <div style="background:#fff7ed; color:#c2410c; padding:12px 24px; border-radius:20px; font-weight:700; font-size:0.9rem; display:flex; align-items:center; gap:10px;">
+                <span style="width:8px; height:8px; background:#f97316; border-radius:50%; display:inline-block;"></span>
+                FALTA POR CONFIRMAR
+            </div>
+            <button id="close-anim" style="margin-top:50px; background:#1a1c1e; color:#fff; border:none; padding:15px 40px; border-radius:20px; font-weight:700; cursor:pointer;">LISTO</button>
+        `;
+        this.shadowRoot.appendChild(anim);
+        this.shadowRoot.getElementById('close-anim').onclick = () => anim.remove();
     }
 }
 

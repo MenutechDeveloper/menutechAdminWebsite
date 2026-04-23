@@ -50,6 +50,12 @@
         .cust-info h3 { font-family: 'Outfit', sans-serif; font-size: 1.4rem; margin-bottom: 5px; }
         .cust-info p { font-size: 0.9rem; color: var(--text-dim); }
 
+        .order-details-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;
+            padding: 15px; background: var(--input); border-radius: 18px; font-size: 0.85rem;
+        }
+        .detail-item strong { display: block; color: var(--orange); font-size: 0.7rem; text-transform: uppercase; margin-bottom: 2px; }
+
         .order-items { margin: 20px 0; padding: 20px; background: var(--input); border-radius: 18px; }
         .item-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95rem; }
         .item-details { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 5px; padding-left: 10px; }
@@ -172,22 +178,31 @@
                         </div>
                     </div>
 
+                    <div class="order-details-grid">
+                        <div class="detail-item"><strong>Tipo</strong>${order.order_type === 'delivery' ? 'Domicilio' : 'Recoger'}</div>
+                        <div class="detail-item"><strong>Pago</strong>${order.payment_method || 'N/A'}</div>
+                        <div class="detail-item"><strong>Entrega</strong>${order.delivery_time_mode === 'later' ? `${order.delivery_date} ${order.delivery_time}` : 'Lo antes posible'}</div>
+                        ${order.order_type === 'delivery' ? `<div class="detail-item"><strong>Dirección</strong>${order.address}</div>` : ''}
+                        ${order.reference ? `<div class="detail-item" style="grid-column: span 2"><strong>Referencia</strong>${order.reference}</div>` : ''}
+                    </div>
+
                     <div class="order-items">
                         ${order.items.map(item => `
                             <div class="item-row">
                                 <span>${item.name}</span>
                                 <strong>$${item.price.toFixed(2)}</strong>
                             </div>
-                            ${item.size || item.toppings.length > 0 ? `
+                            ${item.size || item.toppings.length > 0 || item.instructions ? `
                                 <div class="item-details">
                                     ${item.size ? `Size: ${item.size}` : ''}
                                     ${item.toppings.length > 0 ? `<br>Toppings: ${item.toppings.join(', ')}` : ''}
+                                    ${item.instructions ? `<br><span style="color:var(--orange); font-style:italic;">"${item.instructions}"</span>` : ''}
                                 </div>
                             ` : ''}
                         `).join('')}
                     </div>
 
-                    ${order.customer_notes ? `<p style="font-size:0.85rem; color:var(--text-dim); margin-bottom:20px;"><strong>Notes:</strong> ${order.customer_notes}</p>` : ''}
+                    ${order.customer_notes || order.instructions ? `<p style="font-size:0.85rem; color:var(--text-dim); margin-bottom:20px;"><strong>Notas:</strong> ${order.customer_notes || ''} ${order.instructions || ''}</p>` : ''}
 
                     <div class="order-footer">
                         <div class="total-price">Total: $${order.total.toFixed(2)}</div>
