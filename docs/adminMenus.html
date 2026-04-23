@@ -304,7 +304,7 @@
                 <label id="header-domain-label" style="font-size: 0.9rem; font-weight: 800; color: var(--orange); text-transform: lowercase;">lasalsitapinchi.com</label>
                 <label style="font-size: 0.6rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-top: 10px;">Menu URL Slug</label>
                 <div style="display: flex; align-items: center; background: var(--input); padding: 12px 24px; border-radius: 16px; border: 1px solid var(--border); min-width: 400px; justify-content: center; margin-top: 5px;">
-                    <span style="font-size: 0.95rem; color: var(--text-dim); font-weight: 600;">menutech.io/menu.html?n=</span>
+                    <span style="font-size: 0.95rem; color: var(--orange); font-weight: 900;">menutech.io/menu.html?n=</span>
                     <input type="text" id="slug-input" style="background:transparent; border:none; color:var(--orange); font-weight:900; font-size:0.95rem; padding:0; outline:none; width: auto; min-width: 50px;" oninput="updateSlug(this.value)">
                 </div>
                 <div id="subdomain-link" style="margin-top: 10px;"></div>
@@ -509,20 +509,34 @@
 
         function updateSubdomainLink(profile) {
             if (!profile) return;
-            const slug = menuData.slug || (profile.username || 'restaurant').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            // Improve slug generation: prioritize domain, then username
+            let defaultSlug = '';
+            if (profile.domain && !profile.domain.includes('menutech')) {
+                // Remove .com, .io etc and handle common separators
+                defaultSlug = profile.domain.split('.')[0];
+            } else {
+                defaultSlug = profile.username || 'restaurant';
+            }
+
+            const slug = menuData.slug || defaultSlug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
             menuData.slug = slug;
             document.getElementById('slug-input').value = slug;
             const link = `menutech.io/menu.html?n=${slug}`;
-            document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none;">Go to Menu</a>`;
+            document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none; font-weight:800;">Go to Menu</a>`;
         }
 
         window.updateSlug = (val) => {
-            menuData.slug = val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-            const link = `menutech.io/menu.html?n=${menuData.slug}`;
-            document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none;">Go to Menu</a>`;
+            const slug = val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            menuData.slug = slug;
+            const link = `menutech.io/menu.html?n=${slug}`;
+            document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none; font-weight:800;">Go to Menu</a>`;
         };
 
         async function loadMenu() {
+            if (!activeOwnerId) return;
+            // Clear existing data to prevent bleed-through
+            menuData = { cover_url: '', cover_type: 'image', menu_style: 'mode1', config: { categories: [], toppings: [] } };
+
             const { data } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
             if (data) {
                 menuData = data;
@@ -532,8 +546,6 @@
                 (menuData.config.toppings || []).forEach(tg => {
                     if (!tg.id) tg.id = 'tg-' + Math.random().toString(36).substr(2, 9);
                 });
-            } else {
-                menuData = { cover_url: '', cover_type: 'image', menu_style: 'mode1', config: { categories: [], toppings: [] } };
             }
             renderMenuEditor();
         }
@@ -542,13 +554,15 @@
             menuData.menu_style = style;
             const l1 = document.getElementById('label-mode1');
             const l2 = document.getElementById('label-mode2');
-            l1.style.background = style === 'mode1' ? 'var(--orange)' : 'var(--card)';
-            l1.style.color = style === 'mode1' ? '#fff' : 'var(--text-dim)';
-            l2.style.background = style === 'mode2' ? 'var(--orange)' : 'var(--card)';
-            l2.style.color = style === 'mode2' ? '#fff' : 'var(--text-dim)';
+            if (l1 && l2) {
+                l1.style.background = style === 'mode1' ? 'var(--orange)' : 'var(--card)';
+                l1.style.color = style === 'mode1' ? '#fff' : 'var(--text-dim)';
+                l2.style.background = style === 'mode2' ? 'var(--orange)' : 'var(--card)';
+                l2.style.color = style === 'mode2' ? '#fff' : 'var(--text-dim)';
+            }
         };
 
-        function showApp(profile) {
+        async function showApp(profile) {
             document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('top-nav').classList.remove('hidden');
             if (profile) {
@@ -557,9 +571,12 @@
                 const domainLabel = document.getElementById('header-domain-label');
                 if (domainLabel) domainLabel.textContent = profile.domain || "Workspace";
                 document.getElementById('view-domain-title').textContent = "";
+
+                await loadMenu(); // Wait for menu data before updating the link
                 updateSubdomainLink(profile);
+            } else {
+                await loadMenu();
             }
-            loadMenu();
         }
 
         function initTheme() {
