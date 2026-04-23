@@ -158,6 +158,21 @@
         }
         .btn-copy:hover { background: var(--orange); color: #fff; }
 
+        .copy-icon-btn {
+            background: none; border: none; color: var(--orange); cursor: pointer; padding: 5px;
+            display: flex; align-items: center; justify-content: center; transition: 0.3s;
+            border-radius: 8px;
+        }
+        .copy-icon-btn:hover { background: rgba(255, 149, 51, 0.1); transform: scale(1.1); }
+        .copy-icon-btn svg { width: 18px; height: 18px; }
+
+        #no-menu-container {
+            text-align: center; padding: 60px 40px; background: var(--card); border: 2px dashed var(--border);
+            border-radius: 32px; margin: 40px auto; max-width: 600px;
+        }
+        #no-menu-container h3 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-bottom: 15px; }
+        #no-menu-container p { color: var(--text-dim); margin-bottom: 30px; font-size: 0.95rem; }
+
         #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
         .toast { min-width: 320px; max-width: 440px; padding: 18px 24px; border-radius: 24px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.9rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1), toastFadeOut 0.5s 5.5s forwards; line-height: 1.4; }
         .toast.success { border-left: 6px solid var(--success); }
@@ -303,9 +318,14 @@
             <div style="margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
                 <label id="header-domain-label" style="font-size: 0.9rem; font-weight: 800; color: var(--orange); text-transform: lowercase;">lasalsitapinchi.com</label>
                 <label style="font-size: 0.6rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-top: 10px;">Menu URL Slug</label>
-                <div style="display: flex; align-items: center; background: var(--input); padding: 12px 24px; border-radius: 16px; border: 1px solid var(--border); min-width: 400px; justify-content: center; margin-top: 5px;">
-                    <span style="font-size: 0.95rem; color: var(--orange); font-weight: 900;">menutech.io/menu.html?n=</span>
-                    <input type="text" id="slug-input" style="background:transparent; border:none; color:var(--orange); font-weight:900; font-size:0.95rem; padding:0; outline:none; width: auto; min-width: 50px;" oninput="updateSlug(this.value)">
+                <div style="display: flex; align-items: center; background: var(--input); padding: 12px 24px; border-radius: 16px; border: 1px solid var(--border); min-width: 400px; justify-content: center; margin-top: 5px; gap: 10px;">
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-size: 0.95rem; color: var(--orange); font-weight: 900;">menutech.io/menu.html?n=</span>
+                        <input type="text" id="slug-input" style="background:transparent; border:none; color:var(--orange); font-weight:900; font-size:0.95rem; padding:0; outline:none; width: auto; min-width: 50px;" oninput="updateSlug(this.value)">
+                    </div>
+                    <button class="copy-icon-btn" onclick="copySubdomain()" title="Copy Link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    </button>
                 </div>
                 <div id="subdomain-link" style="margin-top: 10px;"></div>
             </div>
@@ -332,7 +352,13 @@
                     <button id="btn-copy-snippet" class="btn-copy" style="width: 100%; max-width: 800px;">COPY MENU CODE</button>
                 </div>
 
-                <div id="menu-editor">
+                <div id="no-menu-container" class="hidden">
+                    <h3>No Menu Created Yet</h3>
+                    <p>This account doesn't have a menu configured. Start by creating one now.</p>
+                    <button class="btn-panel-top" onclick="startNewMenu()">+ Create Menu</button>
+                </div>
+
+                <div id="menu-editor" class="hidden">
                     <div class="component-header">
                         <h2>Menu Design</h2>
                         <div style="display:flex; gap:10px;">
@@ -443,8 +469,16 @@
         import { supabase as sb } from './supabase.js';
 
         let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
-        let menuData = { cover_url: '', cover_type: 'image', config: { categories: [], toppings: [] } };
+        let menuData = { cover_url: '', cover_type: 'image', menu_style: 'mode1', config: { categories: [], toppings: [] } };
         let allOwners = [];
+        let hasChanges = false;
+
+        function setChanges(visible) {
+            hasChanges = visible;
+            const footer = document.getElementById('floating-footer');
+            if (visible) footer.classList.remove('hidden');
+            else footer.classList.add('hidden');
+        }
 
         window.showToast = (message, type = 'success') => {
             const container = document.getElementById('toast-container');
@@ -526,18 +560,37 @@
         }
 
         window.updateSlug = (val) => {
+            setChanges(true);
             const slug = val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
             menuData.slug = slug;
             const link = `menutech.io/menu.html?n=${slug}`;
             document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none; font-weight:800;">Go to Menu</a>`;
         };
 
+        window.copySubdomain = () => {
+            const slug = document.getElementById('slug-input').value;
+            if (!slug) return showToast("No slug defined", "warning");
+            const url = `https://menutech.io/menu.html?n=${slug}`;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast("Menu URL copied to clipboard!");
+            });
+        };
+
         async function loadMenu() {
             if (!activeOwnerId) return;
+            setChanges(false);
             // Clear existing data to prevent bleed-through
             menuData = { cover_url: '', cover_type: 'image', menu_style: 'mode1', config: { categories: [], toppings: [] } };
 
+            document.getElementById('menu-editor').classList.add('hidden');
+            document.getElementById('no-menu-container').classList.add('hidden');
+
             const { data } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
+
+            // Find the active owner profile to refresh UI
+            const owner = allOwners.find(o => o.id === activeOwnerId);
+            if (owner) updateSubdomainLink(owner);
+
             if (data) {
                 menuData = data;
                 if (!menuData.config) menuData.config = { categories: [], toppings: [] };
@@ -546,11 +599,30 @@
                 (menuData.config.toppings || []).forEach(tg => {
                     if (!tg.id) tg.id = 'tg-' + Math.random().toString(36).substr(2, 9);
                 });
+                document.getElementById('menu-editor').classList.remove('hidden');
+                renderMenuEditor();
+                if (owner) updateSubdomainLink(owner); // Re-run with loaded slug
+            } else {
+                document.getElementById('no-menu-container').classList.remove('hidden');
             }
-            renderMenuEditor();
         }
 
+        window.startNewMenu = () => {
+            menuData = {
+                cover_url: '',
+                cover_type: 'image',
+                menu_style: 'mode1',
+                slug: document.getElementById('slug-input').value,
+                config: { categories: [], toppings: [] }
+            };
+            document.getElementById('no-menu-container').classList.add('hidden');
+            document.getElementById('menu-editor').classList.remove('hidden');
+            renderMenuEditor();
+            setChanges(true);
+        };
+
         window.updateStyle = (style) => {
+            setChanges(true);
             menuData.menu_style = style;
             const l1 = document.getElementById('label-mode1');
             const l2 = document.getElementById('label-mode2');
@@ -701,12 +773,13 @@
         }
 
         window.addDish = (catIdx) => {
+            setChanges(true);
             if (!menuData.config.categories[catIdx].dishes) menuData.config.categories[catIdx].dishes = [];
             menuData.config.categories[catIdx].dishes.push({ name: '', description: '', price: 0, image: '', sizes: [], toppings: [] });
             renderDishes(catIdx);
         };
-        window.updateDish = (cIdx, dIdx, field, val) => { menuData.config.categories[cIdx].dishes[dIdx][field] = val; };
-        window.deleteDish = (cIdx, dIdx) => { if(confirm('Delete dish?')) { menuData.config.categories[cIdx].dishes.splice(dIdx,1); renderDishes(cIdx); } };
+        window.updateDish = (cIdx, dIdx, field, val) => { setChanges(true); menuData.config.categories[cIdx].dishes[dIdx][field] = val; };
+        window.deleteDish = (cIdx, dIdx) => { if(confirm('Delete dish?')) { setChanges(true); menuData.config.categories[cIdx].dishes.splice(dIdx,1); renderDishes(cIdx); } };
 
         let currentSizeDish = null;
         window.openSizes = (cIdx, dIdx) => {
@@ -729,15 +802,18 @@
             `).join('');
         }
         window.addSizeRow = () => {
+            setChanges(true);
             const [cIdx, dIdx] = currentSizeDish;
             menuData.config.categories[cIdx].dishes[dIdx].sizes.push({ name: '', price: 0 });
             renderSizesModal();
         };
         window.updateSize = (i, field, val) => {
+            setChanges(true);
             const [cIdx, dIdx] = currentSizeDish;
             menuData.config.categories[cIdx].dishes[dIdx].sizes[i][field] = val;
         };
         window.deleteSize = (i) => {
+            setChanges(true);
             const [cIdx, dIdx] = currentSizeDish;
             menuData.config.categories[cIdx].dishes[dIdx].sizes.splice(i, 1);
             renderSizesModal();
@@ -768,6 +844,7 @@
             `).join('');
         }
         window.toggleDishTopping = (tgId, checked) => {
+            setChanges(true);
             const [cIdx, dIdx] = currentDishToppings;
             const dish = menuData.config.categories[cIdx].dishes[dIdx];
             if (!dish.toppings) dish.toppings = [];
@@ -813,28 +890,38 @@
         }
 
         window.addToppingGroup = () => {
+            setChanges(true);
             const id = 'tg-' + Math.random().toString(36).substr(2, 9);
             menuData.config.toppings.push({ id, name: '', type: 'optional', min: 0, max: 1, items: [] });
             renderToppings();
         };
-        window.updateToppingGroup = (i, field, val) => { menuData.config.toppings[i][field] = val; };
-        window.deleteToppingGroup = (i) => { if(confirm('Delete topping group?')) { menuData.config.toppings.splice(i,1); renderToppings(); } };
-        window.addToppingItem = (i) => { menuData.config.toppings[i].items.push({ name: '', price: 0 }); renderToppings(); };
-        window.updateToppingItem = (i, j, field, val) => { menuData.config.toppings[i].items[j][field] = val; };
-        window.deleteToppingItem = (i, j) => { menuData.config.toppings[i].items.splice(j,1); renderToppings(); };
+        window.updateToppingGroup = (i, field, val) => { setChanges(true); menuData.config.toppings[i][field] = val; };
+        window.deleteToppingGroup = (i) => { if(confirm('Delete topping group?')) { setChanges(true); menuData.config.toppings.splice(i,1); renderToppings(); } };
+        window.addToppingItem = (i) => { setChanges(true); menuData.config.toppings[i].items.push({ name: '', price: 0 }); renderToppings(); };
+        window.updateToppingItem = (i, j, field, val) => { setChanges(true); menuData.config.toppings[i].items[j][field] = val; };
+        window.deleteToppingItem = (i, j) => { setChanges(true); menuData.config.toppings[i].items.splice(j,1); renderToppings(); };
 
         function renderCover() {
             const zone = document.getElementById('cover-drop-zone');
             const placeholder = document.getElementById('cover-placeholder');
+
+            // Remove existing img or video elements while preserving the placeholder and input
+            const media = zone.querySelector('img, video');
+            if (media) media.remove();
+
             if (menuData.cover_url) {
                 placeholder.classList.add('hidden');
-                zone.innerHTML = menuData.cover_type === 'video'
-                    ? `<video src="${menuData.cover_url}" autoplay loop muted></video>`
-                    : `<img src="${menuData.cover_url}">`;
+                const el = document.createElement(menuData.cover_type === 'video' ? 'video' : 'img');
+                el.src = menuData.cover_url;
+                if (menuData.cover_type === 'video') { el.autoplay = true; el.loop = true; el.muted = true; }
+                zone.appendChild(el);
             } else {
                 placeholder.classList.remove('hidden');
             }
-            zone.onclick = () => document.getElementById('cover-input').click();
+            zone.onclick = (e) => {
+                if (e.target.tagName === 'INPUT') return;
+                document.getElementById('cover-input').click();
+            };
             document.getElementById('cover-input').onchange = (e) => uploadMedia(e.target.files[0], 'cover');
         }
 
@@ -872,12 +959,13 @@
         }
 
         window.addCategory = () => {
+            setChanges(true);
             menuData.config.categories.push({ name: '', description: '', image: '', visibility: { days: [0,1,2,3,4,5,6], start: '00:00', end: '23:59', startDate:'', endDate:'' }, dishes: [] });
             renderCategories();
         };
-        window.updateCat = (i, field, val) => { menuData.config.categories[i][field] = val; };
-        window.deleteCat = (i) => { if(confirm('Delete category?')) { menuData.config.categories.splice(i,1); renderCategories(); } };
-        window.duplicateCat = (i) => { const clone = JSON.parse(JSON.stringify(menuData.config.categories[i])); menuData.config.categories.splice(i+1, 0, clone); renderCategories(); };
+        window.updateCat = (i, field, val) => { setChanges(true); menuData.config.categories[i][field] = val; };
+        window.deleteCat = (i) => { if(confirm('Delete category?')) { setChanges(true); menuData.config.categories.splice(i,1); renderCategories(); } };
+        window.duplicateCat = (i) => { setChanges(true); const clone = JSON.parse(JSON.stringify(menuData.config.categories[i])); menuData.config.categories.splice(i+1, 0, clone); renderCategories(); };
         window.toggleDishes = (i) => { document.getElementById(`dishes-${i}`).classList.toggle('active'); };
 
         let currentVisCat = null;
@@ -899,6 +987,7 @@
         };
         window.closeVisibilityModal = () => document.getElementById('visibility-modal').classList.remove('active');
         window.saveVisibility = () => {
+            setChanges(true);
             const days = Array.from(document.querySelectorAll('#visibility-days input:checked')).map(el => parseInt(el.value));
             menuData.config.categories[currentVisCat].visibility = {
                 days,
@@ -913,6 +1002,7 @@
 
         async function uploadMedia(file, target, idx) {
             if (!file) return;
+            setChanges(true);
             const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
             showToast("Uploading...", "warning");
             try {
@@ -964,6 +1054,7 @@
                 }, { onConflict: 'user_id' });
                 if (error) throw error;
                 showToast("Menu saved successfully!");
+                setChanges(false);
             } catch (e) { showToast(e.message, "error"); }
             btn.textContent = "SAVE CHANGES";
         }
