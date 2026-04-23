@@ -1275,25 +1275,29 @@ class MenutechPlatformOrders extends HTMLElement {
 
         const styles = `
             <style>
-                :host { display: block; font-family: 'Plus Jakarta Sans', sans-serif; color: #1a1c1e; background: ${style === 'mode1' ? '#f4f4f4' : '#fff'}; min-height: 100vh; padding: ${style === 'mode1' ? '40px 20px' : '0'}; }
+                :host { display: block; font-family: 'Helvetica', 'Arial', sans-serif; color: #1a1c1e; background: #f0f2f5; min-height: 100vh; }
 
                 * { box-sizing: border-box; }
 
                 .menu-wrapper {
-                    max-width: 800px; margin: 0 auto; background: #fff; min-height: ${style === 'mode1' ? 'calc(100vh - 80px)' : '100vh'};
-                    box-shadow: ${style === 'mode1' ? '0 30px 100px rgba(0,0,0,0.1)' : 'none'};
-                    border-radius: ${style === 'mode1' ? '40px' : '0'}; overflow: hidden;
+                    max-width: 940px; margin: 30px auto; background: #fff; height: calc(100vh - 60px);
+                    box-shadow: 0 40px 120px rgba(0,0,0,0.2);
+                    border-radius: 12px; overflow-y: auto;
                     position: relative;
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
                 }
-                @media (max-width: 600px) {
-                    :host { padding: 0; }
-                    .menu-wrapper { border-radius: 0; min-height: 100vh; }
+                .menu-wrapper::-webkit-scrollbar { display: none; }
+
+                @media (max-width: 1024px) {
+                    :host { background: #fff; }
+                    .menu-wrapper { margin: 0; width: 100%; height: 100vh; border-radius: 0; box-shadow: none; }
                 }
 
                 .cover-container { width: 100%; height: 200px; position: relative; overflow: hidden; }
                 .cover-container img, .cover-container video { width: 100%; height: 100%; object-fit: cover; }
 
-                .menu-content { padding: 20px; }
+                .menu-content { padding: ${style === 'mode2' ? '0' : '20px'}; }
 
                 /* Mode 1 Tabs */
                 .category-tabs {
@@ -1464,9 +1468,13 @@ class MenutechPlatformOrders extends HTMLElement {
                     .popup-card.open-left { transform: translateX(-250px); }
                 }
 
-                @media (max-width: 600px) {
-                    .popup-overlay { align-items: flex-end; }
-                    .popup-card { border-radius: 30px 30px 0 0; width: 100%; }
+                @media (max-width: 1024px) {
+                    .popup-overlay { align-items: stretch; padding: 0; }
+                    .popup-card {
+                        width: 100%; max-width: 100%; height: 100vh; max-height: 100vh;
+                        border-radius: 0; margin: 0;
+                    }
+                    .popup-img { height: 280px; }
                 }
 
                 .popup-img { width: 100%; height: 250px; position: relative; }
