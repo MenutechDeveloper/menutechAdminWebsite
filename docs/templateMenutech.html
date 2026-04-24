@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant – Mexican Food & Delivery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Reset and Base Styles */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --color-primary: #d9a441;
+    --color-primary-hover: #c4922f;
+    --color-text-dark: #392f2b;
+    --color-text-light: #6b6b6b;
+    --color-white: #ffffff;
+    --color-background: #fbfbfa;
+    --color-footer: #2d2d2d;
+    --font-serif: 'PT Serif', Georgia, serif;
+    --font-sans: 'Open Sans', Arial, sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-text-dark);
+    background-color: var(--color-background);
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Navbar */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--color-white);
+    z-index: 1000;
+    padding: 15px 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar-brand {
+    font-family: var(--font-sans);
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--color-text-dark);
+    letter-spacing: 0.5px;
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+}
+
+.nav-link {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    letter-spacing: 1px;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--color-primary-hover);
+}
+
+.navbar-toggler {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.toggler-icon {
+    width: 25px;
+    height: 2px;
+    background-color: var(--color-text-dark);
+    transition: all 0.3s ease;
+}
+
+/* Hero Section */
+.hero {
+    position: relative;
+    height: 80vh;
+    min-height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image: url('https://ext.same-assets.com/3590151290/922045752.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    color: var(--color-white);
+    padding: 0 20px;
+    max-width: 900px;
+}
+
+.hero-subtitle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    font-weight: 300;
+    margin-bottom: 20px;
+}
+
+.line-decoration {
+    width: 40px;
+    height: 2px;
+    background-color: var(--color-white);
+    opacity: 0.7;
+}
+
+.hero-title {
+    font-family: var(--font-serif);
+    font-size: 72px;
+    font-style: italic;
+    font-weight: 400;
+    margin-bottom: 40px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-block;
+    padding: 12px 30px;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--color-primary);
+    color: var(--color-primary);
+}
+
+.btn-outline:hover {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+.btn-filled {
+    background: var(--color-primary);
+    border: 2px solid var(--color-primary);
+    color: var(--color-white);
+}
+
+.btn-filled:hover {
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+}
+
+/* Section Titles */
+.section-title {
+    font-family: var(--font-serif);
+    font-size: 36px;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--color-text-dark);
+    margin-bottom: 10px;
+}
+
+.section-title.centered {
+    text-align: center;
+}
+
+.section-subtitle-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.section-subtitle-container.centered {
+    justify-content: center;
+}
+
+.line-small {
+    width: 30px;
+    height: 2px;
+    background-color: var(--color-primary);
+}
+
+.section-subtitle {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--color-primary);
+}
+
+/* About Section */
+.about-section {
+    padding: 80px 0;
+    background-color: var(--color-background);
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+}
+
+.about-text p {
+    color: var(--color-text-light);
+    margin-bottom: 15px;
+    line-height: 1.8;
+}
+
+.about-images {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.about-image {
+    width: 100%;
+    height: 350px;
+    object-fit: cover;
+    border-radius: 3px;
+}
+
+/* Promo Section */
+.promo-section {
+    position: relative;
+    padding: 80px 0;
+    background-image: url('https://ext.same-assets.com/3590151290/2837006864.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+.promo-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.promo-section .container {
+    position: relative;
+    z-index: 1;
+}
+
+.promo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+.promo-card {
+    background: var(--color-white);
+    padding: 35px 30px;
+    border: 1px solid #e5e5e5;
+    text-align: left;
+}
+
+.promo-title {
+    font-family: var(--font-serif);
+    font-size: 26px;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--color-text-dark);
+    margin-bottom: 10px;
+}
+
+.promo-subtitle-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.promo-subtitle {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--color-primary);
+}
+
+.promo-content p {
+    color: var(--color-text-light);
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+
+.promo-price {
+    margin-top: 25px;
+    font-size: 15px;
+    color: var(--color-text-light);
+}
+
+.price-value {
+    font-family: var(--font-serif);
+    font-size: 32px;
+    font-style: italic;
+    color: var(--color-primary);
+}
+
+/* Gallery Section */
+.gallery-section {
+    padding: 80px 0;
+    background-color: var(--color-background);
+}
+
+/* Catering Section */
+.catering-section {
+    position: relative;
+    padding: 100px 0;
+    background-image: url('https://ext.same-assets.com/3590151290/3184121437.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+.catering-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.catering-section .container {
+    position: relative;
+    z-index: 1;
+}
+
+.catering-box {
+    background: var(--color-white);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 50px 60px;
+    text-align: center;
+}
+
+.catering-text {
+    color: var(--color-text-light);
+    line-height: 1.8;
+    margin-bottom: 15px;
+}
+
+/* Delivery Section */
+.delivery-section {
+    padding: 80px 0;
+    background-color: var(--color-background);
+}
+
+.delivery-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    align-items: center;
+}
+
+.delivery-text p {
+    color: var(--color-text-light);
+    margin-bottom: 15px;
+    line-height: 1.8;
+}
+
+.delivery-image-container {
+    position: relative;
+}
+
+.delivery-image {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 3px;
+}
+
+/* Footer */
+.site-footer {
+    background-color: var(--color-footer);
+    padding: 60px 0;
+    color: #9a9a9a;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.footer-title {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--color-white);
+    margin-bottom: 15px;
+}
+
+.footer-col p {
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+    .hero-title {
+        font-size: 56px;
+    }
+
+    .about-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .about-images {
+        order: -1;
+    }
+
+    .promo-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .delivery-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .delivery-image-container {
+        order: -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar-toggler {
+        display: flex;
+    }
+
+    .nav-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background-color: var(--color-white);
+        padding: 20px;
+        gap: 15px;
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        transform: translateY(-100%);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .nav-menu.active {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .hero-title {
+        font-size: 42px;
+    }
+
+    .hero-subtitle {
+        font-size: 14px;
+    }
+
+    .line-decoration {
+        width: 25px;
+    }
+
+    .promo-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .catering-box {
+        padding: 35px 25px;
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 32px;
+    }
+
+    .section-title {
+        font-size: 28px;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn {
+        width: 100%;
+        max-width: 250px;
+        text-align: center;
+    }
+
+    .about-images {
+        grid-template-columns: 1fr;
+    }
+
+    .about-image {
+        height: 250px;
+    }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero-content {
+    animation: fadeInUp 1s ease-out;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-hover);
+}
+
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="#" class="navbar-brand">Template Menutech</a>
+            <button class="navbar-toggler" id="navbar-toggler" aria-label="Toggle navigation">
+                <span class="toggler-icon"></span>
+                <span class="toggler-icon"></span>
+                <span class="toggler-icon"></span>
+            </button>
+            <ul class="nav-menu" id="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">Blog</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h2 class="hero-subtitle">
+                <span class="line-decoration"></span>
+                <span>Lorem Lorem Lorem</span>
+                <span class="line-decoration"></span>
+            </h2>
+            <h1 class="hero-title">Template Menutech</h1>
+            <div class="hero-buttons">
+                <a href="#" class="btn btn-outline">Table Reservation</a>
+                <a href="#" class="btn btn-filled">See MENU & Order</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- About Us Section -->
+    <section class="about-section">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-text">
+                    <h2 class="section-title">We are Pronto Mexican Food</h2>
+                    <span class="section-subtitle-container">
+                        <span class="line-small"></span>
+                        <span class="section-subtitle">About Us</span>
+                    </span>
+                    <p>At Restaurant Pronto, we take pride in bringing our guests vibrant and authentic Mexican cuisine, crafted with care and rich culinary tradition. Every dish we serve is full of bold flavors and prepared to deliver a memorable dining experience. We are confident you will leave satisfied.</p>
+                    <p>The secret to our success is simple: creating exceptional meals using fresh, high-quality ingredients that capture the true essence of Mexican cooking in every bite.</p>
+                    <p>Our mission is to help you savor the moments that truly matter. Enjoy great food. Sip on a refreshing drink. And above all, unwind and feel at home. We sincerely appreciate your continued support and trust</p>
+                </div>
+                <div class="about-images">
+                    <img src="https://ext.same-assets.com/3590151290/3587577499.jpeg" alt="Grilled Salmon" class="about-image">
+                    <img src="https://ext.same-assets.com/3590151290/3991706609.jpeg" alt="Caprese Salad" class="about-image">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Promo Cards Section -->
+    <section class="promo-section">
+        <div class="promo-overlay"></div>
+        <div class="container">
+            <div class="promo-grid">
+                <div class="promo-card">
+                    <h3 class="promo-title">Best Friends Deal</h3>
+                    <span class="promo-subtitle-container">
+                        <span class="line-small"></span>
+                        <span class="promo-subtitle">Sharing Is Caring</span>
+                    </span>
+                    <div class="promo-content">
+                        <p>2 Medium Pizzas</p>
+                        <p>Soft Drinks</p>
+                        <p>Garlic Bread or Patato Wedges</p>
+                        <p>Salad to share</p>
+                    </div>
+                    <div class="promo-price">
+                        Only <span class="price-value">$20</span>
+                    </div>
+                </div>
+                <div class="promo-card">
+                    <h3 class="promo-title">Buy 1 Get 1 FREE</h3>
+                    <span class="promo-subtitle-container">
+                        <span class="line-small"></span>
+                        <span class="promo-subtitle">This Week Only</span>
+                    </span>
+                    <div class="promo-content">
+                        <p>Hope you are hungry. Buy one regular priced pizza online and get a second pizza totally free!</p>
+                        <p>Online only!</p>
+                    </div>
+                    <div class="promo-price">
+                        Order code: <span class="price-value">7867</span>
+                    </div>
+                </div>
+                <div class="promo-card">
+                    <h3 class="promo-title">Awesome Foursome</h3>
+                    <span class="promo-subtitle-container">
+                        <span class="line-small"></span>
+                        <span class="promo-subtitle">Sundays Only</span>
+                    </span>
+                    <div class="promo-content">
+                        <p>6 Delicious regular size pizzas to choose from: Margherita, Capricciosa, Prosciutto e Funghi, Diavola, Calzone, Primavera.</p>
+                    </div>
+                    <div class="promo-price">
+                        Only <span class="price-value">$40</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Delicious Mexican Food Section -->
+    <section class="gallery-section">
+        <div class="container">
+            <h2 class="section-title centered">Delicious Mexican Food</h2>
+            <span class="section-subtitle-container centered">
+                <span class="line-small"></span>
+                <span class="section-subtitle">Love At First Bite</span>
+            </span>
+        </div>
+    </section>
+
+    <!-- Catering Section -->
+    <section class="catering-section">
+        <div class="catering-overlay"></div>
+        <div class="container">
+            <div class="catering-box">
+                <h2 class="section-title centered">Catering</h2>
+                <span class="section-subtitle-container centered">
+                    <span class="line-small"></span>
+                    <span class="section-subtitle">Party Time</span>
+                </span>
+                <p class="catering-text">Restaurant Pronto can cater to any party or event irrespective of how big or small. We specialize in catering with personalised service and special menus on request. In our menu palette, you'll discover unique and sophisticated tastes - all of which will help you uncover the true greatness of the mexican restaurant.</p>
+                <p class="catering-text">Tell us about your event at office@pronto-wp.com</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Food Delivery Section -->
+    <section class="delivery-section">
+        <div class="container">
+            <div class="delivery-grid">
+                <div class="delivery-text">
+                    <h2 class="section-title">Food Delivery in NY</h2>
+                    <span class="section-subtitle-container">
+                        <span class="line-small"></span>
+                        <span class="section-subtitle">Get Served Like a King</span>
+                    </span>
+                    <p>Looking for food delivery nearby? Not everybody knows or has the time to prepare tasty food.</p>
+                    <p>When you want to get served like a king then food delivery from restaurant Pronto will be your best choice.</p>
+                    <p>Simply select "Delivery" at the checkout screen and we hope you'll appreciate our food delivery service.</p>
+                </div>
+                <div class="delivery-image-container">
+                    <img src="https://ext.same-assets.com/3590151290/3141438662.jpeg" alt="Pizza Delivery" class="delivery-image">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4 class="footer-title">Contact Us</h4>
+                    <p>100 Tenth Avenue, New York City, NY 1001</p>
+                    <p>Phone: (044) 359 0173</p>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-title">Opening Hours</h4>
+                    <p>Monday - Sunday: 5PM - 10PM</p>
+                    <p>Tuesday - Friday: 11AM - 2PM</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Navbar Toggle for Mobile
+const navbarToggler = document.getElementById('navbar-toggler');
+const navMenu = document.getElementById('nav-menu');
+
+navbarToggler.addEventListener('click', () => {
+    navMenu.classList.toggle('active');
+    
+    // Animate hamburger icon
+    const icons = navbarToggler.querySelectorAll('.toggler-icon');
+    icons.forEach((icon, index) => {
+        if (navMenu.classList.contains('active')) {
+            if (index === 0) {
+                icon.style.transform = 'rotate(45deg) translate(5px, 5px)';
+            } else if (index === 1) {
+                icon.style.opacity = '0';
+            } else if (index === 2) {
+                icon.style.transform = 'rotate(-45deg) translate(5px, -5px)';
+            }
+        } else {
+            icon.style.transform = 'none';
+            icon.style.opacity = '1';
+        }
+    });
+});
+
+// Close menu when clicking outside
+document.addEventListener('click', (e) => {
+    if (!navbarToggler.contains(e.target) && !navMenu.contains(e.target)) {
+        navMenu.classList.remove('active');
+        const icons = navbarToggler.querySelectorAll('.toggler-icon');
+        icons.forEach(icon => {
+            icon.style.transform = 'none';
+            icon.style.opacity = '1';
+        });
+    }
+});
+
+// Navbar scroll effect
+const navbar = document.querySelector('.navbar');
+
+window.addEventListener('scroll', () => {
+    if (window.scrollY > 100) {
+        navbar.style.padding = '10px 0';
+        navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.15)';
+    } else {
+        navbar.style.padding = '15px 0';
+        navbar.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+    }
+});
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+
+// Intersection Observer for fade-in animations
+const observerOptions = {
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.1
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+        }
+    });
+}, observerOptions);
+
+// Add animation to sections
+document.querySelectorAll('section').forEach(section => {
+    section.style.opacity = '0';
+    section.style.transform = 'translateY(30px)';
+    section.style.transition = 'all 0.6s ease-out';
+    observer.observe(section);
+});
+
+// Hero section should be visible immediately
+document.querySelector('.hero').style.opacity = '1';
+document.querySelector('.hero').style.transform = 'translateY(0)';
+
+// Button hover effects
+document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-2px)';
+    });
+    
+    btn.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+    });
+});
+
+    </script>
+</body>
+</html>
