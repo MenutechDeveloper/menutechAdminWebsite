@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Editor | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #059669;
+            --error: #dc2626;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow: hidden; transition: background 0.3s, color 0.3s; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
+
+        /* Loading Animation Overlay */
+        #loading-overlay {
+            position: fixed; inset: 0; background: var(--bg); z-index: 9000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+        .loader-ring {
+            width: 80px; height: 80px; border: 4px solid rgba(255, 149, 51, 0.1);
+            border-radius: 50%; border-top-color: var(--orange);
+            animation: spin 1s linear infinite; margin-bottom: 24px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loading-overlay p {
+            font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 600;
+            color: var(--text); letter-spacing: 1px; animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+        /* Main Layout */
+        .editor-layout { display: flex; height: 100vh; width: 100vw; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 380px; background: var(--card); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; z-index: 100; box-shadow: 10px 0 30px rgba(0,0,0,0.02);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sidebar-header {
+            padding: 30px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo-mt { height: 35px; }
+
+        .sidebar-content { flex: 1; overflow-y: auto; padding: 30px; }
+        .sidebar-content::-webkit-scrollbar { width: 6px; }
+        .sidebar-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .control-group { margin-bottom: 30px; }
+        .control-group label {
+            display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange);
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+        }
+
+        .input-field {
+            width: 100%; background: var(--input); border: 1px solid var(--border);
+            border-radius: 12px; padding: 12px 16px; color: var(--text); font-size: 0.9rem;
+            margin-bottom: 15px; transition: 0.3s;
+        }
+        .input-field:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 4px rgba(255, 149, 51, 0.05); }
+
+        .image-upload-box {
+            width: 100%; height: 120px; border: 2px dashed var(--border); border-radius: 16px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s; overflow: hidden; position: relative; margin-bottom: 15px;
+        }
+        .image-upload-box:hover { border-color: var(--orange); background: rgba(255,149,51,0.02); }
+        .image-upload-box img { width: 100%; height: 100%; object-fit: cover; }
+        .image-upload-box span { font-size: 0.75rem; color: var(--text-dim); font-weight: 600; }
+
+        .switch-container {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--input); padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border);
+        }
+        .switch {
+            position: relative; display: inline-block; width: 44px; height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--orange); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .social-item {
+            display: flex; gap: 10px; margin-bottom: 10px;
+        }
+        .btn-icon {
+            background: rgba(220, 38, 38, 0.1); color: var(--error); border: none;
+            width: 40px; height: 40px; border-radius: 10px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.3s;
+        }
+        .btn-icon:hover { background: var(--error); color: #fff; }
+
+        .gallery-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px;
+        }
+        .gallery-item {
+            aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid var(--border);
+        }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        .gallery-item .remove-btn {
+            position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5);
+            color: #fff; border: none; width: 18px; height: 18px; border-radius: 50%;
+            font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Preview Area */
+        .preview-area { flex: 1; background: #f0f0f0; position: relative; display: flex; flex-direction: column; }
+        .preview-toolbar {
+            height: 60px; background: var(--card); border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center; gap: 20px; padding: 0 20px;
+        }
+        .preview-container { flex: 1; padding: 40px; display: flex; align-items: center; justify-content: center; }
+        .preview-frame-wrapper {
+            width: 100%; height: 100%; background: #fff; border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1); overflow: hidden; position: relative;
+        }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* Floating Actions */
+        .floating-actions {
+            position: absolute; bottom: 30px; right: 30px; display: flex; gap: 15px;
+        }
+        .btn {
+            padding: 14px 28px; border-radius: 16px; font-weight: 800; font-size: 0.85rem;
+            text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 1px;
+        }
+        .btn-primary { background: var(--orange); color: #fff; box-shadow: 0 8px 20px rgba(255,149,51,0.3); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255,149,51,0.4); }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="loader-ring"></div>
+        <p>Cargando editor web...</p>
+    </div>
+
+    <div class="editor-layout">
+        <!-- Sidebar Controls -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="https://menutech.services/assets/img/logomt.png" class="logo-mt" alt="Menutech">
+                <button class="btn" style="padding: 10px;" onclick="location.href='index.html'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px; height:20px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                </button>
+            </div>
+
+            <div class="sidebar-content">
+                <div class="control-group">
+                    <label>General Settings</label>
+                    <div class="switch-container">
+                        <span style="font-size: 0.85rem; font-weight: 700;">English Version</span>
+                        <label class="switch">
+                            <input type="checkbox" id="lang-toggle" onchange="updateContent()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Hero Section</label>
+                    <div class="image-upload-box" id="hero-drop-zone" onclick="document.getElementById('hero-upload').click()">
+                        <img id="hero-preview" class="hidden">
+                        <div id="hero-placeholder">
+                            <span>Click or Drag Hero Image</span>
+                        </div>
+                        <input type="file" id="hero-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'hero')">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Gallery</label>
+                    <div class="image-upload-box" id="gallery-drop-zone" style="height: 80px; border-style: dashed; margin-bottom: 10px;" onclick="document.getElementById('gallery-upload').click()">
+                        <span>Drag & Drop Gallery Images</span>
+                        <input type="file" id="gallery-upload" class="hidden" accept="image/*" multiple onchange="handleImageUpload(event, 'gallery')">
+                    </div>
+                    <div class="gallery-grid" id="gallery-items">
+                        <!-- Gallery items will appear here -->
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Contact Info</label>
+                    <input type="text" id="contact-phone" class="input-field" placeholder="Phone Number" oninput="updateContent()">
+                    <input type="text" id="contact-address" class="input-field" placeholder="Address" oninput="updateContent()">
+                    <input type="text" id="contact-hours" class="input-field" placeholder="Opening Hours" oninput="updateContent()">
+                </div>
+
+                <div class="control-group">
+                    <label>Social Networks</label>
+                    <div id="social-list">
+                        <!-- Social inputs -->
+                    </div>
+                    <button class="btn" style="width: 100%; background: var(--input); border: 1px solid var(--border); font-size: 0.7rem; padding: 10px;" onclick="addSocial()">+ Add Social Link</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Preview Area -->
+        <main class="preview-area">
+            <div class="preview-toolbar">
+                <span style="font-weight: 700; font-size: 0.8rem; color: var(--text-dim);">DESKTOP PREVIEW</span>
+            </div>
+            <div class="preview-container">
+                <div class="preview-frame-wrapper">
+                    <iframe id="preview-iframe" src="templateMenutech.html"></iframe>
+                </div>
+            </div>
+
+            <div class="floating-actions">
+                <button class="btn btn-primary" onclick="exportHTML()">Export HTML</button>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { MT_CONFIG } from './config.js';
+
+        let pageData = {
+            lang: 'es',
+            heroImg: 'https://ext.same-assets.com/3590151290/922045752.jpeg',
+            gallery: [
+                'https://ext.same-assets.com/3590151290/3587577499.jpeg',
+                'https://ext.same-assets.com/3590151290/3991706609.jpeg'
+            ],
+            contact: {
+                phone: '(044) 359 0173',
+                address: '100 Tenth Avenue, New York City, NY 1001',
+                hours: 'Monday - Sunday: 5PM - 10PM'
+            },
+            socials: [
+                { platform: 'instagram', url: '#' },
+                { platform: 'facebook', url: '#' }
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial render of form
+            syncForm();
+            initDragAndDrop();
+
+            setTimeout(() => {
+                const overlay = document.getElementById('loading-overlay');
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.classList.add('hidden'), 800);
+                updateIframe();
+            }, 2000);
+        });
+
+        function initDragAndDrop() {
+            const zones = [
+                { id: 'hero-drop-zone', type: 'hero' },
+                { id: 'gallery-drop-zone', type: 'gallery' }
+            ];
+
+            zones.forEach(zone => {
+                const el = document.getElementById(zone.id);
+                el.ondragover = e => { e.preventDefault(); el.style.borderColor = "var(--orange)"; el.style.background = "rgba(255,149,51,0.05)"; };
+                el.ondragleave = () => { el.style.borderColor = "var(--border)"; el.style.background = "transparent"; };
+                el.ondrop = e => {
+                    e.preventDefault();
+                    el.style.borderColor = "var(--border)";
+                    el.style.background = "transparent";
+                    if (e.dataTransfer.files.length) {
+                        handleFiles(e.dataTransfer.files, zone.type);
+                    }
+                };
+            });
+        }
+
+        function syncForm() {
+            document.getElementById('hero-preview').src = pageData.heroImg;
+            document.getElementById('hero-preview').classList.remove('hidden');
+            document.getElementById('hero-placeholder').classList.add('hidden');
+
+            document.getElementById('contact-phone').value = pageData.contact.phone;
+            document.getElementById('contact-address').value = pageData.contact.address;
+            document.getElementById('contact-hours').value = pageData.contact.hours;
+
+            renderGallery();
+            renderSocials();
+        }
+
+        function renderGallery() {
+            const container = document.getElementById('gallery-items');
+            container.innerHTML = pageData.gallery.map((img, index) => `
+                <div class="gallery-item">
+                    <img src="${img}">
+                    <button class="remove-btn" onclick="removeGalleryItem(${index})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function renderSocials() {
+            const container = document.getElementById('social-list');
+            container.innerHTML = pageData.socials.map((s, index) => `
+                <div class="social-item">
+                    <select class="input-field" style="margin-bottom:0; flex: 1;" onchange="updateSocial(${index}, 'platform', this.value)">
+                        <option value="instagram" ${s.platform === 'instagram' ? 'selected' : ''}>Instagram</option>
+                        <option value="facebook" ${s.platform === 'facebook' ? 'selected' : ''}>Facebook</option>
+                        <option value="whatsapp" ${s.platform === 'whatsapp' ? 'selected' : ''}>WhatsApp</option>
+                        <option value="twitter" ${s.platform === 'twitter' ? 'selected' : ''}>Twitter</option>
+                    </select>
+                    <input type="text" class="input-field" style="margin-bottom:0; flex: 2;" value="${s.url}" oninput="updateSocial(${index}, 'url', this.value)" placeholder="URL">
+                    <button class="btn-icon" onclick="removeSocial(${index})">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px; height:18px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        window.updateContent = () => {
+            pageData.lang = document.getElementById('lang-toggle').checked ? 'en' : 'es';
+            pageData.contact.phone = document.getElementById('contact-phone').value;
+            pageData.contact.address = document.getElementById('contact-address').value;
+            pageData.contact.hours = document.getElementById('contact-hours').value;
+            updateIframe();
+        };
+
+        window.updateSocial = (index, field, value) => {
+            pageData.socials[index][field] = value;
+            updateIframe();
+        };
+
+        window.addSocial = () => {
+            pageData.socials.push({ platform: 'instagram', url: '' });
+            renderSocials();
+            updateIframe();
+        };
+
+        window.removeSocial = (index) => {
+            pageData.socials.splice(index, 1);
+            renderSocials();
+            updateIframe();
+        };
+
+        window.removeGalleryItem = (index) => {
+            pageData.gallery.splice(index, 1);
+            renderGallery();
+            updateIframe();
+        };
+
+        window.handleImageUpload = (event, type) => {
+            handleFiles(event.target.files, type);
+        };
+
+        async function handleFiles(files, type) {
+            if (!files.length) return;
+
+            for (const file of files) {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
+
+                try {
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
+                    const d = await res.json();
+
+                    if (type === 'hero') {
+                        pageData.heroImg = d.secure_url;
+                        document.getElementById('hero-preview').src = d.secure_url;
+                        document.getElementById('hero-preview').classList.remove('hidden');
+                        document.getElementById('hero-placeholder').classList.add('hidden');
+                    } else {
+                        pageData.gallery.push(d.secure_url);
+                        renderGallery();
+                    }
+                    updateIframe();
+                } catch (e) {
+                    console.error("Upload error", e);
+                }
+            }
+        };
+
+        function updateIframe() {
+            const iframe = document.getElementById('preview-iframe');
+            if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage({ type: 'UPDATE_CONTENT', data: pageData }, '*');
+            }
+        }
+
+        window.exportHTML = async () => {
+            const res = await fetch('templateMenutech.html');
+            let html = await res.text();
+
+            // Prepare Export State as JSON to embed in the exported file
+            const exportState = JSON.stringify(pageData);
+
+            // Inject the state into the exported HTML so it can initialize itself
+            const scriptInject = `<script>window.MENU_TECH_STATE = ${exportState};<\/script>`;
+            html = html.replace('</head>', `${scriptInject}\n</head>`);
+
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html';
+            a.click();
+        };
+    </script>
+</body>
+</html>
