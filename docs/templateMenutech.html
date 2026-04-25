@@ -625,7 +625,7 @@ a {
     <!-- Navbar -->
     <nav class="navbar">
         <div class="container nav-container">
-            <a href="#" class="navbar-brand">Template Menutech</a>
+            <a href="#" class="navbar-brand" id="nav-brand">Template Menutech</a>
             <button class="navbar-toggler" id="navbar-toggler" aria-label="Toggle navigation">
                 <span class="toggler-icon"></span>
                 <span class="toggler-icon"></span>
@@ -653,7 +653,7 @@ a {
         <div class="hero-content">
             <h2 class="hero-subtitle">
                 <span class="line-decoration"></span>
-                <span data-es="Lorem Lorem Lorem" data-en="Experience the Best">Lorem Lorem Lorem</span>
+                <span></span>
                 <span class="line-decoration"></span>
             </h2>
             <h1 class="hero-title" id="hero-title">Template Menutech</h1>
@@ -847,6 +847,14 @@ a {
             // Language switch
             if (data.lang) {
                 applyLanguage(data.lang);
+            }
+
+            // Title
+            if (data.title) {
+                const navBrand = document.getElementById('nav-brand');
+                const heroTitle = document.getElementById('hero-title');
+                if (navBrand) navBrand.textContent = data.title;
+                if (heroTitle) heroTitle.textContent = data.title;
             }
 
             // Hero
