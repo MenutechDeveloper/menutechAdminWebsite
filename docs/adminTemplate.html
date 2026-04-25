@@ -90,7 +90,7 @@
         .control-group { margin-bottom: 30px; }
         .control-group label {
             display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange);
-            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+            letter-spacing: 1px; margin-bottom: 12px;
         }
 
         .input-field {
@@ -101,11 +101,12 @@
         .input-field:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 4px rgba(255, 149, 51, 0.05); }
 
         .image-upload-box {
-            width: 100%; height: 120px; border: 2px dashed var(--border); border-radius: 16px;
+            width: 100%; min-height: 180px; border: 2px dashed var(--border); border-radius: 16px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             cursor: pointer; transition: 0.3s; overflow: hidden; position: relative; margin-bottom: 15px;
         }
-        .image-upload-box:hover { border-color: var(--orange); background: rgba(255,149,51,0.02); }
+        .image-upload-box:hover { border-color: var(--orange); background: rgba(255,149,51,0.02); transform: scale(1.01); }
+        .image-upload-box.drag-over { border-color: var(--orange); background: rgba(255,149,51,0.1); border-style: solid; }
         .image-upload-box img { width: 100%; height: 100%; object-fit: cover; }
         .image-upload-box span { font-size: 0.75rem; color: var(--text-dim); font-weight: 600; }
 
@@ -287,6 +288,10 @@
         setTimeout(() => {
             if (window.hideLoading) window.hideLoading();
         }, 2000);
+
+        // Global Drag & Drop handling to prevent browser opening images
+        window.addEventListener('dragover', e => e.preventDefault(), false);
+        window.addEventListener('drop', e => e.preventDefault(), false);
     </script>
 
     <div class="editor-layout">
@@ -315,8 +320,8 @@
                 <div class="control-group">
                     <label data-i18n="generalSettings">General Settings</label>
                     <div class="lang-switch">
-                        <div id="lang-en-btn" class="lang-option active" onclick="setLang('en')">EN</div>
-                        <div id="lang-es-btn" class="lang-option" onclick="setLang('es')">ES</div>
+                        <button id="lang-en-btn" class="lang-option active" onclick="window.setLang('en')">EN</button>
+                        <button id="lang-es-btn" class="lang-option" onclick="window.setLang('es')">ES</button>
                     </div>
                 </div>
 
@@ -333,7 +338,7 @@
 
                 <div class="control-group">
                     <label data-i18n="gallery">Gallery</label>
-                    <div class="image-upload-box" id="gallery-drop-zone" style="height: 80px; border-style: dashed; margin-bottom: 10px;" onclick="document.getElementById('gallery-upload').click()">
+                    <div class="image-upload-box" id="gallery-drop-zone" style="min-height: 120px; border-style: dashed; margin-bottom: 10px;" onclick="document.getElementById('gallery-upload').click()">
                         <span data-i18n="galleryPlaceholder">Drag & Drop Gallery Images</span>
                         <input type="file" id="gallery-upload" class="hidden" accept="image/*" multiple onchange="handleImageUpload(event, 'gallery')">
                     </div>
@@ -366,7 +371,7 @@
             </div>
             <div class="preview-container">
                 <div class="preview-frame-wrapper">
-                    <iframe id="preview-iframe" src="templateMenutech.html" onload="updateIframe()"></iframe>
+                    <iframe id="preview-iframe" src="templateMenutech.html" onload="if(window.updateIframe) window.updateIframe()"></iframe>
                 </div>
             </div>
 
@@ -380,7 +385,8 @@
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
         import { MT_CONFIG } from './config.js';
 
-        const sb = createClient(MT_CONFIG.SUPABASE_URL, MT_CONFIG.SUPABASE_ANON_KEY);
+        window.sb = createClient(MT_CONFIG.SUPABASE_URL, MT_CONFIG.SUPABASE_KEY);
+        const sb = window.sb;
 
         let user = null;
         let userRole = 'owner';
@@ -454,10 +460,6 @@
         // Initialize immediately as modules are deferred by default
         (async function init() {
             try {
-                // Prevent browser from opening dropped files
-                window.addEventListener('dragover', e => e.preventDefault(), false);
-                window.addEventListener('drop', e => e.preventDefault(), false);
-
                 initDragAndDrop();
                 await checkSession();
             } catch (e) {
@@ -497,7 +499,7 @@
             }
 
             syncForm();
-            updateIframe();
+            window.updateIframe();
         }
 
         let contextInitialized = false;
@@ -569,7 +571,7 @@
             }
 
             syncForm();
-            updateIframe();
+            window.updateIframe();
         }
 
         async function saveTemplate() {
@@ -626,22 +628,19 @@
                 el.addEventListener('dragover', e => {
                     e.preventDefault();
                     e.stopPropagation();
-                    el.style.borderColor = "var(--orange)";
-                    el.style.background = "rgba(255,149,51,0.05)";
+                    el.classList.add('drag-over');
                 });
 
                 el.addEventListener('dragleave', e => {
                     e.preventDefault();
                     e.stopPropagation();
-                    el.style.borderColor = "var(--border)";
-                    el.style.background = "transparent";
+                    el.classList.remove('drag-over');
                 });
 
                 el.addEventListener('drop', e => {
                     e.preventDefault();
                     e.stopPropagation();
-                    el.style.borderColor = "var(--border)";
-                    el.style.background = "transparent";
+                    el.classList.remove('drag-over');
                     if (e.dataTransfer.files.length) {
                         handleFiles(e.dataTransfer.files, zone.type);
                     }
@@ -670,9 +669,10 @@
         }
 
         window.setLang = (lang) => {
+            console.log("MT: Setting language to", lang);
             pageData.lang = lang;
             applyEditorLanguage(lang);
-            updateIframe();
+            window.updateIframe();
             triggerAutoSave();
         };
 
@@ -722,34 +722,34 @@
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
             pageData.contact.hours = document.getElementById('contact-hours').value;
-            updateIframe();
+            window.updateIframe();
             triggerAutoSave();
         };
 
         window.updateSocial = (index, field, value) => {
             pageData.socials[index][field] = value;
-            updateIframe();
+            window.updateIframe();
             triggerAutoSave();
         };
 
         window.addSocial = () => {
             pageData.socials.push({ platform: 'instagram', url: '' });
             renderSocials();
-            updateIframe();
+            window.updateIframe();
             triggerAutoSave();
         };
 
         window.removeSocial = (index) => {
             pageData.socials.splice(index, 1);
             renderSocials();
-            updateIframe();
+            window.updateIframe();
             triggerAutoSave();
         };
 
         window.removeGalleryItem = (index) => {
             pageData.gallery.splice(index, 1);
             renderGallery();
-            updateIframe();
+            window.updateIframe();
             triggerAutoSave();
         };
 
@@ -769,29 +769,31 @@
                     const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
                     const d = await res.json();
 
-                    if (type === 'hero') {
-                        pageData.heroImg = d.secure_url;
-                        document.getElementById('hero-preview').src = d.secure_url;
-                        document.getElementById('hero-preview').classList.remove('hidden');
-                        document.getElementById('hero-placeholder').classList.add('hidden');
-                    } else {
-                        pageData.gallery.push(d.secure_url);
-                        renderGallery();
+                    if (d.secure_url) {
+                        if (type === 'hero') {
+                            pageData.heroImg = d.secure_url;
+                            document.getElementById('hero-preview').src = d.secure_url;
+                            document.getElementById('hero-preview').classList.remove('hidden');
+                            document.getElementById('hero-placeholder').classList.add('hidden');
+                        } else {
+                            pageData.gallery.push(d.secure_url);
+                            renderGallery();
+                        }
+                        window.updateIframe();
+                        triggerAutoSave();
                     }
-                    updateIframe();
-                    triggerAutoSave();
                 } catch (e) {
                     console.error("Upload error", e);
                 }
             }
         };
 
-        function updateIframe() {
+        window.updateIframe = () => {
             const iframe = document.getElementById('preview-iframe');
-            if (iframe.contentWindow) {
+            if (iframe && iframe.contentWindow) {
                 iframe.contentWindow.postMessage({ type: 'UPDATE_CONTENT', data: pageData }, '*');
             }
-        }
+        };
 
         window.exportHTML = async () => {
             const res = await fetch('templateMenutech.html');
