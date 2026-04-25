@@ -1,0 +1,15 @@
+Optimizaciones en el Editor de Plantillas (adminTemplate.html):
+
+1. Velocidad de Carga:
+   - Se redujo el tiempo máximo del loading overlay de 2.5s a 2s.
+   - Se eliminó el retraso artificial de 1.8s, permitiendo que el editor se muestre tan pronto como los datos estén listos.
+   - Implementación de consultas paralelas (Promise.all) para obtener el perfil del usuario y la configuración de la plantilla simultáneamente, reduciendo el tiempo de espera inicial.
+
+2. Eficiencia de Datos:
+   - El selector de clientes (Context Switcher) ahora solo descarga las columnas necesarias (id, username, domain) en lugar de todo el perfil (*), optimizando el ancho de banda y la velocidad de respuesta en cuentas con muchos usuarios.
+
+3. Recomendaciones de Base de Datos (SQL):
+   - Aunque la tabla `menutech_web_templates` tiene un constraint UNIQUE en `user_id`, se recomienda asegurar que exista un índice para optimizar las búsquedas frecuentes por este campo.
+
+SQL Sugerido:
+CREATE INDEX IF NOT EXISTS idx_web_templates_user_id ON public.menutech_web_templates (user_id);
