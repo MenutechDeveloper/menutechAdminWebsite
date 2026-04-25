@@ -1,9 +1,11 @@
 Optimizaciones en el Editor de Plantillas (adminTemplate.html):
 
-1. Velocidad de Carga:
+1. Velocidad de Carga y Resiliencia:
    - Se redujo el tiempo máximo del loading overlay de 2.5s a 2s.
+   - El safety timeout se movió a un bloque `<script>` global (fuera del módulo) para garantizar que el loading desaparezca incluso si hay errores de red o de carga de módulos.
    - Se eliminó el retraso artificial de 1.8s, permitiendo que el editor se muestre tan pronto como los datos estén listos.
-   - Implementación de consultas paralelas (Promise.all) para obtener el perfil del usuario y la configuración de la plantilla simultáneamente, reduciendo el tiempo de espera inicial.
+   - Uso de `finally` en la inicialización para asegurar que `hideLoading()` se llame sin importar si la carga de sesión fue exitosa o fallida.
+   - Implementación de consultas paralelas (Promise.all) para obtener el perfil del usuario y la configuración de la plantilla simultáneamente.
 
 2. Eficiencia de Datos:
    - El selector de clientes (Context Switcher) ahora solo descarga las columnas necesarias (id, username, domain) en lugar de todo el perfil (*), optimizando el ancho de banda y la velocidad de respuesta en cuentas con muchos usuarios.

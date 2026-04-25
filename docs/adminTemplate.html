@@ -248,6 +248,22 @@
         <span id="save-status-text">Saving changes...</span>
     </div>
 
+    <script>
+        // Global hideLoading to ensure it's accessible from safety timeout
+        function hideLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay && !overlay.classList.contains('hidden')) {
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    console.log("Editor displayed (loading hidden)");
+                }, 500);
+            }
+        }
+        // Safety timeout: guaranteed hide at 2s regardless of module state
+        setTimeout(hideLoading, 2000);
+    </script>
+
     <div class="editor-layout">
         <!-- Sidebar Controls -->
         <aside class="sidebar">
@@ -370,29 +386,19 @@
 
         let pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        // Initialize immediately as modules are deferred by default
+        (async function init() {
             initDragAndDrop();
-
-            // User request: Loading only lasts max 2s and show editor fast
-            const safetyTimeout = setTimeout(hideLoading, 2000);
 
             try {
                 await checkSession();
-                clearTimeout(safetyTimeout);
-                hideLoading();
             } catch (e) {
                 console.error("Initialization error", e);
+            } finally {
+                // Ensure editor is shown even on error
                 hideLoading();
             }
-        });
-
-        function hideLoading() {
-            const overlay = document.getElementById('loading-overlay');
-            if (overlay && !overlay.classList.contains('hidden')) {
-                overlay.style.opacity = '0';
-                setTimeout(() => overlay.classList.add('hidden'), 500);
-            }
-        }
+        })();
         window.hideLoading = hideLoading;
 
         async function checkSession() {
