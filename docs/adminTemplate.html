@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Template Editor | Menutech</title>
-    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
-    <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg">
+    <link rel="shortcut icon" href="https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
 
@@ -213,13 +213,14 @@
         .context-overlay.active { display: block; }
 
         #save-status {
-            position: fixed; bottom: 30px; left: 30px; padding: 10px 20px;
-            background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-            font-size: 0.75rem; font-weight: 700; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            display: flex; align-items: center; gap: 10px; transition: 0.3s;
-            z-index: 100; opacity: 0; pointer-events: none;
+            position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-20px) scale(0.95);
+            padding: 12px 24px; background: var(--card); border: 2px solid var(--border);
+            border-radius: 100px; font-size: 0.85rem; font-weight: 700;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15); display: flex; align-items: center;
+            gap: 12px; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10000; opacity: 0; pointer-events: none;
         }
-        #save-status.active { opacity: 1; transform: translateY(-5px); }
+        #save-status.active { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 
         /* Multi-language switch styles */
         .lang-switch {
@@ -276,9 +277,13 @@
     </aside>
 
     <div id="save-status">
-        <div class="loader-ring" style="width:14px; height:14px; border-width:2px; margin:0;"></div>
+        <div class="loader-ring" style="width:18px; height:18px; border: 2px solid var(--orange); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
         <span id="save-status-text" data-i18n="saving">Saving changes...</span>
     </div>
+
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 
     <script>
         // Global hideLoading to ensure it's accessible from safety timeout
@@ -304,7 +309,7 @@
         <!-- Sidebar Controls -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="https://menutech.services/assets/img/logomt.png" class="logo-mt" alt="Menutech">
+                <img src="https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg" class="logo-mt" alt="Logo" style="border-radius: 6px;">
                 <div style="display: flex; gap: 8px;">
                     <button class="btn" style="padding: 10px; background: var(--input); border: 1px solid var(--border);" onclick="location.href='index.html'">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px; height:18px; color: var(--text);"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -320,6 +325,26 @@
                         <button class="btn" style="padding: 0 12px; height: 44px; background: var(--input); border: 1px solid var(--border);" onclick="toggleContextSidebar()">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px; height:18px; color: var(--text);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         </button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label data-i18n="generalSettings">General Settings</label>
+                    <input type="text" id="site-title" class="input-field" placeholder="Site Title" data-i18n-placeholder="titlePlaceholder" oninput="updateContent()">
+                    <div class="lang-switch">
+                        <button id="lang-en-btn" class="lang-option active" onclick="window.setLang('en')">EN</button>
+                        <button id="lang-es-btn" class="lang-option" onclick="window.setLang('es')">ES</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label data-i18n="heroSection">Hero Section</label>
+                    <div class="image-upload-box" id="hero-drop-zone" onclick="document.getElementById('hero-upload').click()">
+                        <img id="hero-preview" class="hidden">
+                        <div id="hero-placeholder">
+                            <span data-i18n="heroPlaceholder">Click or Drag Hero Image</span>
+                        </div>
+                        <input type="file" id="hero-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'heroImg')">
                     </div>
                 </div>
 
@@ -355,6 +380,17 @@
                 </div>
 
                 <div class="control-group">
+                    <label data-i18n="gallery">Gallery</label>
+                    <div class="image-upload-box" id="gallery-drop-zone" style="min-height: 120px; border-style: dashed; margin-bottom: 10px;" onclick="document.getElementById('gallery-upload').click()">
+                        <span data-i18n="galleryPlaceholder">Drag & Drop Gallery Images</span>
+                        <input type="file" id="gallery-upload" class="hidden" accept="image/*" multiple onchange="handleImageUpload(event, 'gallery')">
+                    </div>
+                    <div class="gallery-grid" id="gallery-items">
+                        <!-- Gallery items will appear here -->
+                    </div>
+                </div>
+
+                <div class="control-group">
                     <label data-i18n="cateringSection">Catering Section</label>
                     <div class="image-upload-box" id="catering-drop-zone" style="min-height: 100px;" onclick="document.getElementById('catering-upload').click()">
                         <img id="catering-preview" class="hidden">
@@ -373,37 +409,6 @@
                             <span data-i18n="deliveryImgPlaceholder">Delivery Image</span>
                         </div>
                         <input type="file" id="delivery-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'deliveryImg')">
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label data-i18n="generalSettings">General Settings</label>
-                    <input type="text" id="site-title" class="input-field" placeholder="Site Title" data-i18n-placeholder="titlePlaceholder" oninput="updateContent()">
-                    <div class="lang-switch">
-                        <button id="lang-en-btn" class="lang-option active" onclick="window.setLang('en')">EN</button>
-                        <button id="lang-es-btn" class="lang-option" onclick="window.setLang('es')">ES</button>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label data-i18n="heroSection">Hero Section</label>
-                    <div class="image-upload-box" id="hero-drop-zone" onclick="document.getElementById('hero-upload').click()">
-                        <img id="hero-preview" class="hidden">
-                        <div id="hero-placeholder">
-                            <span data-i18n="heroPlaceholder">Click or Drag Hero Image</span>
-                        </div>
-                        <input type="file" id="hero-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'heroImg')">
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label data-i18n="gallery">Gallery</label>
-                    <div class="image-upload-box" id="gallery-drop-zone" style="min-height: 120px; border-style: dashed; margin-bottom: 10px;" onclick="document.getElementById('gallery-upload').click()">
-                        <span data-i18n="galleryPlaceholder">Drag & Drop Gallery Images</span>
-                        <input type="file" id="gallery-upload" class="hidden" accept="image/*" multiple onchange="handleImageUpload(event, 'gallery')">
-                    </div>
-                    <div class="gallery-grid" id="gallery-items">
-                        <!-- Gallery items will appear here -->
                     </div>
                 </div>
 
@@ -701,9 +706,18 @@
             const statusText = document.getElementById('save-status-text');
             const loader = status.querySelector('.loader-ring');
 
+            const isSaved = text.includes('saved') || text.includes('guardados');
+
             statusText.innerText = text;
-            status.style.borderColor = isError ? 'var(--error)' : 'var(--border)';
-            loader.style.display = isError ? 'none' : 'block';
+            status.style.borderColor = isError ? 'var(--error)' : (isSaved ? 'var(--success)' : 'var(--border)');
+
+            if (isSaved) {
+                statusText.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:18px;height:18px;color:var(--success)"><polyline points="20 6 9 17 4 12"/></svg> ` + text;
+            } else if (isError) {
+                statusText.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:18px;height:18px;color:var(--error)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ` + text;
+            }
+
+            if (loader) loader.style.display = (isError || isSaved) ? 'none' : 'block';
             status.classList.add('active');
         }
 
