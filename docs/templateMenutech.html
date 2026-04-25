@@ -849,31 +849,41 @@ a {
             }
 
             // Hero
-            if (data.heroImg) document.getElementById('hero-section').style.backgroundImage = `url('${data.heroImg}')`;
+            if (data.heroImg) {
+                document.getElementById('hero-section').style.backgroundImage = `url('${data.heroImg}')`;
+            }
 
             // Contact
             if (data.contact) {
-                if (data.contact.phone) document.getElementById('footer-phone').textContent = (currentLang === 'es' ? 'Teléfono: ' : 'Phone: ') + data.contact.phone;
-                if (data.contact.address) document.getElementById('footer-address').textContent = data.contact.address;
-                if (data.contact.hours) document.getElementById('footer-hours').textContent = data.contact.hours;
+                const phoneEl = document.getElementById('footer-phone');
+                const addressEl = document.getElementById('footer-address');
+                const hoursEl = document.getElementById('footer-hours');
+
+                if (phoneEl) phoneEl.textContent = (data.contact.phone ? (currentLang === 'es' ? 'Teléfono: ' : 'Phone: ') + data.contact.phone : '');
+                if (addressEl) addressEl.textContent = data.contact.address || '';
+                if (hoursEl) hoursEl.textContent = data.contact.hours || '';
             }
 
             // Socials
             if (data.socials) {
                 const container = document.getElementById('social-icons');
-                container.innerHTML = data.socials.map(s => `
-                    <a href="${s.url}" target="_blank" style="color: #9a9a9a; transition: color 0.3s;" onmouseover="this.style.color='#d9a441'" onmouseout="this.style.color='#9a9a9a'">
-                        ${SOCIAL_ICONS[s.platform] || ''}
-                    </a>
-                `).join('');
+                if (container) {
+                    container.innerHTML = data.socials.map(s => `
+                        <a href="${s.url}" target="_blank" style="color: #9a9a9a; transition: color 0.3s;" onmouseover="this.style.color='#d9a441'" onmouseout="this.style.color='#9a9a9a'">
+                            ${SOCIAL_ICONS[s.platform] || ''}
+                        </a>
+                    `).join('');
+                }
             }
 
             // Gallery
             if (data.gallery) {
                 const container = document.getElementById('gallery-container');
-                container.innerHTML = data.gallery.map(img => `
-                    <img src="${img}" style="width:100%; height:300px; object-fit:cover; border-radius:3px;">
-                `).join('');
+                if (container) {
+                    container.innerHTML = data.gallery.map(img => `
+                        <img src="${img}" style="width:100%; height:300px; object-fit:cover; border-radius:3px;">
+                    `).join('');
+                }
             }
         }
 

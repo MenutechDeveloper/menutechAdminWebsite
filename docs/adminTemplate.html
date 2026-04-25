@@ -213,6 +213,31 @@
             z-index: 100; opacity: 0; pointer-events: none;
         }
         #save-status.active { opacity: 1; transform: translateY(-5px); }
+
+        /* Multi-language switch styles */
+        .lang-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--input);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            width: fit-content;
+        }
+        .lang-option {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            color: var(--text-dim);
+        }
+        .lang-option.active {
+            background: var(--orange);
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -225,7 +250,7 @@
             <div class="cube"></div><div class="cube"></div><div class="cube"></div>
             <div class="cube"></div><div class="cube"></div><div class="cube"></div>
         </div>
-        <p>Cargando editor web...</p>
+        <p data-i18n="loading">Cargando editor web...</p>
     </div>
 
     <!-- Context Selector for Admins -->
@@ -245,7 +270,7 @@
 
     <div id="save-status">
         <div class="loader-ring" style="width:14px; height:14px; border-width:2px; margin:0;"></div>
-        <span id="save-status-text">Saving changes...</span>
+        <span id="save-status-text" data-i18n="saving">Saving changes...</span>
     </div>
 
     <script>
@@ -278,7 +303,7 @@
 
             <div class="sidebar-content">
                 <div class="control-group" id="admin-context-group" style="display:none;">
-                    <label>Editing Account</label>
+                    <label data-i18n="editingAccount">Editing Account</label>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="current-account-name" class="input-field" style="margin-bottom:0; flex:1;" value="Your Store" readonly>
                         <button class="btn" style="padding: 0 12px; height: 44px; background: var(--input); border: 1px solid var(--border);" onclick="toggleContextSidebar()">
@@ -288,31 +313,28 @@
                 </div>
 
                 <div class="control-group">
-                    <label>General Settings</label>
-                    <div class="switch-container">
-                        <span style="font-size: 0.85rem; font-weight: 700;">English Version</span>
-                        <label class="switch">
-                            <input type="checkbox" id="lang-toggle" onchange="updateContent()">
-                            <span class="slider"></span>
-                        </label>
+                    <label data-i18n="generalSettings">General Settings</label>
+                    <div class="lang-switch">
+                        <div id="lang-en-btn" class="lang-option active" onclick="setLang('en')">EN</div>
+                        <div id="lang-es-btn" class="lang-option" onclick="setLang('es')">ES</div>
                     </div>
                 </div>
 
                 <div class="control-group">
-                    <label>Hero Section</label>
+                    <label data-i18n="heroSection">Hero Section</label>
                     <div class="image-upload-box" id="hero-drop-zone" onclick="document.getElementById('hero-upload').click()">
                         <img id="hero-preview" class="hidden">
                         <div id="hero-placeholder">
-                            <span>Click or Drag Hero Image</span>
+                            <span data-i18n="heroPlaceholder">Click or Drag Hero Image</span>
                         </div>
                         <input type="file" id="hero-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'hero')">
                     </div>
                 </div>
 
                 <div class="control-group">
-                    <label>Gallery</label>
+                    <label data-i18n="gallery">Gallery</label>
                     <div class="image-upload-box" id="gallery-drop-zone" style="height: 80px; border-style: dashed; margin-bottom: 10px;" onclick="document.getElementById('gallery-upload').click()">
-                        <span>Drag & Drop Gallery Images</span>
+                        <span data-i18n="galleryPlaceholder">Drag & Drop Gallery Images</span>
                         <input type="file" id="gallery-upload" class="hidden" accept="image/*" multiple onchange="handleImageUpload(event, 'gallery')">
                     </div>
                     <div class="gallery-grid" id="gallery-items">
@@ -321,18 +343,18 @@
                 </div>
 
                 <div class="control-group">
-                    <label>Contact Info</label>
-                    <input type="text" id="contact-phone" class="input-field" placeholder="Phone Number" oninput="updateContent()">
-                    <input type="text" id="contact-address" class="input-field" placeholder="Address" oninput="updateContent()">
-                    <input type="text" id="contact-hours" class="input-field" placeholder="Opening Hours" oninput="updateContent()">
+                    <label data-i18n="contactInfo">Contact Info</label>
+                    <input type="text" id="contact-phone" class="input-field" placeholder="Phone Number" data-i18n-placeholder="phonePlaceholder" oninput="updateContent()">
+                    <input type="text" id="contact-address" class="input-field" placeholder="Address" data-i18n-placeholder="addressPlaceholder" oninput="updateContent()">
+                    <input type="text" id="contact-hours" class="input-field" placeholder="Opening Hours" data-i18n-placeholder="hoursPlaceholder" oninput="updateContent()">
                 </div>
 
                 <div class="control-group">
-                    <label>Social Networks</label>
+                    <label data-i18n="socialNetworks">Social Networks</label>
                     <div id="social-list">
                         <!-- Social inputs -->
                     </div>
-                    <button class="btn" style="width: 100%; background: var(--input); border: 1px solid var(--border); font-size: 0.7rem; padding: 10px;" onclick="addSocial()">+ Add Social Link</button>
+                    <button class="btn" style="width: 100%; background: var(--input); border: 1px solid var(--border); font-size: 0.7rem; padding: 10px;" onclick="addSocial()" data-i18n="addSocial">+ Add Social Link</button>
                 </div>
             </div>
         </aside>
@@ -340,16 +362,16 @@
         <!-- Preview Area -->
         <main class="preview-area">
             <div class="preview-toolbar">
-                <span style="font-weight: 700; font-size: 0.8rem; color: var(--text-dim);">DESKTOP PREVIEW</span>
+                <span style="font-weight: 700; font-size: 0.8rem; color: var(--text-dim);" data-i18n="desktopPreview">DESKTOP PREVIEW</span>
             </div>
             <div class="preview-container">
                 <div class="preview-frame-wrapper">
-                    <iframe id="preview-iframe" src="templateMenutech.html"></iframe>
+                    <iframe id="preview-iframe" src="templateMenutech.html" onload="updateIframe()"></iframe>
                 </div>
             </div>
 
             <div class="floating-actions">
-                <button class="btn btn-primary" id="btn-export" onclick="exportHTML()">Export HTML</button>
+                <button class="btn btn-primary" id="btn-export" onclick="exportHTML()" data-i18n="exportBtn">Export HTML</button>
             </div>
         </main>
     </div>
@@ -366,8 +388,51 @@
         let allOwners = [];
         let saveTimeout = null;
 
+        const TRANSLATIONS = {
+            en: {
+                saving: "Saving changes...",
+                saved: "Changes saved",
+                errorSaving: "Error saving",
+                editingAccount: "Editing Account",
+                generalSettings: "General Settings",
+                heroSection: "Hero Section",
+                heroPlaceholder: "Click or Drag Hero Image",
+                gallery: "Gallery",
+                galleryPlaceholder: "Drag & Drop Gallery Images",
+                contactInfo: "Contact Info",
+                phonePlaceholder: "Phone Number",
+                addressPlaceholder: "Address",
+                hoursPlaceholder: "Opening Hours",
+                socialNetworks: "Social Networks",
+                addSocial: "+ Add Social Link",
+                loading: "Loading web editor...",
+                exportBtn: "Export HTML",
+                desktopPreview: "DESKTOP PREVIEW"
+            },
+            es: {
+                saving: "Guardando cambios...",
+                saved: "Cambios guardados",
+                errorSaving: "Error al guardar",
+                editingAccount: "Editando Cuenta",
+                generalSettings: "Ajustes Generales",
+                heroSection: "Sección Hero",
+                heroPlaceholder: "Haz clic o arrastra la imagen Hero",
+                gallery: "Galería",
+                galleryPlaceholder: "Arrastra y suelta imágenes de la Galería",
+                contactInfo: "Información de Contacto",
+                phonePlaceholder: "Número de Teléfono",
+                addressPlaceholder: "Dirección",
+                hoursPlaceholder: "Horarios de Apertura",
+                socialNetworks: "Redes Sociales",
+                addSocial: "+ Agregar Enlace Social",
+                loading: "Cargando editor web...",
+                exportBtn: "Exportar HTML",
+                desktopPreview: "VISTA PREVIA ESCRITORIO"
+            }
+        };
+
         const DEFAULT_DATA = {
-            lang: 'es',
+            lang: 'en',
             heroImg: 'https://ext.same-assets.com/3590151290/922045752.jpeg',
             gallery: [
                 'https://ext.same-assets.com/3590151290/3587577499.jpeg',
@@ -389,6 +454,10 @@
         // Initialize immediately as modules are deferred by default
         (async function init() {
             try {
+                // Prevent browser from opening dropped files
+                window.addEventListener('dragover', e => e.preventDefault(), false);
+                window.addEventListener('drop', e => e.preventDefault(), false);
+
                 initDragAndDrop();
                 await checkSession();
             } catch (e) {
@@ -504,7 +573,8 @@
         }
 
         async function saveTemplate() {
-            showSaveStatus('Saving changes...');
+            const t = TRANSLATIONS[pageData.lang];
+            showSaveStatus(t.saving);
             const { error } = await sb.from('menutech_web_templates')
                 .upsert({
                     user_id: activeOwnerId,
@@ -514,9 +584,9 @@
 
             if (error) {
                 console.error("Save error", error);
-                showSaveStatus('Error saving', true);
+                showSaveStatus(t.errorSaving, true);
             } else {
-                showSaveStatus('Changes saved');
+                showSaveStatus(t.saved);
                 setTimeout(() => hideSaveStatus(), 2000);
             }
         }
@@ -551,21 +621,63 @@
 
             zones.forEach(zone => {
                 const el = document.getElementById(zone.id);
-                el.ondragover = e => { e.preventDefault(); el.style.borderColor = "var(--orange)"; el.style.background = "rgba(255,149,51,0.05)"; };
-                el.ondragleave = () => { el.style.borderColor = "var(--border)"; el.style.background = "transparent"; };
-                el.ondrop = e => {
+                if (!el) return;
+
+                el.addEventListener('dragover', e => {
                     e.preventDefault();
+                    e.stopPropagation();
+                    el.style.borderColor = "var(--orange)";
+                    el.style.background = "rgba(255,149,51,0.05)";
+                });
+
+                el.addEventListener('dragleave', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    el.style.borderColor = "var(--border)";
+                    el.style.background = "transparent";
+                });
+
+                el.addEventListener('drop', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     el.style.borderColor = "var(--border)";
                     el.style.background = "transparent";
                     if (e.dataTransfer.files.length) {
                         handleFiles(e.dataTransfer.files, zone.type);
                     }
-                };
+                });
             });
         }
 
+        function applyEditorLanguage(lang) {
+            const t = TRANSLATIONS[lang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.innerText = t[key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (t[key]) el.placeholder = t[key];
+            });
+
+            // Update toggle buttons
+            const enBtn = document.getElementById('lang-en-btn');
+            const esBtn = document.getElementById('lang-es-btn');
+            if (enBtn && esBtn) {
+                enBtn.classList.toggle('active', lang === 'en');
+                esBtn.classList.toggle('active', lang === 'es');
+            }
+        }
+
+        window.setLang = (lang) => {
+            pageData.lang = lang;
+            applyEditorLanguage(lang);
+            updateIframe();
+            triggerAutoSave();
+        };
+
         function syncForm() {
-            document.getElementById('lang-toggle').checked = (pageData.lang === 'en');
+            applyEditorLanguage(pageData.lang);
             document.getElementById('hero-preview').src = pageData.heroImg;
             document.getElementById('hero-preview').classList.remove('hidden');
             document.getElementById('hero-placeholder').classList.add('hidden');
@@ -607,7 +719,6 @@
         }
 
         window.updateContent = () => {
-            pageData.lang = document.getElementById('lang-toggle').checked ? 'en' : 'es';
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
             pageData.contact.hours = document.getElementById('contact-hours').value;
