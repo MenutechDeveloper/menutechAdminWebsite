@@ -373,19 +373,13 @@
         document.addEventListener('DOMContentLoaded', async () => {
             initDragAndDrop();
 
-            const start = Date.now();
-
-            // Safety timeout: guaranteed hide at 2.5s regardless of session state
-            const safetyTimeout = setTimeout(hideLoading, 2500);
+            // User request: Loading only lasts max 2s and show editor fast
+            const safetyTimeout = setTimeout(hideLoading, 2000);
 
             try {
                 await checkSession();
-                const elapsed = Date.now() - start;
-                // We want to show the animation for at least 1.8 seconds because it's "espectacular"
-                const remaining = Math.max(0, 1800 - elapsed);
-
                 clearTimeout(safetyTimeout);
-                setTimeout(hideLoading, remaining);
+                hideLoading();
             } catch (e) {
                 console.error("Initialization error", e);
                 hideLoading();
@@ -399,15 +393,22 @@
                 setTimeout(() => overlay.classList.add('hidden'), 500);
             }
         }
+        window.hideLoading = hideLoading;
 
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
-
-            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-            userRole = profile?.role || 'owner';
             activeOwnerId = user.id;
+
+            // Optimization: Fetch profile and template in parallel
+            const [profileRes, templateRes] = await Promise.all([
+                sb.from('profiles').select('role').eq('id', user.id).single(),
+                sb.from('menutech_web_templates').select('config').eq('user_id', user.id).single()
+            ]);
+
+            const profile = profileRes.data;
+            userRole = profile?.role || 'owner';
 
             if (userRole === 'admin' || userRole === 'developer' || userRole === 'adminCS' || userRole === 'CS') {
                 document.getElementById('admin-context-group').style.display = 'block';
@@ -416,11 +417,19 @@
                 document.getElementById('btn-export').classList.add('hidden');
             }
 
-            await loadTemplate(activeOwnerId);
+            if (templateRes.data) {
+                pageData = templateRes.data.config;
+            } else {
+                pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            }
+
+            syncForm();
+            updateIframe();
         }
 
         async function setupContextSwitcher() {
-            const { data } = await sb.from('profiles').select('*');
+            // Optimization: Select only required columns
+            const { data } = await sb.from('profiles').select('id, username, domain');
             allOwners = data || [];
             renderOwners(allOwners);
 
