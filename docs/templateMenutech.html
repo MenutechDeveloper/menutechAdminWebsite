@@ -638,23 +638,28 @@ a {
                 <li class="nav-item">
                     <a href="#" class="nav-link">Blog</a>
                 </li>
+                <li class="nav-item" style="display: flex; align-items: center; gap: 10px; margin-left: 10px; border-left: 1px solid #eee; padding-left: 20px;">
+                    <span id="lang-es" style="cursor: pointer; font-weight: 700; color: var(--color-primary); font-size: 12px;">ES</span>
+                    <span style="color: #eee;">|</span>
+                    <span id="lang-en" style="cursor: pointer; font-weight: 400; color: #999; font-size: 12px;">EN</span>
+                </li>
             </ul>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <header class="hero">
+    <header class="hero" id="hero-section">
         <div class="hero-overlay"></div>
         <div class="hero-content">
             <h2 class="hero-subtitle">
                 <span class="line-decoration"></span>
-                <span>Lorem Lorem Lorem</span>
+                <span data-es="Lorem Lorem Lorem" data-en="Experience the Best">Lorem Lorem Lorem</span>
                 <span class="line-decoration"></span>
             </h2>
-            <h1 class="hero-title">Template Menutech</h1>
+            <h1 class="hero-title" id="hero-title">Template Menutech</h1>
             <div class="hero-buttons">
-                <a href="#" class="btn btn-outline">Table Reservation</a>
-                <a href="#" class="btn btn-filled">See MENU & Order</a>
+                <a href="#" class="btn btn-outline" data-es="Reservar Mesa" data-en="Table Reservation">Table Reservation</a>
+                <a href="#" class="btn btn-filled" data-es="Ver Menú" data-en="See MENU & Order">See MENU & Order</a>
             </div>
         </div>
     </header>
@@ -736,11 +741,14 @@ a {
     <!-- Delicious Mexican Food Section -->
     <section class="gallery-section">
         <div class="container">
-            <h2 class="section-title centered">Delicious Mexican Food</h2>
+            <h2 class="section-title centered" data-es="Deliciosa Comida Mexicana" data-en="Delicious Mexican Food">Delicious Mexican Food</h2>
             <span class="section-subtitle-container centered">
                 <span class="line-small"></span>
-                <span class="section-subtitle">Love At First Bite</span>
+                <span class="section-subtitle" data-es="Amor al Primer Bocado" data-en="Love At First Bite">Love At First Bite</span>
             </span>
+            <div id="gallery-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 40px;">
+                <!-- Menutech creacion de gallery -->
+            </div>
         </div>
     </section>
 
@@ -786,20 +794,108 @@ a {
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-col">
-                    <h4 class="footer-title">Contact Us</h4>
-                    <p>100 Tenth Avenue, New York City, NY 1001</p>
-                    <p>Phone: (044) 359 0173</p>
+                    <h4 class="footer-title" data-es="Contáctanos" data-en="Contact Us">Contact Us</h4>
+                    <p id="footer-address">100 Tenth Avenue, New York City, NY 1001</p>
+                    <p id="footer-phone">Phone: (044) 359 0173</p>
+                    <div id="social-icons" style="margin-top: 20px; display: flex; gap: 15px;">
+                        <!-- Social Networks dynamically added here -->
+                    </div>
                 </div>
                 <div class="footer-col">
-                    <h4 class="footer-title">Opening Hours</h4>
-                    <p>Monday - Sunday: 5PM - 10PM</p>
-                    <p>Tuesday - Friday: 11AM - 2PM</p>
+                    <h4 class="footer-title" data-es="Horarios" data-en="Opening Hours">Opening Hours</h4>
+                    <p id="footer-hours">Monday - Sunday: 5PM - 10PM</p>
                 </div>
             </div>
         </div>
     </footer>
 
     <script>
+        /* Menutech bilingual and dynamic content logic */
+        const SOCIAL_ICONS = {
+            instagram: `<svg style="width:24px;height:24px;fill:currentColor" viewBox="0 0 24 24"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8A3.6 3.6 0 0 0 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6A3.6 3.6 0 0 0 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>`,
+            facebook: `<svg style="width:24px;height:24px;fill:currentColor" viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z"/></svg>`,
+            whatsapp: `<svg style="width:24px;height:24px;fill:currentColor" viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.81 9.81 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.22 8.22 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23-1.44 0-2.85-.38-4.1-1.11l-.29-.17-3.06.81.82-2.98-.19-.3a8.22 8.22 0 0 1-1.26-4.48c0-4.54 3.7-8.23 8.24-8.23m-3.85 3.09c-.21 0-.45.03-.66.24-.21.21-.81.79-.81 1.94s.84 2.25.96 2.41c.12.16 1.63 2.49 3.96 3.5.55.24 1 .38 1.34.49.56.18 1.07.15 1.48.09.45-.06 1.39-.57 1.58-1.12.2-.55.2-1.02.14-1.12-.06-.1-.21-.16-.45-.27-.24-.12-1.39-.69-1.61-.77-.22-.08-.37-.12-.53.12-.16.24-.61.77-.75.93-.14.16-.27.18-.51.06-.24-.12-.99-.36-1.89-1.16-.7-.62-1.17-1.39-1.31-1.63-.14-.24-.01-.37.11-.49.11-.11.24-.28.36-.42.12-.15.16-.25.24-.42.08-.17.04-.32-.02-.45-.06-.13-.53-1.28-.73-1.75-.19-.48-.39-.41-.53-.42l-.44-.01Z"/></svg>`,
+            twitter: `<svg style="width:24px;height:24px;fill:currentColor" viewBox="0 0 24 24"><path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98-3.56-.18-6.73-1.89-8.84-4.48-.37.63-.58 1.37-.58 2.15 0 1.48.75 2.78 1.89 3.55-.7 0-1.36-.21-1.94-.53v.05c0 2.05 1.45 3.78 3.39 4.17-.36.1-.74.15-1.13.15-.27 0-.54-.03-.8-.08.54 1.68 2.11 2.9 3.97 2.93-1.46 1.14-3.29 1.82-5.3 1.82-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23Z"/></svg>`
+        };
+
+        let currentLang = 'es';
+
+        function applyLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-es]').forEach(el => {
+                el.textContent = el.getAttribute(`data-${lang}`);
+            });
+
+            // Update switch UI
+            const esBtn = document.getElementById('lang-es');
+            const enBtn = document.getElementById('lang-en');
+            if (!esBtn || !enBtn) return;
+
+            if (lang === 'es') {
+                esBtn.style.fontWeight = '700'; esBtn.style.color = 'var(--color-primary)';
+                enBtn.style.fontWeight = '400'; enBtn.style.color = '#999';
+            } else {
+                enBtn.style.fontWeight = '700'; enBtn.style.color = 'var(--color-primary)';
+                esBtn.style.fontWeight = '400'; esBtn.style.color = '#999';
+            }
+        }
+
+        function updateUI(data) {
+            if (!data) return;
+
+            // Language switch
+            if (data.lang) {
+                applyLanguage(data.lang);
+            }
+
+            // Hero
+            if (data.heroImg) document.getElementById('hero-section').style.backgroundImage = `url('${data.heroImg}')`;
+
+            // Contact
+            if (data.contact) {
+                if (data.contact.phone) document.getElementById('footer-phone').textContent = (currentLang === 'es' ? 'Teléfono: ' : 'Phone: ') + data.contact.phone;
+                if (data.contact.address) document.getElementById('footer-address').textContent = data.contact.address;
+                if (data.contact.hours) document.getElementById('footer-hours').textContent = data.contact.hours;
+            }
+
+            // Socials
+            if (data.socials) {
+                const container = document.getElementById('social-icons');
+                container.innerHTML = data.socials.map(s => `
+                    <a href="${s.url}" target="_blank" style="color: #9a9a9a; transition: color 0.3s;" onmouseover="this.style.color='#d9a441'" onmouseout="this.style.color='#9a9a9a'">
+                        ${SOCIAL_ICONS[s.platform] || ''}
+                    </a>
+                `).join('');
+            }
+
+            // Gallery
+            if (data.gallery) {
+                const container = document.getElementById('gallery-container');
+                container.innerHTML = data.gallery.map(img => `
+                    <img src="${img}" style="width:100%; height:300px; object-fit:cover; border-radius:3px;">
+                `).join('');
+            }
+        }
+
+        // Listen for editor updates
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'UPDATE_CONTENT') {
+                updateUI(event.data.data);
+            }
+        });
+
+        // Initialize from embedded state (for exported files)
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.MENU_TECH_STATE) {
+                updateUI(window.MENU_TECH_STATE);
+            }
+
+            const esBtn = document.getElementById('lang-es');
+            const enBtn = document.getElementById('lang-en');
+            if (esBtn) esBtn.addEventListener('click', () => applyLanguage('es'));
+            if (enBtn) enBtn.addEventListener('click', () => applyLanguage('en'));
+        });
+
         // Navbar Toggle for Mobile
 const navbarToggler = document.getElementById('navbar-toggler');
 const navMenu = document.getElementById('nav-menu');
