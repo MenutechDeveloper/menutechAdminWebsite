@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Template Editor | Menutech</title>
-    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg">
-    <link rel="shortcut icon" href="https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg">
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
 
@@ -81,7 +81,7 @@
             padding: 30px; border-bottom: 1px solid var(--border);
             display: flex; align-items: center; justify-content: space-between;
         }
-        .logo-mt { height: 35px; }
+        .logo-mt { height: 140px; width: auto; object-fit: contain; }
 
         .sidebar-content { flex: 1; overflow-y: auto; padding: 30px; }
         .sidebar-content::-webkit-scrollbar { width: 6px; }
@@ -262,11 +262,11 @@
     </div>
 
     <!-- Context Selector for Admins -->
-    <div class="context-overlay" id="context-overlay" onclick="toggleContextSidebar()"></div>
+    <div class="context-overlay" id="context-overlay" onclick="window.toggleContextSidebar()"></div>
     <aside class="context-sidebar" id="context-sidebar">
         <div class="context-header">
             <h3 style="font-family: 'Outfit'; font-size: 1rem;">Select Client</h3>
-            <button class="btn-icon" style="background:none; color: var(--text);" onclick="toggleContextSidebar()">×</button>
+            <button class="btn-icon" style="background:none; color: var(--text);" onclick="window.toggleContextSidebar()">×</button>
         </div>
         <div class="context-search">
             <input type="text" id="client-search" class="input-field" style="margin-bottom:0;" placeholder="Search by name or domain...">
@@ -308,9 +308,9 @@
     <div class="editor-layout">
         <!-- Sidebar Controls -->
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <img src="https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg" class="logo-mt" alt="Logo" style="border-radius: 6px;">
-                <div style="display: flex; gap: 8px;">
+            <div class="sidebar-header" style="flex-direction: column; align-items: center; gap: 20px;">
+                <img src="https://menutech.services/assets/img/logomt.png" class="logo-mt" alt="Logo">
+                <div style="display: flex; gap: 8px; width: 100%; justify-content: center;">
                     <button class="btn" style="padding: 10px; background: var(--input); border: 1px solid var(--border);" onclick="location.href='index.html'">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px; height:18px; color: var(--text);"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                     </button>
@@ -322,7 +322,7 @@
                     <label data-i18n="editingAccount">Editing Account</label>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="current-account-name" class="input-field" style="margin-bottom:0; flex:1;" value="Your Store" readonly>
-                        <button class="btn" style="padding: 0 12px; height: 44px; background: var(--input); border: 1px solid var(--border);" onclick="toggleContextSidebar()">
+                        <button class="btn" style="padding: 0 12px; height: 44px; background: var(--input); border: 1px solid var(--border);" onclick="window.toggleContextSidebar()">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px; height:18px; color: var(--text);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         </button>
                     </div>
@@ -330,7 +330,7 @@
 
                 <div class="control-group">
                     <label data-i18n="generalSettings">General Settings</label>
-                    <input type="text" id="site-title" class="input-field" placeholder="Site Title" data-i18n-placeholder="titlePlaceholder" oninput="updateContent()">
+                    <input type="text" id="site-title" class="input-field" placeholder="Site Title" data-i18n-placeholder="titlePlaceholder" oninput="window.updateContent()">
                     <div class="lang-switch">
                         <button id="lang-en-btn" class="lang-option active" onclick="window.setLang('en')">EN</button>
                         <button id="lang-es-btn" class="lang-option" onclick="window.setLang('es')">ES</button>
@@ -344,7 +344,7 @@
                         <div id="hero-placeholder">
                             <span data-i18n="heroPlaceholder">Click or Drag Hero Image</span>
                         </div>
-                        <input type="file" id="hero-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'heroImg')">
+                        <input type="file" id="hero-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'heroImg')">
                     </div>
                 </div>
 
@@ -356,14 +356,14 @@
                             <div id="about1-placeholder">
                                 <span style="font-size: 0.6rem;" data-i18n="aboutImg1Placeholder">Img 1</span>
                             </div>
-                            <input type="file" id="about1-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'aboutImg1')">
+                            <input type="file" id="about1-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'aboutImg1')">
                         </div>
                         <div class="image-upload-box" id="about2-drop-zone" style="min-height: 100px;" onclick="document.getElementById('about2-upload').click()">
                             <img id="about2-preview" class="hidden">
                             <div id="about2-placeholder">
                                 <span style="font-size: 0.6rem;" data-i18n="aboutImg2Placeholder">Img 2</span>
                             </div>
-                            <input type="file" id="about2-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'aboutImg2')">
+                            <input type="file" id="about2-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'aboutImg2')">
                         </div>
                     </div>
                 </div>
@@ -375,7 +375,7 @@
                         <div id="promo-placeholder">
                             <span data-i18n="promoBgPlaceholder">Promo Background</span>
                         </div>
-                        <input type="file" id="promo-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'promoBg')">
+                        <input type="file" id="promo-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'promoBg')">
                     </div>
                 </div>
 
@@ -383,7 +383,7 @@
                     <label data-i18n="gallery">Gallery</label>
                     <div class="image-upload-box" id="gallery-drop-zone" style="min-height: 120px; border-style: dashed; margin-bottom: 10px;" onclick="document.getElementById('gallery-upload').click()">
                         <span data-i18n="galleryPlaceholder">Drag & Drop Gallery Images</span>
-                        <input type="file" id="gallery-upload" class="hidden" accept="image/*" multiple onchange="handleImageUpload(event, 'gallery')">
+                        <input type="file" id="gallery-upload" class="hidden" accept="image/*" multiple onchange="window.handleImageUpload(event, 'gallery')">
                     </div>
                     <div class="gallery-grid" id="gallery-items">
                         <!-- Gallery items will appear here -->
@@ -397,7 +397,7 @@
                         <div id="catering-placeholder">
                             <span data-i18n="cateringBgPlaceholder">Catering Background</span>
                         </div>
-                        <input type="file" id="catering-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'cateringBg')">
+                        <input type="file" id="catering-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'cateringBg')">
                     </div>
                 </div>
 
@@ -408,15 +408,15 @@
                         <div id="delivery-placeholder">
                             <span data-i18n="deliveryImgPlaceholder">Delivery Image</span>
                         </div>
-                        <input type="file" id="delivery-upload" class="hidden" accept="image/*" onchange="handleImageUpload(event, 'deliveryImg')">
+                        <input type="file" id="delivery-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'deliveryImg')">
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label data-i18n="contactInfo">Contact Info</label>
-                    <input type="text" id="contact-phone" class="input-field" placeholder="Phone Number" data-i18n-placeholder="phonePlaceholder" oninput="updateContent()">
-                    <input type="text" id="contact-address" class="input-field" placeholder="Address" data-i18n-placeholder="addressPlaceholder" oninput="updateContent()">
-                    <input type="text" id="contact-hours" class="input-field" placeholder="Opening Hours" data-i18n-placeholder="hoursPlaceholder" oninput="updateContent()">
+                    <input type="text" id="contact-phone" class="input-field" placeholder="Phone Number" data-i18n-placeholder="phonePlaceholder" oninput="window.updateContent()">
+                    <input type="text" id="contact-address" class="input-field" placeholder="Address" data-i18n-placeholder="addressPlaceholder" oninput="window.updateContent()">
+                    <input type="text" id="contact-hours" class="input-field" placeholder="Opening Hours" data-i18n-placeholder="hoursPlaceholder" oninput="window.updateContent()">
                 </div>
 
                 <div class="control-group">
@@ -424,7 +424,7 @@
                     <div id="social-list">
                         <!-- Social inputs -->
                     </div>
-                    <button class="btn" style="width: 100%; background: var(--input); border: 1px solid var(--border); font-size: 0.7rem; padding: 10px;" onclick="addSocial()" data-i18n="addSocial">+ Add Social Link</button>
+                    <button class="btn" style="width: 100%; background: var(--input); border: 1px solid var(--border); font-size: 0.7rem; padding: 10px;" onclick="window.addSocial()" data-i18n="addSocial">+ Add Social Link</button>
                 </div>
             </div>
         </aside>
@@ -445,8 +445,8 @@
             </div>
 
             <div class="floating-actions">
-                <button class="btn btn-primary" style="background: var(--success); box-shadow: 0 8px 20px rgba(5, 150, 105, 0.2);" onclick="saveTemplate()" data-i18n="saveBtn">Save Changes</button>
-                <button class="btn btn-primary" id="btn-export" onclick="exportHTML()" data-i18n="exportBtn">Export HTML</button>
+                <button class="btn btn-primary" style="background: var(--success); box-shadow: 0 8px 20px rgba(5, 150, 105, 0.2);" onclick="window.saveTemplate()" data-i18n="saveBtn">Save Changes</button>
+                <button class="btn btn-primary" id="btn-export" onclick="window.exportHTML()" data-i18n="exportBtn">Export HTML</button>
             </div>
         </main>
     </div>
@@ -559,6 +559,120 @@
 
         let pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
+        window.setLang = (lang) => {
+            console.log("MT: Setting language to", lang);
+            pageData.lang = lang;
+            applyEditorLanguage(lang);
+            window.updateIframe();
+        };
+
+        window.setPreviewMode = (mode) => {
+            const wrapper = document.querySelector('.preview-frame-wrapper');
+            const dBtn = document.getElementById('preview-desktop-btn');
+            const mBtn = document.getElementById('preview-mobile-btn');
+            const label = document.getElementById('preview-mode-label');
+            const t = TRANSLATIONS[pageData.lang];
+
+            if (mode === 'mobile') {
+                wrapper.classList.add('mobile');
+                mBtn.classList.add('active');
+                mBtn.style.background = 'var(--orange)';
+                mBtn.style.color = '#fff';
+                dBtn.classList.remove('active');
+                dBtn.style.background = 'var(--input)';
+                dBtn.style.color = 'var(--text)';
+                label.innerText = t.mobilePreview;
+            } else {
+                wrapper.classList.remove('mobile');
+                dBtn.classList.add('active');
+                dBtn.style.background = 'var(--orange)';
+                dBtn.style.color = '#fff';
+                mBtn.classList.remove('active');
+                mBtn.style.background = 'var(--input)';
+                mBtn.style.color = 'var(--text)';
+                label.innerText = t.desktopPreview;
+            }
+        };
+
+        window.updateContent = () => {
+            pageData.title = document.getElementById('site-title').value;
+            pageData.contact.phone = document.getElementById('contact-phone').value;
+            pageData.contact.address = document.getElementById('contact-address').value;
+            pageData.contact.hours = document.getElementById('contact-hours').value;
+            window.updateIframe();
+        };
+
+        window.updateSocial = (index, field, value) => {
+            pageData.socials[index][field] = value;
+            window.updateIframe();
+        };
+
+        window.addSocial = () => {
+            pageData.socials.push({ platform: 'instagram', url: '' });
+            renderSocials();
+            window.updateIframe();
+        };
+
+        window.removeSocial = (index) => {
+            pageData.socials.splice(index, 1);
+            renderSocials();
+            window.updateIframe();
+        };
+
+        window.removeGalleryItem = (index) => {
+            pageData.gallery.splice(index, 1);
+            renderGallery();
+            window.updateIframe();
+        };
+
+        window.handleImageUpload = (event, type) => {
+            handleFiles(event.target.files, type);
+        };
+
+        window.updateIframe = () => {
+            const iframe = document.getElementById('preview-iframe');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({ type: 'UPDATE_CONTENT', data: pageData }, '*');
+            }
+        };
+
+        window.saveTemplate = async () => {
+            console.log("MT: Triggering saveTemplate", pageData);
+            const t = TRANSLATIONS[pageData.lang];
+            showSaveStatus(t.saving);
+            try {
+                const { error } = await sb.from('menutech_web_templates')
+                    .upsert({
+                        user_id: activeOwnerId,
+                        config: pageData,
+                        updated_at: new Date()
+                    }, { onConflict: 'user_id' });
+
+                if (error) throw error;
+
+                showSaveStatus(t.saved);
+                setTimeout(() => hideSaveStatus(), 2000);
+            } catch (error) {
+                console.error("Save error", error);
+                showSaveStatus(t.errorSaving, true);
+            }
+        };
+
+        window.exportHTML = async () => {
+            const res = await fetch('templateMenutech.html');
+            let html = await res.text();
+
+            const scriptInject = `<script>window.MENU_TECH_STATE = ${JSON.stringify(pageData)};<\/script>`;
+            html = html.replace('</head>', `${scriptInject}\n</head>`);
+
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html';
+            a.click();
+        };
+
         // Initialize immediately as modules are deferred by default
         (async function init() {
             try {
@@ -638,7 +752,7 @@
         function renderOwners(owners) {
             const list = document.getElementById('client-list');
             list.innerHTML = owners.map(o => `
-                <div class="client-item ${o.id === activeOwnerId ? 'active' : ''}" onclick="switchContext('${o.id}', '${o.username || o.domain || 'Client'}')">
+                <div class="client-item ${o.id === activeOwnerId ? 'active' : ''}" onclick="window.switchContext('${o.id}', '${o.username || o.domain || 'Client'}')">
                     <div class="avatar">${(o.username || 'C').charAt(0).toUpperCase()}</div>
                     <div class="client-info">
                         <span class="client-name">${o.username || 'No name'}</span>
@@ -648,15 +762,15 @@
             `).join('');
         }
 
-        window.switchContext = async (ownerId, name) => {
+        window.switchContext = async function(ownerId, name) {
             activeOwnerId = ownerId;
             document.getElementById('current-account-name').value = name;
-            toggleContextSidebar();
+            window.toggleContextSidebar();
             renderOwners(allOwners);
             await loadTemplate(activeOwnerId);
         };
 
-        window.toggleContextSidebar = () => {
+        window.toggleContextSidebar = function() {
             const isActive = document.getElementById('context-sidebar').classList.toggle('active');
             document.getElementById('context-overlay').classList.toggle('active');
 
@@ -666,6 +780,12 @@
         };
 
         async function loadTemplate(ownerId) {
+            // Optimization: Reset state before loading to prevent UI leaks between accounts
+            pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            pageData.title = document.getElementById('current-account-name').value;
+            syncForm();
+            window.updateIframe();
+
             const { data, error } = await sb.from('menutech_web_templates')
                 .select('*')
                 .eq('user_id', ownerId)
@@ -674,31 +794,12 @@
             if (data) {
                 pageData = data.config;
             } else {
-                pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                // Keep the reset state + account name if no template exists
                 pageData.title = document.getElementById('current-account-name').value;
             }
 
             syncForm();
             window.updateIframe();
-        }
-
-        async function saveTemplate() {
-            const t = TRANSLATIONS[pageData.lang];
-            showSaveStatus(t.saving);
-            const { error } = await sb.from('menutech_web_templates')
-                .upsert({
-                    user_id: activeOwnerId,
-                    config: pageData,
-                    updated_at: new Date()
-                }, { onConflict: 'user_id' });
-
-            if (error) {
-                console.error("Save error", error);
-                showSaveStatus(t.errorSaving, true);
-            } else {
-                showSaveStatus(t.saved);
-                setTimeout(() => hideSaveStatus(), 2000);
-            }
         }
 
         function showSaveStatus(text, isError = false) {
@@ -784,41 +885,6 @@
             }
         }
 
-        window.setLang = (lang) => {
-            console.log("MT: Setting language to", lang);
-            pageData.lang = lang;
-            applyEditorLanguage(lang);
-            window.updateIframe();
-        };
-
-        window.setPreviewMode = (mode) => {
-            const wrapper = document.querySelector('.preview-frame-wrapper');
-            const dBtn = document.getElementById('preview-desktop-btn');
-            const mBtn = document.getElementById('preview-mobile-btn');
-            const label = document.getElementById('preview-mode-label');
-            const t = TRANSLATIONS[pageData.lang];
-
-            if (mode === 'mobile') {
-                wrapper.classList.add('mobile');
-                mBtn.classList.add('active');
-                mBtn.style.background = 'var(--orange)';
-                mBtn.style.color = '#fff';
-                dBtn.classList.remove('active');
-                dBtn.style.background = 'var(--input)';
-                dBtn.style.color = 'var(--text)';
-                label.innerText = t.mobilePreview;
-            } else {
-                wrapper.classList.remove('mobile');
-                dBtn.classList.add('active');
-                dBtn.style.background = 'var(--orange)';
-                dBtn.style.color = '#fff';
-                mBtn.classList.remove('active');
-                mBtn.style.background = 'var(--input)';
-                mBtn.style.color = 'var(--text)';
-                label.innerText = t.desktopPreview;
-            }
-        };
-
         function syncForm() {
             applyEditorLanguage(pageData.lang);
             document.getElementById('site-title').value = pageData.title || '';
@@ -856,7 +922,7 @@
             container.innerHTML = pageData.gallery.map((img, index) => `
                 <div class="gallery-item">
                     <img src="${img}">
-                    <button class="remove-btn" onclick="removeGalleryItem(${index})">×</button>
+                    <button class="remove-btn" onclick="window.removeGalleryItem(${index})">×</button>
                 </div>
             `).join('');
         }
@@ -865,54 +931,20 @@
             const container = document.getElementById('social-list');
             container.innerHTML = pageData.socials.map((s, index) => `
                 <div class="social-item">
-                    <select class="input-field" style="margin-bottom:0; flex: 1;" onchange="updateSocial(${index}, 'platform', this.value)">
+                    <select class="input-field" style="margin-bottom:0; flex: 1;" onchange="window.updateSocial(${index}, 'platform', this.value)">
                         <option value="instagram" ${s.platform === 'instagram' ? 'selected' : ''}>Instagram</option>
                         <option value="facebook" ${s.platform === 'facebook' ? 'selected' : ''}>Facebook</option>
                         <option value="whatsapp" ${s.platform === 'whatsapp' ? 'selected' : ''}>WhatsApp</option>
                         <option value="twitter" ${s.platform === 'twitter' ? 'selected' : ''}>Twitter</option>
                     </select>
-                    <input type="text" class="input-field" style="margin-bottom:0; flex: 2;" value="${s.url}" oninput="updateSocial(${index}, 'url', this.value)" placeholder="URL">
-                    <button class="btn-icon" onclick="removeSocial(${index})">
+                    <input type="text" class="input-field" style="margin-bottom:0; flex: 2;" value="${s.url}" oninput="window.updateSocial(${index}, 'url', this.value)" placeholder="URL">
+                    <button class="btn-icon" onclick="window.removeSocial(${index})">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px; height:18px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                     </button>
                 </div>
             `).join('');
         }
 
-        window.updateContent = () => {
-            pageData.title = document.getElementById('site-title').value;
-            pageData.contact.phone = document.getElementById('contact-phone').value;
-            pageData.contact.address = document.getElementById('contact-address').value;
-            pageData.contact.hours = document.getElementById('contact-hours').value;
-            window.updateIframe();
-        };
-
-        window.updateSocial = (index, field, value) => {
-            pageData.socials[index][field] = value;
-            window.updateIframe();
-        };
-
-        window.addSocial = () => {
-            pageData.socials.push({ platform: 'instagram', url: '' });
-            renderSocials();
-            window.updateIframe();
-        };
-
-        window.removeSocial = (index) => {
-            pageData.socials.splice(index, 1);
-            renderSocials();
-            window.updateIframe();
-        };
-
-        window.removeGalleryItem = (index) => {
-            pageData.gallery.splice(index, 1);
-            renderGallery();
-            window.updateIframe();
-        };
-
-        window.handleImageUpload = (event, type) => {
-            handleFiles(event.target.files, type);
-        };
 
         async function handleFiles(files, type) {
             if (!files.length) return;
@@ -959,31 +991,6 @@
             }
         };
 
-        window.updateIframe = () => {
-            const iframe = document.getElementById('preview-iframe');
-            if (iframe && iframe.contentWindow) {
-                iframe.contentWindow.postMessage({ type: 'UPDATE_CONTENT', data: pageData }, '*');
-            }
-        };
-
-        window.exportHTML = async () => {
-            const res = await fetch('templateMenutech.html');
-            let html = await res.text();
-
-            // Prepare Export State as JSON to embed in the exported file
-            const exportState = JSON.stringify(pageData);
-
-            // Inject the state into the exported HTML so it can initialize itself
-            const scriptInject = `<script>window.MENU_TECH_STATE = ${exportState};<\/script>`;
-            html = html.replace('</head>', `${scriptInject}\n</head>`);
-
-            const blob = new Blob([html], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'index.html';
-            a.click();
-        };
     </script>
 </body>
 </html>
