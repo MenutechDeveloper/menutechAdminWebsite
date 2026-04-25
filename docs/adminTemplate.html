@@ -161,6 +161,43 @@
         .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255,149,51,0.4); }
 
         .hidden { display: none !important; }
+
+        /* Context Sidebar */
+        .context-sidebar {
+            position: fixed; left: 0; top: 0; bottom: 0; width: 340px;
+            background: var(--card); border-right: 1px solid var(--border);
+            z-index: 200; transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column;
+        }
+        .context-sidebar.active { transform: translateX(0); }
+        .context-header { padding: 25px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .context-search { padding: 15px 25px; border-bottom: 1px solid var(--border); }
+        .client-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .client-item {
+            padding: 12px 15px; border-radius: 10px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; gap: 12px; margin-bottom: 5px;
+        }
+        .client-item:hover { background: var(--input); }
+        .client-item.active { background: rgba(255,149,51,0.1); border: 1px solid var(--orange); }
+        .client-item .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--orange); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; }
+        .client-info { display: flex; flex-direction: column; }
+        .client-name { font-size: 0.85rem; font-weight: 700; }
+        .client-domain { font-size: 0.7rem; color: var(--text-dim); }
+
+        .context-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px);
+            z-index: 190; display: none;
+        }
+        .context-overlay.active { display: block; }
+
+        #save-status {
+            position: fixed; bottom: 30px; left: 30px; padding: 10px 20px;
+            background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+            font-size: 0.75rem; font-weight: 700; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            display: flex; align-items: center; gap: 10px; transition: 0.3s;
+            z-index: 100; opacity: 0; pointer-events: none;
+        }
+        #save-status.active { opacity: 1; transform: translateY(-5px); }
     </style>
 </head>
 <body>
@@ -172,17 +209,49 @@
         <p>Cargando editor web...</p>
     </div>
 
+    <!-- Context Selector for Admins -->
+    <div class="context-overlay" id="context-overlay" onclick="toggleContextSidebar()"></div>
+    <aside class="context-sidebar" id="context-sidebar">
+        <div class="context-header">
+            <h3 style="font-family: 'Outfit'; font-size: 1rem;">Select Client</h3>
+            <button class="btn-icon" style="background:none; color: var(--text);" onclick="toggleContextSidebar()">×</button>
+        </div>
+        <div class="context-search">
+            <input type="text" id="client-search" class="input-field" style="margin-bottom:0;" placeholder="Search by name or domain...">
+        </div>
+        <div class="client-list" id="client-list">
+            <!-- Clients will be listed here -->
+        </div>
+    </aside>
+
+    <div id="save-status">
+        <div class="loader-ring" style="width:14px; height:14px; border-width:2px; margin:0;"></div>
+        <span id="save-status-text">Saving changes...</span>
+    </div>
+
     <div class="editor-layout">
         <!-- Sidebar Controls -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <img src="https://menutech.services/assets/img/logomt.png" class="logo-mt" alt="Menutech">
-                <button class="btn" style="padding: 10px;" onclick="location.href='index.html'">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px; height:20px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn" style="padding: 10px; background: var(--input); border: 1px solid var(--border);" onclick="location.href='index.html'">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px; height:18px; color: var(--text);"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    </button>
+                </div>
             </div>
 
             <div class="sidebar-content">
+                <div class="control-group" id="admin-context-group" style="display:none;">
+                    <label>Editing Account</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="current-account-name" class="input-field" style="margin-bottom:0; flex:1;" value="Your Store" readonly>
+                        <button class="btn" style="padding: 0 12px; height: 44px; background: var(--input); border: 1px solid var(--border);" onclick="toggleContextSidebar()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px; height:18px; color: var(--text);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </button>
+                    </div>
+                </div>
+
                 <div class="control-group">
                     <label>General Settings</label>
                     <div class="switch-container">
@@ -245,15 +314,24 @@
             </div>
 
             <div class="floating-actions">
-                <button class="btn btn-primary" onclick="exportHTML()">Export HTML</button>
+                <button class="btn btn-primary" id="btn-export" onclick="exportHTML()">Export HTML</button>
             </div>
         </main>
     </div>
 
     <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
         import { MT_CONFIG } from './config.js';
 
-        let pageData = {
+        const sb = createClient(MT_CONFIG.SUPABASE_URL, MT_CONFIG.SUPABASE_ANON_KEY);
+
+        let user = null;
+        let userRole = 'owner';
+        let activeOwnerId = null;
+        let allOwners = [];
+        let saveTimeout = null;
+
+        const DEFAULT_DATA = {
             lang: 'es',
             heroImg: 'https://ext.same-assets.com/3590151290/922045752.jpeg',
             gallery: [
@@ -271,18 +349,133 @@
             ]
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initial render of form
-            syncForm();
+        let pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+
+        document.addEventListener('DOMContentLoaded', async () => {
             initDragAndDrop();
+            await checkSession();
 
             setTimeout(() => {
                 const overlay = document.getElementById('loading-overlay');
                 overlay.style.opacity = '0';
                 setTimeout(() => overlay.classList.add('hidden'), 800);
-                updateIframe();
-            }, 2000);
+            }, 1500);
         });
+
+        async function checkSession() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { location.href = "index.html"; return; }
+            user = session.user;
+
+            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            userRole = profile?.role || 'owner';
+            activeOwnerId = user.id;
+
+            if (userRole === 'admin' || userRole === 'developer' || userRole === 'adminCS' || userRole === 'CS') {
+                document.getElementById('admin-context-group').style.display = 'block';
+                setupContextSwitcher();
+            } else {
+                document.getElementById('btn-export').classList.add('hidden');
+            }
+
+            await loadTemplate(activeOwnerId);
+        }
+
+        async function setupContextSwitcher() {
+            const { data } = await sb.from('profiles').select('*');
+            allOwners = data || [];
+            renderOwners(allOwners);
+
+            document.getElementById('client-search').oninput = (e) => {
+                const term = e.target.value.toLowerCase();
+                renderOwners(allOwners.filter(o =>
+                    (o.username || '').toLowerCase().includes(term) ||
+                    (o.domain || '').toLowerCase().includes(term)
+                ));
+            };
+        }
+
+        function renderOwners(owners) {
+            const list = document.getElementById('client-list');
+            list.innerHTML = owners.map(o => `
+                <div class="client-item ${o.id === activeOwnerId ? 'active' : ''}" onclick="switchContext('${o.id}', '${o.username || o.domain || 'Client'}')">
+                    <div class="avatar">${(o.username || 'C').charAt(0).toUpperCase()}</div>
+                    <div class="client-info">
+                        <span class="client-name">${o.username || 'No name'}</span>
+                        <span class="client-domain">${o.domain || ''}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.switchContext = async (ownerId, name) => {
+            activeOwnerId = ownerId;
+            document.getElementById('current-account-name').value = name;
+            toggleContextSidebar();
+            renderOwners(allOwners);
+            await loadTemplate(activeOwnerId);
+        };
+
+        window.toggleContextSidebar = () => {
+            document.getElementById('context-sidebar').classList.toggle('active');
+            document.getElementById('context-overlay').classList.toggle('active');
+        };
+
+        async function loadTemplate(ownerId) {
+            const { data, error } = await sb.from('menutech_web_templates')
+                .select('*')
+                .eq('user_id', ownerId)
+                .single();
+
+            if (data) {
+                pageData = data.config;
+            } else {
+                pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            }
+
+            syncForm();
+            updateIframe();
+        }
+
+        async function saveTemplate() {
+            showSaveStatus('Saving changes...');
+            const { error } = await sb.from('menutech_web_templates')
+                .upsert({
+                    user_id: activeOwnerId,
+                    config: pageData,
+                    updated_at: new Date()
+                }, { onConflict: 'user_id' });
+
+            if (error) {
+                console.error("Save error", error);
+                showSaveStatus('Error saving', true);
+            } else {
+                showSaveStatus('Changes saved');
+                setTimeout(() => hideSaveStatus(), 2000);
+            }
+        }
+
+        function showSaveStatus(text, isError = false) {
+            const status = document.getElementById('save-status');
+            const statusText = document.getElementById('save-status-text');
+            const loader = status.querySelector('.loader-ring');
+
+            statusText.innerText = text;
+            status.style.borderColor = isError ? 'var(--error)' : 'var(--border)';
+            loader.style.display = isError ? 'none' : 'block';
+            status.classList.add('active');
+        }
+
+        function hideSaveStatus() {
+            document.getElementById('save-status').classList.remove('active');
+        }
+
+        function triggerAutoSave() {
+            if (saveTimeout) clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                saveTemplate();
+            }, 1500);
+        }
 
         function initDragAndDrop() {
             const zones = [
@@ -306,13 +499,14 @@
         }
 
         function syncForm() {
+            document.getElementById('lang-toggle').checked = (pageData.lang === 'en');
             document.getElementById('hero-preview').src = pageData.heroImg;
             document.getElementById('hero-preview').classList.remove('hidden');
             document.getElementById('hero-placeholder').classList.add('hidden');
 
-            document.getElementById('contact-phone').value = pageData.contact.phone;
-            document.getElementById('contact-address').value = pageData.contact.address;
-            document.getElementById('contact-hours').value = pageData.contact.hours;
+            document.getElementById('contact-phone').value = pageData.contact.phone || '';
+            document.getElementById('contact-address').value = pageData.contact.address || '';
+            document.getElementById('contact-hours').value = pageData.contact.hours || '';
 
             renderGallery();
             renderSocials();
@@ -352,29 +546,34 @@
             pageData.contact.address = document.getElementById('contact-address').value;
             pageData.contact.hours = document.getElementById('contact-hours').value;
             updateIframe();
+            triggerAutoSave();
         };
 
         window.updateSocial = (index, field, value) => {
             pageData.socials[index][field] = value;
             updateIframe();
+            triggerAutoSave();
         };
 
         window.addSocial = () => {
             pageData.socials.push({ platform: 'instagram', url: '' });
             renderSocials();
             updateIframe();
+            triggerAutoSave();
         };
 
         window.removeSocial = (index) => {
             pageData.socials.splice(index, 1);
             renderSocials();
             updateIframe();
+            triggerAutoSave();
         };
 
         window.removeGalleryItem = (index) => {
             pageData.gallery.splice(index, 1);
             renderGallery();
             updateIframe();
+            triggerAutoSave();
         };
 
         window.handleImageUpload = (event, type) => {
@@ -403,6 +602,7 @@
                         renderGallery();
                     }
                     updateIframe();
+                    triggerAutoSave();
                 } catch (e) {
                     console.error("Upload error", e);
                 }
