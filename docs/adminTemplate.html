@@ -250,18 +250,18 @@
 
     <script>
         // Global hideLoading to ensure it's accessible from safety timeout
-        function hideLoading() {
+        window.hideLoading = function() {
             const overlay = document.getElementById('loading-overlay');
-            if (overlay && !overlay.classList.contains('hidden')) {
-                overlay.style.opacity = '0';
-                setTimeout(() => {
-                    overlay.classList.add('hidden');
-                    console.log("Editor displayed (loading hidden)");
-                }, 500);
+            if (overlay) {
+                overlay.style.display = 'none';
+                overlay.classList.add('hidden');
+                console.log("Editor displayed (loading hidden)");
             }
-        }
+        };
         // Safety timeout: guaranteed hide at 2s regardless of module state
-        setTimeout(hideLoading, 2000);
+        setTimeout(() => {
+            if (window.hideLoading) window.hideLoading();
+        }, 2000);
     </script>
 
     <div class="editor-layout">
@@ -388,18 +388,16 @@
 
         // Initialize immediately as modules are deferred by default
         (async function init() {
-            initDragAndDrop();
-
             try {
+                initDragAndDrop();
                 await checkSession();
             } catch (e) {
                 console.error("Initialization error", e);
             } finally {
                 // Ensure editor is shown even on error
-                hideLoading();
+                if (window.hideLoading) window.hideLoading();
             }
         })();
-        window.hideLoading = hideLoading;
 
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
@@ -418,7 +416,7 @@
 
             if (userRole === 'admin' || userRole === 'developer' || userRole === 'adminCS' || userRole === 'CS') {
                 document.getElementById('admin-context-group').style.display = 'block';
-                setupContextSwitcher();
+                // setupContextSwitcher is now lazy-loaded on first open
             } else {
                 document.getElementById('btn-export').classList.add('hidden');
             }
@@ -433,19 +431,30 @@
             updateIframe();
         }
 
+        let contextInitialized = false;
         async function setupContextSwitcher() {
-            // Optimization: Select only required columns
-            const { data } = await sb.from('profiles').select('id, username, domain');
-            allOwners = data || [];
-            renderOwners(allOwners);
+            if (contextInitialized) return;
 
-            document.getElementById('client-search').oninput = (e) => {
-                const term = e.target.value.toLowerCase();
-                renderOwners(allOwners.filter(o =>
-                    (o.username || '').toLowerCase().includes(term) ||
-                    (o.domain || '').toLowerCase().includes(term)
-                ));
-            };
+            const list = document.getElementById('client-list');
+            list.innerHTML = '<div style="padding: 20px; text-align: center; font-size: 0.8rem; color: var(--text-dim);">Loading clients...</div>';
+
+            try {
+                // Optimization: Select only required columns
+                const { data } = await sb.from('profiles').select('id, username, domain');
+                allOwners = data || [];
+                renderOwners(allOwners);
+
+                document.getElementById('client-search').oninput = (e) => {
+                    const term = e.target.value.toLowerCase();
+                    renderOwners(allOwners.filter(o =>
+                        (o.username || '').toLowerCase().includes(term) ||
+                        (o.domain || '').toLowerCase().includes(term)
+                    ));
+                };
+                contextInitialized = true;
+            } catch (e) {
+                list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--error);">Error loading clients</div>';
+            }
         }
 
         function renderOwners(owners) {
@@ -470,8 +479,12 @@
         };
 
         window.toggleContextSidebar = () => {
-            document.getElementById('context-sidebar').classList.toggle('active');
+            const isActive = document.getElementById('context-sidebar').classList.toggle('active');
             document.getElementById('context-overlay').classList.toggle('active');
+
+            if (isActive) {
+                setupContextSwitcher();
+            }
         };
 
         async function loadTemplate(ownerId) {
