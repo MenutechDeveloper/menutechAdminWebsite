@@ -156,12 +156,18 @@
         .preview-area { flex: 1; background: #f0f0f0; position: relative; display: flex; flex-direction: column; }
         .preview-toolbar {
             height: 60px; background: var(--card); border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: center; gap: 20px; padding: 0 20px;
+            display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 30px;
         }
         .preview-container { flex: 1; padding: 40px; display: flex; align-items: center; justify-content: center; }
         .preview-frame-wrapper {
             width: 100%; height: 100%; background: #fff; border-radius: 12px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.1); overflow: hidden; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .preview-frame-wrapper.mobile {
+            width: 375px;
+            height: 667px;
+            margin: 0 auto;
         }
         iframe { width: 100%; height: 100%; border: none; }
 
@@ -319,6 +325,7 @@
 
                 <div class="control-group">
                     <label data-i18n="generalSettings">General Settings</label>
+                    <input type="text" id="site-title" class="input-field" placeholder="Site Title" data-i18n-placeholder="titlePlaceholder" oninput="updateContent()">
                     <div class="lang-switch">
                         <button id="lang-en-btn" class="lang-option active" onclick="window.setLang('en')">EN</button>
                         <button id="lang-es-btn" class="lang-option" onclick="window.setLang('es')">ES</button>
@@ -367,7 +374,11 @@
         <!-- Preview Area -->
         <main class="preview-area">
             <div class="preview-toolbar">
-                <span style="font-weight: 700; font-size: 0.8rem; color: var(--text-dim);" data-i18n="desktopPreview">DESKTOP PREVIEW</span>
+                <div style="display: flex; gap: 10px;">
+                    <button id="preview-desktop-btn" class="btn active" style="padding: 8px 16px; font-size: 0.7rem; background: var(--orange); color: #fff;" onclick="window.setPreviewMode('desktop')" data-i18n="desktopPreview">Desktop</button>
+                    <button id="preview-mobile-btn" class="btn" style="padding: 8px 16px; font-size: 0.7rem; background: var(--input); color: var(--text); border: 1px solid var(--border);" onclick="window.setPreviewMode('mobile')" data-i18n="mobilePreview">Mobile</button>
+                </div>
+                <span id="preview-mode-label" style="font-weight: 700; font-size: 0.8rem; color: var(--text-dim);" data-i18n="desktopPreview">DESKTOP PREVIEW</span>
             </div>
             <div class="preview-container">
                 <div class="preview-frame-wrapper">
@@ -376,6 +387,7 @@
             </div>
 
             <div class="floating-actions">
+                <button class="btn btn-primary" style="background: var(--success); box-shadow: 0 8px 20px rgba(5, 150, 105, 0.2);" onclick="saveTemplate()" data-i18n="saveBtn">Save Changes</button>
                 <button class="btn btn-primary" id="btn-export" onclick="exportHTML()" data-i18n="exportBtn">Export HTML</button>
             </div>
         </main>
@@ -413,7 +425,11 @@
                 addSocial: "+ Add Social Link",
                 loading: "Loading web editor...",
                 exportBtn: "Export HTML",
-                desktopPreview: "DESKTOP PREVIEW"
+                desktopPreview: "DESKTOP PREVIEW",
+                mobilePreview: "MOBILE PREVIEW",
+                siteTitle: "Site Title",
+                titlePlaceholder: "Enter Site Name",
+                saveBtn: "SAVE CHANGES"
             },
             es: {
                 saving: "Guardando cambios...",
@@ -433,12 +449,17 @@
                 addSocial: "+ Agregar Enlace Social",
                 loading: "Cargando editor web...",
                 exportBtn: "Exportar HTML",
-                desktopPreview: "VISTA PREVIA ESCRITORIO"
+                desktopPreview: "VISTA PREVIA ESCRITORIO",
+                mobilePreview: "VISTA PREVIA MÓVIL",
+                siteTitle: "Título del Sitio",
+                titlePlaceholder: "Nombre de tu negocio",
+                saveBtn: "GUARDAR CAMBIOS"
             }
         };
 
         const DEFAULT_DATA = {
             lang: 'en',
+            title: 'Template Menutech',
             heroImg: 'https://ext.same-assets.com/3590151290/922045752.jpeg',
             gallery: [
                 'https://ext.same-assets.com/3590151290/3587577499.jpeg',
@@ -478,12 +499,16 @@
 
             // Optimization: Fetch profile and template in parallel
             const [profileRes, templateRes] = await Promise.all([
-                sb.from('profiles').select('role').eq('id', user.id).single(),
+                sb.from('profiles').select('role, username, domain').eq('id', user.id).single(),
                 sb.from('menutech_web_templates').select('config').eq('user_id', user.id).single()
             ]);
 
             const profile = profileRes.data;
             userRole = profile?.role || 'owner';
+
+            if (profile) {
+                document.getElementById('current-account-name').value = profile.username || profile.domain || 'Your Store';
+            }
 
             if (userRole === 'admin' || userRole === 'developer' || userRole === 'adminCS' || userRole === 'CS') {
                 document.getElementById('admin-context-group').style.display = 'block';
@@ -496,6 +521,7 @@
                 pageData = templateRes.data.config;
             } else {
                 pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                pageData.title = document.getElementById('current-account-name').value;
             }
 
             syncForm();
@@ -568,6 +594,7 @@
                 pageData = data.config;
             } else {
                 pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                pageData.title = document.getElementById('current-account-name').value;
             }
 
             syncForm();
@@ -608,12 +635,6 @@
             document.getElementById('save-status').classList.remove('active');
         }
 
-        function triggerAutoSave() {
-            if (saveTimeout) clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                saveTemplate();
-            }, 1500);
-        }
 
         function initDragAndDrop() {
             const zones = [
@@ -673,11 +694,39 @@
             pageData.lang = lang;
             applyEditorLanguage(lang);
             window.updateIframe();
-            triggerAutoSave();
+        };
+
+        window.setPreviewMode = (mode) => {
+            const wrapper = document.querySelector('.preview-frame-wrapper');
+            const dBtn = document.getElementById('preview-desktop-btn');
+            const mBtn = document.getElementById('preview-mobile-btn');
+            const label = document.getElementById('preview-mode-label');
+            const t = TRANSLATIONS[pageData.lang];
+
+            if (mode === 'mobile') {
+                wrapper.classList.add('mobile');
+                mBtn.classList.add('active');
+                mBtn.style.background = 'var(--orange)';
+                mBtn.style.color = '#fff';
+                dBtn.classList.remove('active');
+                dBtn.style.background = 'var(--input)';
+                dBtn.style.color = 'var(--text)';
+                label.innerText = t.mobilePreview;
+            } else {
+                wrapper.classList.remove('mobile');
+                dBtn.classList.add('active');
+                dBtn.style.background = 'var(--orange)';
+                dBtn.style.color = '#fff';
+                mBtn.classList.remove('active');
+                mBtn.style.background = 'var(--input)';
+                mBtn.style.color = 'var(--text)';
+                label.innerText = t.desktopPreview;
+            }
         };
 
         function syncForm() {
             applyEditorLanguage(pageData.lang);
+            document.getElementById('site-title').value = pageData.title || '';
             document.getElementById('hero-preview').src = pageData.heroImg;
             document.getElementById('hero-preview').classList.remove('hidden');
             document.getElementById('hero-placeholder').classList.add('hidden');
@@ -719,38 +768,34 @@
         }
 
         window.updateContent = () => {
+            pageData.title = document.getElementById('site-title').value;
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
             pageData.contact.hours = document.getElementById('contact-hours').value;
             window.updateIframe();
-            triggerAutoSave();
         };
 
         window.updateSocial = (index, field, value) => {
             pageData.socials[index][field] = value;
             window.updateIframe();
-            triggerAutoSave();
         };
 
         window.addSocial = () => {
             pageData.socials.push({ platform: 'instagram', url: '' });
             renderSocials();
             window.updateIframe();
-            triggerAutoSave();
         };
 
         window.removeSocial = (index) => {
             pageData.socials.splice(index, 1);
             renderSocials();
             window.updateIframe();
-            triggerAutoSave();
         };
 
         window.removeGalleryItem = (index) => {
             pageData.gallery.splice(index, 1);
             renderGallery();
             window.updateIframe();
-            triggerAutoSave();
         };
 
         window.handleImageUpload = (event, type) => {
@@ -780,7 +825,6 @@
                             renderGallery();
                         }
                         window.updateIframe();
-                        triggerAutoSave();
                     }
                 } catch (e) {
                     console.error("Upload error", e);
