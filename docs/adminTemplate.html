@@ -373,13 +373,19 @@
         document.addEventListener('DOMContentLoaded', async () => {
             initDragAndDrop();
 
-            // Safety timeout to ensure the overlay disappears even if session check hangs
-            const safetyTimeout = setTimeout(hideLoading, 4000);
+            const start = Date.now();
+
+            // Safety timeout: guaranteed hide at 2.5s regardless of session state
+            const safetyTimeout = setTimeout(hideLoading, 2500);
 
             try {
                 await checkSession();
+                const elapsed = Date.now() - start;
+                // We want to show the animation for at least 1.8 seconds because it's "espectacular"
+                const remaining = Math.max(0, 1800 - elapsed);
+
                 clearTimeout(safetyTimeout);
-                setTimeout(hideLoading, 300);
+                setTimeout(hideLoading, remaining);
             } catch (e) {
                 console.error("Initialization error", e);
                 hideLoading();
