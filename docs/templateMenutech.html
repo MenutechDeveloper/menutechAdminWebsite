@@ -922,12 +922,28 @@ a {
 
             // Paragraphs
             if (data.paragraphs) {
-                Object.keys(data.paragraphs).forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) {
-                        const content = data.paragraphs[id];
-                        el.textContent = content;
-                        el.style.display = content.trim() === "" ? "none" : "";
+                // Section to elements mapping
+                const sectionMap = {
+                    about: ['about-p1', 'about-p2', 'about-p3'],
+                    promo: ['promo1-p1', 'promo1-p2', 'promo1-p3', 'promo1-p4', 'promo2-p1', 'promo2-p2', 'promo3-p1'],
+                    catering: ['catering-p1', 'catering-p2'],
+                    delivery: ['delivery-p1', 'delivery-p2', 'delivery-p3']
+                };
+
+                Object.keys(data.paragraphs).forEach(sectionKey => {
+                    const content = data.paragraphs[sectionKey] || "";
+                    const segments = content.split('\n\n');
+                    const elementIds = sectionMap[sectionKey];
+
+                    if (elementIds) {
+                        elementIds.forEach((id, index) => {
+                            const el = document.getElementById(id);
+                            if (el) {
+                                const segment = segments[index] || "";
+                                el.textContent = segment;
+                                el.style.display = segment.trim() === "" ? "none" : "";
+                            }
+                        });
                     }
                 });
             }
