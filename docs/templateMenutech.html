@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
     <style>
         /* Reset and Base Styles */
 *,
@@ -186,6 +187,13 @@ a {
     gap: 15px;
     justify-content: center;
     flex-wrap: wrap;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.hero-buttons > * {
+    flex: 1;
+    min-width: 250px;
 }
 
 .btn {
@@ -656,8 +664,8 @@ a {
             </h2>
             <h1 class="hero-title" id="hero-title">Template Menutech</h1>
             <div class="hero-buttons">
-                <a href="#" class="btn btn-outline" data-es="Reservar Mesa" data-en="Table Reservation">Table Reservation</a>
-                <a href="#" class="btn btn-filled" data-es="Ver Menú" data-en="See MENU & Order">See MENU & Order</a>
+                <menutech-reservations id="glf-res"></menutech-reservations>
+                <menutech-orders id="glf-orders"></menutech-orders>
             </div>
         </div>
     </header>
@@ -878,6 +886,30 @@ a {
             // Hero
             if (data.heroImg) {
                 document.getElementById('hero-section').style.backgroundImage = `url('${data.heroImg}')`;
+            }
+
+            // GloriaFood
+            if (data.gloriafood) {
+                const oBtn = document.getElementById('glf-orders');
+                const rBtn = document.getElementById('glf-res');
+                const lang = data.lang || 'es';
+
+                if (oBtn) {
+                    oBtn.setAttribute('cuid', data.gloriafood.cuid || '');
+                    oBtn.setAttribute('ruid', data.gloriafood.ruid || '');
+                    oBtn.setAttribute('background', data.gloriafood.order_bg || '#f2a04a');
+                    oBtn.setAttribute('color', data.gloriafood.order_txt || '#ffffff');
+                    oBtn.setAttribute('label', lang === 'es' ? 'ORDENAR AHORA' : 'ORDER NOW');
+                }
+
+                if (rBtn) {
+                    rBtn.style.display = data.gloriafood.has_res ? 'block' : 'none';
+                    rBtn.setAttribute('cuid', data.gloriafood.cuid || '');
+                    rBtn.setAttribute('ruid', data.gloriafood.ruid || '');
+                    rBtn.setAttribute('background', data.gloriafood.res_bg || '#2f4854');
+                    rBtn.setAttribute('color', data.gloriafood.res_txt || '#ffffff');
+                    rBtn.setAttribute('label', lang === 'es' ? 'RESERVAR MESA' : 'RESERVE A TABLE');
+                }
             }
 
             // Section Images
@@ -1106,5 +1138,6 @@ document.querySelectorAll('.btn').forEach(btn => {
 });
 
     </script>
+    <script src="menutechUI.js"></script>
 </body>
 </html>
