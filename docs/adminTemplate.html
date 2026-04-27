@@ -417,14 +417,25 @@
                         </div>
                         <input type="file" id="promo-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'promoBg')">
                     </div>
-                    <label data-i18n="promoParagraphs" style="margin-top: 15px;">Promo Paragraphs</label>
-                    <textarea id="promo1-p1" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
-                    <textarea id="promo1-p2" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
-                    <textarea id="promo1-p3" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
-                    <textarea id="promo1-p4" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
-                    <textarea id="promo2-p1" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
-                    <textarea id="promo2-p2" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
-                    <textarea id="promo3-p1" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
+
+                    <div style="margin-top: 15px; padding-left: 10px; border-left: 2px solid var(--orange);">
+                        <label data-i18n="promoCard1" style="font-size: 0.65rem; color: var(--text-dim);">Card 1 - Features</label>
+                        <textarea id="promo1-p1" class="input-field" style="min-height: 40px; font-size: 0.8rem;" oninput="window.updateContent()"></textarea>
+                        <textarea id="promo1-p2" class="input-field" style="min-height: 40px; font-size: 0.8rem;" oninput="window.updateContent()"></textarea>
+                        <textarea id="promo1-p3" class="input-field" style="min-height: 40px; font-size: 0.8rem;" oninput="window.updateContent()"></textarea>
+                        <textarea id="promo1-p4" class="input-field" style="min-height: 40px; font-size: 0.8rem;" oninput="window.updateContent()"></textarea>
+                    </div>
+
+                    <div style="margin-top: 15px; padding-left: 10px; border-left: 2px solid var(--orange);">
+                        <label data-i18n="promoCard2" style="font-size: 0.65rem; color: var(--text-dim);">Card 2 - Description</label>
+                        <textarea id="promo2-p1" class="input-field" style="min-height: 40px; font-size: 0.8rem;" oninput="window.updateContent()"></textarea>
+                        <textarea id="promo2-p2" class="input-field" style="min-height: 40px; font-size: 0.8rem;" oninput="window.updateContent()"></textarea>
+                    </div>
+
+                    <div style="margin-top: 15px; padding-left: 10px; border-left: 2px solid var(--orange);">
+                        <label data-i18n="promoCard3" style="font-size: 0.65rem; color: var(--text-dim);">Card 3 - Description</label>
+                        <textarea id="promo3-p1" class="input-field" style="min-height: 40px; font-size: 0.8rem;" oninput="window.updateContent()"></textarea>
+                    </div>
                 </div>
 
                 <div class="control-group">
@@ -558,6 +569,9 @@
                 saveBtn: "SAVE CHANGES",
                 aboutParagraphs: "About Paragraphs",
                 promoParagraphs: "Promo Paragraphs",
+                promoCard1: "Card 1 - Features",
+                promoCard2: "Card 2 - Description",
+                promoCard3: "Card 3 - Description",
                 cateringParagraphs: "Catering Paragraphs",
                 deliveryParagraphs: "Delivery Paragraphs"
             },
@@ -595,6 +609,9 @@
                 saveBtn: "GUARDAR CAMBIOS",
                 aboutParagraphs: "Párrafos Nosotros",
                 promoParagraphs: "Párrafos Promos",
+                promoCard1: "Tarjeta 1 - Características",
+                promoCard2: "Tarjeta 2 - Descripción",
+                promoCard3: "Tarjeta 3 - Descripción",
                 cateringParagraphs: "Párrafos Catering",
                 deliveryParagraphs: "Párrafos Delivery"
             }
@@ -729,6 +746,57 @@
                 iframe.contentWindow.postMessage({ type: 'UPDATE_CONTENT', data: pageData }, '*');
             }
         };
+
+        // Click-to-Locate Handler
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'SCROLL_TO') {
+                const templateId = event.data.id;
+                console.log("MT: Scroll to requested for template element:", templateId);
+
+                // Map template IDs to editor input IDs
+                const mapping = {
+                    'nav-brand': 'site-title',
+                    'hero-title': 'site-title',
+                    'hero-section': 'hero-drop-zone',
+                    'about-img-1': 'about1-drop-zone',
+                    'about-img-2': 'about2-drop-zone',
+                    'about-p1': 'about-p1',
+                    'about-p2': 'about-p2',
+                    'about-p3': 'about-p3',
+                    'promo-section': 'promo-drop-zone',
+                    'promo1-p1': 'promo1-p1', 'promo1-p2': 'promo1-p2', 'promo1-p3': 'promo1-p3', 'promo1-p4': 'promo1-p4',
+                    'promo2-p1': 'promo2-p1', 'promo2-p2': 'promo2-p2',
+                    'promo3-p1': 'promo3-p1',
+                    'gallery-container': 'gallery-drop-zone',
+                    'catering-section': 'catering-drop-zone',
+                    'catering-p1': 'catering-p1',
+                    'catering-p2': 'catering-p2',
+                    'delivery-image': 'delivery-drop-zone',
+                    'delivery-p1': 'delivery-p1',
+                    'delivery-p2': 'delivery-p2',
+                    'delivery-p3': 'delivery-p3',
+                    'footer-phone': 'contact-phone',
+                    'footer-address': 'contact-address',
+                    'footer-hours': 'contact-hours',
+                    'social-icons': 'social-list'
+                };
+
+                const editorId = mapping[templateId];
+                if (editorId) {
+                    const el = document.getElementById(editorId);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // Brief highlight
+                        el.style.transition = 'box-shadow 0.3s ease';
+                        el.style.boxShadow = '0 0 15px var(--orange)';
+                        setTimeout(() => {
+                            el.style.boxShadow = '';
+                        }, 1500);
+                        el.focus();
+                    }
+                }
+            }
+        });
 
         window.saveTemplate = async () => {
             console.log("MT: Triggering saveTemplate", pageData);
