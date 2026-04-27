@@ -484,6 +484,52 @@
                 </div>
 
                 <div class="control-group">
+                    <label data-i18n="gloriafoodSection">GloriaFood Integration</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <div>
+                            <label style="font-size: 0.65rem;" data-i18n="glfCuid">CUID</label>
+                            <input type="text" id="glf-cuid" class="input-field" style="margin-bottom:0;" oninput="window.updateContent()">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.65rem;" data-i18n="glfRuid">RUID</label>
+                            <input type="text" id="glf-ruid" class="input-field" style="margin-bottom:0;" oninput="window.updateContent()">
+                        </div>
+                    </div>
+
+                    <label style="font-size: 0.7rem; color: var(--orange);" data-i18n="orderBtnColors">Order Button Colors</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="color" id="glf-order-bg" style="width: 30px; height: 30px; border: none; border-radius: 4px; cursor: pointer;" oninput="window.updateContent()">
+                            <span style="font-size: 0.65rem;" data-i18n="bgLabel">Background</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="color" id="glf-order-txt" style="width: 30px; height: 30px; border: none; border-radius: 4px; cursor: pointer;" oninput="window.updateContent()">
+                            <span style="font-size: 0.65rem;" data-i18n="txtLabel">Text</span>
+                        </div>
+                    </div>
+
+                    <label style="font-size: 0.7rem; color: var(--orange);" data-i18n="resBtnColors">Reservation Button Colors</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="color" id="glf-res-bg" style="width: 30px; height: 30px; border: none; border-radius: 4px; cursor: pointer;" oninput="window.updateContent()">
+                            <span style="font-size: 0.65rem;" data-i18n="bgLabel">Background</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="color" id="glf-res-txt" style="width: 30px; height: 30px; border: none; border-radius: 4px; cursor: pointer;" oninput="window.updateContent()">
+                            <span style="font-size: 0.65rem;" data-i18n="txtLabel">Text</span>
+                        </div>
+                    </div>
+
+                    <div class="switch-container">
+                        <span style="font-size: 0.75rem; font-weight: 700;" data-i18n="enableRes">Enable Reservations</span>
+                        <label class="switch">
+                            <input type="checkbox" id="glf-has-res" onchange="window.updateContent()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="control-group">
                     <label data-i18n="contactInfo">Contact Info</label>
                     <input type="text" id="contact-phone" class="input-field" placeholder="Phone Number" data-i18n-placeholder="phonePlaceholder" oninput="window.updateContent()">
                     <input type="text" id="contact-address" class="input-field" placeholder="Address" data-i18n-placeholder="addressPlaceholder" oninput="window.updateContent()">
@@ -580,7 +626,15 @@
                 cateringParagraphs: "Catering Paragraphs",
                 deliveryParagraphs: "Delivery Paragraphs",
                 sectionTitle: "Section Title",
-                sectionSubtitle: "Section Subtitle"
+                sectionSubtitle: "Section Subtitle",
+                gloriafoodSection: "GloriaFood Integration",
+                glfCuid: "CUID (GloriaFood)",
+                glfRuid: "RUID (GloriaFood)",
+                orderBtnColors: "Order Button Colors",
+                resBtnColors: "Reservation Button Colors",
+                bgLabel: "Background",
+                txtLabel: "Text",
+                enableRes: "Enable Reservations"
             },
             es: {
                 saving: "Guardando cambios...",
@@ -622,7 +676,15 @@
                 cateringParagraphs: "Párrafos Catering",
                 deliveryParagraphs: "Párrafos Delivery",
                 sectionTitle: "Título de la Sección",
-                sectionSubtitle: "Subtítulo de la Sección"
+                sectionSubtitle: "Subtítulo de la Sección",
+                gloriafoodSection: "Integración GloriaFood",
+                glfCuid: "CUID (GloriaFood)",
+                glfRuid: "RUID (GloriaFood)",
+                orderBtnColors: "Colores Botón Órdenes",
+                resBtnColors: "Colores Botón Reservas",
+                bgLabel: "Fondo",
+                txtLabel: "Texto",
+                enableRes: "Activar Reservaciones"
             }
         };
 
@@ -639,6 +701,15 @@
                 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
                 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg'
             ],
+            gloriafood: {
+                cuid: '52230bb2-0d10-491a-80a6-3c5603e87152',
+                ruid: '010d211a-aff0-4aa2-b4d0-739fce78437a',
+                order_bg: '#f2a04a',
+                order_txt: '#ffffff',
+                res_bg: '#2f4854',
+                res_txt: '#ffffff',
+                has_res: true
+            },
             contact: {
                 phone: '(044) 359 0173',
                 address: '100 Tenth Avenue, New York City, NY 1001',
@@ -712,6 +783,16 @@
 
         window.updateContent = () => {
             pageData.title = document.getElementById('site-title').value;
+
+            if (!pageData.gloriafood) pageData.gloriafood = {};
+            pageData.gloriafood.cuid = document.getElementById('glf-cuid').value;
+            pageData.gloriafood.ruid = document.getElementById('glf-ruid').value;
+            pageData.gloriafood.order_bg = document.getElementById('glf-order-bg').value;
+            pageData.gloriafood.order_txt = document.getElementById('glf-order-txt').value;
+            pageData.gloriafood.res_bg = document.getElementById('glf-res-bg').value;
+            pageData.gloriafood.res_txt = document.getElementById('glf-res-txt').value;
+            pageData.gloriafood.has_res = document.getElementById('glf-has-res').checked;
+
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
             pageData.contact.hours = document.getElementById('contact-hours').value;
@@ -1116,6 +1197,16 @@
         function syncForm() {
             applyEditorLanguage(pageData.lang);
             document.getElementById('site-title').value = pageData.title || '';
+
+            if (pageData.gloriafood) {
+                document.getElementById('glf-cuid').value = pageData.gloriafood.cuid || '';
+                document.getElementById('glf-ruid').value = pageData.gloriafood.ruid || '';
+                document.getElementById('glf-order-bg').value = pageData.gloriafood.order_bg || '#f2a04a';
+                document.getElementById('glf-order-txt').value = pageData.gloriafood.order_txt || '#ffffff';
+                document.getElementById('glf-res-bg').value = pageData.gloriafood.res_bg || '#2f4854';
+                document.getElementById('glf-res-txt').value = pageData.gloriafood.res_txt || '#ffffff';
+                document.getElementById('glf-has-res').checked = pageData.gloriafood.has_res !== false;
+            }
 
             // Sync paragraphs
             if (pageData.paragraphs) {
