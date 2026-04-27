@@ -667,10 +667,10 @@ a {
         <div class="container">
             <div class="about-grid">
                 <div class="about-text">
-                    <h2 class="section-title">We are Pronto Mexican Food</h2>
+                    <h2 class="section-title" id="about-title">We are Pronto Mexican Food</h2>
                     <span class="section-subtitle-container">
                         <span class="line-small"></span>
-                        <span class="section-subtitle">About Us</span>
+                        <span class="section-subtitle" id="about-subtitle">About Us</span>
                     </span>
                     <p id="about-p1">At Restaurant Pronto, we take pride in bringing our guests vibrant and authentic Mexican cuisine, crafted with care and rich culinary tradition. Every dish we serve is full of bold flavors and prepared to deliver a memorable dining experience. We are confident you will leave satisfied.</p>
                     <p id="about-p2">The secret to our success is simple: creating exceptional meals using fresh, high-quality ingredients that capture the true essence of Mexican cooking in every bite.</p>
@@ -690,10 +690,10 @@ a {
         <div class="container">
             <div class="promo-grid">
                 <div class="promo-card">
-                    <h3 class="promo-title">Best Friends Deal</h3>
+                    <h3 class="promo-title" id="promo1-title">Best Friends Deal</h3>
                     <span class="promo-subtitle-container">
                         <span class="line-small"></span>
-                        <span class="promo-subtitle">Sharing Is Caring</span>
+                        <span class="promo-subtitle" id="promo1-subtitle">Sharing Is Caring</span>
                     </span>
                     <div class="promo-content">
                         <p id="promo1-p1">2 Medium Pizzas</p>
@@ -706,10 +706,10 @@ a {
                     </div>
                 </div>
                 <div class="promo-card">
-                    <h3 class="promo-title">Buy 1 Get 1 FREE</h3>
+                    <h3 class="promo-title" id="promo2-title">Buy 1 Get 1 FREE</h3>
                     <span class="promo-subtitle-container">
                         <span class="line-small"></span>
-                        <span class="promo-subtitle">This Week Only</span>
+                        <span class="promo-subtitle" id="promo2-subtitle">This Week Only</span>
                     </span>
                     <div class="promo-content">
                         <p id="promo2-p1">Hope you are hungry. Buy one regular priced pizza online and get a second pizza totally free!</p>
@@ -720,10 +720,10 @@ a {
                     </div>
                 </div>
                 <div class="promo-card">
-                    <h3 class="promo-title">Awesome Foursome</h3>
+                    <h3 class="promo-title" id="promo3-title">Awesome Foursome</h3>
                     <span class="promo-subtitle-container">
                         <span class="line-small"></span>
-                        <span class="promo-subtitle">Sundays Only</span>
+                        <span class="promo-subtitle" id="promo3-subtitle">Sundays Only</span>
                     </span>
                     <div class="promo-content">
                         <p id="promo3-p1">6 Delicious regular size pizzas to choose from: Margherita, Capricciosa, Prosciutto e Funghi, Diavola, Calzone, Primavera.</p>
@@ -739,10 +739,10 @@ a {
     <!-- Delicious Mexican Food Section -->
     <section class="gallery-section">
         <div class="container">
-            <h2 class="section-title centered" data-es="Deliciosa Comida Mexicana" data-en="Delicious Mexican Food">Delicious Mexican Food</h2>
+            <h2 class="section-title centered" id="gallery-title" data-es="Deliciosa Comida Mexicana" data-en="Delicious Mexican Food">Delicious Mexican Food</h2>
             <span class="section-subtitle-container centered">
                 <span class="line-small"></span>
-                <span class="section-subtitle" data-es="Amor al Primer Bocado" data-en="Love At First Bite">Love At First Bite</span>
+                <span class="section-subtitle" id="gallery-subtitle" data-es="Amor al Primer Bocado" data-en="Love At First Bite">Love At First Bite</span>
             </span>
             <style>
                 #gallery-container {
@@ -775,10 +775,10 @@ a {
         <div class="catering-overlay"></div>
         <div class="container">
             <div class="catering-box">
-                <h2 class="section-title centered">Catering</h2>
+                <h2 class="section-title centered" id="catering-title">Catering</h2>
                 <span class="section-subtitle-container centered">
                     <span class="line-small"></span>
-                    <span class="section-subtitle">Party Time</span>
+                    <span class="section-subtitle" id="catering-subtitle">Party Time</span>
                 </span>
                 <p id="catering-p1" class="catering-text">Restaurant Pronto can cater to any party or event irrespective of how big or small. We specialize in catering with personalised service and special menus on request. In our menu palette, you'll discover unique and sophisticated tastes - all of which will help you uncover the true greatness of the mexican restaurant.</p>
                 <p id="catering-p2" class="catering-text">Tell us about your event at office@pronto-wp.com</p>
@@ -791,10 +791,10 @@ a {
         <div class="container">
             <div class="delivery-grid">
                 <div class="delivery-text">
-                    <h2 class="section-title">Food Delivery in NY</h2>
+                    <h2 class="section-title" id="delivery-title">Food Delivery in NY</h2>
                     <span class="section-subtitle-container">
                         <span class="line-small"></span>
-                        <span class="section-subtitle">Get Served Like a King</span>
+                        <span class="section-subtitle" id="delivery-subtitle">Get Served Like a King</span>
                     </span>
                     <p id="delivery-p1">Looking for food delivery nearby? Not everybody knows or has the time to prepare tasty food.</p>
                     <p id="delivery-p2">When you want to get served like a king then food delivery from restaurant Pronto will be your best choice.</p>
@@ -918,6 +918,14 @@ a {
                         <img src="${img}" class="gallery-img">
                     `).join('');
                 }
+            }
+
+            // Titles
+            if (data.titles) {
+                Object.keys(data.titles).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = data.titles[id];
+                });
             }
 
             // Paragraphs
