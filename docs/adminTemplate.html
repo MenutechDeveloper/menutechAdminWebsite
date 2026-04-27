@@ -402,6 +402,10 @@
                             <input type="file" id="about2-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'aboutImg2')">
                         </div>
                     </div>
+                    <label data-i18n="aboutParagraphs" style="margin-top: 15px;">About Paragraphs</label>
+                    <textarea id="about-p1" class="input-field" style="min-height: 80px;" oninput="window.updateContent()"></textarea>
+                    <textarea id="about-p2" class="input-field" style="min-height: 80px;" oninput="window.updateContent()"></textarea>
+                    <textarea id="about-p3" class="input-field" style="min-height: 80px;" oninput="window.updateContent()"></textarea>
                 </div>
 
                 <div class="control-group">
@@ -413,6 +417,14 @@
                         </div>
                         <input type="file" id="promo-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'promoBg')">
                     </div>
+                    <label data-i18n="promoParagraphs" style="margin-top: 15px;">Promo Paragraphs</label>
+                    <textarea id="promo1-p1" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
+                    <textarea id="promo1-p2" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
+                    <textarea id="promo1-p3" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
+                    <textarea id="promo1-p4" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
+                    <textarea id="promo2-p1" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
+                    <textarea id="promo2-p2" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
+                    <textarea id="promo3-p1" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
                 </div>
 
                 <div class="control-group">
@@ -435,6 +447,9 @@
                         </div>
                         <input type="file" id="catering-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'cateringBg')">
                     </div>
+                    <label data-i18n="cateringParagraphs" style="margin-top: 15px;">Catering Paragraphs</label>
+                    <textarea id="catering-p1" class="input-field" style="min-height: 80px;" oninput="window.updateContent()"></textarea>
+                    <textarea id="catering-p2" class="input-field" style="min-height: 60px;" oninput="window.updateContent()"></textarea>
                 </div>
 
                 <div class="control-group">
@@ -446,6 +461,10 @@
                         </div>
                         <input type="file" id="delivery-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'deliveryImg')">
                     </div>
+                    <label data-i18n="deliveryParagraphs" style="margin-top: 15px;">Delivery Paragraphs</label>
+                    <textarea id="delivery-p1" class="input-field" style="min-height: 80px;" oninput="window.updateContent()"></textarea>
+                    <textarea id="delivery-p2" class="input-field" style="min-height: 80px;" oninput="window.updateContent()"></textarea>
+                    <textarea id="delivery-p3" class="input-field" style="min-height: 80px;" oninput="window.updateContent()"></textarea>
                 </div>
 
                 <div class="control-group">
@@ -485,7 +504,7 @@
             </div>
 
             <div class="floating-actions">
-                <button class="btn btn-primary" style="background: var(--success); box-shadow: 0 8px 20px rgba(5, 150, 105, 0.2);" onclick="window.saveTemplate()" data-i18n="saveBtn">Save Changes</button>
+                <button class="btn btn-primary" style="background: #333; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);" onclick="window.saveTemplate()" data-i18n="saveBtn">Save Changes</button>
                 <button class="btn btn-primary" id="btn-export" onclick="window.exportHTML()" data-i18n="exportBtn">Export HTML</button>
             </div>
         </main>
@@ -536,7 +555,11 @@
                 mobilePreview: "MOBILE PREVIEW",
                 siteTitle: "Site Title",
                 titlePlaceholder: "Enter Site Name",
-                saveBtn: "SAVE CHANGES"
+                saveBtn: "SAVE CHANGES",
+                aboutParagraphs: "About Paragraphs",
+                promoParagraphs: "Promo Paragraphs",
+                cateringParagraphs: "Catering Paragraphs",
+                deliveryParagraphs: "Delivery Paragraphs"
             },
             es: {
                 saving: "Guardando cambios...",
@@ -569,7 +592,11 @@
                 mobilePreview: "VISTA PREVIA MÓVIL",
                 siteTitle: "Título del Sitio",
                 titlePlaceholder: "Nombre de tu negocio",
-                saveBtn: "GUARDAR CAMBIOS"
+                saveBtn: "GUARDAR CAMBIOS",
+                aboutParagraphs: "Párrafos Nosotros",
+                promoParagraphs: "Párrafos Promos",
+                cateringParagraphs: "Párrafos Catering",
+                deliveryParagraphs: "Párrafos Delivery"
             }
         };
 
@@ -594,7 +621,24 @@
             socials: [
                 { platform: 'instagram', url: '#' },
                 { platform: 'facebook', url: '#' }
-            ]
+            ],
+            paragraphs: {
+                "about-p1": "At Restaurant Pronto, we take pride in bringing our guests vibrant and authentic Mexican cuisine, crafted with care and rich culinary tradition. Every dish we serve is full of bold flavors and prepared to deliver a memorable dining experience. We are confident you will leave satisfied.",
+                "about-p2": "The secret to our success is simple: creating exceptional meals using fresh, high-quality ingredients that capture the true essence of Mexican cooking in every bite.",
+                "about-p3": "Our mission is to help you savor the moments that truly matter. Enjoy great food. Sip on a refreshing drink. And above all, unwind and feel at home. We sincerely appreciate your continued support and trust",
+                "promo1-p1": "2 Medium Pizzas",
+                "promo1-p2": "Soft Drinks",
+                "promo1-p3": "Garlic Bread or Patato Wedges",
+                "promo1-p4": "Salad to share",
+                "promo2-p1": "Hope you are hungry. Buy one regular priced pizza online and get a second pizza totally free!",
+                "promo2-p2": "Online only!",
+                "promo3-p1": "6 Delicious regular size pizzas to choose from: Margherita, Capricciosa, Prosciutto e Funghi, Diavola, Calzone, Primavera.",
+                "catering-p1": "Restaurant Pronto can cater to any party or event irrespective of how big or small. We specialize in catering with personalised service and special menus on request. In our menu palette, you'll discover unique and sophisticated tastes - all of which will help you uncover the true greatness of the mexican restaurant.",
+                "catering-p2": "Tell us about your event at office@pronto-wp.com",
+                "delivery-p1": "Looking for food delivery nearby? Not everybody knows or has the time to prepare tasty food.",
+                "delivery-p2": "When you want to get served like a king then food delivery from restaurant Pronto will be your best choice.",
+                "delivery-p3": "Simply select \"Delivery\" at the checkout screen and we hope you'll appreciate our food delivery service."
+            }
         };
 
         let pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
@@ -640,6 +684,15 @@
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
             pageData.contact.hours = document.getElementById('contact-hours').value;
+
+            // Sync paragraphs
+            if (pageData.paragraphs) {
+                Object.keys(pageData.paragraphs).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) pageData.paragraphs[id] = el.value;
+                });
+            }
+
             window.updateIframe();
         };
 
@@ -834,6 +887,10 @@
 
             if (data) {
                 pageData = data.config;
+                // Backwards compatibility for paragraphs
+                if (!pageData.paragraphs) {
+                    pageData.paragraphs = JSON.parse(JSON.stringify(DEFAULT_DATA.paragraphs));
+                }
             } else {
                 // Keep the reset state + account name if no template exists
                 pageData.title = document.getElementById('current-account-name').value;
@@ -932,6 +989,14 @@
         function syncForm() {
             applyEditorLanguage(pageData.lang);
             document.getElementById('site-title').value = pageData.title || '';
+
+            // Sync paragraphs
+            if (pageData.paragraphs) {
+                Object.keys(pageData.paragraphs).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = pageData.paragraphs[id] || '';
+                });
+            }
 
             // Sync all images
             const images = [
