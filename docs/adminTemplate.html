@@ -810,6 +810,28 @@
             }
         })();
 
+        function migrateParagraphs(config) {
+            if (!config.paragraphs) {
+                config.paragraphs = JSON.parse(JSON.stringify(DEFAULT_DATA.paragraphs));
+            } else if (config.paragraphs["about-p1"]) {
+                // Migrate from individual keys to consolidated keys
+                const p = config.paragraphs;
+                config.paragraphs = {
+                    about: [p["about-p1"], p["about-p2"], p["about-p3"]].filter(Boolean).join('\n\n'),
+                    promo: [p["promo1-p1"], p["promo1-p2"], p["promo1-p3"], p["promo1-p4"], p["promo2-p1"], p["promo2-p2"], p["promo3-p1"]].filter(Boolean).join('\n\n'),
+                    catering: [p["catering-p1"], p["catering-p2"]].filter(Boolean).join('\n\n'),
+                    delivery: [p["delivery-p1"], p["delivery-p2"], p["delivery-p3"]].filter(Boolean).join('\n\n')
+                };
+            }
+            // Ensure all required keys exist
+            Object.keys(DEFAULT_DATA.paragraphs).forEach(key => {
+                if (config.paragraphs[key] === undefined) {
+                    config.paragraphs[key] = DEFAULT_DATA.paragraphs[key];
+                }
+            });
+            return config;
+        }
+
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
             if (!session) { location.href = "index.html"; return; }
@@ -837,7 +859,7 @@
             }
 
             if (templateRes.data) {
-                pageData = templateRes.data.config;
+                pageData = migrateParagraphs(templateRes.data.config);
             } else {
                 pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
                 pageData.title = document.getElementById('current-account-name').value;
@@ -916,20 +938,7 @@
                 .single();
 
             if (data) {
-                pageData = data.config;
-                // Backwards compatibility and Migration
-                if (!pageData.paragraphs) {
-                    pageData.paragraphs = JSON.parse(JSON.stringify(DEFAULT_DATA.paragraphs));
-                } else if (pageData.paragraphs["about-p1"]) {
-                    // Migrate from individual keys to consolidated keys
-                    const p = pageData.paragraphs;
-                    pageData.paragraphs = {
-                        about: [p["about-p1"], p["about-p2"], p["about-p3"]].filter(Boolean).join('\n\n'),
-                        promo: [p["promo1-p1"], p["promo1-p2"], p["promo1-p3"], p["promo1-p4"], p["promo2-p1"], p["promo2-p2"], p["promo3-p1"]].filter(Boolean).join('\n\n'),
-                        catering: [p["catering-p1"], p["catering-p2"]].filter(Boolean).join('\n\n'),
-                        delivery: [p["delivery-p1"], p["delivery-p2"], p["delivery-p3"]].filter(Boolean).join('\n\n')
-                    };
-                }
+                pageData = migrateParagraphs(data.config);
             } else {
                 // Keep the reset state + account name if no template exists
                 pageData.title = document.getElementById('current-account-name').value;
