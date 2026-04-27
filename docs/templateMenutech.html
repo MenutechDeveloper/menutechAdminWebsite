@@ -924,7 +924,11 @@ a {
             if (data.paragraphs) {
                 Object.keys(data.paragraphs).forEach(id => {
                     const el = document.getElementById(id);
-                    if (el) el.textContent = data.paragraphs[id];
+                    if (el) {
+                        const content = data.paragraphs[id];
+                        el.textContent = content;
+                        el.style.display = content.trim() === "" ? "none" : "";
+                    }
                 });
             }
         }
@@ -946,6 +950,32 @@ a {
             const enBtn = document.getElementById('lang-en');
             if (esBtn) esBtn.addEventListener('click', () => applyLanguage('es'));
             if (enBtn) enBtn.addEventListener('click', () => applyLanguage('en'));
+
+            // Click-to-Locate feature
+            document.body.addEventListener('click', (e) => {
+                // Find nearest parent with an ID that we care about
+                let target = e.target;
+                while (target && target !== document.body) {
+                    if (target.id && (
+                        target.id === 'nav-brand' ||
+                        target.id === 'hero-title' ||
+                        target.id === 'hero-section' ||
+                        target.id.startsWith('about-') ||
+                        target.id === 'promo-section' ||
+                        target.id.startsWith('promo') ||
+                        target.id === 'gallery-container' ||
+                        target.id === 'catering-section' ||
+                        target.id.startsWith('catering-') ||
+                        target.id.startsWith('delivery-') ||
+                        target.id.startsWith('footer-') ||
+                        target.id === 'social-icons'
+                    )) {
+                        window.parent.postMessage({ type: 'SCROLL_TO', id: target.id }, '*');
+                        break;
+                    }
+                    target = target.parentElement;
+                }
+            });
         });
 
         // Navbar Toggle for Mobile
