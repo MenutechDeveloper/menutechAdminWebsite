@@ -2377,11 +2377,9 @@ class MenutechActionBase extends HTMLElement {
         const color = this.getAttribute('color') || this.getAttribute('textcolor') || '#ffffff';
 
         const isRes = this.type === 'reservations';
-        const label = isRes ? (this.getAttribute('label') || 'RESERVAR MESA') : (this.getAttribute('label') || 'ORDENAR AHORA');
-        const icon = isRes ? 'bi-calendar-event' : 'bi-bag-check';
+        const label = isRes ? (this.getAttribute('label') || 'RESERVAR MESA') : (this.getAttribute('label') || 'See MENU & Order Now!');
 
         this.shadowRoot.innerHTML = `
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
             <style>
                 :host { display: block; width: 100%; }
                 .btn-glf {
@@ -2405,13 +2403,11 @@ class MenutechActionBase extends HTMLElement {
                     text-decoration: none;
                 }
                 .btn-glf:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 12px 25px rgba(0,0,0,0.15); }
-                i { font-size: 1.2rem; }
             </style>
             <button class="btn-glf"
                     data-glf-cuid="${cuid}"
                     data-glf-ruid="${ruid}"
                     ${isRes ? 'data-glf-reservation="true"' : ''}>
-                <i class="bi ${icon}"></i>
                 ${label}
             </button>
         `;
