@@ -2405,10 +2405,7 @@ class MenutechActionBase extends HTMLElement {
                 }
                 .btn-glf:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
             </style>
-            <button class="btn-glf"
-                    data-glf-cuid="${cuid}"
-                    data-glf-ruid="${ruid}"
-                    ${isRes ? 'data-glf-reservation="true"' : ''}>
+            <button class="btn-glf">
                 ${label}
             </button>
         `;

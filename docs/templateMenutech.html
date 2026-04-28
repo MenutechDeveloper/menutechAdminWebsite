@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <!-- 1. Script Motor GloriaFood -->
     <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
     <style>
         /* Reset and Base Styles */
@@ -664,8 +665,9 @@ a {
             </h2>
             <h1 class="hero-title" id="hero-title">Template Menutech</h1>
             <div class="hero-buttons">
-                <menutech-reservations id="glf-res"></menutech-reservations>
+                <!-- 3. Botones Personalizados -->
                 <menutech-orders id="glf-orders"></menutech-orders>
+                <menutech-reservations id="glf-res"></menutech-reservations>
             </div>
         </div>
     </header>
@@ -893,22 +895,31 @@ a {
                 const oBtn = document.getElementById('glf-orders');
                 const rBtn = document.getElementById('glf-res');
                 const lang = data.lang || 'es';
+                const cuid = data.gloriafood.cuid || '';
+                const ruid = data.gloriafood.ruid || '';
 
                 if (oBtn) {
-                    oBtn.setAttribute('cuid', data.gloriafood.cuid || '');
-                    oBtn.setAttribute('ruid', data.gloriafood.ruid || '');
+                    oBtn.setAttribute('cuid', cuid);
+                    oBtn.setAttribute('ruid', ruid);
                     oBtn.setAttribute('background', data.gloriafood.order_bg || '#f2a04a');
                     oBtn.setAttribute('color', data.gloriafood.order_txt || '#ffffff');
                     oBtn.setAttribute('label', lang === 'es' ? 'ORDENAR AHORA' : 'See MENU & Order Now!');
+                    // Sync with GloriaFood attributes for the motor
+                    oBtn.setAttribute('data-glf-cuid', cuid);
+                    oBtn.setAttribute('data-glf-ruid', ruid);
                 }
 
                 if (rBtn) {
                     rBtn.style.display = data.gloriafood.has_res ? 'block' : 'none';
-                    rBtn.setAttribute('cuid', data.gloriafood.cuid || '');
-                    rBtn.setAttribute('ruid', data.gloriafood.ruid || '');
+                    rBtn.setAttribute('cuid', cuid);
+                    rBtn.setAttribute('ruid', ruid);
                     rBtn.setAttribute('background', data.gloriafood.res_bg || '#2f4854');
                     rBtn.setAttribute('color', data.gloriafood.res_txt || '#ffffff');
                     rBtn.setAttribute('label', lang === 'es' ? 'RESERVAR MESA' : 'RESERVE A TABLE');
+                    // Sync with GloriaFood attributes for the motor
+                    rBtn.setAttribute('data-glf-cuid', cuid);
+                    rBtn.setAttribute('data-glf-ruid', ruid);
+                    rBtn.setAttribute('data-glf-reservation', 'true');
                 }
             }
 
@@ -1000,8 +1011,8 @@ a {
         document.addEventListener('DOMContentLoaded', () => {
             if (window.MENU_TECH_STATE) {
                 updateUI(window.MENU_TECH_STATE);
-                // Menutech: Re-bind GloriaFood buttons after a short delay to ensure components are rendered
-                setTimeout(() => { if(window.glfBindButtons) window.glfBindButtons(); }, 1500);
+                // 4. Forzar vinculación (Opcional si no abre a la primera)
+                setTimeout(() => { if(window.glfBindButtons) window.glfBindButtons(); }, 1000);
             }
 
             const esBtn = document.getElementById('lang-es');
@@ -1140,6 +1151,7 @@ document.querySelectorAll('.btn').forEach(btn => {
 });
 
     </script>
+    <!-- 2. Librería Menutech -->
     <script src="menutechUI.js"></script>
 </body>
 </html>
