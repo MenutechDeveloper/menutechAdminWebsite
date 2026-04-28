@@ -1180,7 +1180,7 @@ if (!customElements.get('menutech-forms')) {
  */
 class MenutechPlatformOrders extends HTMLElement {
     static get observedAttributes() {
-        return ['domain', 'restaurant', 'view'];
+        return ['domain', 'restaurant', 'view', 'custom-label'];
     }
 
     attributeChangedCallback(name, oldVal, newVal) {
@@ -1241,6 +1241,7 @@ class MenutechPlatformOrders extends HTMLElement {
     }
 
     renderPopupTrigger() {
+        const customLabel = this.getAttribute('custom-label') || 'See MENU & Order Now!';
         this.shadowRoot.innerHTML = `
             <style>
                 :host { display: block; font-family: 'Helvetica', 'Arial', sans-serif; }
@@ -1308,7 +1309,7 @@ class MenutechPlatformOrders extends HTMLElement {
                 .close-main-popup:hover { transform: scale(1.1); }
             </style>
             <button class="btn-see-menu" id="trigger-popup">
-                <span>See MENU & Order Now!</span>
+                <span>${customLabel}</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8L22 12L18 16"/><path d="M2 12H22"/></svg>
             </button>
             <div class="main-popup-overlay" id="main-menu-popup">

@@ -656,8 +656,8 @@ a {
             </h2>
             <h1 class="hero-title" id="hero-title">Template Menutech</h1>
             <div class="hero-buttons">
-                <a href="#" class="btn btn-outline" data-es="Reservar Mesa" data-en="Table Reservation">Table Reservation</a>
-                <a href="#" class="btn btn-filled" data-es="Ver Menú" data-en="See MENU & Order">See MENU & Order</a>
+                <a href="#" class="btn btn-outline" id="hero-btn-1" data-es="Reservar Mesa" data-en="Table Reservation">Table Reservation</a>
+                <menutech-platform-orders view="popup" custom-label="See MENU & Order Now!" id="hero-btn-2"></menutech-platform-orders>
             </div>
         </div>
     </header>
@@ -873,6 +873,14 @@ a {
                 const heroTitle = document.getElementById('hero-title');
                 if (navBrand) navBrand.textContent = data.title;
                 if (heroTitle) heroTitle.textContent = data.title;
+            }
+
+            // Hero Buttons / Custom Labels
+            if (data.titles) {
+                const btn1 = document.getElementById('hero-btn-1');
+                const btn2 = document.getElementById('hero-btn-2');
+                if (btn1 && data.titles['hero-btn-1']) btn1.textContent = data.titles['hero-btn-1'];
+                if (btn2 && data.titles['hero-btn-2']) btn2.setAttribute('custom-label', data.titles['hero-btn-2']);
             }
 
             // Hero
