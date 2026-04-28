@@ -899,7 +899,7 @@ a {
                     oBtn.setAttribute('ruid', data.gloriafood.ruid || '');
                     oBtn.setAttribute('background', data.gloriafood.order_bg || '#f2a04a');
                     oBtn.setAttribute('color', data.gloriafood.order_txt || '#ffffff');
-                    oBtn.setAttribute('label', lang === 'es' ? 'See MENU & Order Now!' : 'See MENU & Order Now!');
+                    oBtn.setAttribute('label', lang === 'es' ? 'ORDENAR AHORA' : 'See MENU & Order Now!');
                 }
 
                 if (rBtn) {
@@ -1000,6 +1000,8 @@ a {
         document.addEventListener('DOMContentLoaded', () => {
             if (window.MENU_TECH_STATE) {
                 updateUI(window.MENU_TECH_STATE);
+                // Menutech: Re-bind GloriaFood buttons after a short delay to ensure components are rendered
+                setTimeout(() => { if(window.glfBindButtons) window.glfBindButtons(); }, 1500);
             }
 
             const esBtn = document.getElementById('lang-es');

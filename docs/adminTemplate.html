@@ -152,39 +152,6 @@
             font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
 
-        /* Copy Code Area */
-        .copy-area {
-            margin-top: 20px;
-            background: #1e293b;
-            border-radius: 12px;
-            padding: 15px;
-            position: relative;
-        }
-        .code-output {
-            color: #cbd5e1;
-            font-family: monospace;
-            font-size: 0.7rem;
-            white-space: pre-wrap;
-            margin: 0;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .btn-copy {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255,255,255,0.1);
-            border: none;
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 6px;
-            font-size: 0.6rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn-copy:hover { background: rgba(255,255,255,0.2); }
-
         /* Preview Area */
         .preview-area { flex: 1; background: #f0f0f0; position: relative; display: flex; flex-direction: column; }
         .preview-toolbar {
@@ -572,11 +539,6 @@
                             <span class="slider"></span>
                         </label>
                     </div>
-
-                    <div class="copy-area">
-                        <button class="btn-copy" id="btn-copy-glf" onclick="window.copyGLFCode()">Copy Code</button>
-                        <pre class="code-output" id="glf-code-output"></pre>
-                    </div>
                 </div>
 
                 <div class="control-group">
@@ -839,37 +801,6 @@
             window.updateContent();
         };
 
-        window.copyGLFCode = () => {
-            const output = document.getElementById('glf-code-output').textContent;
-            navigator.clipboard.writeText(output);
-            const btn = document.getElementById('btn-copy-glf');
-            const original = btn.textContent;
-            btn.textContent = 'Copied!';
-            setTimeout(() => btn.textContent = original, 2000);
-        };
-
-        function generateGLFCode() {
-            const gf = pageData.gloriafood || {};
-            const cuid = gf.cuid || '';
-            const ruid = gf.ruid || '';
-            const hasRes = gf.has_res !== false;
-
-            let code = `<!-- 1. Script Motor GloriaFood -->\n<script src="https://www.fbgcdn.com/embedder/js/ewm2.js"><\/script>\n\n`;
-            code += `<!-- 2. Librería Menutech -->\n<script src="https://menutech.services/menutechUI.js"><\/script>\n\n`;
-            code += `<!-- 3. Botones Personalizados -->\n`;
-            code += `<menutech-orders \n  cuid="${cuid}" \n  ruid="${ruid}" \n  background="${gf.order_bg}" \n  color="${gf.order_txt}">\n</menutech-orders>\n`;
-
-            if (hasRes) {
-                code += `\n<menutech-reservations \n  cuid="${cuid}" \n  ruid="${ruid}" \n  background="${gf.res_bg}" \n  color="${gf.res_txt}">\n</menutech-reservations>\n`;
-            }
-
-            code += `\n<!-- 4. Forzar vinculación (Opcional si no abre a la primera) -->\n`;
-            code += `<script>\n  setTimeout(() => { if(window.glfBindButtons) window.glfBindButtons(); }, 1000);\n<\/script>`;
-
-            const output = document.getElementById('glf-code-output');
-            if (output) output.textContent = code;
-        }
-
         window.updateContent = () => {
             pageData.title = document.getElementById('site-title').value;
 
@@ -881,8 +812,6 @@
             pageData.gloriafood.res_bg = document.getElementById('glf-res-bg').value;
             pageData.gloriafood.res_txt = document.getElementById('glf-res-txt').value;
             pageData.gloriafood.has_res = document.getElementById('glf-has-res').checked;
-
-            generateGLFCode();
 
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
@@ -1306,8 +1235,6 @@
                 document.getElementById('glf-res-txt-hex').value = pageData.gloriafood.res_txt || '#ffffff';
 
                 document.getElementById('glf-has-res').checked = pageData.gloriafood.has_res !== false;
-
-                generateGLFCode();
             }
 
             // Sync paragraphs
