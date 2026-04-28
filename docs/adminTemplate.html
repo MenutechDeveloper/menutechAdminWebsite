@@ -405,7 +405,9 @@
                         </div>
                     </div>
                     <label data-i18n="aboutParagraphs" style="margin-top: 15px;">About Paragraphs</label>
-                    <textarea id="about" class="input-field" style="min-height: 150px;" oninput="window.updateContent()"></textarea>
+                    <textarea id="about-p1" class="input-field" style="min-height: 80px; font-size: 0.8rem; margin-bottom: 8px;" oninput="window.updateContent()" placeholder="Paragraph 1"></textarea>
+                    <textarea id="about-p2" class="input-field" style="min-height: 80px; font-size: 0.8rem; margin-bottom: 8px;" oninput="window.updateContent()" placeholder="Paragraph 2"></textarea>
+                    <textarea id="about-p3" class="input-field" style="min-height: 80px; font-size: 0.8rem;" oninput="window.updateContent()" placeholder="Paragraph 3"></textarea>
                 </div>
 
                 <div class="control-group">
@@ -437,7 +439,22 @@
                     </div>
 
                     <label data-i18n="promoParagraphs" style="margin-top: 15px;">Promo Paragraphs</label>
-                    <textarea id="promo" class="input-field" style="min-height: 150px;" oninput="window.updateContent()"></textarea>
+                    <div style="margin-bottom: 10px; padding: 10px; background: rgba(255,149,51,0.02); border-radius: 8px; border: 1px solid var(--border);">
+                        <label style="font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase;">Card 1 Paragraphs</label>
+                        <textarea id="promo1-p1" class="input-field" style="min-height: 60px; font-size: 0.75rem; margin-bottom: 5px;" oninput="window.updateContent()" placeholder="Item 1"></textarea>
+                        <textarea id="promo1-p2" class="input-field" style="min-height: 60px; font-size: 0.75rem; margin-bottom: 5px;" oninput="window.updateContent()" placeholder="Item 2"></textarea>
+                        <textarea id="promo1-p3" class="input-field" style="min-height: 60px; font-size: 0.75rem; margin-bottom: 5px;" oninput="window.updateContent()" placeholder="Item 3"></textarea>
+                        <textarea id="promo1-p4" class="input-field" style="min-height: 60px; font-size: 0.75rem; margin-bottom: 0;" oninput="window.updateContent()" placeholder="Item 4"></textarea>
+                    </div>
+                    <div style="margin-bottom: 10px; padding: 10px; background: rgba(255,149,51,0.02); border-radius: 8px; border: 1px solid var(--border);">
+                        <label style="font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase;">Card 2 Paragraphs</label>
+                        <textarea id="promo2-p1" class="input-field" style="min-height: 60px; font-size: 0.75rem; margin-bottom: 5px;" oninput="window.updateContent()" placeholder="Description P1"></textarea>
+                        <textarea id="promo2-p2" class="input-field" style="min-height: 60px; font-size: 0.75rem; margin-bottom: 0;" oninput="window.updateContent()" placeholder="Description P2"></textarea>
+                    </div>
+                    <div style="padding: 10px; background: rgba(255,149,51,0.02); border-radius: 8px; border: 1px solid var(--border);">
+                        <label style="font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase;">Card 3 Paragraphs</label>
+                        <textarea id="promo3-p1" class="input-field" style="min-height: 60px; font-size: 0.75rem; margin-bottom: 0;" oninput="window.updateContent()" placeholder="Description P1"></textarea>
+                    </div>
                 </div>
 
                 <div class="control-group">
@@ -465,7 +482,8 @@
                         <input type="file" id="catering-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'cateringBg')">
                     </div>
                     <label data-i18n="cateringParagraphs" style="margin-top: 15px;">Catering Paragraphs</label>
-                    <textarea id="catering" class="input-field" style="min-height: 120px;" oninput="window.updateContent()"></textarea>
+                    <textarea id="catering-p1" class="input-field" style="min-height: 80px; font-size: 0.8rem; margin-bottom: 8px;" oninput="window.updateContent()" placeholder="Paragraph 1"></textarea>
+                    <textarea id="catering-p2" class="input-field" style="min-height: 80px; font-size: 0.8rem;" oninput="window.updateContent()" placeholder="Paragraph 2"></textarea>
                 </div>
 
                 <div class="control-group">
@@ -480,7 +498,9 @@
                         <input type="file" id="delivery-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'deliveryImg')">
                     </div>
                     <label data-i18n="deliveryParagraphs" style="margin-top: 15px;">Delivery Paragraphs</label>
-                    <textarea id="delivery" class="input-field" style="min-height: 120px;" oninput="window.updateContent()"></textarea>
+                    <textarea id="delivery-p1" class="input-field" style="min-height: 80px; font-size: 0.8rem; margin-bottom: 8px;" oninput="window.updateContent()" placeholder="Paragraph 1"></textarea>
+                    <textarea id="delivery-p2" class="input-field" style="min-height: 80px; font-size: 0.8rem; margin-bottom: 8px;" oninput="window.updateContent()" placeholder="Paragraph 2"></textarea>
+                    <textarea id="delivery-p3" class="input-field" style="min-height: 80px; font-size: 0.8rem;" oninput="window.updateContent()" placeholder="Paragraph 3"></textarea>
                 </div>
 
                 <div class="control-group">
@@ -748,10 +768,21 @@
                 { platform: 'facebook', url: '#' }
             ],
             paragraphs: {
-                "about": "At Restaurant Pronto, we take pride in bringing our guests vibrant and authentic Mexican cuisine, crafted with care and rich culinary tradition. Every dish we serve is full of bold flavors and prepared to deliver a memorable dining experience. We are confident you will leave satisfied.\n\nThe secret to our success is simple: creating exceptional meals using fresh, high-quality ingredients that capture the true essence of Mexican cooking in every bite.\n\nOur mission is to help you savor the moments that truly matter. Enjoy great food. Sip on a refreshing drink. And above all, unwind and feel at home. We sincerely appreciate your continued support and trust",
-                "promo": "2 Medium Pizzas\n\nSoft Drinks\n\nGarlic Bread or Patato Wedges\n\nSalad to share\n\nHope you are hungry. Buy one regular priced pizza online and get a second pizza totally free!\n\nOnline only!\n\n6 Delicious regular size pizzas to choose from: Margherita, Capricciosa, Prosciutto e Funghi, Diavola, Calzone, Primavera.",
-                "catering": "Restaurant Pronto can cater to any party or event irrespective of how big or small. We specialize in catering with personalised service and special menus on request. In our menu palette, you'll discover unique and sophisticated tastes - all of which will help you uncover the true greatness of the mexican restaurant.\n\nTell us about your event at office@pronto-wp.com",
-                "delivery": "Looking for food delivery nearby? Not everybody knows or has the time to prepare tasty food.\n\nWhen you want to get served like a king then food delivery from restaurant Pronto will be your best choice.\n\nSimply select \"Delivery\" at the checkout screen and we hope you'll appreciate our food delivery service."
+                "about-p1": "At Restaurant Pronto, we take pride in bringing our guests vibrant and authentic Mexican cuisine, crafted with care and rich culinary tradition. Every dish we serve is full of bold flavors and prepared to deliver a memorable dining experience. We are confident you will leave satisfied.",
+                "about-p2": "The secret to our success is simple: creating exceptional meals using fresh, high-quality ingredients that capture the true essence of Mexican cooking in every bite.",
+                "about-p3": "Our mission is to help you savor the moments that truly matter. Enjoy great food. Sip on a refreshing drink. And above all, unwind and feel at home. We sincerely appreciate your continued support and trust",
+                "promo1-p1": "2 Medium Pizzas",
+                "promo1-p2": "Soft Drinks",
+                "promo1-p3": "Garlic Bread or Patato Wedges",
+                "promo1-p4": "Salad to share",
+                "promo2-p1": "Hope you are hungry. Buy one regular priced pizza online and get a second pizza totally free!",
+                "promo2-p2": "Online only!",
+                "promo3-p1": "6 Delicious regular size pizzas to choose from: Margherita, Capricciosa, Prosciutto e Funghi, Diavola, Calzone, Primavera.",
+                "catering-p1": "Restaurant Pronto can cater to any party or event irrespective of how big or small. We specialize in catering with personalised service and special menus on request. In our menu palette, you'll discover unique and sophisticated tastes - all of which will help you uncover the true greatness of the mexican restaurant.",
+                "catering-p2": "Tell us about your event at office@pronto-wp.com",
+                "delivery-p1": "Looking for food delivery nearby? Not everybody knows or has the time to prepare tasty food.",
+                "delivery-p2": "When you want to get served like a king then food delivery from restaurant Pronto will be your best choice.",
+                "delivery-p3": "Simply select \"Delivery\" at the checkout screen and we hope you'll appreciate our food delivery service."
             },
             titles: {
                 "about-title": "We are Pronto Mexican Food",
@@ -934,25 +965,25 @@
                     'about-subtitle': 'about-subtitle',
                     'about-img-1': 'about1-drop-zone',
                     'about-img-2': 'about2-drop-zone',
-                    'about-p1': 'about', 'about-p2': 'about', 'about-p3': 'about',
+                    'about-p1': 'about-p1', 'about-p2': 'about-p2', 'about-p3': 'about-p3',
                     'promo-section': 'promo-drop-zone',
                     'promo1-title': 'promo1-title', 'promo1-subtitle': 'promo1-subtitle',
-                    'promo1-p1': 'promo', 'promo1-p2': 'promo', 'promo1-p3': 'promo', 'promo1-p4': 'promo',
+                    'promo1-p1': 'promo1-p1', 'promo1-p2': 'promo1-p2', 'promo1-p3': 'promo1-p3', 'promo1-p4': 'promo1-p4',
                     'promo2-title': 'promo2-title', 'promo2-subtitle': 'promo2-subtitle',
-                    'promo2-p1': 'promo', 'promo2-p2': 'promo',
+                    'promo2-p1': 'promo2-p1', 'promo2-p2': 'promo2-p2',
                     'promo3-title': 'promo3-title', 'promo3-subtitle': 'promo3-subtitle',
-                    'promo3-p1': 'promo',
+                    'promo3-p1': 'promo3-p1',
                     'gallery-title': 'gallery-title',
                     'gallery-subtitle': 'gallery-subtitle',
                     'gallery-container': 'gallery-drop-zone',
                     'catering-title': 'catering-title',
                     'catering-subtitle': 'catering-subtitle',
                     'catering-section': 'catering-drop-zone',
-                    'catering-p1': 'catering', 'catering-p2': 'catering',
+                    'catering-p1': 'catering-p1', 'catering-p2': 'catering-p2',
                     'delivery-title': 'delivery-title',
                     'delivery-subtitle': 'delivery-subtitle',
                     'delivery-image': 'delivery-drop-zone',
-                    'delivery-p1': 'delivery', 'delivery-p2': 'delivery', 'delivery-p3': 'delivery',
+                    'delivery-p1': 'delivery-p1', 'delivery-p2': 'delivery-p2', 'delivery-p3': 'delivery-p3',
                     'footer-phone': 'contact-phone',
                     'footer-address': 'contact-address',
                     'footer-hours': 'contact-hours',
@@ -1030,36 +1061,53 @@
         })();
 
         function migrateData(config) {
-            // Paragraphs Migration
+            if (!config) config = {};
+
+            // 1. Paragraphs: De-consolidate if needed
             if (!config.paragraphs) {
                 config.paragraphs = JSON.parse(JSON.stringify(DEFAULT_DATA.paragraphs));
-            } else if (config.paragraphs["about-p1"]) {
-                // Migrate from individual keys to consolidated keys
+            } else {
                 const p = config.paragraphs;
-                config.paragraphs = {
-                    about: [p["about-p1"], p["about-p2"], p["about-p3"]].filter(Boolean).join('\n\n'),
-                    promo: [p["promo1-p1"], p["promo1-p2"], p["promo1-p3"], p["promo1-p4"], p["promo2-p1"], p["promo2-p2"], p["promo3-p1"]].filter(Boolean).join('\n\n'),
-                    catering: [p["catering-p1"], p["catering-p2"]].filter(Boolean).join('\n\n'),
-                    delivery: [p["delivery-p1"], p["delivery-p2"], p["delivery-p3"]].filter(Boolean).join('\n\n')
-                };
-            }
-            // Ensure all required paragraph keys exist
-            Object.keys(DEFAULT_DATA.paragraphs).forEach(key => {
-                if (config.paragraphs[key] === undefined) {
-                    config.paragraphs[key] = DEFAULT_DATA.paragraphs[key];
+                if (p.about && !p["about-p1"]) {
+                    const segs = p.about.split('\n\n');
+                    p["about-p1"] = segs[0] || ""; p["about-p2"] = segs[1] || ""; p["about-p3"] = segs[2] || "";
+                    delete p.about;
                 }
+                if (p.promo && !p["promo1-p1"]) {
+                    const segs = p.promo.split('\n\n');
+                    p["promo1-p1"] = segs[0] || ""; p["promo1-p2"] = segs[1] || ""; p["promo1-p3"] = segs[2] || ""; p["promo1-p4"] = segs[3] || "";
+                    p["promo2-p1"] = segs[4] || ""; p["promo2-p2"] = segs[5] || ""; p["promo3-p1"] = segs[6] || "";
+                    delete p.promo;
+                }
+                if (p.catering && !p["catering-p1"]) {
+                    const segs = p.catering.split('\n\n');
+                    p["catering-p1"] = segs[0] || ""; p["catering-p2"] = segs[1] || "";
+                    delete p.catering;
+                }
+                if (p.delivery && !p["delivery-p1"]) {
+                    const segs = p.delivery.split('\n\n');
+                    p["delivery-p1"] = segs[0] || ""; p["delivery-p2"] = segs[1] || ""; p["delivery-p3"] = segs[2] || "";
+                    delete p.delivery;
+                }
+            }
+
+            // Fill missing paragraph keys
+            Object.keys(DEFAULT_DATA.paragraphs).forEach(key => {
+                if (config.paragraphs[key] === undefined) config.paragraphs[key] = DEFAULT_DATA.paragraphs[key];
             });
 
-            // Titles Migration
+            // 2. Titles Migration
             if (!config.titles) {
                 config.titles = JSON.parse(JSON.stringify(DEFAULT_DATA.titles));
             }
-            // Ensure all required title keys exist
             Object.keys(DEFAULT_DATA.titles).forEach(key => {
-                if (config.titles[key] === undefined) {
-                    config.titles[key] = DEFAULT_DATA.titles[key];
-                }
+                if (config.titles[key] === undefined) config.titles[key] = DEFAULT_DATA.titles[key];
             });
+
+            // 3. Ensure other critical sections exist (GloriaFood, etc)
+            if (!config.gloriafood) config.gloriafood = JSON.parse(JSON.stringify(DEFAULT_DATA.gloriafood));
+            if (!config.contact) config.contact = JSON.parse(JSON.stringify(DEFAULT_DATA.contact));
+            if (!config.socials) config.socials = JSON.parse(JSON.stringify(DEFAULT_DATA.socials));
 
             return config;
         }
