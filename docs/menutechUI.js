@@ -2388,26 +2388,24 @@ class MenutechActionBase extends HTMLElement {
                     justify-content: center;
                     gap: 10px;
                     width: 100%;
-                    padding: 16px;
-                    border-radius: 16px;
+                    padding: 12px 30px;
+                    border-radius: 3px;
                     border: none;
                     background: ${bg};
                     color: ${color};
-                    font-family: 'Plus Jakarta Sans', sans-serif;
-                    font-weight: 700;
-                    font-size: 0.9rem;
+                    font-family: 'Open Sans', Arial, sans-serif;
+                    font-weight: 600;
+                    font-size: 14px;
                     text-transform: uppercase;
+                    letter-spacing: 1px;
                     cursor: pointer;
                     transition: all 0.3s;
-                    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
                     text-decoration: none;
                 }
-                .btn-glf:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 12px 25px rgba(0,0,0,0.15); }
+                .btn-glf:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
             </style>
-            <button class="btn-glf"
-                    data-glf-cuid="${cuid}"
-                    data-glf-ruid="${ruid}"
-                    ${isRes ? 'data-glf-reservation="true"' : ''}>
+            <button class="btn-glf">
                 ${label}
             </button>
         `;
