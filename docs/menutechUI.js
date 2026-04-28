@@ -2377,7 +2377,7 @@ class MenutechActionBase extends HTMLElement {
         const color = this.getAttribute('color') || this.getAttribute('textcolor') || '#ffffff';
 
         const isRes = this.type === 'reservations';
-        const label = isRes ? (this.getAttribute('label') || 'RESERVAR MESA') : (this.getAttribute('label') || 'See MENU & Order Now!');
+        const label = this.getAttribute('label') || (isRes ? 'RESERVAR MESA' : 'See MENU & Order Now!');
 
         this.shadowRoot.innerHTML = `
             <style>
