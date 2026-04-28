@@ -485,59 +485,66 @@
 
                 <div class="control-group">
                     <label data-i18n="gloriafoodSection">Botones de Acción</label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                        <div>
-                            <label style="font-size: 0.65rem;" data-i18n="glfCuid">CUID</label>
-                            <input type="text" id="glf-cuid" class="input-field" style="margin-bottom:0;" oninput="window.updateContent()">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.65rem;" data-i18n="glfRuid">RUID</label>
-                            <input type="text" id="glf-ruid" class="input-field" style="margin-bottom:0;" oninput="window.updateContent()">
-                        </div>
-                    </div>
 
-                    <label style="font-size: 0.7rem; color: var(--orange);" data-i18n="orderBtnColors">Order Button Colors</label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                        <div>
-                            <label style="font-size: 0.6rem;" data-i18n="bgLabel">Background</label>
-                            <div style="display: flex; gap: 5px;">
-                                <input type="color" id="glf-order-bg" style="width: 35px; height: 35px; border: none; border-radius: 6px; cursor: pointer;" oninput="window.syncColor(this, 'glf-order-bg-hex')">
-                                <input type="text" id="glf-order-bg-hex" class="input-field" style="margin-bottom:0; padding: 5px 8px; font-size: 0.7rem;" oninput="window.syncColor(this, 'glf-order-bg')">
+                    <div style="background: rgba(255,149,51,0.05); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <div>
+                                <label style="font-size: 0.65rem; color: var(--text-dim);" data-i18n="glfCuid">CUID (GloriaFood)</label>
+                                <input type="text" id="glf-cuid" class="input-field" style="margin-bottom:0;" placeholder="52230bb2-..." oninput="window.updateContent()">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.65rem; color: var(--text-dim);" data-i18n="glfRuid">RUID (GloriaFood)</label>
+                                <input type="text" id="glf-ruid" class="input-field" style="margin-bottom:0;" placeholder="010d211a-..." oninput="window.updateContent()">
                             </div>
                         </div>
-                        <div>
-                            <label style="font-size: 0.6rem;" data-i18n="txtLabel">Text</label>
-                            <div style="display: flex; gap: 5px;">
-                                <input type="color" id="glf-order-txt" style="width: 35px; height: 35px; border: none; border-radius: 6px; cursor: pointer;" oninput="window.syncColor(this, 'glf-order-txt-hex')">
-                                <input type="text" id="glf-order-txt-hex" class="input-field" style="margin-bottom:0; padding: 5px 8px; font-size: 0.7rem;" oninput="window.syncColor(this, 'glf-order-txt')">
-                            </div>
-                        </div>
-                    </div>
 
-                    <label style="font-size: 0.7rem; color: var(--orange);" data-i18n="resBtnColors">Reservation Button Colors</label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                        <div>
-                            <label style="font-size: 0.6rem;" data-i18n="bgLabel">Background</label>
-                            <div style="display: flex; gap: 5px;">
-                                <input type="color" id="glf-res-bg" style="width: 35px; height: 35px; border: none; border-radius: 6px; cursor: pointer;" oninput="window.syncColor(this, 'glf-res-bg-hex')">
-                                <input type="text" id="glf-res-bg-hex" class="input-field" style="margin-bottom:0; padding: 5px 8px; font-size: 0.7rem;" oninput="window.syncColor(this, 'glf-res-bg')">
+                        <div style="border-top: 1px solid var(--border); padding-top: 15px; margin-top: 5px;">
+                            <label style="font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 12px; display: block;" data-i18n="orderBtnColors">Order Button</label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                                <div>
+                                    <label style="font-size: 0.6rem; color: var(--text-dim);" data-i18n="bgLabel">Background</label>
+                                    <div style="display: flex; gap: 5px;">
+                                        <input type="color" id="glf-order-bg" style="width: 35px; height: 35px; border: none; border-radius: 6px; cursor: pointer; background: none; padding:0;" oninput="window.syncColor(this, 'glf-order-bg-hex')">
+                                        <input type="text" id="glf-order-bg-hex" class="input-field" style="margin-bottom:0; padding: 5px 8px; font-size: 0.7rem; flex: 1;" oninput="window.syncColor(this, 'glf-order-bg')">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.6rem; color: var(--text-dim);" data-i18n="txtLabel">Text</label>
+                                    <div style="display: flex; gap: 5px;">
+                                        <input type="color" id="glf-order-txt" style="width: 35px; height: 35px; border: none; border-radius: 6px; cursor: pointer; background: none; padding:0;" oninput="window.syncColor(this, 'glf-order-txt-hex')">
+                                        <input type="text" id="glf-order-txt-hex" class="input-field" style="margin-bottom:0; padding: 5px 8px; font-size: 0.7rem; flex: 1;" oninput="window.syncColor(this, 'glf-order-txt')">
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div>
-                            <label style="font-size: 0.6rem;" data-i18n="txtLabel">Text</label>
-                            <div style="display: flex; gap: 5px;">
-                                <input type="color" id="glf-res-txt" style="width: 35px; height: 35px; border: none; border-radius: 6px; cursor: pointer;" oninput="window.syncColor(this, 'glf-res-txt-hex')">
-                                <input type="text" id="glf-res-txt-hex" class="input-field" style="margin-bottom:0; padding: 5px 8px; font-size: 0.7rem;" oninput="window.syncColor(this, 'glf-res-txt')">
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="switch-container">
-                        <span style="font-size: 0.75rem; font-weight: 700;" data-i18n="enableRes">Enable Reservations</span>
-                        <label class="switch">
-                            <input type="checkbox" id="glf-has-res" onchange="window.updateContent()">
-                            <span class="slider"></span>
-                        </label>
+                        <div style="border-top: 1px solid var(--border); padding-top: 15px; margin-top: 5px;">
+                            <label style="font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 12px; display: block;" data-i18n="resBtnColors">Reservation Button</label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                                <div>
+                                    <label style="font-size: 0.6rem; color: var(--text-dim);" data-i18n="bgLabel">Background</label>
+                                    <div style="display: flex; gap: 5px;">
+                                        <input type="color" id="glf-res-bg" style="width: 35px; height: 35px; border: none; border-radius: 6px; cursor: pointer; background: none; padding:0;" oninput="window.syncColor(this, 'glf-res-bg-hex')">
+                                        <input type="text" id="glf-res-bg-hex" class="input-field" style="margin-bottom:0; padding: 5px 8px; font-size: 0.7rem; flex: 1;" oninput="window.syncColor(this, 'glf-res-bg')">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.6rem; color: var(--text-dim);" data-i18n="txtLabel">Text</label>
+                                    <div style="display: flex; gap: 5px;">
+                                        <input type="color" id="glf-res-txt" style="width: 35px; height: 35px; border: none; border-radius: 6px; cursor: pointer; background: none; padding:0;" oninput="window.syncColor(this, 'glf-res-txt-hex')">
+                                        <input type="text" id="glf-res-txt-hex" class="input-field" style="margin-bottom:0; padding: 5px 8px; font-size: 0.7rem; flex: 1;" oninput="window.syncColor(this, 'glf-res-txt')">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="switch-container" style="background: var(--card); border-style: dashed; border-color: var(--orange);">
+                                <span style="font-size: 0.75rem; font-weight: 700; color: var(--orange);" data-i18n="enableRes">Enable Reservations</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="glf-has-res" onchange="window.updateContent()">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -554,6 +561,15 @@
                         <!-- Social inputs -->
                     </div>
                     <button class="btn" style="width: 100%; background: var(--input); border: 1px solid var(--border); font-size: 0.7rem; padding: 10px;" onclick="window.addSocial()" data-i18n="addSocial">+ Add Social Link</button>
+                </div>
+
+                <!-- Integration Code Section -->
+                <div class="control-group" style="margin-top: 40px; padding-top: 20px; border-top: 2px dashed var(--border);">
+                    <label style="color: var(--text-dim); opacity: 0.6;">Integration Code (Advanced)</label>
+                    <div style="background: #1e293b; border-radius: 12px; padding: 15px; position: relative; overflow: hidden;">
+                        <pre id="integration-code" style="color: #cbd5e1; font-family: monospace; font-size: 0.65rem; white-space: pre-wrap; margin: 0; max-height: 150px; overflow-y: auto;"></pre>
+                        <button class="btn" id="btn-copy-code" style="position: absolute; top: 5px; right: 5px; padding: 4px 8px; font-size: 0.6rem; background: rgba(255,255,255,0.1); color: #fff; border: none; border-radius: 4px;" onclick="window.copyIntegrationCode()">Copy</button>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -813,6 +829,8 @@
             pageData.gloriafood.res_txt = document.getElementById('glf-res-txt').value;
             pageData.gloriafood.has_res = document.getElementById('glf-has-res').checked;
 
+            window.updateIntegrationCode();
+
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
             pageData.contact.hours = document.getElementById('contact-hours').value;
@@ -868,6 +886,37 @@
             if (iframe && iframe.contentWindow) {
                 iframe.contentWindow.postMessage({ type: 'UPDATE_CONTENT', data: pageData }, '*');
             }
+        };
+
+        window.updateIntegrationCode = () => {
+            const gf = pageData.gloriafood || {};
+            const cuid = gf.cuid || '';
+            const ruid = gf.ruid || '';
+            const oBg = gf.order_bg || '#f2a04a';
+            const oTx = gf.order_txt || '#ffffff';
+            const rBg = gf.res_bg || '#2f4854';
+            const rTx = gf.res_txt || '#ffffff';
+
+            let code = `<!-- 1. GloriaFood Engine -->\n<script src="https://www.fbgcdn.com/embedder/js/ewm2.js"><\/script>\n\n`;
+            code += `<!-- 2. Menutech Library -->\n<script src="https://menutech.services/menutechUI.js"><\/script>\n\n`;
+            code += `<!-- 3. Custom Buttons -->\n`;
+            code += `<menutech-orders \n  cuid="${cuid}" \n  ruid="${ruid}" \n  background="${oBg}" \n  color="${oTx}"\n  data-glf-cuid="${cuid}" \n  data-glf-ruid="${ruid}">\n</menutech-orders>\n`;
+            if (gf.has_res) {
+                code += `\n<menutech-reservations \n  cuid="${cuid}" \n  ruid="${ruid}" \n  background="${rBg}" \n  color="${rTx}"\n  data-glf-cuid="${cuid}" \n  data-glf-ruid="${ruid}" \n  data-glf-reservation="true">\n</menutech-reservations>\n`;
+            }
+            code += `\n<script>setTimeout(() => { if(window.glfBindButtons) window.glfBindButtons(); }, 1000);<\/script>`;
+
+            const codeEl = document.getElementById('integration-code');
+            if (codeEl) codeEl.textContent = code;
+        };
+
+        window.copyIntegrationCode = () => {
+            const code = document.getElementById('integration-code').textContent;
+            navigator.clipboard.writeText(code);
+            const btn = document.getElementById('btn-copy-code');
+            const originalText = btn.innerText;
+            btn.innerText = 'Copied!';
+            setTimeout(() => btn.innerText = originalText, 2000);
         };
 
         // Click-to-Locate Handler
@@ -1217,6 +1266,7 @@
         function syncForm() {
             applyEditorLanguage(pageData.lang);
             document.getElementById('site-title').value = pageData.title || '';
+            window.updateIntegrationCode();
 
             if (pageData.gloriafood) {
                 document.getElementById('glf-cuid').value = pageData.gloriafood.cuid || '';
