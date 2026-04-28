@@ -2377,7 +2377,7 @@ class MenutechActionBase extends HTMLElement {
         const color = this.getAttribute('color') || this.getAttribute('textcolor') || '#ffffff';
 
         const isRes = this.type === 'reservations';
-        const label = this.getAttribute('label') || (isRes ? 'RESERVAR MESA' : 'See MENU & Order Now!');
+        const label = this.getAttribute('label') || (isRes ? 'RESERVAR MESA' : 'ORDENAR AHORA');
 
         this.shadowRoot.innerHTML = `
             <style>
@@ -2424,3 +2424,10 @@ if (!customElements.get('menutech-orders')) {
 if (!customElements.get('menutech-reservations')) {
     customElements.define('menutech-reservations', class extends MenutechActionBase { constructor() { super('reservations'); } });
 }
+
+// Global MenutechUI object for legacy compatibility
+window.MenutechUI = {
+    init: () => {
+        console.log("MenutechUI components initialized");
+    }
+};
