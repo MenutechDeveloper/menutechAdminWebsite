@@ -1005,6 +1005,9 @@
             const scriptInject = `<script>window.MENU_TECH_STATE = ${JSON.stringify(pageData)};<\/script>`;
             html = html.replace('</head>', `${scriptInject}\n</head>`);
 
+            // Menutech: Update library reference to CDN
+            html = html.replace('<script src="menutechUI.js"></script>', '<script src="https://menutech.xyz/menutechUI.min.js"></script>');
+
             const blob = new Blob([html], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
