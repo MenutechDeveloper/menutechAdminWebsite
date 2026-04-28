@@ -371,6 +371,10 @@
                 <div class="control-group">
                     <label data-i18n="generalSettings">Restaurant Name</label>
                     <input type="text" id="site-title" class="input-field" placeholder="Site Title" data-i18n-placeholder="titlePlaceholder" oninput="window.updateContent()">
+
+                    <label style="margin-top:10px;">Hero Buttons Labels</label>
+                    <input type="text" id="hero-btn-1" class="input-field" placeholder="Button 1 Label" oninput="window.updateContent()">
+                    <input type="text" id="hero-btn-2" class="input-field" placeholder="Order Button Label" oninput="window.updateContent()">
                 </div>
 
                 <div class="control-group">
@@ -785,6 +789,8 @@
                 "delivery-p3": "Simply select \"Delivery\" at the checkout screen and we hope you'll appreciate our food delivery service."
             },
             titles: {
+                "hero-btn-1": "Table Reservation",
+                "hero-btn-2": "See MENU & Order Now!",
                 "about-title": "We are Pronto Mexican Food",
                 "about-subtitle": "About Us",
                 "promo1-title": "Best Friends Deal",
@@ -960,6 +966,8 @@
                 const mapping = {
                     'nav-brand': 'site-title',
                     'hero-title': 'site-title',
+                    'hero-btn-1': 'hero-btn-1',
+                    'hero-btn-2': 'hero-btn-2',
                     'hero-section': 'hero-drop-zone',
                     'about-title': 'about-title',
                     'about-subtitle': 'about-subtitle',
@@ -1131,18 +1139,22 @@
                 document.getElementById('current-account-name').value = profile.username || profile.domain || 'Your Store';
             }
 
-            if (userRole === 'admin' || userRole === 'developer' || userRole === 'adminCS' || userRole === 'CS') {
-                document.getElementById('admin-context-group').style.display = 'block';
+            const privilegedRoles = ['admin', 'developer', 'adminCS', 'CS', 'adminDesign', 'design', 'retention'];
+            if (privilegedRoles.includes(userRole)) {
+                const adminGroup = document.getElementById('admin-context-group');
+                if (adminGroup) adminGroup.style.display = 'block';
                 // setupContextSwitcher is now lazy-loaded on first open
             } else {
-                document.getElementById('btn-export').classList.add('hidden');
+                const btnExport = document.getElementById('btn-export');
+                if (btnExport) btnExport.classList.add('hidden');
             }
 
-            if (templateRes.data) {
+            if (templateRes.data && templateRes.data.config) {
                 pageData = migrateData(templateRes.data.config);
             } else {
                 pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
                 pageData.title = document.getElementById('current-account-name').value;
+                pageData = migrateData(pageData); // Ensure full structure even for new data
             }
 
             syncForm();
@@ -1206,22 +1218,29 @@
         };
 
         async function loadTemplate(ownerId) {
+            console.log("MT: Loading template for owner", ownerId);
             // Optimization: Reset state before loading to prevent UI leaks between accounts
             pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
             pageData.title = document.getElementById('current-account-name').value;
+            pageData = migrateData(pageData); // Ensure full structure
+
             syncForm();
             window.updateIframe();
 
-            const { data, error } = await sb.from('menutech_web_templates')
-                .select('*')
-                .eq('user_id', ownerId)
-                .single();
+            try {
+                const { data, error } = await sb.from('menutech_web_templates')
+                    .select('*')
+                    .eq('user_id', ownerId)
+                    .single();
 
-            if (data) {
-                pageData = migrateData(data.config);
-            } else {
-                // Keep the reset state + account name if no template exists
-                pageData.title = document.getElementById('current-account-name').value;
+                if (data && data.config) {
+                    pageData = migrateData(data.config);
+                } else {
+                    // Keep the reset state + account name if no template exists
+                    pageData.title = document.getElementById('current-account-name').value;
+                }
+            } catch (e) {
+                console.error("MT: Error loading template", e);
             }
 
             syncForm();

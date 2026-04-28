@@ -924,6 +924,14 @@ a {
                 if (heroTitle) heroTitle.textContent = data.title;
             }
 
+            // Hero Buttons / Custom Labels
+            if (data.titles) {
+                const btn1 = document.getElementById('hero-btn-1');
+                const btn2 = document.getElementById('hero-btn-2');
+                if (btn1 && data.titles['hero-btn-1']) btn1.textContent = data.titles['hero-btn-1'];
+                if (btn2 && data.titles['hero-btn-2']) btn2.setAttribute('custom-label', data.titles['hero-btn-2']);
+            }
+
             // Hero
             if (data.heroImg) {
                 document.getElementById('hero-section').style.backgroundImage = `url('${data.heroImg}')`;
