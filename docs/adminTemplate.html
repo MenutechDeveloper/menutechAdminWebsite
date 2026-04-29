@@ -387,76 +387,47 @@
                 <div class="control-group">
                     <label style="margin-bottom: 15px;">Botones de Acción</label>
 
-                    <!-- Global CUID/RUID -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                         <div>
-                            <label style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 6px;">CUID (Menutech)</label>
+                            <label style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 6px;">CUID</label>
                             <input type="text" id="global-cuid" class="input-field" style="font-size: 0.8rem; margin-bottom: 0;" placeholder="ID de Cliente" oninput="window.updateContent()">
                         </div>
                         <div>
-                            <label style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 6px;">RUID (Menutech)</label>
+                            <label style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 6px;">RUID</label>
                             <input type="text" id="global-ruid" class="input-field" style="font-size: 0.8rem; margin-bottom: 0;" placeholder="ID de Restaurante" oninput="window.updateContent()">
                         </div>
                     </div>
 
-                    <!-- Online Orders Config -->
                     <div style="border-top: 1px solid var(--border); padding-top: 15px; margin-bottom: 20px;">
-                        <label style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 12px; text-transform: uppercase; font-weight: 700;">Botón Órdenes en Línea</label>
-
+                        <label style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 12px; text-transform: uppercase; font-weight: 700;">Online Orders</label>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
                             <div>
-                                <span style="display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 6px; color: var(--text);">Color de Fondo</span>
-                                <div style="display: flex; align-items: center; gap: 8px; background: var(--input); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border);">
-                                    <input type="color" id="order-bg" value="#f2a04a" style="width:24px; height:24px; border:none; border-radius:4px; cursor:pointer; background:none;" oninput="window.updateContent()">
-                                    <input type="text" id="order-bg-hex" class="input-field" style="margin-bottom:0; padding:0; font-size:0.8rem; border:none; background:none;" value="#f2a04a" readonly>
-                                </div>
+                                <span style="display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 6px; color: var(--text);">BG Color</span>
+                                <input type="color" id="order-bg" value="#f2a04a" style="width:100%; height:32px; border:none; border-radius:6px; cursor:pointer; background:var(--input);" oninput="window.updateContent()">
                             </div>
                             <div>
-                                <span style="display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 6px; color: var(--text);">Color de Texto</span>
-                                <div style="display: flex; align-items: center; gap: 8px; background: var(--input); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border);">
-                                    <input type="color" id="order-text" value="#ffffff" style="width:24px; height:24px; border:none; border-radius:4px; cursor:pointer; background:none;" oninput="window.updateContent()">
-                                    <input type="text" id="order-text-hex" class="input-field" style="margin-bottom:0; padding:0; font-size:0.8rem; border:none; background:none;" value="#ffffff" readonly>
-                                </div>
+                                <span style="display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 6px; color: var(--text);">Color</span>
+                                <input type="color" id="order-text" value="#ffffff" style="width:100%; height:32px; border:none; border-radius:6px; cursor:pointer; background:var(--input);" oninput="window.updateContent()">
                             </div>
                         </div>
-
-                        <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 0.7rem; font-weight: 600; color: var(--text);">Color Icono:</span>
-                            <input type="color" id="order-icon" value="#ffffff" style="width:28px; height:28px; border:none; border-radius:4px; cursor:pointer; background:none;" oninput="window.updateContent()">
-                        </div>
-
-                        <label style="display: block; font-size: 0.7rem; font-weight: 600; margin-top: 15px; margin-bottom: 6px; color: var(--text);">Texto del Botón</label>
+                        <label style="display: block; font-size: 0.7rem; font-weight: 600; margin-top: 10px; margin-bottom: 6px; color: var(--text);">Texto del Botón</label>
                         <input type="text" id="hero-btn-2" class="input-field" style="font-size: 0.8rem; margin-bottom: 0;" placeholder="Ej: Ver Menú y Ordenar" oninput="window.updateContent()">
                     </div>
 
-                    <!-- Reservations Config -->
                     <div style="border-top: 1px solid var(--border); padding-top: 15px;">
-                        <label style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 12px; text-transform: uppercase; font-weight: 700;">Botón Reservaciones</label>
-
+                        <label style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 12px; text-transform: uppercase; font-weight: 700;">Reservations</label>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
                             <div>
-                                <span style="display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 6px; color: var(--text);">Color de Fondo</span>
-                                <div style="display: flex; align-items: center; gap: 8px; background: var(--input); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border);">
-                                    <input type="color" id="res-bg" value="#2f4854" style="width:24px; height:24px; border:none; border-radius:4px; cursor:pointer; background:none;" oninput="window.updateContent()">
-                                    <input type="text" id="res-bg-hex" class="input-field" style="margin-bottom:0; padding:0; font-size:0.8rem; border:none; background:none;" value="#2f4854" readonly>
-                                </div>
+                                <span style="display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 6px; color: var(--text);">BG Color</span>
+                                <input type="color" id="res-bg" value="#2f4854" style="width:100%; height:32px; border:none; border-radius:6px; cursor:pointer; background:var(--input);" oninput="window.updateContent()">
                             </div>
                             <div>
-                                <span style="display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 6px; color: var(--text);">Color de Texto</span>
-                                <div style="display: flex; align-items: center; gap: 8px; background: var(--input); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border);">
-                                    <input type="color" id="res-text" value="#ffffff" style="width:24px; height:24px; border:none; border-radius:4px; cursor:pointer; background:none;" oninput="window.updateContent()">
-                                    <input type="text" id="res-text-hex" class="input-field" style="margin-bottom:0; padding:0; font-size:0.8rem; border:none; background:none;" value="#ffffff" readonly>
-                                </div>
+                                <span style="display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 6px; color: var(--text);">Color</span>
+                                <input type="color" id="res-text" value="#ffffff" style="width:100%; height:32px; border:none; border-radius:6px; cursor:pointer; background:var(--input);" oninput="window.updateContent()">
                             </div>
                         </div>
-
-                        <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 0.7rem; font-weight: 600; color: var(--text);">Color Icono:</span>
-                            <input type="color" id="res-icon" value="#ffffff" style="width:28px; height:28px; border:none; border-radius:4px; cursor:pointer; background:none;" oninput="window.updateContent()">
-                        </div>
-
-                        <label style="display: block; font-size: 0.7rem; font-weight: 600; margin-top: 15px; margin-bottom: 6px; color: var(--text);">Texto del Botón</label>
-                        <input type="text" id="hero-btn-1" class="input-field" style="font-size: 0.8rem; margin-bottom: 20px;" placeholder="Ej: Reservar Mesa" oninput="window.updateContent()">
+                        <label style="display: block; font-size: 0.7rem; font-weight: 600; margin-top: 10px; margin-bottom: 6px; color: var(--text);">Texto del Botón</label>
+                        <input type="text" id="hero-btn-1" class="input-field" style="font-size: 0.8rem; margin-bottom: 15px;" placeholder="Ej: Reservar Mesa" oninput="window.updateContent()">
 
                         <div class="switch-container" style="padding: 12px 16px; background: var(--input); border-radius: 12px; border: 1px solid var(--border);">
                             <span style="font-size: 0.75rem; font-weight: 700; color: var(--text);">Activar Reservaciones</span>
@@ -841,22 +812,16 @@
                     ruid: globalRuid,
                     bg: document.getElementById('order-bg').value,
                     text: document.getElementById('order-text').value,
-                    icon: document.getElementById('order-icon').value
+                    icon: pageData.buttons?.order?.icon || '#ffffff'
                 },
                 res: {
                     cuid: globalCuid,
                     ruid: globalRuid,
                     bg: document.getElementById('res-bg').value,
                     text: document.getElementById('res-text').value,
-                    icon: document.getElementById('res-icon').value
+                    icon: pageData.buttons?.res?.icon || '#ffffff'
                 }
             };
-
-            // Update Hex display
-            document.getElementById('order-bg-hex').value = pageData.buttons.order.bg;
-            document.getElementById('order-text-hex').value = pageData.buttons.order.text;
-            document.getElementById('res-bg-hex').value = pageData.buttons.res.bg;
-            document.getElementById('res-text-hex').value = pageData.buttons.res.text;
 
             // Sync paragraphs from inputs to data
             if (pageData.paragraphs) {
@@ -1310,15 +1275,9 @@
 
                 document.getElementById('order-bg').value = pageData.buttons.order.bg || '#f2a04a';
                 document.getElementById('order-text').value = pageData.buttons.order.text || '#ffffff';
-                document.getElementById('order-icon').value = pageData.buttons.order.icon || '#ffffff';
-                document.getElementById('order-bg-hex').value = document.getElementById('order-bg').value;
-                document.getElementById('order-text-hex').value = document.getElementById('order-text').value;
 
                 document.getElementById('res-bg').value = pageData.buttons.res.bg || '#2f4854';
                 document.getElementById('res-text').value = pageData.buttons.res.text || '#ffffff';
-                document.getElementById('res-icon').value = pageData.buttons.res.icon || '#ffffff';
-                document.getElementById('res-bg-hex').value = document.getElementById('res-bg').value;
-                document.getElementById('res-text-hex').value = document.getElementById('res-text').value;
             }
 
             // Sync paragraphs
