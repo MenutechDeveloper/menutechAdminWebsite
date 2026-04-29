@@ -382,41 +382,17 @@
                 <div class="control-group">
                     <label data-i18n="generalSettings">Restaurant Name</label>
                     <input type="text" id="site-title" class="input-field" placeholder="Site Title" data-i18n-placeholder="titlePlaceholder" oninput="window.updateContent()">
-                </div>
 
-                <div class="control-group">
-                    <label>Action Buttons</label>
-                    <input type="text" id="cuid" class="input-field" placeholder="CUID" oninput="window.updateContent()">
-                    <input type="text" id="ruid" class="input-field" placeholder="RUID" oninput="window.updateContent()">
+                    <label style="margin-top:10px;">Hero Buttons Labels</label>
+                    <input type="text" id="hero-btn-1" class="input-field" placeholder="Button 1 Label" oninput="window.updateContent()">
+                    <input type="text" id="hero-btn-2" class="input-field" placeholder="Order Button Label" oninput="window.updateContent()">
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                        <div>
-                            <label style="font-size: 0.6rem;">Order BG</label>
-                            <input type="color" id="btnOrderBg" class="input-field" style="padding: 2px; height: 30px;" oninput="window.updateContent()">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.6rem;">Order Text</label>
-                            <input type="color" id="btnOrderCol" class="input-field" style="padding: 2px; height: 30px;" oninput="window.updateContent()">
-                        </div>
-                    </div>
-
-                    <div class="switch-container" style="margin-top:15px; margin-bottom: 10px;">
+                    <div class="switch-container" style="margin-top:10px;">
                         <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">Enable Reservations</span>
                         <label class="switch">
                             <input type="checkbox" id="show-reservations" onchange="window.updateContent()">
                             <span class="slider"></span>
                         </label>
-                    </div>
-
-                    <div id="res-buttons-config" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div>
-                            <label style="font-size: 0.6rem;">Res BG</label>
-                            <input type="color" id="btnResBg" class="input-field" style="padding: 2px; height: 30px;" oninput="window.updateContent()">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.6rem;">Res Text</label>
-                            <input type="color" id="btnResCol" class="input-field" style="padding: 2px; height: 30px;" oninput="window.updateContent()">
-                        </div>
                     </div>
                 </div>
 
@@ -676,12 +652,6 @@
         const DEFAULT_DATA = {
             lang: 'en',
             showReservations: true,
-            cuid: '52230bb2-0d10-491a-80a6-3c5603e87152',
-            ruid: '010d211a-aff0-4aa2-b4d0-739fce78437a',
-            btnOrderBg: '#f2a04a',
-            btnOrderCol: '#ffffff',
-            btnResBg: '#2f4854',
-            btnResCol: '#ffffff',
             title: 'Template Menutech',
             heroImg: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
             aboutImg1: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
@@ -769,17 +739,6 @@
         window.updateContent = () => {
             pageData.title = document.getElementById('site-title').value;
             pageData.showReservations = document.getElementById('show-reservations').checked;
-            pageData.cuid = document.getElementById('cuid').value;
-            pageData.ruid = document.getElementById('ruid').value;
-            pageData.btnOrderBg = document.getElementById('btnOrderBg').value;
-            pageData.btnOrderCol = document.getElementById('btnOrderCol').value;
-            pageData.btnResBg = document.getElementById('btnResBg').value;
-            pageData.btnResCol = document.getElementById('btnResCol').value;
-            pageData.btnResLabel = document.getElementById('btnResLabel').value;
-
-            const resConfig = document.getElementById('res-buttons-config');
-            if (resConfig) resConfig.style.opacity = pageData.showReservations ? '1' : '0.5';
-
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
             pageData.contact.hours = document.getElementById('contact-hours').value;
@@ -922,34 +881,8 @@
             const res = await fetch('templateMenutech.html');
             let html = await res.text();
 
-            // Inject state
             const scriptInject = `<script>window.MENU_TECH_STATE = ${JSON.stringify(pageData)};<\/script>`;
             html = html.replace('</head>', `${scriptInject}\n</head>`);
-
-            // Use local library path
-            html = html.replace('https://menutech.xyz/menutechUI.min.js', './menutechLibrary.js');
-
-            // Direct replacements for buttons
-            html = html.replace(/<menutech-orders[^>]*>/i, `
-                <menutech-orders
-                id="hero-btn-2"
-                cuid="${pageData.btnOrderCuid}"
-                ruid="${pageData.btnOrderRuid}"
-                background="${pageData.btnOrderBg}"
-                color="${pageData.btnOrderCol}"
-                textcolor="${pageData.btnOrderCol}"
-                custom-label="${pageData.btnOrderLabel || ''}">`);
-
-            html = html.replace(/<menutech-reservations[^>]*>/i, `
-                <menutech-reservations
-                id="hero-btn-1"
-                cuid="${pageData.btnResCuid}"
-                ruid="${pageData.btnResRuid}"
-                background="${pageData.btnResBg}"
-                color="${pageData.btnResCol}"
-                textcolor="${pageData.btnResCol}"
-                custom-label="${pageData.btnResLabel || ''}"
-                style="${pageData.showReservations ? '' : 'display:none'}">`);
 
             const blob = new Blob([html], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
@@ -1012,7 +945,7 @@
             });
 
             // Top level fields
-            const topFields = ['heroImg', 'aboutImg1', 'aboutImg2', 'promoBg', 'cateringBg', 'deliveryImg', 'title', 'lang', 'showReservations', 'cuid', 'ruid', 'btnOrderBg', 'btnOrderCol', 'btnResBg', 'btnResCol'];
+            const topFields = ['heroImg', 'aboutImg1', 'aboutImg2', 'promoBg', 'cateringBg', 'deliveryImg', 'title', 'lang', 'showReservations'];
             topFields.forEach(field => {
                 if (config[field] === undefined || config[field] === null || config[field] === "") {
                     config[field] = DEFAULT_DATA[field];
@@ -1239,15 +1172,6 @@
             applyEditorLanguage(pageData.lang);
             document.getElementById('site-title').value = pageData.title || '';
             document.getElementById('show-reservations').checked = pageData.showReservations !== false;
-            document.getElementById('cuid').value = pageData.cuid || '';
-            document.getElementById('ruid').value = pageData.ruid || '';
-            document.getElementById('btnOrderBg').value = pageData.btnOrderBg || '#f2a04a';
-            document.getElementById('btnOrderCol').value = pageData.btnOrderCol || '#ffffff';
-            document.getElementById('btnResBg').value = pageData.btnResBg || '#2f4854';
-            document.getElementById('btnResCol').value = pageData.btnResCol || '#ffffff';
-
-            const resConfig = document.getElementById('res-buttons-config');
-            if (resConfig) resConfig.style.opacity = pageData.showReservations ? '1' : '0.5';
 
             // Sync paragraphs
             if (pageData.paragraphs) {

@@ -568,12 +568,12 @@ a {
     .hero-buttons {
         flex-direction: column;
         align-items: center;
-        gap: 10px;
     }
 
-    .hero-buttons > * {
+    .btn {
         width: 100%;
-        max-width: 280px;
+        max-width: 250px;
+        text-align: center;
     }
 
     .about-images {
@@ -656,33 +656,8 @@ a {
             </h2>
             <h1 class="hero-title" id="hero-title">Template Menutech</h1>
             <div class="hero-buttons">
-                <!-- 1. Script Motor -->
-                <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
-
-                <!-- 2. Librería Menutech -->
-                <script src="./menutechLibrary.js"></script>
-
-                <!-- 3. Botones Personalizados -->
-                <menutech-orders
-                cuid="52230bb2-0d10-491a-80a6-3c5603e87152"
-                ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"
-                background="#f2a04a"
-                color="#ffffff"
-                textcolor="#ffffff">
-                </menutech-orders>
-
-                <menutech-reservations
-                cuid="52230bb2-0d10-491a-80a6-3c5603e87152"
-                ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"
-                background="#2f4854"
-                color="#ffffff"
-                textcolor="#ffffff">
-                </menutech-reservations>
-
-                <!-- 4. Forzar vinculación (Opcional si no abre a la primera) -->
-                <script>
-                setTimeout(() => { if(window.glfBindButtons) window.glfBindButtons(); }, 1000);
-                </script>
+                <a href="#" class="btn btn-outline" id="hero-btn-1" data-es="Reservar Mesa" data-en="Table Reservation">Table Reservation</a>
+                <menutech-platform-orders view="popup" custom-label="See MENU & Order Now!" id="hero-btn-2"></menutech-platform-orders>
             </div>
         </div>
     </header>
@@ -900,47 +875,18 @@ a {
                 if (heroTitle) heroTitle.textContent = data.title;
             }
 
-            // Action Buttons Sync
-            const btnOrder = document.querySelector('menutech-orders');
-            const btnRes = document.querySelector('menutech-reservations');
-
-            if (btnOrder) {
-                if (data.cuid) {
-                    btnOrder.setAttribute('cuid', data.cuid);
-                    btnOrder.setAttribute('data-glf-cuid', data.cuid);
+            // Hero Buttons / Custom Labels
+            if (data.titles) {
+                const btn1 = document.getElementById('hero-btn-1');
+                const btn2 = document.getElementById('hero-btn-2');
+                if (btn1) {
+                    if (data.titles['hero-btn-1']) btn1.textContent = data.titles['hero-btn-1'];
+                    btn1.style.display = (data.showReservations !== false) ? "" : "none";
                 }
-                if (data.ruid) {
-                    btnOrder.setAttribute('ruid', data.ruid);
-                    btnOrder.setAttribute('data-glf-ruid', data.ruid);
-                }
-                if (data.btnOrderBg) btnOrder.setAttribute('background', data.btnOrderBg);
-                if (data.btnOrderCol) {
-                    btnOrder.setAttribute('color', data.btnOrderCol); // Icon color
-                    btnOrder.setAttribute('textColor', data.btnOrderCol); // Label color
-                }
-            }
-
-            if (btnRes) {
-                const isResActive = data.showReservations !== false;
-                btnRes.style.display = isResActive ? "" : "none";
-
-                if (isResActive) {
-                    btnRes.setAttribute('data-glf-reservation', 'true');
-                    if (data.cuid) {
-                        btnRes.setAttribute('cuid', data.cuid);
-                        btnRes.setAttribute('data-glf-cuid', data.cuid);
-                    }
-                    if (data.ruid) {
-                        btnRes.setAttribute('ruid', data.ruid);
-                        btnRes.setAttribute('data-glf-ruid', data.ruid);
-                    }
-                    if (data.btnResBg) btnRes.setAttribute('background', data.btnResBg);
-                    if (data.btnResCol) {
-                        btnRes.setAttribute('color', data.btnResCol); // Icon color
-                        btnRes.setAttribute('textColor', data.btnResCol); // Label color
-                    }
-                } else {
-                    btnRes.removeAttribute('data-glf-reservation');
+                if (btn2 && data.titles['hero-btn-2']) {
+                    btn2.setAttribute('custom-label', data.titles['hero-btn-2']);
+                    // Force update if component is already initialized
+                    if (btn2.render) btn2.render();
                 }
             }
 
@@ -1089,7 +1035,7 @@ const navMenu = document.getElementById('nav-menu');
 
 navbarToggler.addEventListener('click', () => {
     navMenu.classList.toggle('active');
-
+    
     // Animate hamburger icon
     const icons = navbarToggler.querySelectorAll('.toggler-icon');
     icons.forEach((icon, index) => {
@@ -1180,7 +1126,7 @@ document.querySelectorAll('.btn').forEach(btn => {
     btn.addEventListener('mouseenter', function() {
         this.style.transform = 'translateY(-2px)';
     });
-
+    
     btn.addEventListener('mouseleave', function() {
         this.style.transform = 'translateY(0)';
     });
