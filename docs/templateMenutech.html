@@ -667,28 +667,25 @@ a {
                 <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
 
                 <!-- 2. Librería Menutech -->
-                <script src="menutechLibrary.js"></script>
+                <script src="./menutechLibrary.js"></script>
 
                 <!-- 3. Botones Personalizados -->
                 <menutech-orders
                 id="hero-btn-2"
-                cuid="52230bb2-0d10-491a-80a6-3c5603e87152"
-                ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"
+                cuid=""
+                ruid=""
                 background="#f2a04a"
                 color="#ffffff"
-                data-glf-cuid="52230bb2-0d10-491a-80a6-3c5603e87152"
-                data-glf-ruid="010d211a-aff0-4aa2-b4d0-739fce78437a">
+                textcolor="#ffffff">
                 </menutech-orders>
 
                 <menutech-reservations
                 id="hero-btn-1"
-                cuid="52230bb2-0d10-491a-80a6-3c5603e87152"
-                ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"
+                cuid=""
+                ruid=""
                 background="#2f4854"
                 color="#ffffff"
-                data-glf-cuid="52230bb2-0d10-491a-80a6-3c5603e87152"
-                data-glf-ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"
-                data-glf-reservation="true">
+                textcolor="#ffffff">
                 </menutech-reservations>
 
                 <!-- 4. Forzar vinculación (Opcional si no abre a la primera) -->
@@ -918,52 +915,23 @@ a {
             const btnOrder = document.getElementById('hero-btn-2');
 
             if (btnOrder) {
-                if (data.btnOrderCuid) {
-                    btnOrder.setAttribute('cuid', data.btnOrderCuid);
-                    btnOrder.cuid = data.btnOrderCuid;
-                }
-                if (data.btnOrderRuid) {
-                    btnOrder.setAttribute('ruid', data.btnOrderRuid);
-                    btnOrder.ruid = data.btnOrderRuid;
-                }
-                if (data.btnOrderBg) {
-                    btnOrder.setAttribute('background', data.btnOrderBg);
-                    btnOrder.background = data.btnOrderBg;
-                }
-                if (data.btnOrderCol) {
-                    btnOrder.setAttribute('color', data.btnOrderCol);
-                    btnOrder.setAttribute('textcolor', data.btnOrderCol);
-                    btnOrder.color = data.btnOrderCol;
-                    btnOrder.textcolor = data.btnOrderCol;
-                }
-                if (data.btnOrderLabel !== undefined) {
-                    btnOrder.setAttribute('custom-label', data.btnOrderLabel);
-                }
+                btnOrder.setAttribute('cuid', data.btnOrderCuid || '');
+                btnOrder.setAttribute('ruid', data.btnOrderRuid || '');
+                btnOrder.setAttribute('background', data.btnOrderBg || '');
+                btnOrder.setAttribute('color', data.btnOrderCol || '');
+                btnOrder.setAttribute('textcolor', data.btnOrderCol || '');
+                btnOrder.setAttribute('custom-label', data.btnOrderLabel || '');
+
                 if (btnOrder.render) btnOrder.render();
             }
 
             if (btnRes) {
-                if (data.btnResCuid) {
-                    btnRes.setAttribute('cuid', data.btnResCuid);
-                    btnRes.cuid = data.btnResCuid;
-                }
-                if (data.btnResRuid) {
-                    btnRes.setAttribute('ruid', data.btnResRuid);
-                    btnRes.ruid = data.btnResRuid;
-                }
-                if (data.btnResBg) {
-                    btnRes.setAttribute('background', data.btnResBg);
-                    btnRes.background = data.btnResBg;
-                }
-                if (data.btnResCol) {
-                    btnRes.setAttribute('color', data.btnResCol);
-                    btnRes.setAttribute('textcolor', data.btnResCol);
-                    btnRes.color = data.btnResCol;
-                    btnRes.textcolor = data.btnResCol;
-                }
-                if (data.btnResLabel !== undefined) {
-                    btnRes.setAttribute('custom-label', data.btnResLabel);
-                }
+                btnRes.setAttribute('cuid', data.btnResCuid || '');
+                btnRes.setAttribute('ruid', data.btnResRuid || '');
+                btnRes.setAttribute('background', data.btnResBg || '');
+                btnRes.setAttribute('color', data.btnResCol || '');
+                btnRes.setAttribute('textcolor', data.btnResCol || '');
+                btnRes.setAttribute('custom-label', data.btnResLabel || '');
 
                 btnRes.style.display = (data.showReservations !== false) ? "inline-block" : "none";
                 if (btnRes.render) btnRes.render();

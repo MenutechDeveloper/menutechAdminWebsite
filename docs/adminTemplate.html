@@ -399,11 +399,7 @@
                                 <input type="text" id="btnOrderRuid" class="input-field" style="margin-bottom:0;" oninput="window.updateContent()">
                             </div>
                         </div>
-                        <div style="margin-bottom: 10px;">
-                            <label data-i18n="customLabel" style="font-size: 0.65rem; color: var(--text-dim);">Custom Label</label>
-                            <input type="text" id="btnOrderLabel" class="input-field" style="margin-bottom:0;" data-i18n-placeholder="orderLabelPlaceholder" oninput="window.updateContent()">
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                             <div>
                                 <label data-i18n="bgColor" style="font-size: 0.6rem; color: var(--text-dim);">Background</label>
                                 <div style="display: flex; gap: 5px;">
@@ -419,6 +415,10 @@
                                 </div>
                             </div>
                         </div>
+                        <div style="margin-bottom: 0;">
+                            <label data-i18n="customLabel" style="font-size: 0.65rem; color: var(--text-dim);">Custom Label</label>
+                            <input type="text" id="btnOrderLabel" class="input-field" style="margin-bottom:0;" data-i18n-placeholder="orderLabelPlaceholder" oninput="window.updateContent()">
+                        </div>
                     </div>
 
                     <div style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px;">
@@ -433,11 +433,7 @@
                                 <input type="text" id="btnResRuid" class="input-field" style="margin-bottom:0;" oninput="window.updateContent()">
                             </div>
                         </div>
-                        <div style="margin-bottom: 10px;">
-                            <label data-i18n="customLabel" style="font-size: 0.65rem; color: var(--text-dim);">Custom Label</label>
-                            <input type="text" id="btnResLabel" class="input-field" style="margin-bottom:0;" data-i18n-placeholder="resLabelPlaceholder" oninput="window.updateContent()">
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                             <div>
                                 <label data-i18n="bgColor" style="font-size: 0.6rem; color: var(--text-dim);">Background</label>
                                 <div style="display: flex; gap: 5px;">
@@ -453,14 +449,17 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="switch-container">
-                        <span data-i18n="enableRes" style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">Enable Table Reservations</span>
-                        <label class="switch">
-                            <input type="checkbox" id="show-reservations" onchange="window.updateContent()">
-                            <span class="slider"></span>
-                        </label>
+                        <div style="margin-bottom: 15px;">
+                            <label data-i18n="customLabel" style="font-size: 0.65rem; color: var(--text-dim);">Custom Label</label>
+                            <input type="text" id="btnResLabel" class="input-field" style="margin-bottom:0;" data-i18n-placeholder="resLabelPlaceholder" oninput="window.updateContent()">
+                        </div>
+                        <div class="switch-container">
+                            <span data-i18n="enableRes" style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">Enable Table Reservations</span>
+                            <label class="switch">
+                                <input type="checkbox" id="show-reservations" onchange="window.updateContent()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -992,7 +991,7 @@
             html = html.replace('</head>', `${scriptInject}\n</head>`);
 
             // Use local library path
-            html = html.replace('https://menutech.xyz/menutechUI.min.js', 'menutechLibrary.js');
+            html = html.replace('https://menutech.xyz/menutechUI.min.js', './menutechLibrary.js');
 
             // Direct replacements for buttons
             html = html.replace(/<menutech-orders[^>]*>/i, `
