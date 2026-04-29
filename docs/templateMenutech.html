@@ -572,6 +572,11 @@ a {
         align-items: center;
     }
 
+    .hero-buttons > * {
+        width: 100%;
+        max-width: 250px;
+    }
+
     .btn {
         width: 100%;
         max-width: 250px;
@@ -913,13 +918,13 @@ a {
             const btnOrder = document.getElementById('hero-btn-2');
 
             if (btnOrder) {
-                if (data.cuid) {
-                    btnOrder.setAttribute('cuid', data.cuid);
-                    btnOrder.cuid = data.cuid;
+                if (data.btnOrderCuid) {
+                    btnOrder.setAttribute('cuid', data.btnOrderCuid);
+                    btnOrder.cuid = data.btnOrderCuid;
                 }
-                if (data.ruid) {
-                    btnOrder.setAttribute('ruid', data.ruid);
-                    btnOrder.ruid = data.ruid;
+                if (data.btnOrderRuid) {
+                    btnOrder.setAttribute('ruid', data.btnOrderRuid);
+                    btnOrder.ruid = data.btnOrderRuid;
                 }
                 if (data.btnOrderBg) {
                     btnOrder.setAttribute('background', data.btnOrderBg);
@@ -935,13 +940,13 @@ a {
             }
 
             if (btnRes) {
-                if (data.cuid) {
-                    btnRes.setAttribute('cuid', data.cuid);
-                    btnRes.cuid = data.cuid;
+                if (data.btnResCuid) {
+                    btnRes.setAttribute('cuid', data.btnResCuid);
+                    btnRes.cuid = data.btnResCuid;
                 }
-                if (data.ruid) {
-                    btnRes.setAttribute('ruid', data.ruid);
-                    btnRes.ruid = data.ruid;
+                if (data.btnResRuid) {
+                    btnRes.setAttribute('ruid', data.btnResRuid);
+                    btnRes.ruid = data.btnResRuid;
                 }
                 if (data.btnResBg) {
                     btnRes.setAttribute('background', data.btnResBg);
