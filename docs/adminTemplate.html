@@ -182,6 +182,17 @@
         .btn-primary { background: var(--orange); color: #fff; box-shadow: 0 8px 20px rgba(255,149,51,0.3); }
         .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255,149,51,0.4); }
 
+        /* Save Button Specific Styles */
+        .btn-save {
+            background: #333 !important;
+            color: #fff !important;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+        }
+        .btn-save:hover {
+            background: #1a1a1a !important;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3) !important;
+        }
+
         .hidden { display: none !important; }
 
         /* Context Sidebar */
@@ -375,6 +386,14 @@
                     <label style="margin-top:10px;">Hero Buttons Labels</label>
                     <input type="text" id="hero-btn-1" class="input-field" placeholder="Button 1 Label" oninput="window.updateContent()">
                     <input type="text" id="hero-btn-2" class="input-field" placeholder="Order Button Label" oninput="window.updateContent()">
+
+                    <div class="switch-container" style="margin-top:10px;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">Enable Reservations</span>
+                        <label class="switch">
+                            <input type="checkbox" id="show-reservations" onchange="window.updateContent()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="control-group">
@@ -409,9 +428,7 @@
                         </div>
                     </div>
                     <label data-i18n="aboutParagraphs" style="margin-top: 15px;">About Paragraphs</label>
-                    <textarea id="about-p1" class="input-field" style="min-height: 80px; font-size: 0.8rem; margin-bottom: 8px;" oninput="window.updateContent()" placeholder="Paragraph 1"></textarea>
-                    <textarea id="about-p2" class="input-field" style="min-height: 80px; font-size: 0.8rem; margin-bottom: 8px;" oninput="window.updateContent()" placeholder="Paragraph 2"></textarea>
-                    <textarea id="about-p3" class="input-field" style="min-height: 80px; font-size: 0.8rem;" oninput="window.updateContent()" placeholder="Paragraph 3"></textarea>
+                    <textarea id="about" class="input-field" style="min-height: 150px;" oninput="window.updateContent()"></textarea>
                 </div>
 
                 <div class="control-group">
@@ -443,22 +460,7 @@
                     </div>
 
                     <label data-i18n="promoParagraphs" style="margin-top: 15px;">Promo Paragraphs</label>
-                    <div style="margin-bottom: 10px; padding: 10px; background: rgba(255,149,51,0.02); border-radius: 8px; border: 1px solid var(--border);">
-                        <label style="font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase;">Card 1 Paragraphs</label>
-                        <textarea id="promo1-p1" class="input-field" style="min-height: 60px; font-size: 0.75rem; margin-bottom: 5px;" oninput="window.updateContent()" placeholder="Item 1"></textarea>
-                        <textarea id="promo1-p2" class="input-field" style="min-height: 60px; font-size: 0.75rem; margin-bottom: 5px;" oninput="window.updateContent()" placeholder="Item 2"></textarea>
-                        <textarea id="promo1-p3" class="input-field" style="min-height: 60px; font-size: 0.75rem; margin-bottom: 5px;" oninput="window.updateContent()" placeholder="Item 3"></textarea>
-                        <textarea id="promo1-p4" class="input-field" style="min-height: 60px; font-size: 0.75rem; margin-bottom: 0;" oninput="window.updateContent()" placeholder="Item 4"></textarea>
-                    </div>
-                    <div style="margin-bottom: 10px; padding: 10px; background: rgba(255,149,51,0.02); border-radius: 8px; border: 1px solid var(--border);">
-                        <label style="font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase;">Card 2 Paragraphs</label>
-                        <textarea id="promo2-p1" class="input-field" style="min-height: 60px; font-size: 0.75rem; margin-bottom: 5px;" oninput="window.updateContent()" placeholder="Description P1"></textarea>
-                        <textarea id="promo2-p2" class="input-field" style="min-height: 60px; font-size: 0.75rem; margin-bottom: 0;" oninput="window.updateContent()" placeholder="Description P2"></textarea>
-                    </div>
-                    <div style="padding: 10px; background: rgba(255,149,51,0.02); border-radius: 8px; border: 1px solid var(--border);">
-                        <label style="font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase;">Card 3 Paragraphs</label>
-                        <textarea id="promo3-p1" class="input-field" style="min-height: 60px; font-size: 0.75rem; margin-bottom: 0;" oninput="window.updateContent()" placeholder="Description P1"></textarea>
-                    </div>
+                    <textarea id="promo" class="input-field" style="min-height: 150px;" oninput="window.updateContent()"></textarea>
                 </div>
 
                 <div class="control-group">
@@ -486,8 +488,7 @@
                         <input type="file" id="catering-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'cateringBg')">
                     </div>
                     <label data-i18n="cateringParagraphs" style="margin-top: 15px;">Catering Paragraphs</label>
-                    <textarea id="catering-p1" class="input-field" style="min-height: 80px; font-size: 0.8rem; margin-bottom: 8px;" oninput="window.updateContent()" placeholder="Paragraph 1"></textarea>
-                    <textarea id="catering-p2" class="input-field" style="min-height: 80px; font-size: 0.8rem;" oninput="window.updateContent()" placeholder="Paragraph 2"></textarea>
+                    <textarea id="catering" class="input-field" style="min-height: 120px;" oninput="window.updateContent()"></textarea>
                 </div>
 
                 <div class="control-group">
@@ -502,74 +503,7 @@
                         <input type="file" id="delivery-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'deliveryImg')">
                     </div>
                     <label data-i18n="deliveryParagraphs" style="margin-top: 15px;">Delivery Paragraphs</label>
-                    <textarea id="delivery-p1" class="input-field" style="min-height: 80px; font-size: 0.8rem; margin-bottom: 8px;" oninput="window.updateContent()" placeholder="Paragraph 1"></textarea>
-                    <textarea id="delivery-p2" class="input-field" style="min-height: 80px; font-size: 0.8rem; margin-bottom: 8px;" oninput="window.updateContent()" placeholder="Paragraph 2"></textarea>
-                    <textarea id="delivery-p3" class="input-field" style="min-height: 80px; font-size: 0.8rem;" oninput="window.updateContent()" placeholder="Paragraph 3"></textarea>
-                </div>
-
-                <div class="control-group">
-                    <label data-i18n="gloriafoodSection">Botones de Acción</label>
-
-                    <div style="background: rgba(255,149,51,0.05); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                            <div>
-                                <label style="font-size: 0.65rem; color: var(--text-dim);" data-i18n="glfCuid">CUID (GloriaFood)</label>
-                                <input type="text" id="glf-cuid" class="input-field" style="margin-bottom:0;" placeholder="52230bb2-..." oninput="window.updateContent()">
-                            </div>
-                            <div>
-                                <label style="font-size: 0.65rem; color: var(--text-dim);" data-i18n="glfRuid">RUID (GloriaFood)</label>
-                                <input type="text" id="glf-ruid" class="input-field" style="margin-bottom:0;" placeholder="010d211a-..." oninput="window.updateContent()">
-                            </div>
-                        </div>
-
-                        <div style="border-top: 1px solid var(--border); padding-top: 15px; margin-top: 5px;">
-                            <label style="font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 12px; display: block;" data-i18n="orderBtnColors">Order Button</label>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                                <div>
-                                    <label style="font-size: 0.6rem; color: var(--text-dim);" data-i18n="bgLabel">Background</label>
-                                    <div style="display: flex; gap: 5px;">
-                                        <input type="color" id="glf-order-bg" style="width: 35px; height: 35px; border: none; border-radius: 6px; cursor: pointer; background: none; padding:0;" oninput="window.syncColor(this, 'glf-order-bg-hex')">
-                                        <input type="text" id="glf-order-bg-hex" class="input-field" style="margin-bottom:0; padding: 5px 8px; font-size: 0.7rem; flex: 1;" oninput="window.syncColor(this, 'glf-order-bg')">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label style="font-size: 0.6rem; color: var(--text-dim);" data-i18n="txtLabel">Text</label>
-                                    <div style="display: flex; gap: 5px;">
-                                        <input type="color" id="glf-order-txt" style="width: 35px; height: 35px; border: none; border-radius: 6px; cursor: pointer; background: none; padding:0;" oninput="window.syncColor(this, 'glf-order-txt-hex')">
-                                        <input type="text" id="glf-order-txt-hex" class="input-field" style="margin-bottom:0; padding: 5px 8px; font-size: 0.7rem; flex: 1;" oninput="window.syncColor(this, 'glf-order-txt')">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="border-top: 1px solid var(--border); padding-top: 15px; margin-top: 5px;">
-                            <label style="font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 12px; display: block;" data-i18n="resBtnColors">Reservation Button</label>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                                <div>
-                                    <label style="font-size: 0.6rem; color: var(--text-dim);" data-i18n="bgLabel">Background</label>
-                                    <div style="display: flex; gap: 5px;">
-                                        <input type="color" id="glf-res-bg" style="width: 35px; height: 35px; border: none; border-radius: 6px; cursor: pointer; background: none; padding:0;" oninput="window.syncColor(this, 'glf-res-bg-hex')">
-                                        <input type="text" id="glf-res-bg-hex" class="input-field" style="margin-bottom:0; padding: 5px 8px; font-size: 0.7rem; flex: 1;" oninput="window.syncColor(this, 'glf-res-bg')">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label style="font-size: 0.6rem; color: var(--text-dim);" data-i18n="txtLabel">Text</label>
-                                    <div style="display: flex; gap: 5px;">
-                                        <input type="color" id="glf-res-txt" style="width: 35px; height: 35px; border: none; border-radius: 6px; cursor: pointer; background: none; padding:0;" oninput="window.syncColor(this, 'glf-res-txt-hex')">
-                                        <input type="text" id="glf-res-txt-hex" class="input-field" style="margin-bottom:0; padding: 5px 8px; font-size: 0.7rem; flex: 1;" oninput="window.syncColor(this, 'glf-res-txt')">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="switch-container" style="background: var(--card); border-style: dashed; border-color: var(--orange);">
-                                <span style="font-size: 0.75rem; font-weight: 700; color: var(--orange);" data-i18n="enableRes">Enable Reservations</span>
-                                <label class="switch">
-                                    <input type="checkbox" id="glf-has-res" onchange="window.updateContent()">
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+                    <textarea id="delivery" class="input-field" style="min-height: 120px;" oninput="window.updateContent()"></textarea>
                 </div>
 
                 <div class="control-group">
@@ -585,15 +519,6 @@
                         <!-- Social inputs -->
                     </div>
                     <button class="btn" style="width: 100%; background: var(--input); border: 1px solid var(--border); font-size: 0.7rem; padding: 10px;" onclick="window.addSocial()" data-i18n="addSocial">+ Add Social Link</button>
-                </div>
-
-                <!-- Integration Code Section -->
-                <div class="control-group" style="margin-top: 40px; padding-top: 20px; border-top: 2px dashed var(--border);">
-                    <label style="color: var(--text-dim); opacity: 0.6;">Integration Code (Advanced)</label>
-                    <div style="background: #1e293b; border-radius: 12px; padding: 15px; position: relative; overflow: hidden;">
-                        <pre id="integration-code" style="color: #cbd5e1; font-family: monospace; font-size: 0.65rem; white-space: pre-wrap; margin: 0; max-height: 150px; overflow-y: auto;"></pre>
-                        <button class="btn" id="btn-copy-code" style="position: absolute; top: 5px; right: 5px; padding: 4px 8px; font-size: 0.6rem; background: rgba(255,255,255,0.1); color: #fff; border: none; border-radius: 4px;" onclick="window.copyIntegrationCode()">Copy</button>
-                    </div>
                 </div>
             </div>
         </aside>
@@ -618,7 +543,7 @@
             </div>
 
             <div class="floating-actions">
-                <button class="btn btn-primary" style="background: #333; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);" onclick="window.saveTemplate()" data-i18n="saveBtn">Save Changes</button>
+                <button class="btn btn-primary btn-save" onclick="window.saveTemplate()" data-i18n="saveBtn">Save Changes</button>
                 <button class="btn btn-primary" id="btn-export" onclick="window.exportHTML()" data-i18n="exportBtn">Export HTML</button>
             </div>
         </main>
@@ -678,15 +603,7 @@
                 cateringParagraphs: "Catering Paragraphs",
                 deliveryParagraphs: "Delivery Paragraphs",
                 sectionTitle: "Section Title",
-                sectionSubtitle: "Section Subtitle",
-                gloriafoodSection: "Action Buttons",
-                glfCuid: "CUID",
-                glfRuid: "RUID",
-                orderBtnColors: "Order Button Colors",
-                resBtnColors: "Reservation Button Colors",
-                bgLabel: "Background",
-                txtLabel: "Text",
-                enableRes: "Enable Reservations"
+                sectionSubtitle: "Section Subtitle"
             },
             es: {
                 saving: "Guardando cambios...",
@@ -728,20 +645,13 @@
                 cateringParagraphs: "Párrafos Catering",
                 deliveryParagraphs: "Párrafos Delivery",
                 sectionTitle: "Título de la Sección",
-                sectionSubtitle: "Subtítulo de la Sección",
-                gloriafoodSection: "Botones de Acción",
-                glfCuid: "CUID",
-                glfRuid: "RUID",
-                orderBtnColors: "Colores Botón Órdenes",
-                resBtnColors: "Colores Botón Reservas",
-                bgLabel: "Fondo",
-                txtLabel: "Texto",
-                enableRes: "Activar Reservaciones"
+                sectionSubtitle: "Subtítulo de la Sección"
             }
         };
 
         const DEFAULT_DATA = {
             lang: 'en',
+            showReservations: true,
             title: 'Template Menutech',
             heroImg: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
             aboutImg1: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
@@ -753,15 +663,6 @@
                 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
                 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg'
             ],
-            gloriafood: {
-                cuid: '52230bb2-0d10-491a-80a6-3c5603e87152',
-                ruid: '010d211a-aff0-4aa2-b4d0-739fce78437a',
-                order_bg: '#f2a04a',
-                order_txt: '#ffffff',
-                res_bg: '#2f4854',
-                res_txt: '#ffffff',
-                has_res: true
-            },
             contact: {
                 phone: '(044) 359 0173',
                 address: '100 Tenth Avenue, New York City, NY 1001',
@@ -772,21 +673,10 @@
                 { platform: 'facebook', url: '#' }
             ],
             paragraphs: {
-                "about-p1": "At Restaurant Pronto, we take pride in bringing our guests vibrant and authentic Mexican cuisine, crafted with care and rich culinary tradition. Every dish we serve is full of bold flavors and prepared to deliver a memorable dining experience. We are confident you will leave satisfied.",
-                "about-p2": "The secret to our success is simple: creating exceptional meals using fresh, high-quality ingredients that capture the true essence of Mexican cooking in every bite.",
-                "about-p3": "Our mission is to help you savor the moments that truly matter. Enjoy great food. Sip on a refreshing drink. And above all, unwind and feel at home. We sincerely appreciate your continued support and trust",
-                "promo1-p1": "2 Medium Pizzas",
-                "promo1-p2": "Soft Drinks",
-                "promo1-p3": "Garlic Bread or Patato Wedges",
-                "promo1-p4": "Salad to share",
-                "promo2-p1": "Hope you are hungry. Buy one regular priced pizza online and get a second pizza totally free!",
-                "promo2-p2": "Online only!",
-                "promo3-p1": "6 Delicious regular size pizzas to choose from: Margherita, Capricciosa, Prosciutto e Funghi, Diavola, Calzone, Primavera.",
-                "catering-p1": "Restaurant Pronto can cater to any party or event irrespective of how big or small. We specialize in catering with personalised service and special menus on request. In our menu palette, you'll discover unique and sophisticated tastes - all of which will help you uncover the true greatness of the mexican restaurant.",
-                "catering-p2": "Tell us about your event at office@pronto-wp.com",
-                "delivery-p1": "Looking for food delivery nearby? Not everybody knows or has the time to prepare tasty food.",
-                "delivery-p2": "When you want to get served like a king then food delivery from restaurant Pronto will be your best choice.",
-                "delivery-p3": "Simply select \"Delivery\" at the checkout screen and we hope you'll appreciate our food delivery service."
+                "about": "At Restaurant Pronto, we take pride in bringing our guests vibrant and authentic Mexican cuisine, crafted with care and rich culinary tradition. Every dish we serve is full of bold flavors and prepared to deliver a memorable dining experience. We are confident you will leave satisfied.\n\nThe secret to our success is simple: creating exceptional meals using fresh, high-quality ingredients that capture the true essence of Mexican cooking in every bite.\n\nOur mission is to help you savor the moments that truly matter. Enjoy great food. Sip on a refreshing drink. And above all, unwind and feel at home. We sincerely appreciate your continued support and trust",
+                "promo": "2 Medium Pizzas\n\nSoft Drinks\n\nGarlic Bread or Patato Wedges\n\nSalad to share\n\nHope you are hungry. Buy one regular priced pizza online and get a second pizza totally free!\n\nOnline only!\n\n6 Delicious regular size pizzas to choose from: Margherita, Capricciosa, Prosciutto e Funghi, Diavola, Calzone, Primavera.",
+                "catering": "Restaurant Pronto can cater to any party or event irrespective of how big or small. We specialize in catering with personalised service and special menus on request. In our menu palette, you'll discover unique and sophisticated tastes - all of which will help you uncover the true greatness of the mexican restaurant.\n\nTell us about your event at office@pronto-wp.com",
+                "delivery": "Looking for food delivery nearby? Not everybody knows or has the time to prepare tasty food.\n\nWhen you want to get served like a king then food delivery from restaurant Pronto will be your best choice.\n\nSimply select \"Delivery\" at the checkout screen and we hope you'll appreciate our food delivery service."
             },
             titles: {
                 "hero-btn-1": "Table Reservation",
@@ -846,28 +736,9 @@
             }
         };
 
-        window.syncColor = (source, targetId) => {
-            const target = document.getElementById(targetId);
-            if (target) {
-                target.value = source.value;
-            }
-            window.updateContent();
-        };
-
         window.updateContent = () => {
             pageData.title = document.getElementById('site-title').value;
-
-            if (!pageData.gloriafood) pageData.gloriafood = {};
-            pageData.gloriafood.cuid = document.getElementById('glf-cuid').value;
-            pageData.gloriafood.ruid = document.getElementById('glf-ruid').value;
-            pageData.gloriafood.order_bg = document.getElementById('glf-order-bg').value;
-            pageData.gloriafood.order_txt = document.getElementById('glf-order-txt').value;
-            pageData.gloriafood.res_bg = document.getElementById('glf-res-bg').value;
-            pageData.gloriafood.res_txt = document.getElementById('glf-res-txt').value;
-            pageData.gloriafood.has_res = document.getElementById('glf-has-res').checked;
-
-            window.updateIntegrationCode();
-
+            pageData.showReservations = document.getElementById('show-reservations').checked;
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
             pageData.contact.hours = document.getElementById('contact-hours').value;
@@ -925,37 +796,6 @@
             }
         };
 
-        window.updateIntegrationCode = () => {
-            const gf = pageData.gloriafood || {};
-            const cuid = gf.cuid || '';
-            const ruid = gf.ruid || '';
-            const oBg = gf.order_bg || '#f2a04a';
-            const oTx = gf.order_txt || '#ffffff';
-            const rBg = gf.res_bg || '#2f4854';
-            const rTx = gf.res_txt || '#ffffff';
-
-            let code = `<!-- 1. GloriaFood Engine -->\n<script src="https://www.fbgcdn.com/embedder/js/ewm2.js"><\/script>\n\n`;
-            code += `<!-- 2. Menutech Library -->\n<script src="https://menutech.services/menutechUI.js"><\/script>\n\n`;
-            code += `<!-- 3. Custom Buttons -->\n`;
-            code += `<menutech-orders \n  cuid="${cuid}" \n  ruid="${ruid}" \n  background="${oBg}" \n  color="${oTx}"\n  data-glf-cuid="${cuid}" \n  data-glf-ruid="${ruid}">\n</menutech-orders>\n`;
-            if (gf.has_res) {
-                code += `\n<menutech-reservations \n  cuid="${cuid}" \n  ruid="${ruid}" \n  background="${rBg}" \n  color="${rTx}"\n  data-glf-cuid="${cuid}" \n  data-glf-ruid="${ruid}" \n  data-glf-reservation="true">\n</menutech-reservations>\n`;
-            }
-            code += `\n<script>setTimeout(() => { if(window.glfBindButtons) window.glfBindButtons(); }, 1000);<\/script>`;
-
-            const codeEl = document.getElementById('integration-code');
-            if (codeEl) codeEl.textContent = code;
-        };
-
-        window.copyIntegrationCode = () => {
-            const code = document.getElementById('integration-code').textContent;
-            navigator.clipboard.writeText(code);
-            const btn = document.getElementById('btn-copy-code');
-            const originalText = btn.innerText;
-            btn.innerText = 'Copied!';
-            setTimeout(() => btn.innerText = originalText, 2000);
-        };
-
         // Click-to-Locate Handler
         window.addEventListener('message', (event) => {
             if (event.data.type === 'SCROLL_TO') {
@@ -973,25 +813,25 @@
                     'about-subtitle': 'about-subtitle',
                     'about-img-1': 'about1-drop-zone',
                     'about-img-2': 'about2-drop-zone',
-                    'about-p1': 'about-p1', 'about-p2': 'about-p2', 'about-p3': 'about-p3',
+                    'about-p1': 'about', 'about-p2': 'about', 'about-p3': 'about',
                     'promo-section': 'promo-drop-zone',
                     'promo1-title': 'promo1-title', 'promo1-subtitle': 'promo1-subtitle',
-                    'promo1-p1': 'promo1-p1', 'promo1-p2': 'promo1-p2', 'promo1-p3': 'promo1-p3', 'promo1-p4': 'promo1-p4',
+                    'promo1-p1': 'promo', 'promo1-p2': 'promo', 'promo1-p3': 'promo', 'promo1-p4': 'promo',
                     'promo2-title': 'promo2-title', 'promo2-subtitle': 'promo2-subtitle',
-                    'promo2-p1': 'promo2-p1', 'promo2-p2': 'promo2-p2',
+                    'promo2-p1': 'promo', 'promo2-p2': 'promo',
                     'promo3-title': 'promo3-title', 'promo3-subtitle': 'promo3-subtitle',
-                    'promo3-p1': 'promo3-p1',
+                    'promo3-p1': 'promo',
                     'gallery-title': 'gallery-title',
                     'gallery-subtitle': 'gallery-subtitle',
                     'gallery-container': 'gallery-drop-zone',
                     'catering-title': 'catering-title',
                     'catering-subtitle': 'catering-subtitle',
                     'catering-section': 'catering-drop-zone',
-                    'catering-p1': 'catering-p1', 'catering-p2': 'catering-p2',
+                    'catering-p1': 'catering', 'catering-p2': 'catering',
                     'delivery-title': 'delivery-title',
                     'delivery-subtitle': 'delivery-subtitle',
                     'delivery-image': 'delivery-drop-zone',
-                    'delivery-p1': 'delivery-p1', 'delivery-p2': 'delivery-p2', 'delivery-p3': 'delivery-p3',
+                    'delivery-p1': 'delivery', 'delivery-p2': 'delivery', 'delivery-p3': 'delivery',
                     'footer-phone': 'contact-phone',
                     'footer-address': 'contact-address',
                     'footer-hours': 'contact-hours',
@@ -1044,9 +884,6 @@
             const scriptInject = `<script>window.MENU_TECH_STATE = ${JSON.stringify(pageData)};<\/script>`;
             html = html.replace('</head>', `${scriptInject}\n</head>`);
 
-            // Menutech: Update library reference to CDN
-            html = html.replace('<script src="menutechUI.js"></script>', '<script src="https://menutech.xyz/menutechUI.min.js"></script>');
-
             const blob = new Blob([html], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1069,53 +906,51 @@
         })();
 
         function migrateData(config) {
-            if (!config) config = {};
+            if (!config) return JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-            // 1. Paragraphs: De-consolidate if needed
+            // Ensure basic objects exist
+            if (!config.contact) config.contact = JSON.parse(JSON.stringify(DEFAULT_DATA.contact));
+            if (!config.socials) config.socials = JSON.parse(JSON.stringify(DEFAULT_DATA.socials));
+            if (!config.gallery) config.gallery = JSON.parse(JSON.stringify(DEFAULT_DATA.gallery));
+
+            // Paragraphs Migration
             if (!config.paragraphs) {
                 config.paragraphs = JSON.parse(JSON.stringify(DEFAULT_DATA.paragraphs));
-            } else {
+            } else if (config.paragraphs["about-p1"]) {
+                // Migrate from individual keys to consolidated keys
                 const p = config.paragraphs;
-                if (p.about && !p["about-p1"]) {
-                    const segs = p.about.split('\n\n');
-                    p["about-p1"] = segs[0] || ""; p["about-p2"] = segs[1] || ""; p["about-p3"] = segs[2] || "";
-                    delete p.about;
-                }
-                if (p.promo && !p["promo1-p1"]) {
-                    const segs = p.promo.split('\n\n');
-                    p["promo1-p1"] = segs[0] || ""; p["promo1-p2"] = segs[1] || ""; p["promo1-p3"] = segs[2] || ""; p["promo1-p4"] = segs[3] || "";
-                    p["promo2-p1"] = segs[4] || ""; p["promo2-p2"] = segs[5] || ""; p["promo3-p1"] = segs[6] || "";
-                    delete p.promo;
-                }
-                if (p.catering && !p["catering-p1"]) {
-                    const segs = p.catering.split('\n\n');
-                    p["catering-p1"] = segs[0] || ""; p["catering-p2"] = segs[1] || "";
-                    delete p.catering;
-                }
-                if (p.delivery && !p["delivery-p1"]) {
-                    const segs = p.delivery.split('\n\n');
-                    p["delivery-p1"] = segs[0] || ""; p["delivery-p2"] = segs[1] || ""; p["delivery-p3"] = segs[2] || "";
-                    delete p.delivery;
-                }
+                config.paragraphs = {
+                    about: [p["about-p1"], p["about-p2"], p["about-p3"]].filter(Boolean).join('\n\n'),
+                    promo: [p["promo1-p1"], p["promo1-p2"], p["promo1-p3"], p["promo1-p4"], p["promo2-p1"], p["promo2-p2"], p["promo3-p1"]].filter(Boolean).join('\n\n'),
+                    catering: [p["catering-p1"], p["catering-p2"]].filter(Boolean).join('\n\n'),
+                    delivery: [p["delivery-p1"], p["delivery-p2"], p["delivery-p3"]].filter(Boolean).join('\n\n')
+                };
             }
-
-            // Fill missing paragraph keys
+            // Ensure all required paragraph keys exist
             Object.keys(DEFAULT_DATA.paragraphs).forEach(key => {
-                if (config.paragraphs[key] === undefined) config.paragraphs[key] = DEFAULT_DATA.paragraphs[key];
+                if (config.paragraphs[key] === undefined) {
+                    config.paragraphs[key] = DEFAULT_DATA.paragraphs[key];
+                }
             });
 
-            // 2. Titles Migration
+            // Titles Migration
             if (!config.titles) {
                 config.titles = JSON.parse(JSON.stringify(DEFAULT_DATA.titles));
             }
+            // Ensure all required title keys exist
             Object.keys(DEFAULT_DATA.titles).forEach(key => {
-                if (config.titles[key] === undefined) config.titles[key] = DEFAULT_DATA.titles[key];
+                if (config.titles[key] === undefined) {
+                    config.titles[key] = DEFAULT_DATA.titles[key];
+                }
             });
 
-            // 3. Ensure other critical sections exist (GloriaFood, etc)
-            if (!config.gloriafood) config.gloriafood = JSON.parse(JSON.stringify(DEFAULT_DATA.gloriafood));
-            if (!config.contact) config.contact = JSON.parse(JSON.stringify(DEFAULT_DATA.contact));
-            if (!config.socials) config.socials = JSON.parse(JSON.stringify(DEFAULT_DATA.socials));
+            // Top level fields
+            const topFields = ['heroImg', 'aboutImg1', 'aboutImg2', 'promoBg', 'cateringBg', 'deliveryImg', 'title', 'lang', 'showReservations'];
+            topFields.forEach(field => {
+                if (config[field] === undefined || config[field] === null || config[field] === "") {
+                    config[field] = DEFAULT_DATA[field];
+                }
+            });
 
             return config;
         }
@@ -1336,26 +1171,7 @@
         function syncForm() {
             applyEditorLanguage(pageData.lang);
             document.getElementById('site-title').value = pageData.title || '';
-            window.updateIntegrationCode();
-
-            if (pageData.gloriafood) {
-                document.getElementById('glf-cuid').value = pageData.gloriafood.cuid || '';
-                document.getElementById('glf-ruid').value = pageData.gloriafood.ruid || '';
-
-                document.getElementById('glf-order-bg').value = pageData.gloriafood.order_bg || '#f2a04a';
-                document.getElementById('glf-order-bg-hex').value = pageData.gloriafood.order_bg || '#f2a04a';
-
-                document.getElementById('glf-order-txt').value = pageData.gloriafood.order_txt || '#ffffff';
-                document.getElementById('glf-order-txt-hex').value = pageData.gloriafood.order_txt || '#ffffff';
-
-                document.getElementById('glf-res-bg').value = pageData.gloriafood.res_bg || '#2f4854';
-                document.getElementById('glf-res-bg-hex').value = pageData.gloriafood.res_bg || '#2f4854';
-
-                document.getElementById('glf-res-txt').value = pageData.gloriafood.res_txt || '#ffffff';
-                document.getElementById('glf-res-txt-hex').value = pageData.gloriafood.res_txt || '#ffffff';
-
-                document.getElementById('glf-has-res').checked = pageData.gloriafood.has_res !== false;
-            }
+            document.getElementById('show-reservations').checked = pageData.showReservations !== false;
 
             // Sync paragraphs
             if (pageData.paragraphs) {
@@ -1474,6 +1290,22 @@
                 }
             }
         };
+
+        // Attach functions to window
+        window.switchContext = switchContext;
+        window.toggleContextSidebar = toggleContextSidebar;
+        window.saveTemplate = saveTemplate;
+        window.exportHTML = exportHTML;
+        window.updateContent = updateContent;
+        window.updateSocial = updateSocial;
+        window.addSocial = addSocial;
+        window.removeSocial = removeSocial;
+        window.removeGalleryItem = removeGalleryItem;
+        window.handleImageUpload = handleImageUpload;
+        window.updateIframe = updateIframe;
+        window.setPreviewMode = setPreviewMode;
+        window.toggleLang = toggleLang;
+        window.setLang = setLang;
 
     </script>
 </body>

@@ -6,7 +6,7 @@
     <title>Restaurant – Mexican Food & Delivery</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Plus+Jakarta+Sans:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <style>
         /* Reset and Base Styles */
@@ -186,27 +186,6 @@ a {
     gap: 15px;
     justify-content: center;
     flex-wrap: wrap;
-    max-width: 700px;
-    margin: 0 auto;
-}
-
-.hero-buttons menutech-orders,
-.hero-buttons menutech-reservations {
-    display: block;
-    flex: 1;
-    min-width: 250px;
-}
-
-@media (max-width: 600px) {
-    .hero-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
-    .hero-buttons menutech-orders,
-    .hero-buttons menutech-reservations {
-        width: 100%;
-        max-width: 320px;
-    }
 }
 
 .btn {
@@ -677,36 +656,8 @@ a {
             </h2>
             <h1 class="hero-title" id="hero-title">Template Menutech</h1>
             <div class="hero-buttons">
-                <!-- 1. Script Motor GloriaFood -->
-                <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
-
-                <!-- 2. Librería Menutech -->
-                <script src="menutechUI.js"></script>
-
-                <!-- 3. Botones Personalizados -->
-                <menutech-orders
-                cuid="52230bb2-0d10-491a-80a6-3c5603e87152"
-                ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"
-                background="#f2a04a"
-                color="#ffffff"
-                data-glf-cuid="52230bb2-0d10-491a-80a6-3c5603e87152"
-                data-glf-ruid="010d211a-aff0-4aa2-b4d0-739fce78437a">
-                </menutech-orders>
-
-                <menutech-reservations
-                cuid="52230bb2-0d10-491a-80a6-3c5603e87152"
-                ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"
-                background="#2f4854"
-                color="#ffffff"
-                data-glf-cuid="52230bb2-0d10-491a-80a6-3c5603e87152"
-                data-glf-ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"
-                data-glf-reservation="true">
-                </menutech-reservations>
-
-                <!-- 4. Forzar vinculación (Opcional si no abre a la primera) -->
-                <script>
-                setTimeout(() => { if(window.glfBindButtons) window.glfBindButtons(); }, 1000);
-                </script>
+                <a href="#" class="btn btn-outline" id="hero-btn-1" data-es="Reservar Mesa" data-en="Table Reservation">Table Reservation</a>
+                <menutech-platform-orders view="popup" custom-label="See MENU & Order Now!" id="hero-btn-2"></menutech-platform-orders>
             </div>
         </div>
     </header>
@@ -928,46 +879,20 @@ a {
             if (data.titles) {
                 const btn1 = document.getElementById('hero-btn-1');
                 const btn2 = document.getElementById('hero-btn-2');
-                if (btn1 && data.titles['hero-btn-1']) btn1.textContent = data.titles['hero-btn-1'];
-                if (btn2 && data.titles['hero-btn-2']) btn2.setAttribute('custom-label', data.titles['hero-btn-2']);
+                if (btn1) {
+                    if (data.titles['hero-btn-1']) btn1.textContent = data.titles['hero-btn-1'];
+                    btn1.style.display = (data.showReservations !== false) ? "" : "none";
+                }
+                if (btn2 && data.titles['hero-btn-2']) {
+                    btn2.setAttribute('custom-label', data.titles['hero-btn-2']);
+                    // Force update if component is already initialized
+                    if (btn2.render) btn2.render();
+                }
             }
 
             // Hero
             if (data.heroImg) {
                 document.getElementById('hero-section').style.backgroundImage = `url('${data.heroImg}')`;
-            }
-
-            // GloriaFood
-            if (data.gloriafood) {
-                const oBtn = document.querySelector('menutech-orders');
-                const rBtn = document.querySelector('menutech-reservations');
-                const lang = data.lang || 'es';
-                const cuid = data.gloriafood.cuid || '';
-                const ruid = data.gloriafood.ruid || '';
-
-                if (oBtn) {
-                    oBtn.setAttribute('cuid', cuid);
-                    oBtn.setAttribute('ruid', ruid);
-                    oBtn.setAttribute('background', data.gloriafood.order_bg || '#f2a04a');
-                    oBtn.setAttribute('color', data.gloriafood.order_txt || '#ffffff');
-                    oBtn.setAttribute('label', lang === 'es' ? 'ORDENAR AHORA' : 'See MENU & Order Now!');
-                    // Sync with GloriaFood attributes for the motor
-                    oBtn.setAttribute('data-glf-cuid', cuid);
-                    oBtn.setAttribute('data-glf-ruid', ruid);
-                }
-
-                if (rBtn) {
-                    rBtn.style.display = data.gloriafood.has_res ? 'block' : 'none';
-                    rBtn.setAttribute('cuid', cuid);
-                    rBtn.setAttribute('ruid', ruid);
-                    rBtn.setAttribute('background', data.gloriafood.res_bg || '#2f4854');
-                    rBtn.setAttribute('color', data.gloriafood.res_txt || '#ffffff');
-                    rBtn.setAttribute('label', lang === 'es' ? 'RESERVAR MESA' : 'RESERVE A TABLE');
-                    // Sync with GloriaFood attributes for the motor
-                    rBtn.setAttribute('data-glf-cuid', cuid);
-                    rBtn.setAttribute('data-glf-ruid', ruid);
-                    rBtn.setAttribute('data-glf-reservation', 'true');
-                }
             }
 
             // Section Images
@@ -1020,12 +945,40 @@ a {
 
             // Paragraphs
             if (data.paragraphs) {
-                Object.keys(data.paragraphs).forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) {
-                        const content = data.paragraphs[id] || "";
-                        el.textContent = content;
-                        el.style.display = content.trim() === "" ? "none" : "";
+                // Section to elements mapping
+                const sectionMap = {
+                    about: ['about-p1', 'about-p2', 'about-p3'],
+                    promo: ['promo1-p1', 'promo1-p2', 'promo1-p3', 'promo1-p4', 'promo2-p1', 'promo2-p2', 'promo3-p1'],
+                    catering: ['catering-p1', 'catering-p2'],
+                    delivery: ['delivery-p1', 'delivery-p2', 'delivery-p3']
+                };
+
+                Object.keys(data.paragraphs).forEach(sectionKey => {
+                    const content = data.paragraphs[sectionKey] || "";
+                    const segments = content.split('\n\n');
+                    const elementIds = sectionMap[sectionKey];
+
+                    if (elementIds) {
+                        elementIds.forEach((id, index) => {
+                            const el = document.getElementById(id);
+                            if (el) {
+                                const segment = segments[index] || "";
+                                el.textContent = segment;
+                                // Menutech: Hide element if segment is empty
+                                el.style.display = segment.trim() === "" ? "none" : "";
+                            }
+                        });
+
+                        // Menutech: Also hide parent sections if all segments are empty
+                        if (sectionKey === 'promo') {
+                            const p1 = document.getElementById('promo1-title')?.closest('.promo-card');
+                            const p2 = document.getElementById('promo2-title')?.closest('.promo-card');
+                            const p3 = document.getElementById('promo3-title')?.closest('.promo-card');
+
+                            if (p1) p1.style.display = (segments[0] || segments[1] || segments[2] || segments[3]) ? "" : "none";
+                            if (p2) p2.style.display = (segments[4] || segments[5]) ? "" : "none";
+                            if (p3) p3.style.display = (segments[6]) ? "" : "none";
+                        }
                     }
                 });
             }
