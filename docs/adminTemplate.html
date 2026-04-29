@@ -385,74 +385,38 @@
                 </div>
 
                 <div class="control-group">
-                    <label data-i18n="actionButtons">Action Buttons</label>
+                    <label>Action Buttons</label>
+                    <input type="text" id="cuid" class="input-field" placeholder="CUID" oninput="window.updateContent()">
+                    <input type="text" id="ruid" class="input-field" placeholder="RUID" oninput="window.updateContent()">
 
-                    <div style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px;">
-                        <label data-i18n="menutechOrders" style="color: var(--orange); margin-bottom: 10px;">Menutech Orders</label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                            <div>
-                                <label style="font-size: 0.65rem; color: var(--text-dim);">CUID</label>
-                                <input type="text" id="btnOrderCuid" class="input-field" style="margin-bottom:0;" oninput="window.updateContent()">
-                            </div>
-                            <div>
-                                <label style="font-size: 0.65rem; color: var(--text-dim);">RUID</label>
-                                <input type="text" id="btnOrderRuid" class="input-field" style="margin-bottom:0;" oninput="window.updateContent()">
-                            </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                        <div>
+                            <label style="font-size: 0.6rem;">Order BG</label>
+                            <input type="color" id="btnOrderBg" class="input-field" style="padding: 2px; height: 30px;" oninput="window.updateContent()">
                         </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <div>
-                                <label data-i18n="bgColor" style="font-size: 0.6rem; color: var(--text-dim);">Background</label>
-                                <div style="display: flex; gap: 5px;">
-                                    <input type="color" id="btnOrderBg-picker" style="width:30px; height:34px; border:none; padding:0; background:none; cursor:pointer;" oninput="document.getElementById('btnOrderBg').value = this.value; window.updateContent()">
-                                    <input type="text" id="btnOrderBg" class="input-field" style="margin-bottom:0; font-size: 0.7rem;" oninput="document.getElementById('btnOrderBg-picker').value = this.value; window.updateContent()">
-                                </div>
-                            </div>
-                            <div>
-                                <label data-i18n="textColor" style="font-size: 0.6rem; color: var(--text-dim);">Text Color</label>
-                                <div style="display: flex; gap: 5px;">
-                                    <input type="color" id="btnOrderCol-picker" style="width:30px; height:34px; border:none; padding:0; background:none; cursor:pointer;" oninput="document.getElementById('btnOrderCol').value = this.value; window.updateContent()">
-                                    <input type="text" id="btnOrderCol" class="input-field" style="margin-bottom:0; font-size: 0.7rem;" oninput="document.getElementById('btnOrderCol-picker').value = this.value; window.updateContent()">
-                                </div>
-                            </div>
+                        <div>
+                            <label style="font-size: 0.6rem;">Order Text</label>
+                            <input type="color" id="btnOrderCol" class="input-field" style="padding: 2px; height: 30px;" oninput="window.updateContent()">
                         </div>
                     </div>
 
-                    <div style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px;">
-                        <label data-i18n="menutechReservations" style="color: var(--orange); margin-bottom: 10px;">Menutech Reservations</label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                            <div>
-                                <label style="font-size: 0.65rem; color: var(--text-dim);">CUID</label>
-                                <input type="text" id="btnResCuid" class="input-field" style="margin-bottom:0;" oninput="window.updateContent()">
-                            </div>
-                            <div>
-                                <label style="font-size: 0.65rem; color: var(--text-dim);">RUID</label>
-                                <input type="text" id="btnResRuid" class="input-field" style="margin-bottom:0;" oninput="window.updateContent()">
-                            </div>
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <div>
-                                <label data-i18n="bgColor" style="font-size: 0.6rem; color: var(--text-dim);">Background</label>
-                                <div style="display: flex; gap: 5px;">
-                                    <input type="color" id="btnResBg-picker" style="width:30px; height:34px; border:none; padding:0; background:none; cursor:pointer;" oninput="document.getElementById('btnResBg').value = this.value; window.updateContent()">
-                                    <input type="text" id="btnResBg" class="input-field" style="margin-bottom:0; font-size: 0.7rem;" oninput="document.getElementById('btnResBg-picker').value = this.value; window.updateContent()">
-                                </div>
-                            </div>
-                            <div>
-                                <label data-i18n="textColor" style="font-size: 0.6rem; color: var(--text-dim);">Text Color</label>
-                                <div style="display: flex; gap: 5px;">
-                                    <input type="color" id="btnResCol-picker" style="width:30px; height:34px; border:none; padding:0; background:none; cursor:pointer;" oninput="document.getElementById('btnResCol').value = this.value; window.updateContent()">
-                                    <input type="text" id="btnResCol" class="input-field" style="margin-bottom:0; font-size: 0.7rem;" oninput="document.getElementById('btnResCol-picker').value = this.value; window.updateContent()">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="switch-container">
-                        <span data-i18n="enableRes" style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">Enable Table Reservations</span>
+                    <div class="switch-container" style="margin-top:15px; margin-bottom: 10px;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">Enable Reservations</span>
                         <label class="switch">
                             <input type="checkbox" id="show-reservations" onchange="window.updateContent()">
                             <span class="slider"></span>
                         </label>
+                    </div>
+
+                    <div id="res-buttons-config" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label style="font-size: 0.6rem;">Res BG</label>
+                            <input type="color" id="btnResBg" class="input-field" style="padding: 2px; height: 30px;" oninput="window.updateContent()">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.6rem;">Res Text</label>
+                            <input type="color" id="btnResCol" class="input-field" style="padding: 2px; height: 30px;" oninput="window.updateContent()">
+                        </div>
                     </div>
                 </div>
 
@@ -663,13 +627,7 @@
                 cateringParagraphs: "Catering Paragraphs",
                 deliveryParagraphs: "Delivery Paragraphs",
                 sectionTitle: "Section Title",
-                sectionSubtitle: "Section Subtitle",
-                actionButtons: "Action Buttons",
-                menutechOrders: "Menutech Orders",
-                menutechReservations: "Menutech Reservations",
-                bgColor: "Background Color",
-                textColor: "Text Color",
-                enableRes: "Enable Table Reservations"
+                sectionSubtitle: "Section Subtitle"
             },
             es: {
                 saving: "Guardando cambios...",
@@ -711,28 +669,20 @@
                 cateringParagraphs: "Párrafos Catering",
                 deliveryParagraphs: "Párrafos Delivery",
                 sectionTitle: "Título de la Sección",
-                sectionSubtitle: "Subtítulo de la Sección",
-                actionButtons: "Botones de Acción",
-                menutechOrders: "Menutech Orders",
-                menutechReservations: "Menutech Reservations",
-                bgColor: "Color de Fondo",
-                textColor: "Color de Texto",
-                enableRes: "Activar Reservación de Mesas"
+                sectionSubtitle: "Subtítulo de la Sección"
             }
         };
 
         const DEFAULT_DATA = {
             lang: 'en',
             showReservations: true,
-            title: 'Template Menutech',
-            btnOrderCuid: '52230bb2-0d10-491a-80a6-3c5603e87152',
-            btnOrderRuid: '010d211a-aff0-4aa2-b4d0-739fce78437a',
+            cuid: '52230bb2-0d10-491a-80a6-3c5603e87152',
+            ruid: '010d211a-aff0-4aa2-b4d0-739fce78437a',
             btnOrderBg: '#f2a04a',
             btnOrderCol: '#ffffff',
-            btnResCuid: '52230bb2-0d10-491a-80a6-3c5603e87152',
-            btnResRuid: '010d211a-aff0-4aa2-b4d0-739fce78437a',
             btnResBg: '#2f4854',
             btnResCol: '#ffffff',
+            title: 'Template Menutech',
             heroImg: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
             aboutImg1: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
             aboutImg2: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
@@ -759,6 +709,8 @@
                 "delivery": "Looking for food delivery nearby? Not everybody knows or has the time to prepare tasty food.\n\nWhen you want to get served like a king then food delivery from restaurant Pronto will be your best choice.\n\nSimply select \"Delivery\" at the checkout screen and we hope you'll appreciate our food delivery service."
             },
             titles: {
+                "hero-btn-1": "Table Reservation",
+                "hero-btn-2": "See MENU & Order Now!",
                 "about-title": "We are Pronto Mexican Food",
                 "about-subtitle": "About Us",
                 "promo1-title": "Best Friends Deal",
@@ -817,16 +769,15 @@
         window.updateContent = () => {
             pageData.title = document.getElementById('site-title').value;
             pageData.showReservations = document.getElementById('show-reservations').checked;
-
-            pageData.btnOrderCuid = document.getElementById('btnOrderCuid').value;
-            pageData.btnOrderRuid = document.getElementById('btnOrderRuid').value;
+            pageData.cuid = document.getElementById('cuid').value;
+            pageData.ruid = document.getElementById('ruid').value;
             pageData.btnOrderBg = document.getElementById('btnOrderBg').value;
             pageData.btnOrderCol = document.getElementById('btnOrderCol').value;
-
-            pageData.btnResCuid = document.getElementById('btnResCuid').value;
-            pageData.btnResRuid = document.getElementById('btnResRuid').value;
             pageData.btnResBg = document.getElementById('btnResBg').value;
             pageData.btnResCol = document.getElementById('btnResCol').value;
+
+            const resConfig = document.getElementById('res-buttons-config');
+            if (resConfig) resConfig.style.opacity = pageData.showReservations ? '1' : '0.5';
 
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
@@ -843,7 +794,6 @@
             // Sync titles from inputs to data
             if (pageData.titles) {
                 Object.keys(pageData.titles).forEach(key => {
-                    // Skip hero-btn inputs if they don't exist anymore in the DOM
                     const el = document.getElementById(key);
                     if (el) pageData.titles[key] = el.value;
                 });
@@ -896,6 +846,8 @@
                 const mapping = {
                     'nav-brand': 'site-title',
                     'hero-title': 'site-title',
+                    'hero-btn-1': 'hero-btn-1',
+                    'hero-btn-2': 'hero-btn-2',
                     'hero-section': 'hero-drop-zone',
                     'about-title': 'about-title',
                     'about-subtitle': 'about-subtitle',
@@ -1032,14 +984,8 @@
                 }
             });
 
-            // Migration for separate CUID/RUID per button
-            if (config.cuid && !config.btnOrderCuid) config.btnOrderCuid = config.cuid;
-            if (config.ruid && !config.btnOrderRuid) config.btnOrderRuid = config.ruid;
-            if (config.cuid && !config.btnResCuid) config.btnResCuid = config.cuid;
-            if (config.ruid && !config.btnResRuid) config.btnResRuid = config.ruid;
-
             // Top level fields
-            const topFields = ['heroImg', 'aboutImg1', 'aboutImg2', 'promoBg', 'cateringBg', 'deliveryImg', 'title', 'lang', 'showReservations', 'btnOrderCuid', 'btnOrderRuid', 'btnOrderBg', 'btnOrderCol', 'btnResCuid', 'btnResRuid', 'btnResBg', 'btnResCol'];
+            const topFields = ['heroImg', 'aboutImg1', 'aboutImg2', 'promoBg', 'cateringBg', 'deliveryImg', 'title', 'lang', 'showReservations', 'cuid', 'ruid', 'btnOrderBg', 'btnOrderCol', 'btnResBg', 'btnResCol'];
             topFields.forEach(field => {
                 if (config[field] === undefined || config[field] === null || config[field] === "") {
                     config[field] = DEFAULT_DATA[field];
@@ -1266,20 +1212,15 @@
             applyEditorLanguage(pageData.lang);
             document.getElementById('site-title').value = pageData.title || '';
             document.getElementById('show-reservations').checked = pageData.showReservations !== false;
+            document.getElementById('cuid').value = pageData.cuid || '';
+            document.getElementById('ruid').value = pageData.ruid || '';
+            document.getElementById('btnOrderBg').value = pageData.btnOrderBg || '#f2a04a';
+            document.getElementById('btnOrderCol').value = pageData.btnOrderCol || '#ffffff';
+            document.getElementById('btnResBg').value = pageData.btnResBg || '#2f4854';
+            document.getElementById('btnResCol').value = pageData.btnResCol || '#ffffff';
 
-            document.getElementById('btnOrderCuid').value = pageData.btnOrderCuid || '';
-            document.getElementById('btnOrderRuid').value = pageData.btnOrderRuid || '';
-            document.getElementById('btnOrderBg').value = pageData.btnOrderBg || '';
-            document.getElementById('btnOrderBg-picker').value = pageData.btnOrderBg || '#000000';
-            document.getElementById('btnOrderCol').value = pageData.btnOrderCol || '';
-            document.getElementById('btnOrderCol-picker').value = pageData.btnOrderCol || '#000000';
-
-            document.getElementById('btnResCuid').value = pageData.btnResCuid || '';
-            document.getElementById('btnResRuid').value = pageData.btnResRuid || '';
-            document.getElementById('btnResBg').value = pageData.btnResBg || '';
-            document.getElementById('btnResBg-picker').value = pageData.btnResBg || '#000000';
-            document.getElementById('btnResCol').value = pageData.btnResCol || '';
-            document.getElementById('btnResCol-picker').value = pageData.btnResCol || '#000000';
+            const resConfig = document.getElementById('res-buttons-config');
+            if (resConfig) resConfig.style.opacity = pageData.showReservations ? '1' : '0.5';
 
             // Sync paragraphs
             if (pageData.paragraphs) {
