@@ -890,6 +890,7 @@ a {
             }
         }
 
+        let bindTimeout = null;
         function updateUI(data) {
             console.log("MT: Updating UI with data", data);
             if (!data) return;
@@ -907,24 +908,28 @@ a {
                 if (heroTitle) heroTitle.textContent = data.title;
             }
 
-            // Hero Buttons / Custom Labels & Colors
+            // Hero Buttons / Colors & Config
             const btnRes = document.getElementById('hero-btn-1');
             const btnOrder = document.getElementById('hero-btn-2');
 
             if (btnOrder) {
                 if (data.cuid) {
                     btnOrder.setAttribute('cuid', data.cuid);
-                    btnOrder.setAttribute('data-glf-cuid', data.cuid);
+                    btnOrder.cuid = data.cuid;
                 }
                 if (data.ruid) {
                     btnOrder.setAttribute('ruid', data.ruid);
-                    btnOrder.setAttribute('data-glf-ruid', data.ruid);
+                    btnOrder.ruid = data.ruid;
                 }
-                if (data.btnOrderBg) btnOrder.setAttribute('background', data.btnOrderBg);
-                if (data.btnOrderCol) btnOrder.setAttribute('color', data.btnOrderCol);
-
-                if (data.titles && data.titles['hero-btn-2']) {
-                    btnOrder.setAttribute('custom-label', data.titles['hero-btn-2']);
+                if (data.btnOrderBg) {
+                    btnOrder.setAttribute('background', data.btnOrderBg);
+                    btnOrder.background = data.btnOrderBg;
+                }
+                if (data.btnOrderCol) {
+                    btnOrder.setAttribute('color', data.btnOrderCol);
+                    btnOrder.setAttribute('textColor', data.btnOrderCol);
+                    btnOrder.color = data.btnOrderCol;
+                    btnOrder.textColor = data.btnOrderCol;
                 }
                 if (btnOrder.render) btnOrder.render();
             }
@@ -932,20 +937,30 @@ a {
             if (btnRes) {
                 if (data.cuid) {
                     btnRes.setAttribute('cuid', data.cuid);
-                    btnRes.setAttribute('data-glf-cuid', data.cuid);
+                    btnRes.cuid = data.cuid;
                 }
                 if (data.ruid) {
                     btnRes.setAttribute('ruid', data.ruid);
-                    btnRes.setAttribute('data-glf-ruid', data.ruid);
+                    btnRes.ruid = data.ruid;
                 }
-                if (data.btnResBg) btnRes.setAttribute('background', data.btnResBg);
-                if (data.btnResCol) btnRes.setAttribute('color', data.btnResCol);
+                if (data.btnResBg) {
+                    btnRes.setAttribute('background', data.btnResBg);
+                    btnRes.background = data.btnResBg;
+                }
+                if (data.btnResCol) {
+                    btnRes.setAttribute('color', data.btnResCol);
+                    btnRes.setAttribute('textColor', data.btnResCol);
+                    btnRes.color = data.btnResCol;
+                    btnRes.textColor = data.btnResCol;
+                }
 
-                if (data.titles && data.titles['hero-btn-1']) {
-                    btnRes.setAttribute('custom-label', data.titles['hero-btn-1']);
-                }
-                btnRes.style.display = (data.showReservations !== false) ? "" : "none";
+                btnRes.style.display = (data.showReservations !== false) ? "inline-block" : "none";
                 if (btnRes.render) btnRes.render();
+            }
+
+            if (window.glfBindButtons) {
+                clearTimeout(bindTimeout);
+                bindTimeout = setTimeout(() => window.glfBindButtons(), 100);
             }
 
             // Hero
