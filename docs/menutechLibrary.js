@@ -58,7 +58,7 @@ function injectMenuTechStyles() {
 
 class MenuTechButton extends HTMLElement {
     static get observedAttributes() {
-        return ['cuid', 'ruid', 'color', 'background', 'textcolor', 'border-color', 'custom-label', 'reservation'];
+        return ['cuid', 'ruid', 'color', 'background', 'textcolor', 'textColor', 'border-color', 'custom-label', 'reservation'];
     }
 
     constructor() {
@@ -76,8 +76,9 @@ class MenuTechButton extends HTMLElement {
         if (oldVal !== newVal) {
             this.updateProps();
             this.render();
-            // Icons don't usually change, but if they did we'd call loadIcon
-            if (!this.querySelector('.menutech-icon svg')) this.loadIcon();
+            if (!this.querySelector('.menutech-icon svg')) {
+                this.loadIcon();
+            }
         }
     }
 
@@ -111,13 +112,6 @@ class MenuTechButton extends HTMLElement {
         <span class="btn-text">${text}</span>
       </span>
     `;
-
-        if (this.textColor) {
-            const btnText = this.querySelector('.btn-text');
-            if (btnText) {
-                btnText.style.color = this.textColor;
-            }
-        }
     }
 
     loadIcon() {

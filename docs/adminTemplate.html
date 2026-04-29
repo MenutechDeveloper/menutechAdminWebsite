@@ -382,17 +382,64 @@
                 <div class="control-group">
                     <label data-i18n="generalSettings">Restaurant Name</label>
                     <input type="text" id="site-title" class="input-field" placeholder="Site Title" data-i18n-placeholder="titlePlaceholder" oninput="window.updateContent()">
+                </div>
 
-                    <label style="margin-top:10px;">Hero Buttons Labels</label>
-                    <input type="text" id="hero-btn-1" class="input-field" placeholder="Button 1 Label" oninput="window.updateContent()">
-                    <input type="text" id="hero-btn-2" class="input-field" placeholder="Order Button Label" oninput="window.updateContent()">
+                <div class="control-group">
+                    <label style="margin-bottom: 5px;">Action Buttons</label>
 
-                    <div class="switch-container" style="margin-top:10px;">
-                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">Enable Reservations</span>
-                        <label class="switch">
-                            <input type="checkbox" id="show-reservations" onchange="window.updateContent()">
-                            <span class="slider"></span>
-                        </label>
+                    <!-- Online Orders Config -->
+                    <div style="margin-top: 10px; padding: 12px; background: rgba(255,149,51,0.05); border-radius: 12px; border: 1px solid var(--border);">
+                        <label style="font-size: 0.7rem; color: var(--orange); margin-bottom: 8px;">Online Orders</label>
+                        <input type="text" id="hero-btn-2" class="input-field" style="font-size: 0.8rem; margin-bottom: 8px;" placeholder="Order Button Label" oninput="window.updateContent()">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                            <input type="text" id="order-cuid" class="input-field" style="font-size: 0.7rem; margin-bottom: 0;" placeholder="CUID" oninput="window.updateContent()">
+                            <input type="text" id="order-ruid" class="input-field" style="font-size: 0.7rem; margin-bottom: 0;" placeholder="RUID" oninput="window.updateContent()">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 5px;">
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span style="font-size: 0.6rem; font-weight: 600;">BG:</span>
+                                <input type="color" id="order-bg" value="#f2a04a" style="width:20px; height:20px; border:none; border-radius:4px; cursor:pointer; background:none;" oninput="window.updateContent()">
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span style="font-size: 0.6rem; font-weight: 600;">Text:</span>
+                                <input type="color" id="order-text" value="#ffffff" style="width:20px; height:20px; border:none; border-radius:4px; cursor:pointer; background:none;" oninput="window.updateContent()">
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span style="font-size: 0.6rem; font-weight: 600;">Icon:</span>
+                                <input type="color" id="order-icon" value="#ffffff" style="width:20px; height:20px; border:none; border-radius:4px; cursor:pointer; background:none;" oninput="window.updateContent()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reservations Config -->
+                    <div style="margin-top: 10px; padding: 12px; background: rgba(255,149,51,0.05); border-radius: 12px; border: 1px solid var(--border);">
+                        <label style="font-size: 0.7rem; color: var(--orange); margin-bottom: 8px;">Reservations</label>
+                        <input type="text" id="hero-btn-1" class="input-field" style="font-size: 0.8rem; margin-bottom: 8px;" placeholder="Reservation Button Label" oninput="window.updateContent()">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                            <input type="text" id="res-cuid" class="input-field" style="font-size: 0.7rem; margin-bottom: 0;" placeholder="CUID" oninput="window.updateContent()">
+                            <input type="text" id="res-ruid" class="input-field" style="font-size: 0.7rem; margin-bottom: 0;" placeholder="RUID" oninput="window.updateContent()">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 5px;">
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span style="font-size: 0.6rem; font-weight: 600;">BG:</span>
+                                <input type="color" id="res-bg" value="#2f4854" style="width:20px; height:20px; border:none; border-radius:4px; cursor:pointer; background:none;" oninput="window.updateContent()">
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span style="font-size: 0.6rem; font-weight: 600;">Text:</span>
+                                <input type="color" id="res-text" value="#ffffff" style="width:20px; height:20px; border:none; border-radius:4px; cursor:pointer; background:none;" oninput="window.updateContent()">
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span style="font-size: 0.6rem; font-weight: 600;">Icon:</span>
+                                <input type="color" id="res-icon" value="#ffffff" style="width:20px; height:20px; border:none; border-radius:4px; cursor:pointer; background:none;" oninput="window.updateContent()">
+                            </div>
+                        </div>
+                        <div class="switch-container" style="margin-top:12px; padding: 8px; background: var(--card);">
+                            <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-dim);">Enable Reservations</span>
+                            <label class="switch">
+                                <input type="checkbox" id="show-reservations" onchange="window.updateContent()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -678,6 +725,22 @@
                 "catering": "Restaurant Pronto can cater to any party or event irrespective of how big or small. We specialize in catering with personalised service and special menus on request. In our menu palette, you'll discover unique and sophisticated tastes - all of which will help you uncover the true greatness of the mexican restaurant.\n\nTell us about your event at office@pronto-wp.com",
                 "delivery": "Looking for food delivery nearby? Not everybody knows or has the time to prepare tasty food.\n\nWhen you want to get served like a king then food delivery from restaurant Pronto will be your best choice.\n\nSimply select \"Delivery\" at the checkout screen and we hope you'll appreciate our food delivery service."
             },
+            buttons: {
+                order: {
+                    cuid: '',
+                    ruid: '',
+                    bg: '#f2a04a',
+                    text: '#ffffff',
+                    icon: '#ffffff'
+                },
+                res: {
+                    cuid: '',
+                    ruid: '',
+                    bg: '#2f4854',
+                    text: '#ffffff',
+                    icon: '#ffffff'
+                }
+            },
             titles: {
                 "hero-btn-1": "Table Reservation",
                 "hero-btn-2": "See MENU & Order Now!",
@@ -742,6 +805,24 @@
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
             pageData.contact.hours = document.getElementById('contact-hours').value;
+
+            // Sync buttons
+            pageData.buttons = {
+                order: {
+                    cuid: document.getElementById('order-cuid').value,
+                    ruid: document.getElementById('order-ruid').value,
+                    bg: document.getElementById('order-bg').value,
+                    text: document.getElementById('order-text').value,
+                    icon: document.getElementById('order-icon').value
+                },
+                res: {
+                    cuid: document.getElementById('res-cuid').value,
+                    ruid: document.getElementById('res-ruid').value,
+                    bg: document.getElementById('res-bg').value,
+                    text: document.getElementById('res-text').value,
+                    icon: document.getElementById('res-icon').value
+                }
+            };
 
             // Sync paragraphs from inputs to data
             if (pageData.paragraphs) {
@@ -944,6 +1025,16 @@
                 }
             });
 
+            // Buttons Migration
+            if (!config.buttons) {
+                config.buttons = JSON.parse(JSON.stringify(DEFAULT_DATA.buttons));
+            } else {
+                if (!config.buttons.order) config.buttons.order = JSON.parse(JSON.stringify(DEFAULT_DATA.buttons.order));
+                if (!config.buttons.res) config.buttons.res = JSON.parse(JSON.stringify(DEFAULT_DATA.buttons.res));
+                if (config.buttons.order.icon === undefined) config.buttons.order.icon = DEFAULT_DATA.buttons.order.icon;
+                if (config.buttons.res.icon === undefined) config.buttons.res.icon = DEFAULT_DATA.buttons.res.icon;
+            }
+
             // Top level fields
             const topFields = ['heroImg', 'aboutImg1', 'aboutImg2', 'promoBg', 'cateringBg', 'deliveryImg', 'title', 'lang', 'showReservations'];
             topFields.forEach(field => {
@@ -957,7 +1048,9 @@
 
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
-            if (!session) { location.href = "index.html"; return; }
+            if (!session) {
+                location.href = "index.html"; return;
+            }
             user = session.user;
             activeOwnerId = user.id;
 
@@ -1172,6 +1265,21 @@
             applyEditorLanguage(pageData.lang);
             document.getElementById('site-title').value = pageData.title || '';
             document.getElementById('show-reservations').checked = pageData.showReservations !== false;
+
+            // Sync buttons
+            if (pageData.buttons) {
+                document.getElementById('order-cuid').value = pageData.buttons.order.cuid || '';
+                document.getElementById('order-ruid').value = pageData.buttons.order.ruid || '';
+                document.getElementById('order-bg').value = pageData.buttons.order.bg || '#f2a04a';
+                document.getElementById('order-text').value = pageData.buttons.order.text || '#ffffff';
+                document.getElementById('order-icon').value = pageData.buttons.order.icon || '#ffffff';
+
+                document.getElementById('res-cuid').value = pageData.buttons.res.cuid || '';
+                document.getElementById('res-ruid').value = pageData.buttons.res.ruid || '';
+                document.getElementById('res-bg').value = pageData.buttons.res.bg || '#2f4854';
+                document.getElementById('res-text').value = pageData.buttons.res.text || '#ffffff';
+                document.getElementById('res-icon').value = pageData.buttons.res.icon || '#ffffff';
+            }
 
             // Sync paragraphs
             if (pageData.paragraphs) {
