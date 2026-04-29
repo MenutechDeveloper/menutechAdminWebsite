@@ -76,7 +76,6 @@ class MenuTechButton extends HTMLElement {
         if (oldVal !== newVal) {
             this.updateProps();
             this.render();
-            // Icons don't usually change, but if they did we'd call loadIcon
             if (!this.querySelector('.menutech-icon svg')) this.loadIcon();
         }
     }
@@ -93,6 +92,14 @@ class MenuTechButton extends HTMLElement {
     }
 
     render() {
+        // If IDs are missing, hide the component content
+        if (!this.cuid && !this.ruid) {
+            this.innerHTML = '';
+            this.style.display = 'none';
+            return;
+        }
+        this.style.display = 'inline-block';
+
         const text = this.customLabel || (this.isReservation ? 'Table Reservation' : 'See MENU & Order Now!');
         const reservationAttr = this.isReservation ? 'data-glf-reservation="true"' : '';
         const isOutline = this.borderColor;
@@ -154,3 +161,6 @@ if (!customElements.get('menutech-orders')) {
 if (!customElements.get('menutech-reservations')) {
     customElements.define('menutech-reservations', MenuTechReservations);
 }
+
+// Ensure styles are injected immediately
+injectMenuTechStyles();
