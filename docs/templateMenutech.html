@@ -564,23 +564,16 @@ a {
     .section-title {
         font-size: 28px;
     }
-}
 
-@media (max-width: 600px) {
     .hero-buttons {
         flex-direction: column;
         align-items: center;
+        gap: 10px;
     }
 
     .hero-buttons > * {
         width: 100%;
-        max-width: 250px;
-    }
-
-    .btn {
-        width: 100%;
-        max-width: 250px;
-        text-align: center;
+        max-width: 280px;
     }
 
     .about-images {
@@ -671,18 +664,16 @@ a {
 
                 <!-- 3. Botones Personalizados -->
                 <menutech-orders
-                id="hero-btn-2"
-                cuid=""
-                ruid=""
+                cuid="52230bb2-0d10-491a-80a6-3c5603e87152"
+                ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"
                 background="#f2a04a"
                 color="#ffffff"
                 textcolor="#ffffff">
                 </menutech-orders>
 
                 <menutech-reservations
-                id="hero-btn-1"
-                cuid=""
-                ruid=""
+                cuid="52230bb2-0d10-491a-80a6-3c5603e87152"
+                ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"
                 background="#2f4854"
                 color="#ffffff"
                 textcolor="#ffffff">
@@ -892,7 +883,6 @@ a {
             }
         }
 
-        let bindTimeout = null;
         function updateUI(data) {
             console.log("MT: Updating UI with data", data);
             if (!data) return;
@@ -910,36 +900,48 @@ a {
                 if (heroTitle) heroTitle.textContent = data.title;
             }
 
-            // Hero Buttons / Colors & Config
-            const btnRes = document.getElementById('hero-btn-1');
-            const btnOrder = document.getElementById('hero-btn-2');
+            // Action Buttons Sync
+            const btnOrder = document.querySelector('menutech-orders');
+            const btnRes = document.querySelector('menutech-reservations');
 
             if (btnOrder) {
-                btnOrder.setAttribute('cuid', data.btnOrderCuid || '');
-                btnOrder.setAttribute('ruid', data.btnOrderRuid || '');
-                btnOrder.setAttribute('background', data.btnOrderBg || '');
-                btnOrder.setAttribute('color', data.btnOrderCol || '');
-                btnOrder.setAttribute('textcolor', data.btnOrderCol || '');
-                btnOrder.setAttribute('custom-label', data.btnOrderLabel || '');
-
-                if (btnOrder.render) btnOrder.render();
+                if (data.cuid) {
+                    btnOrder.setAttribute('cuid', data.cuid);
+                    btnOrder.setAttribute('data-glf-cuid', data.cuid);
+                }
+                if (data.ruid) {
+                    btnOrder.setAttribute('ruid', data.ruid);
+                    btnOrder.setAttribute('data-glf-ruid', data.ruid);
+                }
+                if (data.btnOrderBg) btnOrder.setAttribute('background', data.btnOrderBg);
+                if (data.btnOrderCol) {
+                    btnOrder.setAttribute('color', data.btnOrderCol); // Icon color
+                    btnOrder.setAttribute('textColor', data.btnOrderCol); // Label color
+                }
             }
 
             if (btnRes) {
-                btnRes.setAttribute('cuid', data.btnResCuid || '');
-                btnRes.setAttribute('ruid', data.btnResRuid || '');
-                btnRes.setAttribute('background', data.btnResBg || '');
-                btnRes.setAttribute('color', data.btnResCol || '');
-                btnRes.setAttribute('textcolor', data.btnResCol || '');
-                btnRes.setAttribute('custom-label', data.btnResLabel || '');
+                const isResActive = data.showReservations !== false;
+                btnRes.style.display = isResActive ? "" : "none";
 
-                btnRes.style.display = (data.showReservations !== false) ? "inline-block" : "none";
-                if (btnRes.render) btnRes.render();
-            }
-
-            if (window.glfBindButtons) {
-                clearTimeout(bindTimeout);
-                bindTimeout = setTimeout(() => window.glfBindButtons(), 100);
+                if (isResActive) {
+                    btnRes.setAttribute('data-glf-reservation', 'true');
+                    if (data.cuid) {
+                        btnRes.setAttribute('cuid', data.cuid);
+                        btnRes.setAttribute('data-glf-cuid', data.cuid);
+                    }
+                    if (data.ruid) {
+                        btnRes.setAttribute('ruid', data.ruid);
+                        btnRes.setAttribute('data-glf-ruid', data.ruid);
+                    }
+                    if (data.btnResBg) btnRes.setAttribute('background', data.btnResBg);
+                    if (data.btnResCol) {
+                        btnRes.setAttribute('color', data.btnResCol); // Icon color
+                        btnRes.setAttribute('textColor', data.btnResCol); // Label color
+                    }
+                } else {
+                    btnRes.removeAttribute('data-glf-reservation');
+                }
             }
 
             // Hero
