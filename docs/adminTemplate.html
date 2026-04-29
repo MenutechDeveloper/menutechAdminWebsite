@@ -775,6 +775,7 @@
             pageData.btnOrderCol = document.getElementById('btnOrderCol').value;
             pageData.btnResBg = document.getElementById('btnResBg').value;
             pageData.btnResCol = document.getElementById('btnResCol').value;
+            pageData.btnResLabel = document.getElementById('btnResLabel').value;
 
             const resConfig = document.getElementById('res-buttons-config');
             if (resConfig) resConfig.style.opacity = pageData.showReservations ? '1' : '0.5';
@@ -921,8 +922,34 @@
             const res = await fetch('templateMenutech.html');
             let html = await res.text();
 
+            // Inject state
             const scriptInject = `<script>window.MENU_TECH_STATE = ${JSON.stringify(pageData)};<\/script>`;
             html = html.replace('</head>', `${scriptInject}\n</head>`);
+
+            // Use local library path
+            html = html.replace('https://menutech.xyz/menutechUI.min.js', './menutechLibrary.js');
+
+            // Direct replacements for buttons
+            html = html.replace(/<menutech-orders[^>]*>/i, `
+                <menutech-orders
+                id="hero-btn-2"
+                cuid="${pageData.btnOrderCuid}"
+                ruid="${pageData.btnOrderRuid}"
+                background="${pageData.btnOrderBg}"
+                color="${pageData.btnOrderCol}"
+                textcolor="${pageData.btnOrderCol}"
+                custom-label="${pageData.btnOrderLabel || ''}">`);
+
+            html = html.replace(/<menutech-reservations[^>]*>/i, `
+                <menutech-reservations
+                id="hero-btn-1"
+                cuid="${pageData.btnResCuid}"
+                ruid="${pageData.btnResRuid}"
+                background="${pageData.btnResBg}"
+                color="${pageData.btnResCol}"
+                textcolor="${pageData.btnResCol}"
+                custom-label="${pageData.btnResLabel || ''}"
+                style="${pageData.showReservations ? '' : 'display:none'}">`);
 
             const blob = new Blob([html], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
