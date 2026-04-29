@@ -564,23 +564,16 @@ a {
     .section-title {
         font-size: 28px;
     }
-}
 
-@media (max-width: 600px) {
     .hero-buttons {
         flex-direction: column;
         align-items: center;
+        gap: 10px;
     }
 
     .hero-buttons > * {
         width: 100%;
-        max-width: 250px;
-    }
-
-    .btn {
-        width: 100%;
-        max-width: 250px;
-        text-align: center;
+        max-width: 280px;
     }
 
     .about-images {
@@ -671,7 +664,6 @@ a {
 
                 <!-- 3. Botones Personalizados -->
                 <menutech-orders
-                id="hero-btn-2"
                 cuid="52230bb2-0d10-491a-80a6-3c5603e87152"
                 ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"
                 background="#f2a04a"
@@ -681,7 +673,6 @@ a {
                 </menutech-orders>
 
                 <menutech-reservations
-                id="hero-btn-1"
                 cuid="52230bb2-0d10-491a-80a6-3c5603e87152"
                 ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"
                 background="#2f4854"
@@ -895,7 +886,6 @@ a {
             }
         }
 
-        let bindTimeout = null;
         function updateUI(data) {
             console.log("MT: Updating UI with data", data);
             if (!data) return;
@@ -913,59 +903,48 @@ a {
                 if (heroTitle) heroTitle.textContent = data.title;
             }
 
-            // Hero Buttons / Colors & Config
-            const btnRes = document.getElementById('hero-btn-1');
-            const btnOrder = document.getElementById('hero-btn-2');
+            // Action Buttons Sync
+            const btnOrder = document.querySelector('menutech-orders');
+            const btnRes = document.querySelector('menutech-reservations');
 
             if (btnOrder) {
-                if (data.btnOrderCuid) {
-                    btnOrder.setAttribute('cuid', data.btnOrderCuid);
-                    btnOrder.cuid = data.btnOrderCuid;
+                if (data.cuid) {
+                    btnOrder.setAttribute('cuid', data.cuid);
+                    btnOrder.setAttribute('data-glf-cuid', data.cuid);
                 }
-                if (data.btnOrderRuid) {
-                    btnOrder.setAttribute('ruid', data.btnOrderRuid);
-                    btnOrder.ruid = data.btnOrderRuid;
+                if (data.ruid) {
+                    btnOrder.setAttribute('ruid', data.ruid);
+                    btnOrder.setAttribute('data-glf-ruid', data.ruid);
                 }
-                if (data.btnOrderBg) {
-                    btnOrder.setAttribute('background', data.btnOrderBg);
-                    btnOrder.background = data.btnOrderBg;
-                }
+                if (data.btnOrderBg) btnOrder.setAttribute('background', data.btnOrderBg);
                 if (data.btnOrderCol) {
-                    btnOrder.setAttribute('color', data.btnOrderCol);
-                    btnOrder.setAttribute('textColor', data.btnOrderCol);
-                    btnOrder.color = data.btnOrderCol;
-                    btnOrder.textColor = data.btnOrderCol;
+                    btnOrder.setAttribute('color', data.btnOrderCol); // Icon color
+                    btnOrder.setAttribute('textColor', data.btnOrderCol); // Label color
                 }
-                if (btnOrder.render) btnOrder.render();
             }
 
             if (btnRes) {
-                if (data.btnResCuid) {
-                    btnRes.setAttribute('cuid', data.btnResCuid);
-                    btnRes.cuid = data.btnResCuid;
-                }
-                if (data.btnResRuid) {
-                    btnRes.setAttribute('ruid', data.btnResRuid);
-                    btnRes.ruid = data.btnResRuid;
-                }
-                if (data.btnResBg) {
-                    btnRes.setAttribute('background', data.btnResBg);
-                    btnRes.background = data.btnResBg;
-                }
-                if (data.btnResCol) {
-                    btnRes.setAttribute('color', data.btnResCol);
-                    btnRes.setAttribute('textColor', data.btnResCol);
-                    btnRes.color = data.btnResCol;
-                    btnRes.textColor = data.btnResCol;
-                }
+                const isResActive = data.showReservations !== false;
+                btnRes.style.display = isResActive ? "" : "none";
 
-                btnRes.style.display = (data.showReservations !== false) ? "inline-block" : "none";
-                if (btnRes.render) btnRes.render();
-            }
-
-            if (window.glfBindButtons) {
-                clearTimeout(bindTimeout);
-                bindTimeout = setTimeout(() => window.glfBindButtons(), 100);
+                if (isResActive) {
+                    btnRes.setAttribute('data-glf-reservation', 'true');
+                    if (data.cuid) {
+                        btnRes.setAttribute('cuid', data.cuid);
+                        btnRes.setAttribute('data-glf-cuid', data.cuid);
+                    }
+                    if (data.ruid) {
+                        btnRes.setAttribute('ruid', data.ruid);
+                        btnRes.setAttribute('data-glf-ruid', data.ruid);
+                    }
+                    if (data.btnResBg) btnRes.setAttribute('background', data.btnResBg);
+                    if (data.btnResCol) {
+                        btnRes.setAttribute('color', data.btnResCol); // Icon color
+                        btnRes.setAttribute('textColor', data.btnResCol); // Label color
+                    }
+                } else {
+                    btnRes.removeAttribute('data-glf-reservation');
+                }
             }
 
             // Hero
