@@ -8,6 +8,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <!-- Menutech Ordering Engine -->
+    <script src="https://www.fbgcdn.com/embedder/js/ewm2.js" defer async></script>
+    <!-- Menutech Button Library -->
+    <script src="./menutechLibrary.js" defer></script>
+    <script>
+        // Force bind if not opened at first
+        setTimeout(() => { if(window.glfBindButtons) window.glfBindButtons(); }, 1000);
+    </script>
     <style>
         /* Reset and Base Styles */
 *,
@@ -185,6 +193,7 @@ a {
     display: flex;
     gap: 15px;
     justify-content: center;
+    align-items: center;
     flex-wrap: wrap;
 }
 
@@ -656,8 +665,8 @@ a {
             </h2>
             <h1 class="hero-title" id="hero-title">Template Menutech</h1>
             <div class="hero-buttons">
-                <a href="#" class="btn btn-outline" id="hero-btn-1" data-es="Reservar Mesa" data-en="Table Reservation">Table Reservation</a>
-                <menutech-platform-orders view="popup" custom-label="See MENU & Order Now!" id="hero-btn-2"></menutech-platform-orders>
+                <menutech-orders id="hero-btn-2" custom-label="See MENU & Order Now!"></menutech-orders>
+                <menutech-reservations id="hero-btn-1" custom-label="Table Reservation"></menutech-reservations>
             </div>
         </div>
     </header>
@@ -875,18 +884,31 @@ a {
                 if (heroTitle) heroTitle.textContent = data.title;
             }
 
-            // Hero Buttons / Custom Labels
+            // Hero Buttons / Custom Labels & Config
+            const btn1 = document.getElementById('hero-btn-1'); // Reservations
+            const btn2 = document.getElementById('hero-btn-2'); // Orders
+
             if (data.titles) {
-                const btn1 = document.getElementById('hero-btn-1');
-                const btn2 = document.getElementById('hero-btn-2');
-                if (btn1) {
-                    if (data.titles['hero-btn-1']) btn1.textContent = data.titles['hero-btn-1'];
-                    btn1.style.display = (data.showReservations !== false) ? "" : "none";
+                if (btn1 && data.titles['hero-btn-1']) btn1.setAttribute('custom-label', data.titles['hero-btn-1']);
+                if (btn2 && data.titles['hero-btn-2']) btn2.setAttribute('custom-label', data.titles['hero-btn-2']);
+            }
+
+            if (btn1) btn1.style.display = (data.showReservations !== false) ? "" : "none";
+
+            if (data.buttons) {
+                if (btn2 && data.buttons.order) {
+                    btn2.setAttribute('cuid', data.buttons.order.cuid || '');
+                    btn2.setAttribute('ruid', data.buttons.order.ruid || '');
+                    btn2.setAttribute('background', data.buttons.order.bg || '#f2a04a');
+                    btn2.setAttribute('textcolor', data.buttons.order.text || '#ffffff');
+                    btn2.setAttribute('color', data.buttons.order.icon || '#ffffff');
                 }
-                if (btn2 && data.titles['hero-btn-2']) {
-                    btn2.setAttribute('custom-label', data.titles['hero-btn-2']);
-                    // Force update if component is already initialized
-                    if (btn2.render) btn2.render();
+                if (btn1 && data.buttons.res) {
+                    btn1.setAttribute('cuid', data.buttons.res.cuid || '');
+                    btn1.setAttribute('ruid', data.buttons.res.ruid || '');
+                    btn1.setAttribute('background', data.buttons.res.bg || '#2f4854');
+                    btn1.setAttribute('textcolor', data.buttons.res.text || '#ffffff');
+                    btn1.setAttribute('color', data.buttons.res.icon || '#ffffff');
                 }
             }
 
