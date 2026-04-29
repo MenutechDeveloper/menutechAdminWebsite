@@ -399,6 +399,10 @@
                                 <input type="text" id="btnOrderRuid" class="input-field" style="margin-bottom:0;" oninput="window.updateContent()">
                             </div>
                         </div>
+                        <div style="margin-bottom: 10px;">
+                            <label data-i18n="customLabel" style="font-size: 0.65rem; color: var(--text-dim);">Custom Label</label>
+                            <input type="text" id="btnOrderLabel" class="input-field" style="margin-bottom:0;" data-i18n-placeholder="orderLabelPlaceholder" oninput="window.updateContent()">
+                        </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                             <div>
                                 <label data-i18n="bgColor" style="font-size: 0.6rem; color: var(--text-dim);">Background</label>
@@ -428,6 +432,10 @@
                                 <label style="font-size: 0.65rem; color: var(--text-dim);">RUID</label>
                                 <input type="text" id="btnResRuid" class="input-field" style="margin-bottom:0;" oninput="window.updateContent()">
                             </div>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label data-i18n="customLabel" style="font-size: 0.65rem; color: var(--text-dim);">Custom Label</label>
+                            <input type="text" id="btnResLabel" class="input-field" style="margin-bottom:0;" data-i18n-placeholder="resLabelPlaceholder" oninput="window.updateContent()">
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                             <div>
@@ -669,6 +677,9 @@
                 menutechReservations: "Menutech Reservations",
                 bgColor: "Background Color",
                 textColor: "Text Color",
+                customLabel: "Custom Label",
+                orderLabelPlaceholder: "See MENU & Order Now!",
+                resLabelPlaceholder: "Table Reservation",
                 enableRes: "Enable Table Reservations"
             },
             es: {
@@ -717,6 +728,9 @@
                 menutechReservations: "Menutech Reservations",
                 bgColor: "Color de Fondo",
                 textColor: "Color de Texto",
+                customLabel: "Etiqueta Personalizada",
+                orderLabelPlaceholder: "¡Ver MENÚ y Pedir Ahora!",
+                resLabelPlaceholder: "Reservar Mesa",
                 enableRes: "Activar Reservación de Mesas"
             }
         };
@@ -729,10 +743,12 @@
             btnOrderRuid: '010d211a-aff0-4aa2-b4d0-739fce78437a',
             btnOrderBg: '#f2a04a',
             btnOrderCol: '#ffffff',
+            btnOrderLabel: '',
             btnResCuid: '52230bb2-0d10-491a-80a6-3c5603e87152',
             btnResRuid: '010d211a-aff0-4aa2-b4d0-739fce78437a',
             btnResBg: '#2f4854',
             btnResCol: '#ffffff',
+            btnResLabel: '',
             heroImg: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
             aboutImg1: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
             aboutImg2: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
@@ -822,11 +838,13 @@
             pageData.btnOrderRuid = document.getElementById('btnOrderRuid').value;
             pageData.btnOrderBg = document.getElementById('btnOrderBg').value;
             pageData.btnOrderCol = document.getElementById('btnOrderCol').value;
+            pageData.btnOrderLabel = document.getElementById('btnOrderLabel').value;
 
             pageData.btnResCuid = document.getElementById('btnResCuid').value;
             pageData.btnResRuid = document.getElementById('btnResRuid').value;
             pageData.btnResBg = document.getElementById('btnResBg').value;
             pageData.btnResCol = document.getElementById('btnResCol').value;
+            pageData.btnResLabel = document.getElementById('btnResLabel').value;
 
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
@@ -969,8 +987,34 @@
             const res = await fetch('templateMenutech.html');
             let html = await res.text();
 
+            // Inject state
             const scriptInject = `<script>window.MENU_TECH_STATE = ${JSON.stringify(pageData)};<\/script>`;
             html = html.replace('</head>', `${scriptInject}\n</head>`);
+
+            // Use local library path
+            html = html.replace('https://menutech.xyz/menutechUI.min.js', 'menutechLibrary.js');
+
+            // Direct replacements for buttons
+            html = html.replace(/<menutech-orders[^>]*>/i, `
+                <menutech-orders
+                id="hero-btn-2"
+                cuid="${pageData.btnOrderCuid}"
+                ruid="${pageData.btnOrderRuid}"
+                background="${pageData.btnOrderBg}"
+                color="${pageData.btnOrderCol}"
+                textcolor="${pageData.btnOrderCol}"
+                custom-label="${pageData.btnOrderLabel || ''}">`);
+
+            html = html.replace(/<menutech-reservations[^>]*>/i, `
+                <menutech-reservations
+                id="hero-btn-1"
+                cuid="${pageData.btnResCuid}"
+                ruid="${pageData.btnResRuid}"
+                background="${pageData.btnResBg}"
+                color="${pageData.btnResCol}"
+                textcolor="${pageData.btnResCol}"
+                custom-label="${pageData.btnResLabel || ''}"
+                style="${pageData.showReservations ? '' : 'display:none'}">`);
 
             const blob = new Blob([html], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
@@ -1039,7 +1083,7 @@
             if (config.ruid && !config.btnResRuid) config.btnResRuid = config.ruid;
 
             // Top level fields
-            const topFields = ['heroImg', 'aboutImg1', 'aboutImg2', 'promoBg', 'cateringBg', 'deliveryImg', 'title', 'lang', 'showReservations', 'btnOrderCuid', 'btnOrderRuid', 'btnOrderBg', 'btnOrderCol', 'btnResCuid', 'btnResRuid', 'btnResBg', 'btnResCol'];
+            const topFields = ['heroImg', 'aboutImg1', 'aboutImg2', 'promoBg', 'cateringBg', 'deliveryImg', 'title', 'lang', 'showReservations', 'btnOrderCuid', 'btnOrderRuid', 'btnOrderBg', 'btnOrderCol', 'btnOrderLabel', 'btnResCuid', 'btnResRuid', 'btnResBg', 'btnResCol', 'btnResLabel'];
             topFields.forEach(field => {
                 if (config[field] === undefined || config[field] === null || config[field] === "") {
                     config[field] = DEFAULT_DATA[field];
@@ -1273,6 +1317,7 @@
             document.getElementById('btnOrderBg-picker').value = pageData.btnOrderBg || '#000000';
             document.getElementById('btnOrderCol').value = pageData.btnOrderCol || '';
             document.getElementById('btnOrderCol-picker').value = pageData.btnOrderCol || '#000000';
+            document.getElementById('btnOrderLabel').value = pageData.btnOrderLabel || '';
 
             document.getElementById('btnResCuid').value = pageData.btnResCuid || '';
             document.getElementById('btnResRuid').value = pageData.btnResRuid || '';
@@ -1280,6 +1325,7 @@
             document.getElementById('btnResBg-picker').value = pageData.btnResBg || '#000000';
             document.getElementById('btnResCol').value = pageData.btnResCol || '';
             document.getElementById('btnResCol-picker').value = pageData.btnResCol || '#000000';
+            document.getElementById('btnResLabel').value = pageData.btnResLabel || '';
 
             // Sync paragraphs
             if (pageData.paragraphs) {

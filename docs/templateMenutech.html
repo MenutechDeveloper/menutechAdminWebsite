@@ -663,11 +663,11 @@ a {
             </h2>
             <h1 class="hero-title" id="hero-title">Template Menutech</h1>
             <div class="hero-buttons">
-                <!-- 1. Script Motor GloriaFood -->
+                <!-- 1. Script Motor -->
                 <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
 
                 <!-- 2. Librería Menutech -->
-                <script src="https://menutech.xyz/menutechUI.min.js"></script>
+                <script src="menutechLibrary.js"></script>
 
                 <!-- 3. Botones Personalizados -->
                 <menutech-orders
@@ -932,9 +932,12 @@ a {
                 }
                 if (data.btnOrderCol) {
                     btnOrder.setAttribute('color', data.btnOrderCol);
-                    btnOrder.setAttribute('textColor', data.btnOrderCol);
+                    btnOrder.setAttribute('textcolor', data.btnOrderCol);
                     btnOrder.color = data.btnOrderCol;
-                    btnOrder.textColor = data.btnOrderCol;
+                    btnOrder.textcolor = data.btnOrderCol;
+                }
+                if (data.btnOrderLabel !== undefined) {
+                    btnOrder.setAttribute('custom-label', data.btnOrderLabel);
                 }
                 if (btnOrder.render) btnOrder.render();
             }
@@ -954,9 +957,12 @@ a {
                 }
                 if (data.btnResCol) {
                     btnRes.setAttribute('color', data.btnResCol);
-                    btnRes.setAttribute('textColor', data.btnResCol);
+                    btnRes.setAttribute('textcolor', data.btnResCol);
                     btnRes.color = data.btnResCol;
-                    btnRes.textColor = data.btnResCol;
+                    btnRes.textcolor = data.btnResCol;
+                }
+                if (data.btnResLabel !== undefined) {
+                    btnRes.setAttribute('custom-label', data.btnResLabel);
                 }
 
                 btnRes.style.display = (data.showReservations !== false) ? "inline-block" : "none";
