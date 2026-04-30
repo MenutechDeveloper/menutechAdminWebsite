@@ -410,8 +410,6 @@
                                 <input type="color" id="order-text" value="#ffffff" style="width:100%; height:32px; border:none; border-radius:6px; cursor:pointer; background:var(--input);" oninput="window.updateContent()">
                             </div>
                         </div>
-                        <label style="display: block; font-size: 0.7rem; font-weight: 600; margin-top: 10px; margin-bottom: 6px; color: var(--text);">Texto del Botón</label>
-                        <input type="text" id="hero-btn-2" class="input-field" style="font-size: 0.8rem; margin-bottom: 0;" placeholder="Ej: Ver Menú y Ordenar" oninput="window.updateContent()">
                     </div>
 
                     <div style="border-top: 1px solid var(--border); padding-top: 15px;">
@@ -426,8 +424,6 @@
                                 <input type="color" id="res-text" value="#ffffff" style="width:100%; height:32px; border:none; border-radius:6px; cursor:pointer; background:var(--input);" oninput="window.updateContent()">
                             </div>
                         </div>
-                        <label style="display: block; font-size: 0.7rem; font-weight: 600; margin-top: 10px; margin-bottom: 6px; color: var(--text);">Texto del Botón</label>
-                        <input type="text" id="hero-btn-1" class="input-field" style="font-size: 0.8rem; margin-bottom: 15px;" placeholder="Ej: Reservar Mesa" oninput="window.updateContent()">
 
                         <div class="switch-container" style="padding: 12px 16px; background: var(--input); border-radius: 12px; border: 1px solid var(--border);">
                             <span style="font-size: 0.75rem; font-weight: 700; color: var(--text);">Activar Reservaciones</span>
@@ -738,8 +734,6 @@
                 }
             },
             titles: {
-                "hero-btn-1": "Table Reservation",
-                "hero-btn-2": "See MENU & Order Now!",
                 "about-title": "We are Pronto Mexican Food",
                 "about-subtitle": "About Us",
                 "promo1-title": "Best Friends Deal",
@@ -806,20 +800,23 @@
             const globalCuid = document.getElementById('global-cuid').value;
             const globalRuid = document.getElementById('global-ruid').value;
 
+            const orderColor = document.getElementById('order-text').value;
+            const resColor = document.getElementById('res-text').value;
+
             pageData.buttons = {
                 order: {
                     cuid: globalCuid,
                     ruid: globalRuid,
                     bg: document.getElementById('order-bg').value,
-                    text: document.getElementById('order-text').value,
-                    icon: pageData.buttons?.order?.icon || '#ffffff'
+                    text: orderColor,
+                    icon: orderColor
                 },
                 res: {
                     cuid: globalCuid,
                     ruid: globalRuid,
                     bg: document.getElementById('res-bg').value,
-                    text: document.getElementById('res-text').value,
-                    icon: pageData.buttons?.res?.icon || '#ffffff'
+                    text: resColor,
+                    icon: resColor
                 }
             };
 
@@ -1292,7 +1289,7 @@
             if (pageData.titles) {
                 Object.keys(pageData.titles).forEach(id => {
                     const el = document.getElementById(id);
-                    if (el) el.value = pageData.titles[id] || '';
+                    if (el && !id.startsWith('hero-btn-')) el.value = pageData.titles[id] || '';
                 });
             }
 

@@ -8,9 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <!-- Menutech: Botones y Motor -->
-    <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
-    <script src="./menutechLibrary.js"></script>
     <style>
         /* Reset and Base Styles */
 *,
@@ -661,6 +658,12 @@ a {
             </h2>
             <h1 class="hero-title" id="hero-title">Template Menutech</h1>
             <div class="hero-botones">
+                <!-- 1. Script Motor MTech -->
+                <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
+
+                <!-- 2. Librería Menutech -->
+                <script src="https://menutech.xyz/menutechUI.min.js"></script>
+
                 <!-- 3. Botones Personalizados -->
                 <menutech-orders
                     id="hero-btn-2"
@@ -668,10 +671,8 @@ a {
                     ruid=""
                     background="#f2a04a"
                     color="#ffffff"
-                    textcolor="#ffffff"
                     data-glf-cuid=""
-                    data-glf-ruid=""
-                    custom-label="See MENU & Order Now!">
+                    data-glf-ruid="">
                 </menutech-orders>
 
                 <menutech-reservations
@@ -680,11 +681,9 @@ a {
                     ruid=""
                     background="#2f4854"
                     color="#ffffff"
-                    textcolor="#ffffff"
                     data-glf-cuid=""
                     data-glf-ruid=""
-                    data-glf-reservation="true"
-                    custom-label="Table Reservation">
+                    data-glf-reservation="true">
                 </menutech-reservations>
 
                 <!-- 4. Forzar vinculación -->
@@ -909,36 +908,37 @@ a {
             }
 
             // Hero Buttons / Custom Labels & Config
-            const btn1 = document.getElementById('hero-btn-1'); // Reservations
-            const btn2 = document.getElementById('hero-btn-2'); // Orders
+            const btn1 = document.getElementById('hero-btn-1') || document.querySelector('menutech-reservations');
+            const btn2 = document.getElementById('hero-btn-2') || document.querySelector('menutech-orders');
 
-            if (data.titles) {
-                if (btn1 && data.titles['hero-btn-1']) btn1.setAttribute('custom-label', data.titles['hero-btn-1']);
-                if (btn2 && data.titles['hero-btn-2']) btn2.setAttribute('custom-label', data.titles['hero-btn-2']);
-            }
 
             if (btn1) {
-                btn1.style.display = (data.showReservations !== false) ? "inline-block" : "none";
+                btn1.style.setProperty('display', (data.showReservations !== false) ? "inline-block" : "none", "important");
             }
 
             if (data.buttons) {
                 if (btn2 && data.buttons.order) {
-                    btn2.setAttribute('cuid', data.buttons.order.cuid || '');
-                    btn2.setAttribute('ruid', data.buttons.order.ruid || '');
-                    btn2.setAttribute('data-glf-cuid', data.buttons.order.cuid || '');
-                    btn2.setAttribute('data-glf-ruid', data.buttons.order.ruid || '');
-                    btn2.setAttribute('background', data.buttons.order.bg || '#f2a04a');
-                    btn2.setAttribute('textcolor', data.buttons.order.text || '#ffffff');
-                    btn2.setAttribute('color', data.buttons.order.icon || '#ffffff');
+                    const o = data.buttons.order;
+                    btn2.setAttribute('cuid', o.cuid || '');
+                    btn2.setAttribute('ruid', o.ruid || '');
+                    btn2.setAttribute('data-glf-cuid', o.cuid || '');
+                    btn2.setAttribute('data-glf-ruid', o.ruid || '');
+                    btn2.setAttribute('background', o.bg || '#f2a04a');
+                    btn2.setAttribute('color', o.icon || '#ffffff');
+                    btn2.setAttribute('textcolor', o.text || '#ffffff');
+                    btn2.setAttribute('textColor', o.text || '#ffffff');
                 }
                 if (btn1 && data.buttons.res) {
-                    btn1.setAttribute('cuid', data.buttons.res.cuid || '');
-                    btn1.setAttribute('ruid', data.buttons.res.ruid || '');
-                    btn1.setAttribute('data-glf-cuid', data.buttons.res.cuid || '');
-                    btn1.setAttribute('data-glf-ruid', data.buttons.res.ruid || '');
-                    btn1.setAttribute('background', data.buttons.res.bg || '#2f4854');
-                    btn1.setAttribute('textcolor', data.buttons.res.text || '#ffffff');
-                    btn1.setAttribute('color', data.buttons.res.icon || '#ffffff');
+                    const r = data.buttons.res;
+                    btn1.setAttribute('cuid', r.cuid || '');
+                    btn1.setAttribute('ruid', r.ruid || '');
+                    btn1.setAttribute('data-glf-cuid', r.cuid || '');
+                    btn1.setAttribute('data-glf-ruid', r.ruid || '');
+                    btn1.setAttribute('background', r.bg || '#2f4854');
+                    btn1.setAttribute('color', r.icon || '#ffffff');
+                    btn1.setAttribute('textcolor', r.text || '#ffffff');
+                    btn1.setAttribute('textColor', r.text || '#ffffff');
+                    btn1.setAttribute('data-glf-reservation', 'true');
                 }
             }
 
