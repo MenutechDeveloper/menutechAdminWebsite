@@ -604,7 +604,9 @@
             if (['admin', 'developer', 'CS', 'adminCS'].includes(userRole)) {
                 const sidebarContainer = document.getElementById('sidebar-container');
                 sidebarContainer.classList.remove('hidden');
-                sidebarContainer.classList.add('collapsed');
+                if (userRole === 'admin' || userRole === 'developer') {
+                    sidebarContainer.classList.add('collapsed');
+                }
                 document.getElementById('btn-copy-code').classList.remove('hidden');
                 document.getElementById('btn-copy-promo').classList.remove('hidden');
                 document.getElementById('btn-copy-form').classList.remove('hidden');
