@@ -601,7 +601,7 @@
                 return;
             }
 
-            if (userRole === 'admin' || userRole === 'developer') {
+            if (['admin', 'developer', 'CS', 'adminCS'].includes(userRole)) {
                 const sidebarContainer = document.getElementById('sidebar-container');
                 sidebarContainer.classList.remove('hidden');
                 sidebarContainer.classList.add('collapsed');
@@ -620,7 +620,7 @@
         async function setupContextSwitcher() {
             const list = document.getElementById('client-list');
             const search = document.getElementById('client-search');
-            const privilegedRoles = ['admin', 'CS', 'adminCS'];
+            const privilegedRoles = ['admin', 'developer', 'CS', 'adminCS'];
             if (privilegedRoles.includes(userRole)) { const { data } = await sb.from('profiles').select('*'); allOwners = data || []; }
             else { const { data: access } = await sb.from('developer_access').select('owner_id').eq('developer_id', user.id); const ids = (access || []).map(a => a.owner_id); const { data } = await sb.from('profiles').select('*').in('id', ids); allOwners = data || []; }
             renderOwners(allOwners);
