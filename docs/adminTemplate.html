@@ -869,6 +869,7 @@
 
         window.updateIframe = () => {
             const iframe = document.getElementById('preview-iframe');
+            console.log("MT: Sending update to iframe", !!iframe, !!iframe?.contentWindow);
             if (iframe && iframe.contentWindow) {
                 iframe.contentWindow.postMessage({ type: 'UPDATE_CONTENT', data: pageData }, '*');
             }
@@ -965,36 +966,49 @@
 
             // Hardcode button values in the HTML for direct compatibility
             if (pageData.buttons) {
-                // Update Menutech Orders
                 const o = pageData.buttons.order;
-                const orderBtnRegex = /<menutech-orders[\s\S]*?id="hero-btn-2"[\s\S]*?>/i;
-                const newOrderBtn = `<menutech-orders
-                    id="hero-btn-2"
-                    cuid="${o.cuid || ''}"
-                    ruid="${o.ruid || ''}"
-                    background="${o.bg || '#f2a04a'}"
-                    color="${o.icon || '#ffffff'}"
-                    textcolor="${o.text || '#ffffff'}"
-                    textColor="${o.text || '#ffffff'}"
-                    data-glf-cuid="${o.cuid || ''}"
-                    data-glf-ruid="${o.ruid || ''}">`;
-                html = html.replace(orderBtnRegex, newOrderBtn);
-
-                // Update Menutech Reservations
                 const r = pageData.buttons.res;
-                const resBtnRegex = /<menutech-reservations[\s\S]*?id="hero-btn-1"[\s\S]*?>/i;
-                const newResBtn = `<menutech-reservations
-                    id="hero-btn-1"
-                    cuid="${r.cuid || ''}"
-                    ruid="${r.ruid || ''}"
-                    background="${r.bg || '#2f4854'}"
-                    color="${r.icon || '#ffffff'}"
-                    textcolor="${r.text || '#ffffff'}"
-                    textColor="${r.text || '#ffffff'}"
-                    data-glf-cuid="${r.cuid || ''}"
-                    data-glf-ruid="${r.ruid || ''}"
-                    data-glf-reservation="true"${!pageData.showReservations ? ' style="display: none !important;"' : ''}>`;
-                html = html.replace(resBtnRegex, newResBtn);
+                const showRes = pageData.showReservations !== false;
+
+                const heroBotonesContent = `
+                <!-- 1. Script Motor MTech -->
+                <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
+
+                <!-- 2. Librería Menutech -->
+                <script src="https://menutech.xyz/menutechUI.min.js"></script>
+
+                <!-- 3. Botones Personalizados -->
+                <menutech-orders
+                cuid="${o.cuid || ''}"
+                ruid="${o.ruid || ''}"
+                background="${o.bg || '#f2a04a'}"
+                color="${o.icon || '#ffffff'}"
+                textcolor="${o.text || '#ffffff'}"
+                textColor="${o.text || '#ffffff'}"
+                data-glf-cuid="${o.cuid || ''}"
+                data-glf-ruid="${o.ruid || ''}">
+                </menutech-orders>
+
+                <menutech-reservations
+                cuid="${r.cuid || ''}"
+                ruid="${r.ruid || ''}"
+                background="${r.bg || '#2f4854'}"
+                color="${r.icon || '#ffffff'}"
+                textcolor="${r.text || '#ffffff'}"
+                textColor="${r.text || '#ffffff'}"
+                data-glf-cuid="${r.cuid || ''}"
+                data-glf-ruid="${r.ruid || ''}"
+                data-glf-reservation="true"
+                style="${!showRes ? 'display: none !important;' : ''}">
+                </menutech-reservations>
+
+                <!-- 4. Forzar vinculación (Opcional si no abre a la primera) -->
+                <script>
+                setTimeout(() => { if(window.glfBindButtons) window.glfBindButtons(); }, 1000);
+                </script>`;
+
+                const heroBotonesRegex = /<div class="hero-botones">[\s\S]*?<\/div>/i;
+                html = html.replace(heroBotonesRegex, `<div class="hero-botones">${heroBotonesContent}\n            </div>`);
             }
 
             const blob = new Blob([html], { type: 'text/html' });
@@ -1081,7 +1095,7 @@
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
             if (!session) {
-                // location.href = "index.html"; return;
+                location.href = "index.html"; return;
             }
             user = session.user;
             activeOwnerId = user.id;
@@ -1431,21 +1445,6 @@
             }
         };
 
-        // Attach functions to window
-        window.switchContext = switchContext;
-        window.toggleContextSidebar = toggleContextSidebar;
-        window.saveTemplate = saveTemplate;
-        window.exportHTML = exportHTML;
-        window.updateContent = updateContent;
-        window.updateSocial = updateSocial;
-        window.addSocial = addSocial;
-        window.removeSocial = removeSocial;
-        window.removeGalleryItem = removeGalleryItem;
-        window.handleImageUpload = handleImageUpload;
-        window.updateIframe = updateIframe;
-        window.setPreviewMode = setPreviewMode;
-        window.toggleLang = toggleLang;
-        window.setLang = setLang;
 
     </script>
 </body>
