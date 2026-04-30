@@ -656,8 +656,38 @@ a {
             </h2>
             <h1 class="hero-title" id="hero-title">Template Menutech</h1>
             <div class="hero-buttons">
-                <a href="#" class="btn btn-outline" id="hero-btn-1" data-es="Reservar Mesa" data-en="Table Reservation">Table Reservation</a>
-                <menutech-platform-orders view="popup" custom-label="See MENU & Order Now!" id="hero-btn-2"></menutech-platform-orders>
+                <!-- 1. Script Motor GloriaFood -->
+                <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
+
+                <!-- 2. Librería Menutech -->
+                <script src="https://menutech.xyz/menutechUI.min.js"></script>
+
+                <!-- 3. Botones Personalizados -->
+                <menutech-orders
+                id="hero-orders"
+                cuid=""
+                ruid=""
+                background="#f2a04a"
+                color="#ffffff"
+                data-glf-cuid=""
+                data-glf-ruid="">
+                </menutech-orders>
+
+                <menutech-reservations
+                id="hero-reservations"
+                cuid=""
+                ruid=""
+                background="#2f4854"
+                color="#ffffff"
+                data-glf-cuid=""
+                data-glf-ruid=""
+                data-glf-reservation="true">
+                </menutech-reservations>
+
+                <!-- 4. Forzar vinculación (Opcional si no abre a la primera) -->
+                <script>
+                setTimeout(() => { if(window.glfBindButtons) window.glfBindButtons(); }, 1000);
+                </script>
             </div>
         </div>
     </header>
@@ -875,20 +905,30 @@ a {
                 if (heroTitle) heroTitle.textContent = data.title;
             }
 
-            // Hero Buttons / Custom Labels
-            if (data.titles) {
-                const btn1 = document.getElementById('hero-btn-1');
-                const btn2 = document.getElementById('hero-btn-2');
-                if (btn1) {
-                    if (data.titles['hero-btn-1']) btn1.textContent = data.titles['hero-btn-1'];
-                    btn1.style.display = (data.showReservations !== false) ? "" : "none";
-                }
-                if (btn2 && data.titles['hero-btn-2']) {
-                    btn2.setAttribute('custom-label', data.titles['hero-btn-2']);
-                    // Force update if component is already initialized
-                    if (btn2.render) btn2.render();
-                }
+            // Hero Buttons (GloriaFood CUID/RUID)
+            const ordersBtn = document.getElementById('hero-orders');
+            const resBtn = document.getElementById('hero-reservations');
+
+            if (ordersBtn) {
+                const cuid = data.cuid || '';
+                const ruid = data.ruid || '';
+                ordersBtn.setAttribute('cuid', cuid);
+                ordersBtn.setAttribute('data-glf-cuid', cuid);
+                ordersBtn.setAttribute('ruid', ruid);
+                ordersBtn.setAttribute('data-glf-ruid', ruid);
             }
+
+            if (resBtn) {
+                const cuid = data.cuid || '';
+                const ruid = data.ruid || '';
+                resBtn.setAttribute('cuid', cuid);
+                resBtn.setAttribute('data-glf-cuid', cuid);
+                resBtn.setAttribute('ruid', ruid);
+                resBtn.setAttribute('data-glf-ruid', ruid);
+                resBtn.style.setProperty('display', (data.showReservations !== false) ? 'inline-block' : 'none', 'important');
+            }
+
+            if (window.glfBindButtons) window.glfBindButtons();
 
             // Hero
             if (data.heroImg) {
@@ -1011,6 +1051,8 @@ a {
                         target.id === 'nav-brand' ||
                         target.id === 'hero-title' ||
                         target.id === 'hero-section' ||
+                        target.id === 'hero-orders' ||
+                        target.id === 'hero-reservations' ||
                         target.id.startsWith('about-') ||
                         target.id === 'promo-section' ||
                         target.id.startsWith('promo') ||
