@@ -656,7 +656,7 @@ a {
             </h2>
             <h1 class="hero-title" id="hero-title">Template Menutech</h1>
             <div class="hero-buttons">
-                <!-- 1. Script Motor GloriaFood -->
+                <!-- 1. Script Motor Menutech -->
                 <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
 
                 <!-- 2. Librería Menutech -->
@@ -905,7 +905,7 @@ a {
                 if (heroTitle) heroTitle.textContent = data.title;
             }
 
-            // Hero Buttons (GloriaFood CUID/RUID)
+            // Hero Buttons (Menutech CUID/RUID)
             const ordersBtn = document.getElementById('hero-orders');
             const resBtn = document.getElementById('hero-reservations');
 
@@ -925,7 +925,12 @@ a {
                 resBtn.setAttribute('data-glf-cuid', cuid);
                 resBtn.setAttribute('ruid', ruid);
                 resBtn.setAttribute('data-glf-ruid', ruid);
-                resBtn.style.setProperty('display', (data.showReservations !== false) ? 'inline-block' : 'none', 'important');
+
+                if (data.showReservations !== false) {
+                    resBtn.style.setProperty('display', 'inline-block', 'important');
+                } else {
+                    resBtn.style.setProperty('display', 'none', 'important');
+                }
             }
 
             if (window.glfBindButtons) window.glfBindButtons();
