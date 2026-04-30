@@ -181,6 +181,12 @@
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
             const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+
+            if (profile && (profile.role === 'CS' || profile.role === 'adminCS')) {
+                location.href = "index.html";
+                return;
+            }
+
             const allowedRoles = ['admin', 'developer'];
             if (!profile || !allowedRoles.includes(profile.role)) { location.href = "index.html"; return; }
 
