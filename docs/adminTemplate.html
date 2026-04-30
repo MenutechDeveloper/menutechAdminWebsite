@@ -382,56 +382,17 @@
                 <div class="control-group">
                     <label data-i18n="generalSettings">Restaurant Name</label>
                     <input type="text" id="site-title" class="input-field" placeholder="Site Title" data-i18n-placeholder="titlePlaceholder" oninput="window.updateContent()">
-                </div>
 
-                <div class="control-group">
-                    <label style="margin-bottom: 15px;">Botones de Acción</label>
+                    <label style="margin-top:10px;">Hero Buttons Labels</label>
+                    <input type="text" id="hero-btn-1" class="input-field" placeholder="Button 1 Label" oninput="window.updateContent()">
+                    <input type="text" id="hero-btn-2" class="input-field" placeholder="Order Button Label" oninput="window.updateContent()">
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                        <div>
-                            <label style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 6px;">CUID</label>
-                            <input type="text" id="global-cuid" class="input-field" style="font-size: 0.8rem; margin-bottom: 0;" placeholder="ID de Cliente" oninput="window.updateContent()">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 6px;">RUID</label>
-                            <input type="text" id="global-ruid" class="input-field" style="font-size: 0.8rem; margin-bottom: 0;" placeholder="ID de Restaurante" oninput="window.updateContent()">
-                        </div>
-                    </div>
-
-                    <div style="border-top: 1px solid var(--border); padding-top: 15px; margin-bottom: 20px;">
-                        <label style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 12px; text-transform: uppercase; font-weight: 700;">Online Orders</label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
-                            <div>
-                                <span style="display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 6px; color: var(--text);">BG Color</span>
-                                <input type="color" id="order-bg" value="#f2a04a" style="width:100%; height:32px; border:none; border-radius:6px; cursor:pointer; background:var(--input);" oninput="window.updateContent()">
-                            </div>
-                            <div>
-                                <span style="display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 6px; color: var(--text);">Color</span>
-                                <input type="color" id="order-text" value="#ffffff" style="width:100%; height:32px; border:none; border-radius:6px; cursor:pointer; background:var(--input);" oninput="window.updateContent()">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="border-top: 1px solid var(--border); padding-top: 15px;">
-                        <label style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 12px; text-transform: uppercase; font-weight: 700;">Reservations</label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
-                            <div>
-                                <span style="display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 6px; color: var(--text);">BG Color</span>
-                                <input type="color" id="res-bg" value="#2f4854" style="width:100%; height:32px; border:none; border-radius:6px; cursor:pointer; background:var(--input);" oninput="window.updateContent()">
-                            </div>
-                            <div>
-                                <span style="display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 6px; color: var(--text);">Color</span>
-                                <input type="color" id="res-text" value="#ffffff" style="width:100%; height:32px; border:none; border-radius:6px; cursor:pointer; background:var(--input);" oninput="window.updateContent()">
-                            </div>
-                        </div>
-
-                        <div class="switch-container" style="padding: 12px 16px; background: var(--input); border-radius: 12px; border: 1px solid var(--border);">
-                            <span style="font-size: 0.75rem; font-weight: 700; color: var(--text);">Activar Reservaciones</span>
-                            <label class="switch">
-                                <input type="checkbox" id="show-reservations" onchange="window.updateContent()">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
+                    <div class="switch-container" style="margin-top:10px;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">Enable Reservations</span>
+                        <label class="switch">
+                            <input type="checkbox" id="show-reservations" onchange="window.updateContent()">
+                            <span class="slider"></span>
+                        </label>
                     </div>
                 </div>
 
@@ -717,23 +678,9 @@
                 "catering": "Restaurant Pronto can cater to any party or event irrespective of how big or small. We specialize in catering with personalised service and special menus on request. In our menu palette, you'll discover unique and sophisticated tastes - all of which will help you uncover the true greatness of the mexican restaurant.\n\nTell us about your event at office@pronto-wp.com",
                 "delivery": "Looking for food delivery nearby? Not everybody knows or has the time to prepare tasty food.\n\nWhen you want to get served like a king then food delivery from restaurant Pronto will be your best choice.\n\nSimply select \"Delivery\" at the checkout screen and we hope you'll appreciate our food delivery service."
             },
-            buttons: {
-                order: {
-                    cuid: '',
-                    ruid: '',
-                    bg: '#f2a04a',
-                    text: '#ffffff',
-                    icon: '#ffffff'
-                },
-                res: {
-                    cuid: '',
-                    ruid: '',
-                    bg: '#2f4854',
-                    text: '#ffffff',
-                    icon: '#ffffff'
-                }
-            },
             titles: {
+                "hero-btn-1": "Table Reservation",
+                "hero-btn-2": "See MENU & Order Now!",
                 "about-title": "We are Pronto Mexican Food",
                 "about-subtitle": "About Us",
                 "promo1-title": "Best Friends Deal",
@@ -752,7 +699,6 @@
         };
 
         let pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
-        window.pageData = pageData; // Expose for verification
 
         window.setLang = (lang) => {
             console.log("MT: Setting language to", lang);
@@ -796,30 +742,6 @@
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
             pageData.contact.hours = document.getElementById('contact-hours').value;
-
-            // Sync buttons
-            const globalCuid = document.getElementById('global-cuid').value;
-            const globalRuid = document.getElementById('global-ruid').value;
-
-            const orderColor = document.getElementById('order-text').value;
-            const resColor = document.getElementById('res-text').value;
-
-            pageData.buttons = {
-                order: {
-                    cuid: globalCuid,
-                    ruid: globalRuid,
-                    bg: document.getElementById('order-bg').value,
-                    text: orderColor,
-                    icon: orderColor
-                },
-                res: {
-                    cuid: globalCuid,
-                    ruid: globalRuid,
-                    bg: document.getElementById('res-bg').value,
-                    text: resColor,
-                    icon: resColor
-                }
-            };
 
             // Sync paragraphs from inputs to data
             if (pageData.paragraphs) {
@@ -869,7 +791,6 @@
 
         window.updateIframe = () => {
             const iframe = document.getElementById('preview-iframe');
-            console.log("MT: Sending update to iframe", !!iframe, !!iframe?.contentWindow);
             if (iframe && iframe.contentWindow) {
                 iframe.contentWindow.postMessage({ type: 'UPDATE_CONTENT', data: pageData }, '*');
             }
@@ -960,56 +881,8 @@
             const res = await fetch('templateMenutech.html');
             let html = await res.text();
 
-            // Inject the data for dynamic loading if needed
             const scriptInject = `<script>window.MENU_TECH_STATE = ${JSON.stringify(pageData)};<\/script>`;
             html = html.replace('</head>', `${scriptInject}\n</head>`);
-
-            // Hardcode button values in the HTML for direct compatibility
-            if (pageData.buttons) {
-                const o = pageData.buttons.order;
-                const r = pageData.buttons.res;
-                const showRes = pageData.showReservations !== false;
-
-                const heroBotonesContent = `
-                <!-- 1. Script Motor MTech -->
-                <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
-
-                <!-- 2. Librería Menutech -->
-                <script src="https://menutech.xyz/menutechUI.min.js"></script>
-
-                <!-- 3. Botones Personalizados -->
-                <menutech-orders
-                cuid="${o.cuid || ''}"
-                ruid="${o.ruid || ''}"
-                background="${o.bg || '#f2a04a'}"
-                color="${o.icon || '#ffffff'}"
-                textcolor="${o.text || '#ffffff'}"
-                textColor="${o.text || '#ffffff'}"
-                data-glf-cuid="${o.cuid || ''}"
-                data-glf-ruid="${o.ruid || ''}">
-                </menutech-orders>
-
-                <menutech-reservations
-                cuid="${r.cuid || ''}"
-                ruid="${r.ruid || ''}"
-                background="${r.bg || '#2f4854'}"
-                color="${r.icon || '#ffffff'}"
-                textcolor="${r.text || '#ffffff'}"
-                textColor="${r.text || '#ffffff'}"
-                data-glf-cuid="${r.cuid || ''}"
-                data-glf-ruid="${r.ruid || ''}"
-                data-glf-reservation="true"
-                style="${!showRes ? 'display: none !important;' : ''}">
-                </menutech-reservations>
-
-                <!-- 4. Forzar vinculación (Opcional si no abre a la primera) -->
-                <script>
-                setTimeout(() => { if(window.glfBindButtons) window.glfBindButtons(); }, 1000);
-                </script>`;
-
-                const heroBotonesRegex = /<div class="hero-botones">[\s\S]*?<\/div>/i;
-                html = html.replace(heroBotonesRegex, `<div class="hero-botones">${heroBotonesContent}\n            </div>`);
-            }
 
             const blob = new Blob([html], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
@@ -1071,16 +944,6 @@
                 }
             });
 
-            // Buttons Migration
-            if (!config.buttons) {
-                config.buttons = JSON.parse(JSON.stringify(DEFAULT_DATA.buttons));
-            } else {
-                if (!config.buttons.order) config.buttons.order = JSON.parse(JSON.stringify(DEFAULT_DATA.buttons.order));
-                if (!config.buttons.res) config.buttons.res = JSON.parse(JSON.stringify(DEFAULT_DATA.buttons.res));
-                if (config.buttons.order.icon === undefined) config.buttons.order.icon = DEFAULT_DATA.buttons.order.icon;
-                if (config.buttons.res.icon === undefined) config.buttons.res.icon = DEFAULT_DATA.buttons.res.icon;
-            }
-
             // Top level fields
             const topFields = ['heroImg', 'aboutImg1', 'aboutImg2', 'promoBg', 'cateringBg', 'deliveryImg', 'title', 'lang', 'showReservations'];
             topFields.forEach(field => {
@@ -1094,9 +957,7 @@
 
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
-            if (!session) {
-                location.href = "index.html"; return;
-            }
+            if (!session) { location.href = "index.html"; return; }
             user = session.user;
             activeOwnerId = user.id;
 
@@ -1312,21 +1173,6 @@
             document.getElementById('site-title').value = pageData.title || '';
             document.getElementById('show-reservations').checked = pageData.showReservations !== false;
 
-            // Sync buttons
-            if (pageData.buttons) {
-                const cuid = pageData.buttons.order?.cuid || '';
-                const ruid = pageData.buttons.order?.ruid || '';
-
-                document.getElementById('global-cuid').value = cuid;
-                document.getElementById('global-ruid').value = ruid;
-
-                document.getElementById('order-bg').value = pageData.buttons.order.bg || '#f2a04a';
-                document.getElementById('order-text').value = pageData.buttons.order.text || '#ffffff';
-
-                document.getElementById('res-bg').value = pageData.buttons.res.bg || '#2f4854';
-                document.getElementById('res-text').value = pageData.buttons.res.text || '#ffffff';
-            }
-
             // Sync paragraphs
             if (pageData.paragraphs) {
                 Object.keys(pageData.paragraphs).forEach(id => {
@@ -1339,7 +1185,7 @@
             if (pageData.titles) {
                 Object.keys(pageData.titles).forEach(id => {
                     const el = document.getElementById(id);
-                    if (el && !id.startsWith('hero-btn-')) el.value = pageData.titles[id] || '';
+                    if (el) el.value = pageData.titles[id] || '';
                 });
             }
 
@@ -1445,6 +1291,21 @@
             }
         };
 
+        // Attach functions to window
+        window.switchContext = switchContext;
+        window.toggleContextSidebar = toggleContextSidebar;
+        window.saveTemplate = saveTemplate;
+        window.exportHTML = exportHTML;
+        window.updateContent = updateContent;
+        window.updateSocial = updateSocial;
+        window.addSocial = addSocial;
+        window.removeSocial = removeSocial;
+        window.removeGalleryItem = removeGalleryItem;
+        window.handleImageUpload = handleImageUpload;
+        window.updateIframe = updateIframe;
+        window.setPreviewMode = setPreviewMode;
+        window.toggleLang = toggleLang;
+        window.setLang = setLang;
 
     </script>
 </body>
