@@ -908,38 +908,31 @@ a {
             }
 
             // Hero Buttons / Custom Labels & Config
-            const btn1 = document.getElementById('hero-btn-1') || document.querySelector('menutech-reservations');
-            const btn2 = document.getElementById('hero-btn-2') || document.querySelector('menutech-orders');
+            const updateButton = (id, config, isRes) => {
+                const tagName = isRes ? 'menutech-reservations' : 'menutech-orders';
+                const oldBtn = document.getElementById(id) || document.querySelector(tagName);
+                if (!oldBtn) return;
 
-
-            if (btn1) {
-                btn1.style.setProperty('display', (data.showReservations !== false) ? "inline-block" : "none", "important");
-            }
+                const newBtn = document.createElement(tagName);
+                newBtn.id = id;
+                newBtn.setAttribute('cuid', config.cuid || '');
+                newBtn.setAttribute('ruid', config.ruid || '');
+                newBtn.setAttribute('data-glf-cuid', config.cuid || '');
+                newBtn.setAttribute('data-glf-ruid', config.ruid || '');
+                newBtn.setAttribute('background', config.bg || (isRes ? '#2f4854' : '#f2a04a'));
+                newBtn.setAttribute('color', config.icon || '#ffffff');
+                newBtn.setAttribute('textcolor', config.text || '#ffffff');
+                newBtn.setAttribute('textColor', config.text || '#ffffff');
+                if (isRes) {
+                    newBtn.setAttribute('data-glf-reservation', 'true');
+                    newBtn.style.setProperty('display', (data.showReservations !== false) ? "inline-block" : "none", "important");
+                }
+                oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+            };
 
             if (data.buttons) {
-                if (btn2 && data.buttons.order) {
-                    const o = data.buttons.order;
-                    btn2.setAttribute('cuid', o.cuid || '');
-                    btn2.setAttribute('ruid', o.ruid || '');
-                    btn2.setAttribute('data-glf-cuid', o.cuid || '');
-                    btn2.setAttribute('data-glf-ruid', o.ruid || '');
-                    btn2.setAttribute('background', o.bg || '#f2a04a');
-                    btn2.setAttribute('color', o.icon || '#ffffff');
-                    btn2.setAttribute('textcolor', o.text || '#ffffff');
-                    btn2.setAttribute('textColor', o.text || '#ffffff');
-                }
-                if (btn1 && data.buttons.res) {
-                    const r = data.buttons.res;
-                    btn1.setAttribute('cuid', r.cuid || '');
-                    btn1.setAttribute('ruid', r.ruid || '');
-                    btn1.setAttribute('data-glf-cuid', r.cuid || '');
-                    btn1.setAttribute('data-glf-ruid', r.ruid || '');
-                    btn1.setAttribute('background', r.bg || '#2f4854');
-                    btn1.setAttribute('color', r.icon || '#ffffff');
-                    btn1.setAttribute('textcolor', r.text || '#ffffff');
-                    btn1.setAttribute('textColor', r.text || '#ffffff');
-                    btn1.setAttribute('data-glf-reservation', 'true');
-                }
+                if (data.buttons.order) updateButton('hero-btn-2', data.buttons.order, false);
+                if (data.buttons.res) updateButton('hero-btn-1', data.buttons.res, true);
             }
 
             // Hero

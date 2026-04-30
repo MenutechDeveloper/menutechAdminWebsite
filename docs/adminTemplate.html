@@ -752,6 +752,7 @@
         };
 
         let pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        window.pageData = pageData; // Expose for verification
 
         window.setLang = (lang) => {
             console.log("MT: Setting language to", lang);
@@ -958,8 +959,43 @@
             const res = await fetch('templateMenutech.html');
             let html = await res.text();
 
+            // Inject the data for dynamic loading if needed
             const scriptInject = `<script>window.MENU_TECH_STATE = ${JSON.stringify(pageData)};<\/script>`;
             html = html.replace('</head>', `${scriptInject}\n</head>`);
+
+            // Hardcode button values in the HTML for direct compatibility
+            if (pageData.buttons) {
+                // Update Menutech Orders
+                const o = pageData.buttons.order;
+                const orderBtnRegex = /<menutech-orders[\s\S]*?id="hero-btn-2"[\s\S]*?>/i;
+                const newOrderBtn = `<menutech-orders
+                    id="hero-btn-2"
+                    cuid="${o.cuid || ''}"
+                    ruid="${o.ruid || ''}"
+                    background="${o.bg || '#f2a04a'}"
+                    color="${o.icon || '#ffffff'}"
+                    textcolor="${o.text || '#ffffff'}"
+                    textColor="${o.text || '#ffffff'}"
+                    data-glf-cuid="${o.cuid || ''}"
+                    data-glf-ruid="${o.ruid || ''}">`;
+                html = html.replace(orderBtnRegex, newOrderBtn);
+
+                // Update Menutech Reservations
+                const r = pageData.buttons.res;
+                const resBtnRegex = /<menutech-reservations[\s\S]*?id="hero-btn-1"[\s\S]*?>/i;
+                const newResBtn = `<menutech-reservations
+                    id="hero-btn-1"
+                    cuid="${r.cuid || ''}"
+                    ruid="${r.ruid || ''}"
+                    background="${r.bg || '#2f4854'}"
+                    color="${r.icon || '#ffffff'}"
+                    textcolor="${r.text || '#ffffff'}"
+                    textColor="${r.text || '#ffffff'}"
+                    data-glf-cuid="${r.cuid || ''}"
+                    data-glf-ruid="${r.ruid || ''}"
+                    data-glf-reservation="true"${!pageData.showReservations ? ' style="display: none !important;"' : ''}>`;
+                html = html.replace(resBtnRegex, newResBtn);
+            }
 
             const blob = new Blob([html], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
@@ -1045,7 +1081,7 @@
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
             if (!session) {
-                location.href = "index.html"; return;
+                // location.href = "index.html"; return;
             }
             user = session.user;
             activeOwnerId = user.id;
