@@ -1052,6 +1052,12 @@
 
             syncForm();
             window.updateIframe();
+
+            if (userRole === 'CS' || userRole === 'adminCS') {
+                if (activeOwnerId === user.id) {
+                    window.toggleContextSidebar();
+                }
+            }
         }
 
         let contextInitialized = false;

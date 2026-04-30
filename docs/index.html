@@ -274,46 +274,51 @@
                 const nameEl = document.getElementById('user-name'), roleEl = document.getElementById('user-role-label');
 
                 if (profile) {
+                    const rawRole = (profile.role || 'user').trim();
+                    const role = rawRole.toUpperCase();
                     nameEl.textContent = profile.username || user.email.split('@')[0];
-                    roleEl.textContent = profile.role || 'User';
-                    if (profile.role === 'admin') pill.classList.add('admin-glow');
-                    else if (profile.role === 'developer') pill.classList.add('dev-glow');
+                    roleEl.textContent = rawRole;
+
+                    if (role === 'ADMIN') pill.classList.add('admin-glow');
+                    else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
                     else pill.classList.add('owner-glow');
 
-                    const role = profile.role || 'user';
-                    const qrRoles = ['design', 'adminDesign', 'retention'];
-                    const csRoles = ['CS', 'adminCS'];
+                    const qrRoles = ['DESIGN', 'ADMINDESIGN', 'RETENTION'];
+                    const csRoles = ['CS', 'ADMINCS'];
 
-                    if (role === 'admin') {
+                    if (role === 'ADMIN') {
                         document.getElementById('card-lab').classList.remove('hidden');
                     }
 
-                    if (role === 'owner') {
-                        document.getElementById('card-users').style.display = 'none';
-                        document.getElementById('card-qr-gen').style.display = 'none';
-                        document.getElementById('card-qr-admin').style.display = 'none';
-                        document.getElementById('card-customer-website').style.display = 'none';
+                    if (role === 'OWNER') {
+                        document.getElementById('card-users').classList.add('hidden');
+                        document.getElementById('card-qr-gen').classList.add('hidden');
+                        document.getElementById('card-qr-admin').classList.add('hidden');
+                        document.getElementById('card-customer-website').classList.add('hidden');
                         const grid = document.getElementById('main-bento');
                         grid.style.maxWidth = '800px';
                         grid.style.margin = '40px auto 0 auto';
                     } else if (csRoles.includes(role)) {
-                        document.getElementById('card-users').style.display = 'none';
-                        document.getElementById('card-qr-gen').style.display = 'none';
-                        document.getElementById('card-qr-admin').style.display = 'none';
-                        document.getElementById('card-menus').style.display = 'none';
-                        document.getElementById('card-orders').style.display = 'none';
-                        document.getElementById('card-customer-website').style.display = 'none';
+                        document.getElementById('card-users').classList.add('hidden');
+                        document.getElementById('card-qr-gen').classList.add('hidden');
+                        document.getElementById('card-qr-admin').classList.add('hidden');
+                        document.getElementById('card-menus').classList.add('hidden');
+                        document.getElementById('card-orders').classList.add('hidden');
+                        document.getElementById('card-customer-website').classList.add('hidden');
+                        document.getElementById('card-lab').classList.add('hidden');
                     } else if (qrRoles.includes(role)) {
-                        document.getElementById('card-users').style.display = 'none';
-                        document.getElementById('card-web').style.display = 'none';
-                        document.getElementById('card-menus').style.display = 'none';
-                        document.getElementById('card-orders').style.display = 'none';
-                        document.getElementById('card-template').style.display = 'none';
-                        document.getElementById('card-customer-website').style.display = 'none';
+                        document.getElementById('card-users').classList.add('hidden');
+                        document.getElementById('card-web').classList.add('hidden');
+                        document.getElementById('card-menus').classList.add('hidden');
+                        document.getElementById('card-orders').classList.add('hidden');
+                        document.getElementById('card-template').classList.add('hidden');
+                        document.getElementById('card-customer-website').classList.add('hidden');
+                        document.getElementById('card-lab').classList.add('hidden');
                         // QR Generator and QR Manager stay visible
-                    } else if (role !== 'admin' && role !== 'developer') {
+                    } else if (role !== 'ADMIN' && role !== 'DEVELOPER') {
                         // Default fallback for other roles if any
-                        document.getElementById('card-customer-website').style.display = 'none';
+                        document.getElementById('card-customer-website').classList.add('hidden');
+                        document.getElementById('card-lab').classList.add('hidden');
                     }
                 }
 
