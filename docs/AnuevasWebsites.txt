@@ -1,0 +1,10 @@
+-- SQL Migration for Menutech Deluxe/Template Websites
+-- This script adds columns to track website type and completion status.
+
+ALTER TABLE public.profiles
+ADD COLUMN IF NOT EXISTS website_type TEXT DEFAULT 'Template',
+ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT FALSE;
+
+-- Update existing records if necessary (optional)
+-- UPDATE public.profiles SET website_type = 'Template' WHERE website_type IS NULL;
+-- UPDATE public.profiles SET is_completed = FALSE WHERE is_completed IS NULL;
