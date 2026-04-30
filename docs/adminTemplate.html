@@ -383,12 +383,12 @@
                     <label data-i18n="generalSettings">Restaurant Name</label>
                     <input type="text" id="site-title" class="input-field" placeholder="Site Title" data-i18n-placeholder="titlePlaceholder" oninput="window.updateContent()">
 
-                    <label style="margin-top:10px;">Menutech CUID / RUID</label>
+                    <label style="margin-top:10px;" data-i18n="heroButtonsLabels">Hero Buttons Labels</label>
                     <input type="text" id="cuid" class="input-field" placeholder="CUID" oninput="window.updateContent()">
                     <input type="text" id="ruid" class="input-field" placeholder="RUID" oninput="window.updateContent()">
 
                     <div class="switch-container" style="margin-top:10px;">
-                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">Enable Reservations</span>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);" data-i18n="enableReservations">Enable Reservations</span>
                         <label class="switch">
                             <input type="checkbox" id="show-reservations" onchange="window.updateContent()">
                             <span class="slider"></span>
@@ -583,6 +583,8 @@
                 gallery: "Gallery",
                 galleryPlaceholder: "Drag & Drop Gallery Images",
                 contactInfo: "Contact Info",
+                heroButtonsLabels: "Menutech (CUID / RUID)",
+                enableReservations: "Enable Reservations",
                 phonePlaceholder: "Phone Number",
                 addressPlaceholder: "Address",
                 hoursPlaceholder: "Opening Hours",
@@ -625,6 +627,8 @@
                 gallery: "Galería",
                 galleryPlaceholder: "Arrastra y suelta imágenes de la Galería",
                 contactInfo: "Información de Contacto",
+                heroButtonsLabels: "Menutech (CUID / RUID)",
+                enableReservations: "Habilitar Reservas",
                 phonePlaceholder: "Número de Teléfono",
                 addressPlaceholder: "Dirección",
                 hoursPlaceholder: "Horarios de Apertura",
@@ -893,6 +897,11 @@
             html = html.replace(/ruid=""/g, `ruid="${ruid}"`);
             html = html.replace(/data-glf-cuid=""/g, `data-glf-cuid="${cuid}"`);
             html = html.replace(/data-glf-ruid=""/g, `data-glf-ruid="${ruid}"`);
+
+            // Handle reservations visibility in exported HTML
+            if (pageData.showReservations === false) {
+                html = html.replace('id="hero-reservations-wrapper" style="display: inline-block;"', 'id="hero-reservations-wrapper" style="display: none;"');
+            }
 
             const blob = new Blob([html], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
