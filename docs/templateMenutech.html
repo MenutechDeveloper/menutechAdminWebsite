@@ -673,16 +673,18 @@ a {
                 data-glf-ruid="">
                 </menutech-orders>
 
-                <menutech-reservations
-                id="hero-reservations"
-                cuid=""
-                ruid=""
-                background="#2f4854"
-                color="#ffffff"
-                data-glf-cuid=""
-                data-glf-ruid=""
-                data-glf-reservation="true">
-                </menutech-reservations>
+                <div id="hero-reservations-wrapper" style="display: inline-block;">
+                    <menutech-reservations
+                    id="hero-reservations"
+                    cuid=""
+                    ruid=""
+                    background="#2f4854"
+                    color="#ffffff"
+                    data-glf-cuid=""
+                    data-glf-ruid=""
+                    data-glf-reservation="true">
+                    </menutech-reservations>
+                </div>
 
                 <!-- 4. Forzar vinculación (Opcional si no abre a la primera) -->
                 <script>
@@ -906,30 +908,35 @@ a {
             }
 
             // Hero Buttons (Menutech CUID/RUID)
-            const ordersBtn = document.getElementById('hero-orders');
-            const resBtn = document.getElementById('hero-reservations');
+            const cuid = data.cuid || '';
+            const ruid = data.ruid || '';
 
+            const ordersBtn = document.querySelector('menutech-orders');
             if (ordersBtn) {
-                const cuid = data.cuid || '';
-                const ruid = data.ruid || '';
-                ordersBtn.setAttribute('cuid', cuid);
-                ordersBtn.setAttribute('data-glf-cuid', cuid);
-                ordersBtn.setAttribute('ruid', ruid);
-                ordersBtn.setAttribute('data-glf-ruid', ruid);
+                const newOrdersBtn = document.createElement('menutech-orders');
+                newOrdersBtn.setAttribute('cuid', cuid);
+                newOrdersBtn.setAttribute('ruid', ruid);
+                newOrdersBtn.setAttribute('background', '#f2a04a');
+                newOrdersBtn.setAttribute('color', '#ffffff');
+                newOrdersBtn.setAttribute('data-glf-cuid', cuid);
+                newOrdersBtn.setAttribute('data-glf-ruid', ruid);
+                ordersBtn.parentNode.replaceChild(newOrdersBtn, ordersBtn);
             }
 
-            if (resBtn) {
-                const cuid = data.cuid || '';
-                const ruid = data.ruid || '';
-                resBtn.setAttribute('cuid', cuid);
-                resBtn.setAttribute('data-glf-cuid', cuid);
-                resBtn.setAttribute('ruid', ruid);
-                resBtn.setAttribute('data-glf-ruid', ruid);
-
-                if (data.showReservations !== false) {
-                    resBtn.style.setProperty('display', 'inline-block', 'important');
-                } else {
-                    resBtn.style.setProperty('display', 'none', 'important');
+            const resWrapper = document.getElementById('hero-reservations-wrapper');
+            if (resWrapper) {
+                resWrapper.style.setProperty('display', (data.showReservations !== false) ? 'inline-block' : 'none', 'important');
+                const resBtn = resWrapper.querySelector('menutech-reservations');
+                if (resBtn) {
+                    const newResBtn = document.createElement('menutech-reservations');
+                    newResBtn.setAttribute('cuid', cuid);
+                    newResBtn.setAttribute('ruid', ruid);
+                    newResBtn.setAttribute('background', '#2f4854');
+                    newResBtn.setAttribute('color', '#ffffff');
+                    newResBtn.setAttribute('data-glf-cuid', cuid);
+                    newResBtn.setAttribute('data-glf-ruid', ruid);
+                    newResBtn.setAttribute('data-glf-reservation', 'true');
+                    resBtn.parentNode.replaceChild(newResBtn, resBtn);
                 }
             }
 
