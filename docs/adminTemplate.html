@@ -383,9 +383,9 @@
                     <label data-i18n="generalSettings">Restaurant Name</label>
                     <input type="text" id="site-title" class="input-field" placeholder="Site Title" data-i18n-placeholder="titlePlaceholder" oninput="window.updateContent()">
 
-                    <label style="margin-top:10px;">Hero Buttons Labels</label>
-                    <input type="text" id="hero-btn-1" class="input-field" placeholder="Button 1 Label" oninput="window.updateContent()">
-                    <input type="text" id="hero-btn-2" class="input-field" placeholder="Order Button Label" oninput="window.updateContent()">
+                    <label style="margin-top:10px;">GloriaFood CUID / RUID</label>
+                    <input type="text" id="cuid" class="input-field" placeholder="CUID" oninput="window.updateContent()">
+                    <input type="text" id="ruid" class="input-field" placeholder="RUID" oninput="window.updateContent()">
 
                     <div class="switch-container" style="margin-top:10px;">
                         <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">Enable Reservations</span>
@@ -652,6 +652,8 @@
         const DEFAULT_DATA = {
             lang: 'en',
             showReservations: true,
+            cuid: '',
+            ruid: '',
             title: 'Template Menutech',
             heroImg: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
             aboutImg1: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
@@ -679,8 +681,6 @@
                 "delivery": "Looking for food delivery nearby? Not everybody knows or has the time to prepare tasty food.\n\nWhen you want to get served like a king then food delivery from restaurant Pronto will be your best choice.\n\nSimply select \"Delivery\" at the checkout screen and we hope you'll appreciate our food delivery service."
             },
             titles: {
-                "hero-btn-1": "Table Reservation",
-                "hero-btn-2": "See MENU & Order Now!",
                 "about-title": "We are Pronto Mexican Food",
                 "about-subtitle": "About Us",
                 "promo1-title": "Best Friends Deal",
@@ -738,6 +738,8 @@
 
         window.updateContent = () => {
             pageData.title = document.getElementById('site-title').value;
+            pageData.cuid = document.getElementById('cuid').value;
+            pageData.ruid = document.getElementById('ruid').value;
             pageData.showReservations = document.getElementById('show-reservations').checked;
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
@@ -806,8 +808,8 @@
                 const mapping = {
                     'nav-brand': 'site-title',
                     'hero-title': 'site-title',
-                    'hero-btn-1': 'hero-btn-1',
-                    'hero-btn-2': 'hero-btn-2',
+                    'hero-orders': 'cuid',
+                    'hero-reservations': 'ruid',
                     'hero-section': 'hero-drop-zone',
                     'about-title': 'about-title',
                     'about-subtitle': 'about-subtitle',
@@ -884,6 +886,14 @@
             const scriptInject = `<script>window.MENU_TECH_STATE = ${JSON.stringify(pageData)};<\/script>`;
             html = html.replace('</head>', `${scriptInject}\n</head>`);
 
+            // Inject actual CUID/RUID for the exported static version
+            const cuid = pageData.cuid || '';
+            const ruid = pageData.ruid || '';
+            html = html.replace(/cuid=""/g, `cuid="${cuid}"`);
+            html = html.replace(/ruid=""/g, `ruid="${ruid}"`);
+            html = html.replace(/data-glf-cuid=""/g, `data-glf-cuid="${cuid}"`);
+            html = html.replace(/data-glf-ruid=""/g, `data-glf-ruid="${ruid}"`);
+
             const blob = new Blob([html], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -907,6 +917,9 @@
 
         function migrateData(config) {
             if (!config) return JSON.parse(JSON.stringify(DEFAULT_DATA));
+
+            if (config.cuid === undefined) config.cuid = '';
+            if (config.ruid === undefined) config.ruid = '';
 
             // Ensure basic objects exist
             if (!config.contact) config.contact = JSON.parse(JSON.stringify(DEFAULT_DATA.contact));
@@ -1171,6 +1184,8 @@
         function syncForm() {
             applyEditorLanguage(pageData.lang);
             document.getElementById('site-title').value = pageData.title || '';
+            document.getElementById('cuid').value = pageData.cuid || '';
+            document.getElementById('ruid').value = pageData.ruid || '';
             document.getElementById('show-reservations').checked = pageData.showReservations !== false;
 
             // Sync paragraphs
