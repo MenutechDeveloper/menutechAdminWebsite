@@ -502,7 +502,13 @@
             const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
             if (!profile) { userRole = 'owner'; activeOwnerId = user.id; showApp(null); return; }
             userRole = profile.role;
-            if (userRole === 'admin' || userRole === 'developer' || userRole === 'adminCS' || userRole === 'CS') {
+
+            if (userRole === 'CS' || userRole === 'adminCS') {
+                location.href = "index.html";
+                return;
+            }
+
+            if (userRole === 'admin' || userRole === 'developer') {
                 document.getElementById('sidebar-container').classList.remove('hidden');
                 document.getElementById('sidebar-container').classList.add('collapsed');
                 document.getElementById('snippet-section').classList.remove('hidden');

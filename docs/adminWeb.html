@@ -661,7 +661,13 @@
 
             if (main) main.classList.remove('hidden');
             if (nav) nav.classList.remove('hidden');
-            if (activeOwnerId) { loadGallery(); loadPromos(); loadForm(); }
+
+            if (activeOwnerId) {
+                loadGallery(); loadPromos(); loadForm();
+                if ((userRole === 'CS' || userRole === 'adminCS') && activeOwnerId === user.id) {
+                    document.getElementById('sidebar-container').classList.remove('collapsed');
+                }
+            }
         }
 
         function initEvents() {

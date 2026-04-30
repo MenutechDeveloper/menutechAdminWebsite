@@ -203,6 +203,12 @@
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
             const { data } = await sb.from('profiles').select('role, username').eq('id', user.id).single();
+
+            if (data && (data.role === 'CS' || data.role === 'adminCS')) {
+                location.href = "index.html";
+                return;
+            }
+
             const allowedRoles = ['admin', 'developer'];
             if (!data || !allowedRoles.includes(data.role)) { document.getElementById('no-access').classList.remove('hidden'); }
             else {
