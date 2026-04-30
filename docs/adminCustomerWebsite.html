@@ -181,7 +181,7 @@
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
             const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-            const allowedRoles = ['admin', 'developer', 'CS', 'adminCS'];
+            const allowedRoles = ['admin', 'developer'];
             if (!profile || !allowedRoles.includes(profile.role)) { location.href = "index.html"; return; }
 
             const pill = document.getElementById('user-display-pill');
