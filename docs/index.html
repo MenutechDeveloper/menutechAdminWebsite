@@ -195,7 +195,7 @@
             </a>
             <a href="adminWeb.html" class="bento-card" id="card-web">
                 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-                <h3>Website Edit</h3>
+                <h3>Deluxe Website</h3>
                 <p>Customize your gallery, upload images, and manage domain content.</p>
             </a>
             <a href="QRmenutech.html" class="bento-card" id="card-qr-gen">
@@ -222,6 +222,11 @@
                 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div>
                 <h3>Template Web</h3>
                 <p>Customize and export your professional restaurant website.</p>
+            </a>
+            <a href="adminCustomerWebsite.html" class="bento-card" id="card-customer-website">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+                <h3>Customer Website</h3>
+                <p>Manage website types and completion status.</p>
             </a>
             <a href="laboratorio.html" class="bento-card hidden" id="card-lab">
                 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M10 2v8L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45L14 10V2M8.5 2h7M7 16h10"/></svg></div>
@@ -276,7 +281,8 @@
                     else pill.classList.add('owner-glow');
 
                     const role = profile.role || 'user';
-                    const qrRoles = ['design', 'adminDesign', 'CS', 'adminCS', 'retention'];
+                    const qrRoles = ['design', 'adminDesign', 'retention'];
+                    const csRoles = ['CS', 'adminCS'];
 
                     if (role === 'admin') {
                         document.getElementById('card-lab').classList.remove('hidden');
@@ -286,16 +292,27 @@
                         document.getElementById('card-users').style.display = 'none';
                         document.getElementById('card-qr-gen').style.display = 'none';
                         document.getElementById('card-qr-admin').style.display = 'none';
+                        document.getElementById('card-customer-website').style.display = 'none';
                         const grid = document.getElementById('main-bento');
                         grid.style.maxWidth = '800px';
                         grid.style.margin = '40px auto 0 auto';
+                    } else if (csRoles.includes(role)) {
+                        document.getElementById('card-users').style.display = 'none';
+                        document.getElementById('card-qr-gen').style.display = 'none';
+                        document.getElementById('card-qr-admin').style.display = 'none';
+                        document.getElementById('card-menus').style.display = 'none';
+                        document.getElementById('card-orders').style.display = 'none';
                     } else if (qrRoles.includes(role)) {
                         document.getElementById('card-users').style.display = 'none';
                         document.getElementById('card-web').style.display = 'none';
                         document.getElementById('card-menus').style.display = 'none';
                         document.getElementById('card-orders').style.display = 'none';
                         document.getElementById('card-template').style.display = 'none';
+                        document.getElementById('card-customer-website').style.display = 'none';
                         // QR Generator and QR Manager stay visible
+                    } else if (role !== 'admin' && role !== 'developer') {
+                        // Default fallback for other roles if any
+                        document.getElementById('card-customer-website').style.display = 'none';
                     }
                 }
 

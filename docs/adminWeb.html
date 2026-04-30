@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gallery Admin | Menutech</title>
+    <title>Deluxe Website | Menutech</title>
     <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
 <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
     <style>
@@ -437,7 +437,7 @@
                 <div id="section-gallery">
                     <div class="component-header">
                         <div style="display: flex; align-items: center; gap: 20px;">
-                            <h2>Gallery Images</h2>
+                            <h2>Deluxe Website</h2>
                             <div class="segmented-control">
                                 <button class="segment-btn active" data-value="grid" onclick="setGalleryType('grid')">Grid</button>
                                 <button class="segment-btn" data-value="slider" onclick="setGalleryType('slider')">Slider</button>
@@ -595,7 +595,7 @@
             }
 
             userRole = profile.role;
-            const allowedRoles = ['admin', 'developer', 'owner'];
+            const allowedRoles = ['admin', 'developer', 'owner', 'CS', 'adminCS'];
             if (!allowedRoles.includes(userRole)) {
                 location.href = "index.html";
                 return;
@@ -620,7 +620,8 @@
         async function setupContextSwitcher() {
             const list = document.getElementById('client-list');
             const search = document.getElementById('client-search');
-            if (userRole === 'admin') { const { data } = await sb.from('profiles').select('*'); allOwners = data || []; }
+            const privilegedRoles = ['admin', 'CS', 'adminCS'];
+            if (privilegedRoles.includes(userRole)) { const { data } = await sb.from('profiles').select('*'); allOwners = data || []; }
             else { const { data: access } = await sb.from('developer_access').select('owner_id').eq('developer_id', user.id); const ids = (access || []).map(a => a.owner_id); const { data } = await sb.from('profiles').select('*').in('id', ids); allOwners = data || []; }
             renderOwners(allOwners);
             search.oninput = () => { const term = search.value.toLowerCase(); const filtered = allOwners.filter(o => (o.username || '').toLowerCase().includes(term) || (o.domain || '').toLowerCase().includes(term)); renderOwners(filtered); };

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Website | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --error: #dc2626;
+            --success: #059669;
+            --dev: #8b5cf6;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; overflow-x: hidden; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 100% 0%, rgba(255, 149, 51, 0.1) 0%, transparent 40%), radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.05) 0%, transparent 40%); }
+
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
+        #top-nav > * { pointer-events: auto; }
+
+        #user-display-pill {
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); min-width: 220px; justify-content: flex-start;
+        }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
+        #user-display-pill.admin-glow {
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
+
+        #user-display-pill.dev-glow {
+            background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
+
+        #user-display-pill.owner-glow {
+            background: #000;
+            background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 20%, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 80%, rgba(255,255,255,0.1) 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.owner-glow #user-name, #user-display-pill.owner-glow #user-role-label { color: #fff !important; }
+
+        #user-display-pill #user-name, #user-display-pill #user-role-label { color: var(--text); transition: color 0.3s; }
+
+        @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
+        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .pill-menu { position: absolute; top: calc(100% + 12px); right: 0; background: var(--card) !important; border: 1px solid var(--border); border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2); opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000; animation: none !important; }
+        #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .pill-menu-item { padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none; }
+        .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
+        .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+
+        .theme-switch { width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; }
+        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); }
+
+        header { text-align: center; margin-bottom: 60px; padding-top: 120px; }
+        .logo-main { width: 100%; max-width: 280px; height: auto; margin: 0 auto 10px auto; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
+
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 40px; animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-title { font-family: 'Outfit', sans-serif; font-size: 1.2rem; margin-bottom: 24px; color: var(--text-dim); display: flex; align-items: center; gap: 12px; }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        .user-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 60px; }
+        .user-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px 32px; display: grid; grid-template-columns: 1.5fr 1fr 1fr 0.5fr; align-items: center; gap: 24px; transition: 0.4s; }
+        .user-card:hover { border-color: var(--orange); transform: scale(1.005); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .user-info h3 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .user-info .domain { font-size: 0.8rem; color: var(--orange); font-weight: 600; }
+
+        .control-group { display: flex; flex-direction: column; gap: 6px; }
+        .control-group label { font-size: 0.65rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+        select, input[type="checkbox"] { background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 10px; color: var(--text); font-size: 0.85rem; cursor: pointer; }
+
+        .status-checkbox { width: 24px; height: 24px; accent-color: var(--success); cursor: pointer; }
+
+        .loader { width: 30px; height: 30px; border: 3px solid rgba(255, 149, 51, 0.1); border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite; margin: 40px auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .hidden { display: none !important; }
+        @media (max-width: 768px) { .user-card { grid-template-columns: 1fr; text-align: center; } .control-group { align-items: center; } }
+
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast { min-width: 320px; max-width: 440px; padding: 18px 24px; border-radius: 24px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.9rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1), toastFadeOut 0.5s 5.5s forwards; line-height: 1.4; }
+        .toast.success { border-left: 6px solid var(--success); }
+        .toast.error { border-left: 6px solid var(--error); }
+        @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastFadeOut { from { opacity: 1; } to { opacity: 0; } }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
+
+    <div id="top-nav">
+        <div><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="theme-switch" id="theme-toggle">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+            <div id="user-display-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div class="pill-info">
+                    <div id="user-name">&nbsp;</div>
+                    <div id="user-role-label">&nbsp;</div>
+                </div>
+                <div class="pill-menu">
+                    <a href="index.html" class="pill-menu-item">Home</a>
+                    <div class="pill-menu-item danger" onclick="logout()">Logout</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header><img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo"></header>
+        <div class="section-title">Customer Website Management</div>
+        <div style="margin-bottom: 30px;"><input type="text" id="user-search" placeholder="Search customers..." style="width: 100%; max-width: 400px; background: var(--input); border: 1px solid var(--border); border-radius: 14px; padding: 14px 20px; color: var(--text);"></div>
+        <div id="loading" class="loader"></div>
+        <div id="user-list" class="user-list"></div>
+    </div>
+
+    <script type="module">
+        import { MT_CONFIG } from './config.js';
+        import { supabase as sb } from './supabase.js';
+        let user = null;
+
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const msg = document.createElement('div');
+            msg.textContent = message;
+            toast.appendChild(msg); container.appendChild(toast);
+            setTimeout(() => toast.remove(), 6000);
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
+            checkAuth();
+        });
+
+        async function checkAuth() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { location.href = "index.html"; return; }
+            user = session.user;
+            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            const allowedRoles = ['admin', 'developer', 'CS', 'adminCS'];
+            if (!profile || !allowedRoles.includes(profile.role)) { location.href = "index.html"; return; }
+
+            const pill = document.getElementById('user-display-pill');
+            document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
+            document.getElementById('user-role-label').textContent = profile.role;
+            if (profile.role === 'admin') pill.classList.add('admin-glow');
+            else if (profile.role === 'developer') pill.classList.add('dev-glow');
+            else pill.classList.add('owner-glow');
+
+            loadUsers();
+        }
+
+        async function loadUsers() {
+            const { data, error } = await sb.from('profiles').select('*').order('username', { ascending: true });
+            document.getElementById('loading').classList.add('hidden');
+            if (error) { showToast("Error loading users", "error"); return; }
+
+            renderList(data);
+            document.getElementById('user-search').oninput = (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = data.filter(u => (u.username||'').toLowerCase().includes(term) || (u.domain||'').toLowerCase().includes(term));
+                renderList(filtered);
+            };
+        }
+
+        function renderList(users) {
+            const list = document.getElementById('user-list');
+            list.innerHTML = users.map(u => `
+                <div class="user-card">
+                    <div class="user-info">
+                        <h3>${u.username || 'Unnamed'}</h3>
+                        <div class="domain">${u.domain || 'No domain'}</div>
+                    </div>
+                    <div class="control-group">
+                        <label>Website Type</label>
+                        <select onchange="updateProfile('${u.id}', 'website_type', this.value)">
+                            <option value="Template" ${u.website_type === 'Template' ? 'selected' : ''}>Template</option>
+                            <option value="Deluxe" ${u.website_type === 'Deluxe' ? 'selected' : ''}>Deluxe</option>
+                        </select>
+                    </div>
+                    <div class="control-group" style="align-items: center;">
+                        <label>Completed</label>
+                        <input type="checkbox" class="status-checkbox" ${u.is_completed ? 'checked' : ''} onchange="updateProfile('${u.id}', 'is_completed', this.checked)">
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 0.6rem; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">ID: ${u.id.substring(0,8)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.updateProfile = async (id, field, value) => {
+            const { error } = await sb.from('profiles').update({ [field]: value }).eq('id', id);
+            if (error) {
+                showToast("Error updating profile", "error");
+                console.error(error);
+            } else {
+                showToast("Profile updated", "success");
+            }
+        };
+
+        function initTheme() {
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            document.getElementById('theme-toggle').onclick = () => { document.body.classList.toggle('dark-mode'); localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); };
+            const pill = document.getElementById('user-display-pill');
+            pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
+            document.addEventListener('click', () => pill.classList.remove('active'));
+        }
+        window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
+    </script>
+</body>
+</html>
