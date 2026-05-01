@@ -888,6 +888,7 @@
 
         window.markAsComplete = async () => {
             if (!activeOwnerId) return;
+            console.log("MT: Marking profile as complete for ID:", activeOwnerId);
             const t = TRANSLATIONS[pageData.lang];
             showSaveStatus(t.saving);
             try {
@@ -896,10 +897,11 @@
                     .eq('id', activeOwnerId);
 
                 if (error) throw error;
+                console.log("MT: Profile marked as complete successfully");
                 showSaveStatus(t.saved);
                 setTimeout(() => hideSaveStatus(), 2000);
             } catch (error) {
-                console.error("Mark as complete error", error);
+                console.error("MT: Mark as complete error", error);
                 showSaveStatus(t.errorSaving, true);
             }
         };
