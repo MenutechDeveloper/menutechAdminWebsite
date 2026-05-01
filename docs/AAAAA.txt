@@ -9,7 +9,7 @@ CREATE POLICY "Allow update for privileged roles" ON public.profiles
         EXISTS (
             SELECT 1 FROM public.profiles
             WHERE profiles.id = auth.uid()
-            AND profiles.role IN ('admin', 'developer', 'CS', 'adminCS')
+            AND UPPER(profiles.role) IN ('ADMIN', 'DEVELOPER', 'CS', 'ADMINCS')
         )
     );
 
@@ -21,7 +21,7 @@ CREATE POLICY "Management access for forms" ON public.menutech_forms
         EXISTS (
             SELECT 1 FROM public.profiles
             WHERE profiles.id = auth.uid()
-            AND profiles.role IN ('admin', 'developer', 'CS', 'adminCS')
+            AND UPPER(profiles.role) IN ('ADMIN', 'DEVELOPER', 'CS', 'ADMINCS')
         )
     );
 
@@ -37,7 +37,7 @@ CREATE POLICY "Management access for responses" ON public.menutech_forms_respues
                 EXISTS (
                     SELECT 1 FROM public.profiles
                     WHERE profiles.id = auth.uid()
-                    AND profiles.role IN ('admin', 'developer', 'CS', 'adminCS')
+                    AND UPPER(profiles.role) IN ('ADMIN', 'DEVELOPER', 'CS', 'ADMINCS')
                 )
             )
         )
