@@ -888,21 +888,34 @@
 
         window.markAsComplete = async () => {
             if (!activeOwnerId) return;
+            // Prevent marking own CS account as complete
+            if (activeOwnerId === user.id && (userRole === 'CS' || userRole === 'ADMINCS')) {
+                const t = TRANSLATIONS[pageData.lang];
+                showSaveStatus("Please select a client account first.", true);
+                window.toggleContextSidebar();
+                return;
+            }
+
             console.log("MT: Marking profile as complete for ID:", activeOwnerId);
             const t = TRANSLATIONS[pageData.lang];
             showSaveStatus(t.saving);
             try {
-                const { error } = await sb.from('profiles')
+                const { data, error } = await sb.from('profiles')
                     .update({ is_completed: true })
-                    .eq('id', activeOwnerId);
+                    .eq('id', activeOwnerId)
+                    .select();
 
                 if (error) throw error;
-                console.log("MT: Profile marked as complete successfully");
+                if (!data || data.length === 0) {
+                    throw new Error("Update failed: No rows affected. Check RLS policies.");
+                }
+
+                console.log("MT: Profile marked as complete successfully", data);
                 showSaveStatus(t.saved);
                 setTimeout(() => hideSaveStatus(), 2000);
             } catch (error) {
                 console.error("MT: Mark as complete error", error);
-                showSaveStatus(t.errorSaving, true);
+                showSaveStatus(t.errorSaving + ": " + (error.message || ""), true);
             }
         };
 
@@ -1039,6 +1052,10 @@
                 if (userRole === 'CS' || userRole === 'ADMINCS') {
                     if (btnExport) btnExport.classList.add('hidden');
                     if (btnComplete) btnComplete.classList.remove('hidden');
+                    // Automatically open sidebar for CS if they haven't switched client yet
+                    if (activeOwnerId === user.id) {
+                        setTimeout(() => { if (window.toggleContextSidebar) window.toggleContextSidebar(); }, 1000);
+                    }
                 } else {
                     if (btnExport) btnExport.classList.remove('hidden');
                     if (btnComplete) btnComplete.classList.add('hidden');
