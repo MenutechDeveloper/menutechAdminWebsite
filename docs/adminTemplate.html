@@ -1004,8 +1004,9 @@
             user = session.user;
 
             const { data: currentProfile } = await sb.from('profiles').select('role').eq('id', user.id).single();
-            const allowedRoles = ['admin', 'developer', 'owner', 'CS', 'adminCS'];
-            if (!currentProfile || !allowedRoles.includes(currentProfile.role)) {
+            const rawRole = (currentProfile?.role || 'owner').toUpperCase();
+            const allowedRoles = ['ADMIN', 'DEVELOPER', 'OWNER', 'CS', 'ADMINCS'];
+            if (!currentProfile || !allowedRoles.includes(rawRole)) {
                 location.href = "index.html";
                 return;
             }
@@ -1019,24 +1020,17 @@
             ]);
 
             const profile = profileRes.data;
-            userRole = profile?.role || 'owner';
+            userRole = (profile?.role || 'owner').toUpperCase();
 
             if (profile) {
                 document.getElementById('current-account-name').value = profile.username || profile.domain || 'Your Store';
             }
 
-            const privilegedRoles = ['admin', 'developer', 'adminCS', 'CS', 'adminDesign', 'design', 'retention'];
+            const privilegedRoles = ['ADMIN', 'DEVELOPER', 'ADMINCS', 'CS', 'ADMINDESIGN', 'DESIGN', 'RETENTION'];
             if (privilegedRoles.includes(userRole)) {
                 const adminGroup = document.getElementById('admin-context-group');
                 if (adminGroup) adminGroup.style.display = 'block';
                 // setupContextSwitcher is now lazy-loaded on first open
-
-                if (userRole === 'CS' || userRole === 'adminCS') {
-                    const btnExport = document.getElementById('btn-export');
-                    const btnComplete = document.getElementById('btn-complete');
-                    if (btnExport) btnExport.classList.add('hidden');
-                    if (btnComplete) btnComplete.classList.remove('hidden');
-                }
             } else {
                 const btnExport = document.getElementById('btn-export');
                 if (btnExport) btnExport.classList.add('hidden');
@@ -1053,11 +1047,6 @@
             syncForm();
             window.updateIframe();
 
-            if (userRole === 'CS' || userRole === 'adminCS') {
-                if (activeOwnerId === user.id) {
-                    window.toggleContextSidebar();
-                }
-            }
         }
 
         let contextInitialized = false;

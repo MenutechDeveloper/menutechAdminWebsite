@@ -274,10 +274,9 @@
                 const nameEl = document.getElementById('user-name'), roleEl = document.getElementById('user-role-label');
 
                 if (profile) {
-                    const rawRole = (profile.role || 'user').trim();
-                    const role = rawRole.toUpperCase();
+                    const role = (profile.role || 'user').trim().toUpperCase();
                     nameEl.textContent = profile.username || user.email.split('@')[0];
-                    roleEl.textContent = rawRole;
+                    roleEl.textContent = profile.role || 'user';
 
                     if (role === 'ADMIN') pill.classList.add('admin-glow');
                     else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
@@ -299,6 +298,7 @@
                         grid.style.maxWidth = '800px';
                         grid.style.margin = '40px auto 0 auto';
                     } else if (csRoles.includes(role)) {
+                        // CS roles only see Deluxe Web and Template Web slots
                         document.getElementById('card-users').classList.add('hidden');
                         document.getElementById('card-qr-gen').classList.add('hidden');
                         document.getElementById('card-qr-admin').classList.add('hidden');

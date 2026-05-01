@@ -1,0 +1,44 @@
+-- SQL for Menutech permissions for CS and ADMINCS roles
+-- Run in Supabase SQL Editor
+
+-- 1. Grant UPDATE permission on profiles (to save gallery type and completion status)
+DROP POLICY IF EXISTS "Allow update for privileged roles" ON public.profiles;
+CREATE POLICY "Allow update for privileged roles" ON public.profiles
+    FOR UPDATE USING (
+        auth.uid() = id OR
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = auth.uid()
+            AND profiles.role IN ('admin', 'developer', 'CS', 'adminCS')
+        )
+    );
+
+-- 2. Update Management access for Forms
+DROP POLICY IF EXISTS "Management access for forms" ON public.menutech_forms;
+CREATE POLICY "Management access for forms" ON public.menutech_forms
+    FOR ALL USING (
+        auth.uid() = user_id OR
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = auth.uid()
+            AND profiles.role IN ('admin', 'developer', 'CS', 'adminCS')
+        )
+    );
+
+-- 3. Update Management access for Form Responses
+DROP POLICY IF EXISTS "Management access for responses" ON public.menutech_forms_respuestas;
+CREATE POLICY "Management access for responses" ON public.menutech_forms_respuestas
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM public.menutech_forms
+            WHERE menutech_forms.id = form_id
+            AND (
+                menutech_forms.user_id = auth.uid() OR
+                EXISTS (
+                    SELECT 1 FROM public.profiles
+                    WHERE profiles.id = auth.uid()
+                    AND profiles.role IN ('admin', 'developer', 'CS', 'adminCS')
+                )
+            )
+        )
+    );
