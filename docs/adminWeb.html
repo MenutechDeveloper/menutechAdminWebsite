@@ -1151,7 +1151,7 @@
                     .select();
 
                 if (error) throw error;
-                if (!data || data.length === 0) throw new Error("Update failed: No rows affected. Check RLS.");
+                if (!data || data.length === 0) throw new Error("Update failed: No rows affected. Please run the SQL in AAAAA.txt to update permissions.");
 
                 showToast("Project marked as complete!", "success");
             } catch (e) {
