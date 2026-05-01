@@ -1,0 +1,26 @@
+-- SQL para otorgar permisos a roles CS y ADMINCS en la tabla profiles
+-- Ejecutar en el Editor SQL de Supabase
+
+-- 1. Permitir LECTURA de perfiles a roles privilegiados (para listar clientes en el sidebar)
+DROP POLICY IF EXISTS "Allow select for privileged roles" ON public.profiles;
+CREATE POLICY "Allow select for privileged roles" ON public.profiles
+    FOR SELECT USING (
+        auth.uid() = id OR
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = auth.uid()
+            AND UPPER(profiles.role) IN ('ADMIN', 'DEVELOPER', 'CS', 'ADMINCS')
+        )
+    );
+
+-- 2. Permitir ACTUALIZACIÓN de perfiles a roles privilegiados (para marcar como Complete)
+DROP POLICY IF EXISTS "Allow update for privileged roles" ON public.profiles;
+CREATE POLICY "Allow update for privileged roles" ON public.profiles
+    FOR UPDATE USING (
+        auth.uid() = id OR
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = auth.uid()
+            AND UPPER(profiles.role) IN ('ADMIN', 'DEVELOPER', 'CS', 'ADMINCS')
+        )
+    );
