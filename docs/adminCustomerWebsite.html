@@ -109,6 +109,24 @@
 
         .status-checkbox { width: 24px; height: 24px; accent-color: var(--success); cursor: pointer; }
 
+        .glow-new {
+            animation: glow-yellow 1.5s infinite alternate;
+            border-color: #ffcc00 !important;
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
+            z-index: 10;
+        }
+
+        @keyframes glow-yellow {
+            from {
+                box-shadow: 0 0 5px rgba(255, 204, 0, 0.2);
+                border-color: var(--border);
+            }
+            to {
+                box-shadow: 0 0 25px rgba(255, 204, 0, 0.7);
+                border-color: #ffcc00;
+            }
+        }
+
         .loader { width: 30px; height: 30px; border: 3px solid rgba(255, 149, 51, 0.1); border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite; margin: 40px auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -215,8 +233,10 @@
 
         function renderList(users) {
             const list = document.getElementById('user-list');
+            const seenAccounts = JSON.parse(localStorage.getItem('seen_completed_accounts') || '[]');
+
             list.innerHTML = users.map(u => `
-                <div class="user-card">
+                <div class="user-card ${u.is_completed && !seenAccounts.includes(u.id) ? 'glow-new' : ''}" onclick="window.markAsSeen('${u.id}', this)">
                     <div class="user-info">
                         <h3>${u.username || 'Unnamed'}</h3>
                         <div class="domain">${u.domain || 'No domain'}</div>
@@ -239,6 +259,17 @@
             `).join('');
         }
 
+        window.markAsSeen = (id, element) => {
+            if (!element.classList.contains('glow-new')) return;
+
+            let seenAccounts = JSON.parse(localStorage.getItem('seen_completed_accounts') || '[]');
+            if (!seenAccounts.includes(id)) {
+                seenAccounts.push(id);
+                localStorage.setItem('seen_completed_accounts', JSON.stringify(seenAccounts));
+            }
+            element.classList.remove('glow-new');
+        };
+
         window.updateProfile = async (id, field, value) => {
             const { error } = await sb.from('profiles').update({ [field]: value }).eq('id', id);
             if (error) {
@@ -246,6 +277,13 @@
                 console.error(error);
             } else {
                 showToast("Profile updated", "success");
+                if (field === 'is_completed' && value === false) {
+                    let seenAccounts = JSON.parse(localStorage.getItem('seen_completed_accounts') || '[]');
+                    if (seenAccounts.includes(id)) {
+                        seenAccounts = seenAccounts.filter(accId => accId !== id);
+                        localStorage.setItem('seen_completed_accounts', JSON.stringify(seenAccounts));
+                    }
+                }
             }
         };
 
