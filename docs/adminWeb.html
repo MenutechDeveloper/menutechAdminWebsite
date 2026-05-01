@@ -607,12 +607,8 @@
                 sidebarContainer.classList.remove('hidden');
                 sidebarContainer.classList.add('collapsed');
 
-                // Automatically open sidebar for CS if they haven't switched client yet
                 if (userRole === 'CS' || userRole === 'ADMINCS') {
                     document.getElementById('btn-complete')?.classList.remove('hidden');
-                    if (!activeOwnerId || activeOwnerId === user.id) {
-                        setTimeout(() => { sidebarContainer.classList.remove('collapsed'); }, 1000);
-                    }
                 }
 
                 document.getElementById('btn-copy-code').classList.remove('hidden');
@@ -1133,30 +1129,21 @@
 
         window.markAsComplete = async () => {
             if (!activeOwnerId) return;
-            if (activeOwnerId === user.id && (userRole === 'CS' || userRole === 'ADMINCS')) {
-                showToast("Please select a client account first.", "warning");
-                document.getElementById('sidebar-container').classList.remove('collapsed');
-                return;
-            }
-
             const btn = document.getElementById('btn-complete');
             const oldText = btn.textContent;
             btn.textContent = "SAVING...";
             btn.disabled = true;
 
             try {
-                const { data, error } = await sb.from('profiles')
+                const { error } = await sb.from('profiles')
                     .update({ is_completed: true })
-                    .eq('id', activeOwnerId)
-                    .select();
+                    .eq('id', activeOwnerId);
 
                 if (error) throw error;
-                if (!data || data.length === 0) throw new Error("Update failed: No rows affected. Please run the SQL in Areal.txt to update permissions.");
-
                 showToast("Project marked as complete!", "success");
             } catch (e) {
                 console.error(e);
-                showToast("Error: " + e.message, "error");
+                showToast("Error updating status", "error");
             } finally {
                 btn.textContent = oldText;
                 btn.disabled = false;

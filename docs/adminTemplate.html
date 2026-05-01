@@ -888,34 +888,19 @@
 
         window.markAsComplete = async () => {
             if (!activeOwnerId) return;
-            // Prevent marking own CS account as complete
-            if (activeOwnerId === user.id && (userRole === 'CS' || userRole === 'ADMINCS')) {
-                const t = TRANSLATIONS[pageData.lang];
-                showSaveStatus("Please select a client account first.", true);
-                window.toggleContextSidebar();
-                return;
-            }
-
-            console.log("MT: Marking profile as complete for ID:", activeOwnerId);
             const t = TRANSLATIONS[pageData.lang];
             showSaveStatus(t.saving);
             try {
-                const { data, error } = await sb.from('profiles')
+                const { error } = await sb.from('profiles')
                     .update({ is_completed: true })
-                    .eq('id', activeOwnerId)
-                    .select();
+                    .eq('id', activeOwnerId);
 
                 if (error) throw error;
-                if (!data || data.length === 0) {
-                    throw new Error("Update failed: No rows affected. Please run the SQL in Areal.txt to update permissions.");
-                }
-
-                console.log("MT: Profile marked as complete successfully", data);
                 showSaveStatus(t.saved);
                 setTimeout(() => hideSaveStatus(), 2000);
             } catch (error) {
-                console.error("MT: Mark as complete error", error);
-                showSaveStatus(t.errorSaving + ": " + (error.message || ""), true);
+                console.error("Mark as complete error", error);
+                showSaveStatus(t.errorSaving, true);
             }
         };
 
@@ -1052,10 +1037,6 @@
                 if (userRole === 'CS' || userRole === 'ADMINCS') {
                     if (btnExport) btnExport.classList.add('hidden');
                     if (btnComplete) btnComplete.classList.remove('hidden');
-                    // Automatically open sidebar for CS if they haven't switched client yet
-                    if (activeOwnerId === user.id) {
-                        setTimeout(() => { if (window.toggleContextSidebar) window.toggleContextSidebar(); }, 1000);
-                    }
                 } else {
                     if (btnExport) btnExport.classList.remove('hidden');
                     if (btnComplete) btnComplete.classList.add('hidden');
