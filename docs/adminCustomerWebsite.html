@@ -114,6 +114,7 @@
             border-color: #ffcc00 !important;
             box-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
             z-index: 10;
+            position: relative;
         }
 
         @keyframes glow-yellow {
@@ -125,6 +126,12 @@
                 box-shadow: 0 0 25px rgba(255, 204, 0, 0.7);
                 border-color: #ffcc00;
             }
+        }
+
+        @keyframes badge-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
 
         .loader { width: 30px; height: 30px; border: 3px solid rgba(255, 149, 51, 0.1); border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite; margin: 40px auto; }
@@ -235,20 +242,25 @@
             const list = document.getElementById('user-list');
             const seenAccounts = JSON.parse(localStorage.getItem('seen_completed_accounts') || '[]');
 
-            list.innerHTML = users.map(u => `
-                <div class="user-card ${u.is_completed && !seenAccounts.includes(u.id) ? 'glow-new' : ''}" onclick="window.markAsSeen('${u.id}', this)">
+            list.innerHTML = users.map(u => {
+                const isNewlyCompleted = !!u.is_completed && !seenAccounts.includes(u.id);
+                return `
+                <div class="user-card ${isNewlyCompleted ? 'glow-new' : ''}" onclick="window.markAsSeen('${u.id}', this)">
                     <div class="user-info">
-                        <h3>${u.username || 'Unnamed'}</h3>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <h3>${u.username || 'Unnamed'}</h3>
+                            ${isNewlyCompleted ? '<span class="new-badge" style="background: #ffcc00; color: #000; font-size: 0.6rem; font-weight: 900; padding: 2px 8px; border-radius: 10px; animation: badge-pulse 1s infinite;">NEW</span>' : ''}
+                        </div>
                         <div class="domain">${u.domain || 'No domain'}</div>
                     </div>
-                    <div class="control-group">
+                    <div class="control-group" onclick="event.stopPropagation()">
                         <label>Website Type</label>
                         <select onchange="updateProfile('${u.id}', 'website_type', this.value)">
                             <option value="Template" ${u.website_type === 'Template' ? 'selected' : ''}>Template</option>
                             <option value="Deluxe" ${u.website_type === 'Deluxe' ? 'selected' : ''}>Deluxe</option>
                         </select>
                     </div>
-                    <div class="control-group" style="align-items: center;">
+                    <div class="control-group" style="align-items: center;" onclick="event.stopPropagation()">
                         <label>Completed</label>
                         <input type="checkbox" class="status-checkbox" ${u.is_completed ? 'checked' : ''} onchange="updateProfile('${u.id}', 'is_completed', this.checked)">
                     </div>
@@ -256,7 +268,8 @@
                         <span style="font-size: 0.6rem; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">ID: ${u.id.substring(0,8)}</span>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         window.markAsSeen = (id, element) => {
@@ -268,6 +281,8 @@
                 localStorage.setItem('seen_completed_accounts', JSON.stringify(seenAccounts));
             }
             element.classList.remove('glow-new');
+            const badge = element.querySelector('.new-badge');
+            if (badge) badge.remove();
         };
 
         window.updateProfile = async (id, field, value) => {
