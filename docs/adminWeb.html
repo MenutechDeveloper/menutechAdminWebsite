@@ -591,20 +591,20 @@
             const { data: profile, error: pError } = await sb.from('profiles').select('*').eq('id', user.id).single();
 
             if (pError || !profile) {
-                userRole = 'owner'; activeOwnerId = user.id; showApp(null); return;
+                userRole = 'OWNER'; activeOwnerId = user.id; showApp(null); return;
             }
 
-            userRole = profile.role;
-            const allowedRoles = ['admin', 'developer', 'owner', 'CS', 'adminCS'];
+            userRole = (profile.role || 'OWNER').toUpperCase();
+            const allowedRoles = ['ADMIN', 'DEVELOPER', 'OWNER', 'CS', 'ADMINCS'];
             if (!allowedRoles.includes(userRole)) {
                 location.href = "index.html";
                 return;
             }
 
-            if (['admin', 'developer', 'CS', 'adminCS'].includes(userRole)) {
+            if (['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'].includes(userRole)) {
                 const sidebarContainer = document.getElementById('sidebar-container');
                 sidebarContainer.classList.remove('hidden');
-                if (userRole === 'admin' || userRole === 'developer') {
+                if (userRole === 'ADMIN' || userRole === 'DEVELOPER') {
                     sidebarContainer.classList.add('collapsed');
                 }
                 document.getElementById('btn-copy-code').classList.remove('hidden');
@@ -622,7 +622,7 @@
         async function setupContextSwitcher() {
             const list = document.getElementById('client-list');
             const search = document.getElementById('client-search');
-            const privilegedRoles = ['admin', 'developer', 'CS', 'adminCS'];
+            const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'];
             if (privilegedRoles.includes(userRole)) { const { data } = await sb.from('profiles').select('*'); allOwners = data || []; }
             else { const { data: access } = await sb.from('developer_access').select('owner_id').eq('developer_id', user.id); const ids = (access || []).map(a => a.owner_id); const { data } = await sb.from('profiles').select('*').in('id', ids); allOwners = data || []; }
             renderOwners(allOwners);
@@ -664,7 +664,7 @@
 
             if (activeOwnerId) {
                 loadGallery(); loadPromos(); loadForm();
-                if ((userRole === 'CS' || userRole === 'adminCS') && activeOwnerId === user.id) {
+                if ((userRole === 'CS' || userRole === 'ADMINCS') && activeOwnerId === user.id) {
                     document.getElementById('sidebar-container').classList.remove('collapsed');
                 }
             }

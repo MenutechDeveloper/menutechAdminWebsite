@@ -332,15 +332,16 @@
 
             user = session.user;
             const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            const role = (profile?.role || '').toUpperCase();
 
-            if (!profile || profile.role !== 'admin') {
+            if (!profile || role !== 'ADMIN') {
                 location.href = "index.html";
                 return;
             }
 
             document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
             document.getElementById('user-role-label').textContent = profile.role;
-            if (profile.role === 'admin') document.getElementById('user-display-pill').classList.add('admin-glow');
+            if (role === 'ADMIN') document.getElementById('user-display-pill').classList.add('admin-glow');
 
             document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('user-display-pill').classList.remove('hidden');

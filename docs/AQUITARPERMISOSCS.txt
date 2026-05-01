@@ -1,0 +1,63 @@
+-- SQL para otorgar permisos a roles CS y ADMINCS
+-- Ejecutar en el Editor SQL de Supabase
+
+-- 1. Actualizar política de perfiles para permitir lectura a roles CS
+-- (Asegura que el sidebar pueda listar a todos los usuarios)
+DROP POLICY IF EXISTS "Allow select for privileged roles" ON public.profiles;
+CREATE POLICY "Allow select for privileged roles" ON public.profiles
+    FOR SELECT USING (
+        auth.uid() = id OR
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = auth.uid()
+            AND profiles.role IN ('admin', 'developer', 'CS', 'adminCS')
+        )
+    );
+
+-- 2. Actualizar política de Website Templates (menutech_web_templates)
+DROP POLICY IF EXISTS "Template management access" ON public.menutech_web_templates;
+CREATE POLICY "Template management access" ON public.menutech_web_templates
+    FOR ALL USING (
+        auth.uid() = user_id OR
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = auth.uid()
+            AND profiles.role IN ('admin', 'developer', 'CS', 'adminCS')
+        )
+    );
+
+-- 3. Actualizar política de Galería
+DROP POLICY IF EXISTS "Gallery management access" ON public.galeria;
+CREATE POLICY "Gallery management access" ON public.galeria
+    FOR ALL USING (
+        auth.uid() = user_id OR
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = auth.uid()
+            AND profiles.role IN ('admin', 'developer', 'CS', 'adminCS')
+        )
+    );
+
+-- 4. Actualizar política de Promociones
+DROP POLICY IF EXISTS "Promo management access" ON public.promos;
+CREATE POLICY "Promo management access" ON public.promos
+    FOR ALL USING (
+        auth.uid() = user_id OR
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = auth.uid()
+            AND profiles.role IN ('admin', 'developer', 'CS', 'adminCS')
+        )
+    );
+
+-- 5. Actualizar política de Formularios
+DROP POLICY IF EXISTS "Management access for forms" ON public.menutech_forms;
+CREATE POLICY "Management access for forms" ON public.menutech_forms
+    FOR ALL USING (
+        auth.uid() = user_id OR
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE profiles.id = auth.uid()
+            AND profiles.role IN ('admin', 'developer', 'CS', 'adminCS')
+        )
+    );
