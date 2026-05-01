@@ -1004,10 +1004,8 @@
             user = session.user;
 
             const { data: currentProfile } = await sb.from('profiles').select('role').eq('id', user.id).single();
-            const role = (currentProfile?.role || '').toUpperCase();
-            const allowedRoles = ['ADMIN', 'DEVELOPER', 'OWNER', 'CS', 'ADMINCS'];
-
-            if (!currentProfile || !allowedRoles.includes(role)) {
+            const allowedRoles = ['admin', 'developer', 'owner', 'CS', 'adminCS'];
+            if (!currentProfile || !allowedRoles.includes(currentProfile.role)) {
                 location.href = "index.html";
                 return;
             }
@@ -1021,19 +1019,25 @@
             ]);
 
             const profile = profileRes.data;
-            userRole = (profile?.role || 'owner').toUpperCase();
+            userRole = profile?.role || 'owner';
 
             if (profile) {
                 document.getElementById('current-account-name').value = profile.username || profile.domain || 'Your Store';
             }
 
-            const privilegedRoles = ['ADMIN', 'DEVELOPER', 'ADMINCS', 'CS', 'ADMINDESIGN', 'DESIGN', 'RETENTION'];
+            const privilegedRoles = ['admin', 'developer', 'adminCS', 'CS', 'adminDesign', 'design', 'retention'];
             if (privilegedRoles.includes(userRole)) {
                 const adminGroup = document.getElementById('admin-context-group');
                 if (adminGroup) adminGroup.style.display = 'block';
                 // setupContextSwitcher is now lazy-loaded on first open
+
+                if (userRole === 'CS' || userRole === 'adminCS') {
+                    const btnExport = document.getElementById('btn-export');
+                    const btnComplete = document.getElementById('btn-complete');
+                    if (btnExport) btnExport.classList.add('hidden');
+                    if (btnComplete) btnComplete.classList.remove('hidden');
+                }
             } else {
-                // For non-privileged roles (like standard owner), hide export by default
                 const btnExport = document.getElementById('btn-export');
                 if (btnExport) btnExport.classList.add('hidden');
             }
@@ -1049,7 +1053,7 @@
             syncForm();
             window.updateIframe();
 
-            if (userRole === 'CS' || userRole === 'ADMINCS') {
+            if (userRole === 'CS' || userRole === 'adminCS') {
                 if (activeOwnerId === user.id) {
                     window.toggleContextSidebar();
                 }

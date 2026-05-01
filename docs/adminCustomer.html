@@ -203,15 +203,14 @@
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
             const { data } = await sb.from('profiles').select('role, username').eq('id', user.id).single();
-            const role = (data?.role || '').toUpperCase();
 
-            if (role === 'CS' || role === 'ADMINCS') {
+            if (data && (data.role === 'CS' || data.role === 'adminCS')) {
                 location.href = "index.html";
                 return;
             }
 
-            const allowedRoles = ['ADMIN', 'DEVELOPER'];
-            if (!data || !allowedRoles.includes(role)) { document.getElementById('no-access').classList.remove('hidden'); }
+            const allowedRoles = ['admin', 'developer'];
+            if (!data || !allowedRoles.includes(data.role)) { document.getElementById('no-access').classList.remove('hidden'); }
             else {
                 userRole = data.role;
                 const pill = document.getElementById('user-display-pill');

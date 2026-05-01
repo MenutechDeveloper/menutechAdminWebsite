@@ -500,21 +500,15 @@
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
             const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-            if (!profile) { userRole = 'OWNER'; activeOwnerId = user.id; showApp(null); return; }
-            userRole = profile.role.toUpperCase();
+            if (!profile) { userRole = 'owner'; activeOwnerId = user.id; showApp(null); return; }
+            userRole = profile.role;
 
-            if (userRole === 'CS' || userRole === 'ADMINCS') {
+            if (userRole === 'CS' || userRole === 'adminCS') {
                 location.href = "index.html";
                 return;
             }
 
-            const role = (profile?.role || '').toUpperCase();
-            if (role === 'CS' || role === 'ADMINCS') {
-                location.href = "index.html";
-                return;
-            }
-
-            if (role === 'ADMIN' || role === 'DEVELOPER') {
+            if (userRole === 'admin' || userRole === 'developer') {
                 document.getElementById('sidebar-container').classList.remove('hidden');
                 document.getElementById('sidebar-container').classList.add('collapsed');
                 document.getElementById('snippet-section').classList.remove('hidden');

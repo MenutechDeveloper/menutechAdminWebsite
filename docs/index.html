@@ -276,7 +276,6 @@
                 if (profile) {
                     const rawRole = (profile.role || 'user').trim();
                     const role = rawRole.toUpperCase();
-                    console.log("MT Auth: Role identified as", role);
                     nameEl.textContent = profile.username || user.email.split('@')[0];
                     roleEl.textContent = rawRole;
 
@@ -287,20 +286,11 @@
                     const qrRoles = ['DESIGN', 'ADMINDESIGN', 'RETENTION'];
                     const csRoles = ['CS', 'ADMINCS'];
 
-                    // Special handling for CS roles: strictly only Web Website cards
-                    if (csRoles.includes(role)) {
-                        const allCards = ['card-users', 'card-qr-gen', 'card-qr-admin', 'card-menus', 'card-orders', 'card-customer-website', 'card-lab'];
-                        allCards.forEach(id => {
-                            const el = document.getElementById(id);
-                            if (el) el.classList.add('hidden');
-                        });
-                        console.log("MT Auth: Restricted CS view applied");
-                    } else {
-                        if (role === 'ADMIN' || role === 'DEVELOPER') {
-                            document.getElementById('card-lab').classList.remove('hidden');
-                        }
+                    if (role === 'ADMIN') {
+                        document.getElementById('card-lab').classList.remove('hidden');
+                    }
 
-                        if (role === 'OWNER') {
+                    if (role === 'OWNER') {
                         document.getElementById('card-users').classList.add('hidden');
                         document.getElementById('card-qr-gen').classList.add('hidden');
                         document.getElementById('card-qr-admin').classList.add('hidden');
@@ -308,6 +298,14 @@
                         const grid = document.getElementById('main-bento');
                         grid.style.maxWidth = '800px';
                         grid.style.margin = '40px auto 0 auto';
+                    } else if (csRoles.includes(role)) {
+                        document.getElementById('card-users').classList.add('hidden');
+                        document.getElementById('card-qr-gen').classList.add('hidden');
+                        document.getElementById('card-qr-admin').classList.add('hidden');
+                        document.getElementById('card-menus').classList.add('hidden');
+                        document.getElementById('card-orders').classList.add('hidden');
+                        document.getElementById('card-customer-website').classList.add('hidden');
+                        document.getElementById('card-lab').classList.add('hidden');
                     } else if (qrRoles.includes(role)) {
                         document.getElementById('card-users').classList.add('hidden');
                         document.getElementById('card-web').classList.add('hidden');

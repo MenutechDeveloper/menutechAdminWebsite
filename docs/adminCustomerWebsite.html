@@ -181,15 +181,14 @@
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
             const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-            const role = (profile?.role || '').toUpperCase();
 
-            if (role === 'CS' || role === 'ADMINCS') {
+            if (profile && (profile.role === 'CS' || profile.role === 'adminCS')) {
                 location.href = "index.html";
                 return;
             }
 
-            const allowedRoles = ['ADMIN', 'DEVELOPER'];
-            if (!profile || !allowedRoles.includes(role)) { location.href = "index.html"; return; }
+            const allowedRoles = ['admin', 'developer'];
+            if (!profile || !allowedRoles.includes(profile.role)) { location.href = "index.html"; return; }
 
             const pill = document.getElementById('user-display-pill');
             document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
