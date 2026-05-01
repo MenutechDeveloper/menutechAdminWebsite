@@ -1027,13 +1027,23 @@
             }
 
             const privilegedRoles = ['ADMIN', 'DEVELOPER', 'ADMINCS', 'CS', 'ADMINDESIGN', 'DESIGN', 'RETENTION'];
+            const btnExport = document.getElementById('btn-export');
+            const btnComplete = document.getElementById('btn-complete');
+
             if (privilegedRoles.includes(userRole)) {
                 const adminGroup = document.getElementById('admin-context-group');
                 if (adminGroup) adminGroup.style.display = 'block';
-                // setupContextSwitcher is now lazy-loaded on first open
+
+                if (userRole === 'CS' || userRole === 'ADMINCS') {
+                    if (btnExport) btnExport.classList.add('hidden');
+                    if (btnComplete) btnComplete.classList.remove('hidden');
+                } else {
+                    if (btnExport) btnExport.classList.remove('hidden');
+                    if (btnComplete) btnComplete.classList.add('hidden');
+                }
             } else {
-                const btnExport = document.getElementById('btn-export');
                 if (btnExport) btnExport.classList.add('hidden');
+                if (btnComplete) btnComplete.classList.add('hidden');
             }
 
             if (templateRes.data && templateRes.data.config) {
