@@ -286,12 +286,10 @@
         };
 
         window.updateProfile = async (id, field, value) => {
-            const { data, error } = await sb.from('profiles').update({ [field]: value }).eq('id', id).select();
+            const { error } = await sb.from('profiles').update({ [field]: value }).eq('id', id);
             if (error) {
-                showToast("Error updating profile: " + error.message, "error");
+                showToast("Error updating profile", "error");
                 console.error(error);
-            } else if (!data || data.length === 0) {
-                showToast("Update failed: No rows affected. Check RLS.", "error");
             } else {
                 showToast("Profile updated", "success");
                 if (field === 'is_completed' && value === false) {
