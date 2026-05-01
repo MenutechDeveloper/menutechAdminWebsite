@@ -214,15 +214,16 @@
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
             const { data, error } = await sb.from('profiles').select('role, username').eq('id', user.id).single();
+            const role = (data?.role || '').toUpperCase();
 
-            if (data && (data.role === 'CS' || data.role === 'adminCS')) {
+            if (role === 'CS' || role === 'ADMINCS') {
                 location.href = "index.html";
                 return;
             }
 
-            const allowedRoles = ['admin', 'developer', 'design', 'adminDesign', 'retention'];
+            const allowedRoles = ['ADMIN', 'DEVELOPER', 'DESIGN', 'ADMINDESIGN', 'RETENTION'];
 
-            if (error || !data || !allowedRoles.includes(data.role)) {
+            if (error || !data || !allowedRoles.includes(role)) {
                 document.getElementById('no-access').classList.remove('hidden');
                 document.body.classList.add('ready');
             }

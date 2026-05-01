@@ -272,15 +272,16 @@ async function checkAuth() {
         if (!session) { location.href = "index.html"; return; }
 
         const { data: profile } = await sb.from('profiles').select('role, username').eq('id', session.user.id).single();
+        const role = (profile?.role || '').toUpperCase();
 
-        if (profile && (profile.role === 'CS' || profile.role === 'adminCS')) {
+        if (role === 'CS' || role === 'ADMINCS') {
             location.href = "index.html";
             return;
         }
 
-        const allowedRoles = ['admin', 'developer', 'design', 'adminDesign', 'retention'];
+        const allowedRoles = ['ADMIN', 'DEVELOPER', 'DESIGN', 'ADMINDESIGN', 'RETENTION'];
 
-        if (!profile || !allowedRoles.includes(profile.role)) {
+        if (!profile || !allowedRoles.includes(role)) {
             showPopup("No tienes permiso para usar esta herramienta.");
             setTimeout(() => {
                 location.href = "index.html";
