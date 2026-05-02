@@ -110,21 +110,20 @@
         .status-checkbox { width: 24px; height: 24px; accent-color: var(--success); cursor: pointer; }
 
         .glow-new {
-            animation: glow-yellow 1.5s infinite alternate;
-            border-color: #ffcc00 !important;
-            box-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
+            animation: glow-yellow 1.2s infinite alternate;
+            border: 2px solid #ffcc00 !important;
             z-index: 10;
             position: relative;
         }
 
         @keyframes glow-yellow {
             from {
+                border-color: #ffcc00;
                 box-shadow: 0 0 5px rgba(255, 204, 0, 0.2);
-                border-color: var(--border);
             }
             to {
-                box-shadow: 0 0 25px rgba(255, 204, 0, 0.7);
-                border-color: #ffcc00;
+                border-color: #fff5cc;
+                box-shadow: 0 0 20px rgba(255, 204, 0, 0.6);
             }
         }
 
@@ -223,6 +222,31 @@
             else pill.classList.add('owner-glow');
 
             loadUsers();
+            setupRealtime();
+        }
+
+        /**
+         * setupRealtime: Subscribes to profile updates to notify the admin when a CS user
+         * marks an account as 'Complete'. Triggers a toast and re-renders the list to
+         * start the pulsing yellow border glow on the new account.
+         */
+        function setupRealtime() {
+            sb.channel('public:profiles')
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'profiles'
+                }, payload => {
+                    if (payload.new.is_completed) {
+                        const seenAccounts = JSON.parse(localStorage.getItem('seen_completed_accounts') || '[]');
+                        if (!seenAccounts.includes(payload.new.id)) {
+                            const name = payload.new.username || payload.new.domain || 'A customer';
+                            window.showToast(`Notification: ${name} marked as COMPLETE`, 'success');
+                            loadUsers();
+                        }
+                    }
+                })
+                .subscribe();
         }
 
         async function loadUsers() {
@@ -272,6 +296,11 @@
             }).join('');
         }
 
+        /**
+         * markAsSeen: Called when an admin clicks a glowing account card.
+         * Adds the ID to localStorage to ensure the 'glow-new' class is not reapplied
+         * on future renders, fulfilling the requirement that it stops glowing once seen.
+         */
         window.markAsSeen = (id, element) => {
             if (!element.classList.contains('glow-new')) return;
 
