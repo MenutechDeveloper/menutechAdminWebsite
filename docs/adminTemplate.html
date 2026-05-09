@@ -398,7 +398,20 @@
 
                 <div class="control-group">
                     <label data-i18n="heroSection">Hero Section</label>
-                    <div class="image-upload-box" id="hero-drop-zone" onclick="document.getElementById('hero-upload').click()">
+                    <label style="font-size: 0.6rem; margin-top:5px;" data-i18n="heroLogo">Hero Logo</label>
+                    <div class="image-upload-box" id="logo-drop-zone" style="min-height: 100px;" onclick="document.getElementById('logo-upload').click()">
+                        <img id="logo-preview" class="hidden">
+                        <div id="logo-placeholder">
+                            <span data-i18n="heroPlaceholder">Click or Drag Hero Image</span>
+                        </div>
+                        <input type="file" id="logo-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'logoImg')">
+                    </div>
+
+                    <label style="font-size: 0.6rem; margin-top:5px;" data-i18n="heroAddress">Hero Address</label>
+                    <input type="text" id="hero-address" class="input-field" placeholder="Address" oninput="window.updateContent()">
+
+                    <label style="font-size: 0.6rem; margin-top:5px;" data-i18n="heroBackground">Hero Background</label>
+                    <div class="image-upload-box" id="hero-drop-zone" style="min-height: 100px;" onclick="document.getElementById('hero-upload').click()">
                         <img id="hero-preview" class="hidden">
                         <div id="hero-placeholder">
                             <span data-i18n="heroPlaceholder">Click or Drag Hero Image</span>
@@ -408,7 +421,13 @@
                 </div>
 
                 <div class="control-group">
-                    <label data-i18n="aboutSection">About Section</label>
+                    <div class="switch-container" style="margin-bottom:10px;">
+                        <label data-i18n="aboutSection" style="margin-bottom:0;">About Section</label>
+                        <label class="switch">
+                            <input type="checkbox" id="show-about" onchange="window.updateContent()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     <input type="text" id="about-title" class="input-field" data-i18n-placeholder="sectionTitle" oninput="window.updateContent()">
                     <input type="text" id="about-subtitle" class="input-field" data-i18n-placeholder="sectionSubtitle" oninput="window.updateContent()">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -432,7 +451,13 @@
                 </div>
 
                 <div class="control-group">
-                    <label data-i18n="promoSection">Promo Section</label>
+                    <div class="switch-container" style="margin-bottom:10px;">
+                        <label data-i18n="promoSection" style="margin-bottom:0;">Promo Section</label>
+                        <label class="switch">
+                            <input type="checkbox" id="show-promo" onchange="window.updateContent()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     <div class="image-upload-box" id="promo-drop-zone" style="min-height: 100px;" onclick="document.getElementById('promo-upload').click()">
                         <img id="promo-preview" class="hidden">
                         <div id="promo-placeholder">
@@ -464,7 +489,13 @@
                 </div>
 
                 <div class="control-group">
-                    <label data-i18n="gallery">Gallery</label>
+                    <div class="switch-container" style="margin-bottom:10px;">
+                        <label data-i18n="gallery" style="margin-bottom:0;">Gallery</label>
+                        <label class="switch">
+                            <input type="checkbox" id="show-gallery" onchange="window.updateContent()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     <input type="text" id="gallery-title" class="input-field" data-i18n-placeholder="sectionTitle" oninput="window.updateContent()">
                     <input type="text" id="gallery-subtitle" class="input-field" data-i18n-placeholder="sectionSubtitle" oninput="window.updateContent()">
                     <div class="image-upload-box" id="gallery-drop-zone" style="min-height: 120px; border-style: dashed; margin-bottom: 10px;" onclick="document.getElementById('gallery-upload').click()">
@@ -477,7 +508,13 @@
                 </div>
 
                 <div class="control-group">
-                    <label data-i18n="cateringSection">Catering Section</label>
+                    <div class="switch-container" style="margin-bottom:10px;">
+                        <label data-i18n="cateringSection" style="margin-bottom:0;">Catering Section</label>
+                        <label class="switch">
+                            <input type="checkbox" id="show-catering" onchange="window.updateContent()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     <input type="text" id="catering-title" class="input-field" data-i18n-placeholder="sectionTitle" oninput="window.updateContent()">
                     <input type="text" id="catering-subtitle" class="input-field" data-i18n-placeholder="sectionSubtitle" oninput="window.updateContent()">
                     <div class="image-upload-box" id="catering-drop-zone" style="min-height: 100px;" onclick="document.getElementById('catering-upload').click()">
@@ -492,7 +529,34 @@
                 </div>
 
                 <div class="control-group">
-                    <label data-i18n="deliverySection">Delivery Section</label>
+                    <div class="switch-container" style="margin-bottom:10px;">
+                        <label data-i18n="infoSection" style="margin-bottom:0;">Info Section</label>
+                        <label class="switch">
+                            <input type="checkbox" id="show-info" onchange="window.updateContent()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <input type="text" id="info-title" class="input-field" data-i18n-placeholder="infoTitle" oninput="window.updateContent()">
+                    <input type="text" id="info-subtitle" class="input-field" data-i18n-placeholder="infoSubtitle" oninput="window.updateContent()">
+
+                    <label style="font-size: 0.6rem; margin-top:5px;" data-i18n="hoursPlaceholder">Hours</label>
+                    <textarea id="info-hours" class="input-field" style="min-height: 80px;" oninput="window.updateContent()"></textarea>
+
+                    <label style="font-size: 0.6rem; margin-top:5px;" data-i18n="phonePlaceholder">Phone</label>
+                    <input type="text" id="info-phone" class="input-field" oninput="window.updateContent()">
+
+                    <label style="font-size: 0.6rem; margin-top:5px;" data-i18n="addressPlaceholder">Address</label>
+                    <input type="text" id="info-address" class="input-field" oninput="window.updateContent()">
+                </div>
+
+                <div class="control-group">
+                    <div class="switch-container" style="margin-bottom:10px;">
+                        <label data-i18n="deliverySection" style="margin-bottom:0;">Delivery Section</label>
+                        <label class="switch">
+                            <input type="checkbox" id="show-delivery" onchange="window.updateContent()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     <input type="text" id="delivery-title" class="input-field" data-i18n-placeholder="sectionTitle" oninput="window.updateContent()">
                     <input type="text" id="delivery-subtitle" class="input-field" data-i18n-placeholder="sectionSubtitle" oninput="window.updateContent()">
                     <div class="image-upload-box" id="delivery-drop-zone" style="min-height: 100px;" onclick="document.getElementById('delivery-upload').click()">
@@ -571,6 +635,7 @@
                 editingAccount: "Editing Account",
                 generalSettings: "Restaurant Name",
                 heroSection: "Hero Section",
+                heroBackground: "Hero Background",
                 heroPlaceholder: "Click or Drag Hero Image",
                 aboutSection: "About Section",
                 aboutImg1Placeholder: "Click or Drag About Image 1",
@@ -591,6 +656,12 @@
                 hoursPlaceholder: "Opening Hours",
                 socialNetworks: "Social Networks",
                 addSocial: "+ Add Social Link",
+                infoSection: "Info Section",
+                infoTitle: "Info Title",
+                infoSubtitle: "Info Subtitle",
+                sectionVisible: "Section Visible",
+                heroLogo: "Hero Logo",
+                heroAddress: "Hero Address",
                 loading: "Loading web editor...",
                 exportBtn: "Export HTML",
                 completeBtn: "Complete",
@@ -616,6 +687,7 @@
                 editingAccount: "Editando Cuenta",
                 generalSettings: "Nombre del Restaurante",
                 heroSection: "Sección Hero",
+                heroBackground: "Fondo Hero",
                 heroPlaceholder: "Haz clic o arrastra la imagen Hero",
                 aboutSection: "Sección Nosotros",
                 aboutImg1Placeholder: "Imagen Nosotros 1",
@@ -636,6 +708,12 @@
                 hoursPlaceholder: "Horarios de Apertura",
                 socialNetworks: "Redes Sociales",
                 addSocial: "+ Agregar Enlace Social",
+                infoSection: "Sección Información",
+                infoTitle: "Título Información",
+                infoSubtitle: "Subtítulo Información",
+                sectionVisible: "Sección Visible",
+                heroLogo: "Logo Hero",
+                heroAddress: "Dirección Hero",
                 loading: "Cargando editor web...",
                 exportBtn: "Exportar HTML",
                 completeBtn: "Completar",
@@ -659,9 +737,17 @@
         const DEFAULT_DATA = {
             lang: 'en',
             showReservations: true,
+            showAbout: true,
+            showPromo: true,
+            showGallery: true,
+            showCatering: true,
+            showInfo: true,
+            showDelivery: true,
             cuid: '',
             ruid: '',
             title: 'Template Menutech',
+            logoImg: 'https://menutech.services/assets/img/logomt.png',
+            heroAddress: '100 Tenth Avenue, New York City, NY 1001',
             heroImg: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
             aboutImg1: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
             aboutImg2: 'https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
@@ -701,7 +787,9 @@
                 "catering-title": "Catering",
                 "catering-subtitle": "Party Time",
                 "delivery-title": "Food Delivery in NY",
-                "delivery-subtitle": "Get Served Like a King"
+                "delivery-subtitle": "Get Served Like a King",
+                "info-title": "Information",
+                "info-subtitle": "Visit Us"
             }
         };
 
@@ -748,6 +836,21 @@
             pageData.cuid = document.getElementById('cuid').value;
             pageData.ruid = document.getElementById('ruid').value;
             pageData.showReservations = document.getElementById('show-reservations').checked;
+
+            pageData.showAbout = document.getElementById('show-about').checked;
+            pageData.showPromo = document.getElementById('show-promo').checked;
+            pageData.showGallery = document.getElementById('show-gallery').checked;
+            pageData.showCatering = document.getElementById('show-catering').checked;
+            pageData.showInfo = document.getElementById('show-info').checked;
+            pageData.showDelivery = document.getElementById('show-delivery').checked;
+
+            pageData.heroAddress = document.getElementById('hero-address').value;
+
+            if (!pageData.info) pageData.info = {};
+            pageData.info.hours = document.getElementById('info-hours').value;
+            pageData.info.phone = document.getElementById('info-phone').value;
+            pageData.info.address = document.getElementById('info-address').value;
+
             pageData.contact.phone = document.getElementById('contact-phone').value;
             pageData.contact.address = document.getElementById('contact-address').value;
             pageData.contact.hours = document.getElementById('contact-hours').value;
@@ -818,6 +921,8 @@
                     'hero-orders': 'cuid',
                     'hero-reservations': 'ruid',
                     'hero-section': 'hero-drop-zone',
+                    'hero-logo': 'logo-drop-zone',
+                    'hero-address': 'hero-address',
                     'about-title': 'about-title',
                     'about-subtitle': 'about-subtitle',
                     'about-img-1': 'about1-drop-zone',
@@ -837,6 +942,12 @@
                     'catering-subtitle': 'catering-subtitle',
                     'catering-section': 'catering-drop-zone',
                     'catering-p1': 'catering', 'catering-p2': 'catering',
+                    'info-section': 'show-info',
+                    'info-title': 'info-title',
+                    'info-subtitle': 'info-subtitle',
+                    'info-hours': 'info-hours',
+                    'info-phone': 'info-phone',
+                    'info-address': 'info-address',
                     'delivery-title': 'delivery-title',
                     'delivery-subtitle': 'delivery-subtitle',
                     'delivery-image': 'delivery-drop-zone',
@@ -911,7 +1022,7 @@
             const scriptInject = `<script>window.MENU_TECH_STATE = ${JSON.stringify(pageData)};<\/script>`;
             html = html.replace('</head>', `${scriptInject}\n</head>`);
 
-            // Inject actual CUID/RUID for the exported static version
+            // Inject actual values for exported static version
             const cuid = pageData.cuid || '';
             const ruid = pageData.ruid || '';
             html = html.replace(/cuid=""/g, `cuid="${cuid}"`);
@@ -919,10 +1030,39 @@
             html = html.replace(/data-glf-cuid=""/g, `data-glf-cuid="${cuid}"`);
             html = html.replace(/data-glf-ruid=""/g, `data-glf-ruid="${ruid}"`);
 
+            if (pageData.logoImg) {
+                html = html.replace(/https:\/\/menutech\.services\/assets\/img\/logomt\.png/g, pageData.logoImg);
+            }
+            if (pageData.heroAddress) {
+                html = html.replace(/100 Tenth Avenue, New York City, NY 1001/g, pageData.heroAddress);
+            }
+
             // Handle reservations visibility in exported HTML
             if (pageData.showReservations === false) {
                 html = html.replace('id="hero-reservations-wrapper" style="display: inline-block;"', 'id="hero-reservations-wrapper" style="display: none;"');
             }
+
+            // Remove disabled sections
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const sectionMap = {
+                'showAbout': 'about-section',
+                'showPromo': 'promo-section',
+                'showGallery': 'gallery-section',
+                'showCatering': 'catering-section',
+                'showInfo': 'info-section',
+                'showDelivery': 'delivery-section'
+            };
+
+            Object.keys(sectionMap).forEach(key => {
+                if (pageData[key] === false) {
+                    const el = doc.getElementById(sectionMap[key]);
+                    if (el) el.remove();
+                }
+            });
+
+            html = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
 
             const blob = new Blob([html], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
@@ -951,10 +1091,22 @@
             if (config.cuid === undefined) config.cuid = '';
             if (config.ruid === undefined) config.ruid = '';
 
+            if (config.showAbout === undefined) config.showAbout = true;
+            if (config.showPromo === undefined) config.showPromo = true;
+            if (config.showGallery === undefined) config.showGallery = true;
+            if (config.showCatering === undefined) config.showCatering = true;
+            if (config.showInfo === undefined) config.showInfo = true;
+            if (config.showDelivery === undefined) config.showDelivery = true;
+
             // Ensure basic objects exist
             if (!config.contact) config.contact = JSON.parse(JSON.stringify(DEFAULT_DATA.contact));
             if (!config.socials) config.socials = JSON.parse(JSON.stringify(DEFAULT_DATA.socials));
             if (!config.gallery) config.gallery = JSON.parse(JSON.stringify(DEFAULT_DATA.gallery));
+            if (!config.info) config.info = JSON.parse(JSON.stringify(DEFAULT_DATA.info || {
+                hours: 'Monday - Sunday: 5PM - 10PM',
+                phone: '(044) 359 0173',
+                address: '100 Tenth Avenue, New York City, NY 1001'
+            }));
 
             // Paragraphs Migration
             if (!config.paragraphs) {
@@ -988,7 +1140,7 @@
             });
 
             // Top level fields
-            const topFields = ['heroImg', 'aboutImg1', 'aboutImg2', 'promoBg', 'cateringBg', 'deliveryImg', 'title', 'lang', 'showReservations'];
+            const topFields = ['heroImg', 'aboutImg1', 'aboutImg2', 'promoBg', 'cateringBg', 'deliveryImg', 'title', 'lang', 'showReservations', 'logoImg', 'heroAddress'];
             topFields.forEach(field => {
                 if (config[field] === undefined || config[field] === null || config[field] === "") {
                     config[field] = DEFAULT_DATA[field];
@@ -1172,6 +1324,7 @@
 
         function initDragAndDrop() {
             const zones = [
+                { id: 'logo-drop-zone', type: 'logoImg' },
                 { id: 'hero-drop-zone', type: 'heroImg' },
                 { id: 'about1-drop-zone', type: 'aboutImg1' },
                 { id: 'about2-drop-zone', type: 'aboutImg2' },
@@ -1238,6 +1391,23 @@
             document.getElementById('ruid').value = pageData.ruid || '';
             document.getElementById('show-reservations').checked = pageData.showReservations !== false;
 
+            document.getElementById('show-about').checked = pageData.showAbout !== false;
+            document.getElementById('show-promo').checked = pageData.showPromo !== false;
+            document.getElementById('show-gallery').checked = pageData.showGallery !== false;
+            document.getElementById('show-catering').checked = pageData.showCatering !== false;
+            document.getElementById('show-info').checked = pageData.showInfo !== false;
+            document.getElementById('show-delivery').checked = pageData.showDelivery !== false;
+
+            document.getElementById('hero-address').value = pageData.heroAddress || '';
+
+            if (pageData.info) {
+                document.getElementById('info-title').value = pageData.titles['info-title'] || '';
+                document.getElementById('info-subtitle').value = pageData.titles['info-subtitle'] || '';
+                document.getElementById('info-hours').value = pageData.info.hours || '';
+                document.getElementById('info-phone').value = pageData.info.phone || '';
+                document.getElementById('info-address').value = pageData.info.address || '';
+            }
+
             // Sync paragraphs
             if (pageData.paragraphs) {
                 Object.keys(pageData.paragraphs).forEach(id => {
@@ -1256,6 +1426,7 @@
 
             // Sync all images
             const images = [
+                { id: 'logo', url: pageData.logoImg },
                 { id: 'hero', url: pageData.heroImg },
                 { id: 'about1', url: pageData.aboutImg1 },
                 { id: 'about2', url: pageData.aboutImg2 },
@@ -1331,6 +1502,7 @@
                             pageData[type] = d.secure_url;
                             // Map type back to ID for preview update
                             const idMap = {
+                                logoImg: 'logo',
                                 heroImg: 'hero',
                                 aboutImg1: 'about1',
                                 aboutImg2: 'about2',
