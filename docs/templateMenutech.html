@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurant – Mexican Food & Delivery</title>
+    <link rel="icon" id="favicon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
@@ -172,6 +173,17 @@ a {
     opacity: 0.7;
 }
 
+.hero-logo-container {
+    margin-bottom: 30px;
+}
+
+.hero-logo {
+    max-height: 120px;
+    width: auto;
+    display: block;
+    margin: 0 auto;
+}
+
 .hero-title {
     font-family: var(--font-serif);
     font-size: 72px;
@@ -186,6 +198,15 @@ a {
     gap: 15px;
     justify-content: center;
     flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.hero-address {
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--color-white);
+    margin-top: 15px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .btn {
@@ -417,6 +438,43 @@ a {
     margin-bottom: 15px;
 }
 
+/* Info Section */
+.info-section {
+    padding: 80px 0;
+    background-color: var(--color-background);
+}
+
+.info-box {
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--color-white);
+    padding: 50px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    border-radius: 3px;
+    text-align: center;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.info-item h4 {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-style: italic;
+    color: var(--color-text-dark);
+    margin-bottom: 15px;
+}
+
+.info-item p {
+    color: var(--color-text-light);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
 /* Delivery Section */
 .delivery-section {
     padding: 80px 0;
@@ -500,6 +558,11 @@ a {
 
     .delivery-image-container {
         order: -1;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
     }
 }
 
@@ -651,10 +714,12 @@ a {
     <header class="hero" id="hero-section">
         <div class="hero-overlay"></div>
         <div class="hero-content">
+            <div class="hero-logo-container">
+                <img src="https://menutech.services/assets/img/logomt.png" id="hero-logo" alt="Logo" class="hero-logo">
+            </div>
             <h2 class="hero-subtitle">
                 <span></span>
             </h2>
-            <h1 class="hero-title" id="hero-title">Template Menutech</h1>
             <div class="hero-buttons">
                 <!-- 1. Script Motor Menutech -->
                 <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
@@ -691,11 +756,12 @@ a {
                 setTimeout(() => { if(window.glfBindButtons) window.glfBindButtons(); }, 1000);
                 </script>
             </div>
+            <p class="hero-address" id="hero-address">100 Tenth Avenue, New York City, NY 1001</p>
         </div>
     </header>
 
     <!-- About Us Section -->
-    <section class="about-section">
+    <section class="about-section" id="about-section">
         <div class="container">
             <div class="about-grid">
                 <div class="about-text">
@@ -769,7 +835,7 @@ a {
     </section>
 
     <!-- Delicious Mexican Food Section -->
-    <section class="gallery-section">
+    <section class="gallery-section" id="gallery-section">
         <div class="container">
             <h2 class="section-title centered" id="gallery-title" data-es="Deliciosa Comida Mexicana" data-en="Delicious Mexican Food">Delicious Mexican Food</h2>
             <span class="section-subtitle-container centered">
@@ -818,8 +884,35 @@ a {
         </div>
     </section>
 
+    <!-- Info Section -->
+    <section class="info-section" id="info-section">
+        <div class="container">
+            <div class="info-box">
+                <h2 class="section-title centered" id="info-title" data-es="Información" data-en="Information">Information</h2>
+                <span class="section-subtitle-container centered">
+                    <span class="line-small"></span>
+                    <span class="section-subtitle" id="info-subtitle" data-es="Visítanos" data-en="Visit Us">Visit Us</span>
+                </span>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <h4 data-es="Horarios" data-en="Opening Hours">Opening Hours</h4>
+                        <p id="info-hours">Monday - Sunday: 5PM - 10PM</p>
+                    </div>
+                    <div class="info-item">
+                        <h4 data-es="Teléfono" data-en="Phone">Phone</h4>
+                        <p id="info-phone">(044) 359 0173</p>
+                    </div>
+                    <div class="info-item">
+                        <h4 data-es="Dirección" data-en="Address">Address</h4>
+                        <p id="info-address">100 Tenth Avenue, New York City, NY 1001</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Food Delivery Section -->
-    <section class="delivery-section">
+    <section class="delivery-section" id="delivery-section">
         <div class="container">
             <div class="delivery-grid">
                 <div class="delivery-text">
@@ -902,10 +995,36 @@ a {
             // Title
             if (data.title) {
                 const navBrand = document.getElementById('nav-brand');
-                const heroTitle = document.getElementById('hero-title');
                 if (navBrand) navBrand.textContent = data.title;
-                if (heroTitle) heroTitle.textContent = data.title;
             }
+
+            // Logo & Favicon
+            if (data.logoImg) {
+                const logo = document.getElementById('hero-logo');
+                const favicon = document.getElementById('favicon');
+                if (logo) logo.src = data.logoImg;
+                if (favicon) favicon.href = data.logoImg;
+            }
+
+            // Hero Address
+            if (data.heroAddress !== undefined) {
+                const addr = document.getElementById('hero-address');
+                if (addr) addr.textContent = data.heroAddress;
+            }
+
+            // Section Visibility
+            const sections = {
+                'about-section': data.showAbout !== false,
+                'promo-section': data.showPromo !== false,
+                'gallery-section': data.showGallery !== false,
+                'catering-section': data.showCatering !== false,
+                'info-section': data.showInfo !== false,
+                'delivery-section': data.showDelivery !== false
+            };
+            Object.keys(sections).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = sections[id] ? '' : 'none';
+            });
 
             // Hero Buttons (Menutech CUID/RUID)
             const cuid = data.cuid || '';
@@ -954,15 +1073,23 @@ a {
             if (data.cateringBg) document.getElementById('catering-section').style.backgroundImage = `url('${data.cateringBg}')`;
             if (data.deliveryImg) document.getElementById('delivery-image').src = data.deliveryImg;
 
-            // Contact
-            if (data.contact) {
-                const phoneEl = document.getElementById('footer-phone');
-                const addressEl = document.getElementById('footer-address');
-                const hoursEl = document.getElementById('footer-hours');
+            // Info Section
+            if (data.info) {
+                const hoursEl = document.getElementById('info-hours');
+                const phoneEl = document.getElementById('info-phone');
+                const addressEl = document.getElementById('info-address');
 
-                if (phoneEl) phoneEl.textContent = (data.contact.phone ? (currentLang === 'es' ? 'Teléfono: ' : 'Phone: ') + data.contact.phone : '');
-                if (addressEl) addressEl.textContent = data.contact.address || '';
-                if (hoursEl) hoursEl.textContent = data.contact.hours || '';
+                if (hoursEl) hoursEl.innerHTML = (data.info.hours || '').replace(/\n/g, '<br>');
+                if (phoneEl) phoneEl.textContent = data.info.phone || '';
+                if (addressEl) addressEl.textContent = data.info.address || '';
+
+                // Sync to footer
+                const fHours = document.getElementById('footer-hours');
+                const fPhone = document.getElementById('footer-phone');
+                const fAddress = document.getElementById('footer-address');
+                if (fHours) fHours.innerHTML = (data.info.hours || '').replace(/\n/g, '<br>');
+                if (fPhone) fPhone.textContent = (data.info.phone ? (currentLang === 'es' ? 'Teléfono: ' : 'Phone: ') + data.info.phone : '');
+                if (fAddress) fAddress.textContent = data.info.address || '';
             }
 
             // Socials
@@ -1061,16 +1188,19 @@ a {
                 while (target && target !== document.body) {
                     if (target.id && (
                         target.id === 'nav-brand' ||
-                        target.id === 'hero-title' ||
+                        target.id === 'hero-logo' ||
                         target.id === 'hero-section' ||
                         target.id === 'hero-orders' ||
                         target.id === 'hero-reservations' ||
+                        target.id === 'hero-address' ||
                         target.id.startsWith('about-') ||
                         target.id === 'promo-section' ||
                         target.id.startsWith('promo') ||
                         target.id === 'gallery-container' ||
                         target.id === 'catering-section' ||
                         target.id.startsWith('catering-') ||
+                        target.id === 'info-section' ||
+                        target.id.startsWith('info-') ||
                         target.id.startsWith('delivery-') ||
                         target.id.startsWith('footer-') ||
                         target.id === 'social-icons'
@@ -1089,7 +1219,7 @@ const navMenu = document.getElementById('nav-menu');
 
 navbarToggler.addEventListener('click', () => {
     navMenu.classList.toggle('active');
-    
+
     // Animate hamburger icon
     const icons = navbarToggler.querySelectorAll('.toggler-icon');
     icons.forEach((icon, index) => {
@@ -1180,7 +1310,7 @@ document.querySelectorAll('.btn').forEach(btn => {
     btn.addEventListener('mouseenter', function() {
         this.style.transform = 'translateY(-2px)';
     });
-    
+
     btn.addEventListener('mouseleave', function() {
         this.style.transform = 'translateY(0)';
     });
