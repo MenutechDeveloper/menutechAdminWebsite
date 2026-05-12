@@ -1063,15 +1063,31 @@ a {
 
             // Hero
             if (data.heroImg) {
-                document.getElementById('hero-section').style.backgroundImage = `url('${data.heroImg}')`;
+                const heroSection = document.getElementById('hero-section');
+                if (heroSection) heroSection.style.backgroundImage = `url('${data.heroImg}')`;
             }
 
             // Section Images
-            if (data.aboutImg1) document.getElementById('about-img-1').src = data.aboutImg1;
-            if (data.aboutImg2) document.getElementById('about-img-2').src = data.aboutImg2;
-            if (data.promoBg) document.getElementById('promo-section').style.backgroundImage = `url('${data.promoBg}')`;
-            if (data.cateringBg) document.getElementById('catering-section').style.backgroundImage = `url('${data.cateringBg}')`;
-            if (data.deliveryImg) document.getElementById('delivery-image').src = data.deliveryImg;
+            if (data.aboutImg1) {
+                const img = document.getElementById('about-img-1');
+                if (img) img.src = data.aboutImg1;
+            }
+            if (data.aboutImg2) {
+                const img = document.getElementById('about-img-2');
+                if (img) img.src = data.aboutImg2;
+            }
+            if (data.promoBg) {
+                const el = document.getElementById('promo-section');
+                if (el) el.style.backgroundImage = `url('${data.promoBg}')`;
+            }
+            if (data.cateringBg) {
+                const el = document.getElementById('catering-section');
+                if (el) el.style.backgroundImage = `url('${data.cateringBg}')`;
+            }
+            if (data.deliveryImg) {
+                const img = document.getElementById('delivery-image');
+                if (img) img.src = data.deliveryImg;
+            }
 
             // Info Section
             if (data.info) {
