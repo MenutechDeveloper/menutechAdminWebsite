@@ -31,43 +31,63 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
 
-        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.1) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.05) 0%, transparent 40%); }
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
 
-        .container { width: 100%; max-width: 900px; margin: 0 auto; padding: 100px 24px; animation: fadeIn 1s ease-out; }
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 100px 24px; animation: fadeIn 1s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        header { text-align: center; margin-bottom: 60px; }
+        header { text-align: center; margin-bottom: 50px; }
         .logo-main { width: 100%; max-width: 240px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
-        header h1 { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 700; margin-bottom: 10px; }
-        header p { color: var(--text-dim); font-size: 1.1rem; }
+        header h1 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 700; margin-bottom: 10px; }
 
-        /* Accordion Styles */
-        .accordion { display: flex; flex-direction: column; gap: 15px; }
-        .accordion-item { background: var(--card); border: 1px solid var(--border); border-radius: 24px; overflow: hidden; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .accordion-header { padding: 24px 30px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; transition: 0.3s; }
-        .accordion-header:hover { background: rgba(255,149,51,0.05); }
-        .accordion-header h3 { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; gap: 15px; }
-        .step-num { background: var(--orange); color: #000; width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 800; }
-        .accordion-icon { width: 24px; height: 24px; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); color: var(--orange); }
-        .accordion-item.active .accordion-icon { transform: rotate(180deg); }
+        .dashboard-layout { display: flex; gap: 40px; position: relative; }
 
-        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1); background: var(--card); }
-        .accordion-item.active .accordion-content { max-height: 2000px; }
-        .content-inner { padding: 0 30px 40px 30px; }
-        .content-inner p { color: var(--text-dim); line-height: 1.6; margin-bottom: 20px; font-weight: 500; }
-        .tutorial-img { width: 100%; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
+        /* Sidebar Styles (Matching project style) */
+        .sidebar-container {
+            position: fixed; left: 0; top: 120px; z-index: 6000; pointer-events: none; display: flex; align-items: flex-start;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sidebar-container > * { pointer-events: auto; }
+        .sidebar-container.collapsed { transform: translateX(-340px) !important; }
 
-        /* Copy Table Styles */
-        .copy-grid { display: grid; grid-template-columns: 1fr 1fr 2fr 1fr; gap: 10px; background: var(--input); padding: 20px; border-radius: 18px; border: 1px solid var(--border); margin-top: 20px; }
-        .copy-header { font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .sidebar { width: 340px; height: 500px; }
+        .sidebar-content { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); height: 100%; display: flex; flex-direction: column; }
+        .sidebar-content label { display: block; font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 20px; letter-spacing: 1px; }
+
+        .step-list { display: flex; flex-direction: column; gap: 12px; }
+        .step-item { padding: 16px 20px; border-radius: 18px; background: var(--input); border: 1px solid var(--border); cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 15px; }
+        .step-item:hover { border-color: var(--orange); background: rgba(255,149,51,0.03); }
+        .step-item.active { border-color: var(--orange); background: rgba(255,149,51,0.08); }
+        .step-item .num { background: var(--orange); color: #000; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+        .step-item .title { font-weight: 700; font-size: 0.85rem; }
+
+        .sidebar-tab {
+            width: 45px; height: 160px; background: var(--orange); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 0 16px 16px 0; cursor: pointer; writing-mode: vertical-lr; text-orientation: mixed; font-weight: 800; font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; box-shadow: 10px 0 30px rgba(255, 149, 51, 0.2); transition: 0.4s; margin-top: 40px;
+        }
+        .sidebar-tab:hover { width: 55px; padding-left: 10px; }
+
+        .main-content { flex: 1; min-width: 0; padding-left: 360px; transition: padding 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .sidebar-container.collapsed + .main-content { padding-left: 0; }
+
+        .step-panel { background: var(--card); border: 1px solid var(--border); border-radius: 36px; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); display: none; animation: slideIn 0.5s ease-out; }
+        .step-panel.active { display: block; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .step-panel h2 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
+        .step-panel h2 .num { background: var(--orange); color: #000; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 800; }
+        .step-panel p { color: var(--text-dim); line-height: 1.6; margin-bottom: 25px; font-size: 1.05rem; font-weight: 500; }
+        .tutorial-img { width: 100%; border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
+
+        /* Copy Grid */
+        .copy-grid { display: grid; grid-template-columns: 1fr 1fr 2fr 1fr; gap: 12px; background: var(--input); padding: 24px; border-radius: 24px; border: 1px solid var(--border); margin-bottom: 30px; }
+        .copy-header { font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; }
         .copy-row { display: contents; }
-        .copy-cell { background: var(--card); padding: 12px; border-radius: 10px; border: 1px solid var(--border); font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; }
-        .copy-cell.clickable { cursor: pointer; position: relative; }
-        .copy-cell.clickable:hover { border-color: var(--orange); background: rgba(255,149,51,0.05); }
-        .copy-cell.clickable:active { transform: scale(0.98); }
-        .copy-cell svg { width: 14px; height: 14px; color: var(--text-dim); opacity: 0.5; }
+        .copy-cell { background: var(--card); padding: 14px; border-radius: 12px; border: 1px solid var(--border); font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; }
+        .copy-cell.clickable { cursor: pointer; border: 1.5px solid var(--border); }
+        .copy-cell.clickable:hover { border-color: var(--orange); background: rgba(255,149,51,0.05); transform: translateY(-2px); }
+        .copy-cell svg { width: 16px; height: 16px; color: var(--orange); opacity: 0.7; }
 
         #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
         #top-nav > * { pointer-events: auto; }
@@ -86,13 +106,17 @@
         .toast.success { border-left: 6px solid var(--success); }
         @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        @media (max-width: 640px) {
-            .copy-grid { grid-template-columns: 1fr 1fr; }
-            header h1 { font-size: 1.8rem; }
+        @media (max-width: 1024px) {
+            .main-content { padding-left: 0; margin-top: 20px; }
+            .sidebar-container { position: relative; top: 0; transform: none !important; width: 100%; margin-bottom: 20px; }
+            .sidebar { width: 100%; height: auto; }
+            .sidebar-tab { display: none; }
+            .step-list { flex-direction: row; flex-wrap: wrap; }
+            .step-item { flex: 1; min-width: 200px; }
         }
     </style>
 </head>
-<body>
+<body style="display: none;">
     <div class="bg-mesh"></div>
     <div id="toast-container"></div>
 
@@ -108,127 +132,149 @@
         <header>
             <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
             <h1>Cargar Website</h1>
-            <p>Sigue estos pasos para desplegar tu sitio en GitHub y conectar tu dominio.</p>
         </header>
 
-        <div class="accordion">
-            <!-- Step 1 -->
-            <div class="accordion-item active">
-                <div class="accordion-header" onclick="toggleAccordion(this)">
-                    <h3><div class="step-num">1</div> Preparar Archivos</h3>
-                    <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-                <div class="accordion-content">
-                    <div class="content-inner">
-                        <p>Asegúrate de que tu repositorio en GitHub tenga la estructura correcta. Es obligatorio crear un archivo <b>README.md</b> en la raíz y una carpeta llamada <b>docs</b>.</p>
-                        <p>Dentro de la carpeta <b>docs</b> debes colocar todos tus archivos (HTML, CSS, JS, imágenes, etc.).</p>
-                        <img src="assets/img/step1.jpg" class="tutorial-img" alt="Estructura de archivos GitHub">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 2 -->
-            <div class="accordion-item">
-                <div class="accordion-header" onclick="toggleAccordion(this)">
-                    <h3><div class="step-num">2</div> Configurar GitHub Pages</h3>
-                    <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-                <div class="accordion-content">
-                    <div class="content-inner">
-                        <p>Ve a <b>Settings</b> > <b>Pages</b>. En la sección "Build and deployment", selecciona la rama <b>main</b> y la carpeta <b>/docs</b>, luego dale click en <b>Save</b>.</p>
-                        <p>Más abajo, en "Custom domain", escribe tu dominio (ej: midominio.com) sin "www" y dale <b>Save</b>. Espera unos minutos para que el sitio se despliegue y puedas activar el certificado HTTPS (candadito).</p>
-                        <img src="assets/img/step2.jpg" class="tutorial-img" alt="Configuración GitHub Pages">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 3 -->
-            <div class="accordion-item">
-                <div class="accordion-header" onclick="toggleAccordion(this)">
-                    <h3><div class="step-num">3</div> Gestión DNS en GoDaddy</h3>
-                    <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-                <div class="accordion-content">
-                    <div class="content-inner">
-                        <p>Inicia sesión en GoDaddy, ve a tu lista de dominios y busca el dominio del cliente. Haz clic en <b>DNS</b> y luego en la pestaña <b>Registros DNS</b>.</p>
-                        <p>Haz clic en el botón <b>Añadir un registro nuevo</b> para comenzar a ingresar los datos de GitHub.</p>
-                        <img src="assets/img/step3.jpg" class="tutorial-img" alt="Panel GoDaddy DNS">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 4 -->
-            <div class="accordion-item">
-                <div class="accordion-header" onclick="toggleAccordion(this)">
-                    <h3><div class="step-num">4</div> Ingresar Registros A</h3>
-                    <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-                <div class="accordion-content">
-                    <div class="content-inner">
-                        <p>Debes crear 4 registros de tipo <b>A</b>. Para todos usa el nombre <b>@</b> y un TTL de <b>600</b> segundos. Haz clic en cada dirección IP para copiarla rápidamente:</p>
-
-                        <div class="copy-grid">
-                            <div class="copy-header">Tipo</div>
-                            <div class="copy-header">Nombre</div>
-                            <div class="copy-header">Datos (Haz clic para copiar)</div>
-                            <div class="copy-header">TTL</div>
-
-                            <div class="copy-row">
-                                <div class="copy-cell">A</div>
-                                <div class="copy-cell">@</div>
-                                <div class="copy-cell clickable" onclick="copyText('185.199.108.153', this)">185.199.108.153 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
-                                <div class="copy-cell">600s</div>
+        <div class="dashboard-layout">
+            <div class="sidebar-container" id="sidebar-container">
+                <div class="sidebar">
+                    <div class="sidebar-content">
+                        <label>Pasos del Tutorial</label>
+                        <div class="step-list">
+                            <div class="step-item active" onclick="showStep(1)">
+                                <div class="num">1</div>
+                                <div class="title">Preparar Archivos</div>
                             </div>
-                            <div class="copy-row">
-                                <div class="copy-cell">A</div>
-                                <div class="copy-cell">@</div>
-                                <div class="copy-cell clickable" onclick="copyText('185.199.109.153', this)">185.199.109.153 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
-                                <div class="copy-cell">600s</div>
+                            <div class="step-item" onclick="showStep(2)">
+                                <div class="num">2</div>
+                                <div class="title">Configurar GitHub</div>
                             </div>
-                            <div class="copy-row">
-                                <div class="copy-cell">A</div>
-                                <div class="copy-cell">@</div>
-                                <div class="copy-cell clickable" onclick="copyText('185.199.110.153', this)">185.199.110.153 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
-                                <div class="copy-cell">600s</div>
+                            <div class="step-item" onclick="showStep(3)">
+                                <div class="num">3</div>
+                                <div class="title">DNS en GoDaddy</div>
                             </div>
-                            <div class="copy-row">
-                                <div class="copy-cell">A</div>
-                                <div class="copy-cell">@</div>
-                                <div class="copy-cell clickable" onclick="copyText('185.199.111.153', this)">185.199.111.153 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
-                                <div class="copy-cell">600s</div>
+                            <div class="step-item" onclick="showStep(4)">
+                                <div class="num">4</div>
+                                <div class="title">Registros A</div>
                             </div>
                         </div>
-
-                        <img src="assets/img/step4.jpg" class="tutorial-img" style="margin-top: 30px;" alt="DNS Records GoDaddy">
                     </div>
+                </div>
+                <div class="sidebar-tab" id="sidebar-tab">PASOS TUTORIAL</div>
+            </div>
+
+            <div class="main-content">
+                <!-- Step 1 Panel -->
+                <div id="panel-1" class="step-panel active">
+                    <h2><div class="num">1</div> Preparar Archivos</h2>
+                    <p>Es obligatorio que tu repositorio en GitHub tenga la estructura correcta para el despliegue. Debes crear un archivo <b>README.md</b> en la raíz y una carpeta llamada <b>docs</b> que contendrá todo el sitio web.</p>
+                    <p>Dentro de la carpeta <b>docs</b> coloca todos tus archivos HTML, CSS, JS e imágenes.</p>
+                    <img src="assets/img/step1.jpg" class="tutorial-img" alt="Estructura de archivos">
+                </div>
+
+                <!-- Step 2 Panel -->
+                <div id="panel-2" class="step-panel">
+                    <h2><div class="num">2</div> Configurar GitHub Pages</h2>
+                    <p>Ve a <b>Settings</b> > <b>Pages</b>. En "Build and deployment", selecciona la rama <b>main</b> y asegúrate de elegir la carpeta <b>/docs</b>. Haz clic en <b>Save</b>.</p>
+                    <p>En "Custom domain", ingresa tu dominio (ej: midominio.com) sin "www". Tras guardar, espera unos minutos y podrás activar el HTTPS (candadito).</p>
+                    <img src="assets/img/step2.jpg" class="tutorial-img" alt="Configuración Pages">
+                </div>
+
+                <!-- Step 3 Panel -->
+                <div id="panel-3" class="step-panel">
+                    <h2><div class="num">3</div> Gestión DNS en GoDaddy</h2>
+                    <p>Entra a GoDaddy, busca el dominio del cliente y entra en la sección de <b>DNS</b>. Busca la opción de <b>Registros DNS</b> o <b>Administrar DNS</b>.</p>
+                    <p>Haz clic en el botón <b>Añadir un registro nuevo</b> para comenzar la vinculación con GitHub.</p>
+                    <img src="assets/img/step3.jpg" class="tutorial-img" alt="GoDaddy DNS">
+                </div>
+
+                <!-- Step 4 Panel -->
+                <div id="panel-4" class="step-panel">
+                    <h2><div class="num">4</div> Ingresar Registros A</h2>
+                    <p>Crea 4 registros de tipo <b>A</b> con el nombre <b>@</b> y TTL de <b>600</b>. Haz clic en las IPs para copiarlas:</p>
+
+                    <div class="copy-grid">
+                        <div class="copy-header">Tipo</div>
+                        <div class="copy-header">Nombre</div>
+                        <div class="copy-header">Datos (IP)</div>
+                        <div class="copy-header">TTL</div>
+
+                        <div class="copy-row">
+                            <div class="copy-cell">A</div>
+                            <div class="copy-cell">@</div>
+                            <div class="copy-cell clickable" onclick="copyText('185.199.108.153', this)">185.199.108.153 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
+                            <div class="copy-cell">600s</div>
+                        </div>
+                        <div class="copy-row">
+                            <div class="copy-cell">A</div>
+                            <div class="copy-cell">@</div>
+                            <div class="copy-cell clickable" onclick="copyText('185.199.109.153', this)">185.199.109.153 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
+                            <div class="copy-cell">600s</div>
+                        </div>
+                        <div class="copy-row">
+                            <div class="copy-cell">A</div>
+                            <div class="copy-cell">@</div>
+                            <div class="copy-cell clickable" onclick="copyText('185.199.110.153', this)">185.199.110.153 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
+                            <div class="copy-cell">600s</div>
+                        </div>
+                        <div class="copy-row">
+                            <div class="copy-cell">A</div>
+                            <div class="copy-cell">@</div>
+                            <div class="copy-cell clickable" onclick="copyText('185.199.111.153', this)">185.199.111.153 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
+                            <div class="copy-cell">600s</div>
+                        </div>
+                    </div>
+
+                    <img src="assets/img/step4.jpg" class="tutorial-img" alt="Registros DNS">
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        function toggleAccordion(header) {
-            const item = header.parentElement;
-            const isActive = item.classList.contains('active');
+    <script type="module">
+        import { supabase as sb } from './supabase.js';
 
-            // Close all items
-            document.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('active'));
+        async function checkAccess() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { location.href = 'index.html'; return; }
 
-            // Toggle clicked item
-            if (!isActive) {
-                item.classList.add('active');
+            const { data: profile } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
+            const role = (profile?.role || '').trim().toUpperCase();
+
+            if (role !== 'ADMIN' && role !== 'DEVELOPER') {
+                location.href = 'index.html';
+            } else {
+                document.body.style.display = 'block';
             }
         }
 
-        function copyText(text, el) {
+        document.addEventListener('DOMContentLoaded', checkAccess);
+
+        window.showStep = function(num) {
+            // Update active state in sidebar
+            document.querySelectorAll('.step-item').forEach((item, idx) => {
+                item.classList.toggle('active', idx + 1 === num);
+            });
+
+            // Update visible panel
+            document.querySelectorAll('.step-panel').forEach((panel, idx) => {
+                panel.classList.toggle('active', idx + 1 === num);
+            });
+
+            // On mobile, scroll to content after selecting a step
+            if (window.innerWidth <= 1024) {
+                document.querySelector('.main-content').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        window.copyText = function(text, el) {
             navigator.clipboard.writeText(text).then(() => {
-                showToast("¡Copiado al portapapeles!");
+                showToast("¡IP Copiada!");
                 el.style.borderColor = "var(--success)";
                 setTimeout(() => el.style.borderColor = "var(--border)", 2000);
             });
         }
 
-        function showToast(message) {
+        window.showToast = function(message) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = 'toast success';
@@ -240,6 +286,14 @@
             }, 3000);
         }
 
+        // Sidebar Toggle
+        const sidebarContainer = document.getElementById('sidebar-container');
+        const sidebarTab = document.getElementById('sidebar-tab');
+
+        sidebarTab.onclick = () => {
+            sidebarContainer.classList.toggle('collapsed');
+        };
+
         // Theme toggle
         const toggle = document.getElementById('theme-toggle');
         if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
@@ -248,8 +302,8 @@
             localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
         };
 
-        // Security check (only admin/developer should stay here, though index.html already filters access)
-        // In a real app we would verify session here too, but for now we follow the project's pattern.
+        // Start collapsed on desktop if preferred, but usually it's better to show it first
+        // sidebarContainer.classList.add('collapsed');
     </script>
     <style>
         @keyframes toastFadeOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
