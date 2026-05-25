@@ -228,6 +228,11 @@
                 <h3>Customer Website</h3>
                 <p>Manage website types and completion status.</p>
             </a>
+            <a href="cargarweb.html" class="bento-card hidden" id="card-upload-web">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+                <h3>Upload Website</h3>
+                <p>Tutorial on how to deploy websites to GitHub and connect domains.</p>
+            </a>
             <a href="laboratorio.html" class="bento-card hidden" id="card-lab">
                 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M10 2v8L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45L14 10V2M8.5 2h7M7 16h10"/></svg></div>
                 <h3>Laboratorio</h3>
@@ -285,8 +290,11 @@
                     const qrRoles = ['DESIGN', 'ADMINDESIGN', 'RETENTION'];
                     const csRoles = ['CS', 'ADMINCS'];
 
-                    if (role === 'ADMIN') {
-                        document.getElementById('card-lab').classList.remove('hidden');
+                    if (role === 'ADMIN' || role === 'DEVELOPER') {
+                        document.getElementById('card-upload-web').classList.remove('hidden');
+                        if (role === 'ADMIN') {
+                            document.getElementById('card-lab').classList.remove('hidden');
+                        }
                     }
 
                     if (role === 'OWNER') {
@@ -318,6 +326,7 @@
                     } else if (role !== 'ADMIN' && role !== 'DEVELOPER') {
                         // Default fallback for other roles if any
                         document.getElementById('card-customer-website').classList.add('hidden');
+                        document.getElementById('card-upload-web').classList.add('hidden');
                         document.getElementById('card-lab').classList.add('hidden');
                     }
                 }
