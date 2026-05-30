@@ -2395,13 +2395,12 @@ class MenutechFooter extends HTMLElement {
         let domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
         const fullData = await this.fetchFooterData(domain);
 
-        if (!fullData) {
-            this.shadowRoot.innerHTML = '';
-            return;
-        }
-
-        const footerConfig = fullData.config || {};
+        const footerConfig = (fullData && fullData.config) ? fullData.config : {};
         const { brand, logo, address, phone, email, fb, ig, tw, ctaText, ctaLink, bgImage, darkBg, links, legal } = footerConfig;
+
+        // Default values if minimal/no data
+        const finalBgImage = bgImage || 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80&w=2000';
+        const isDark = darkBg !== false;
 
         const currentYear = new Date().getFullYear();
         const yearDisplay = currentYear > 2015 ? `2015 - ${currentYear}` : '2015';
@@ -2423,14 +2422,14 @@ class MenutechFooter extends HTMLElement {
                     display: block;
                     width: 100%;
                     font-family: 'Plus Jakarta Sans', sans-serif;
-                    color: ${darkBg ? '#ffffff' : '#1a1c1e'};
+                    color: ${isDark ? '#ffffff' : '#1a1c1e'};
                     overflow: hidden;
                     position: relative;
                 }
                 .footer-container {
                     padding: 80px 24px 40px;
-                    background-color: ${darkBg ? '#121418' : '#ffffff'};
-                    ${bgImage ? `background-image: ${darkBg ? 'linear-gradient(rgba(18, 20, 24, 0.85), rgba(18, 20, 24, 0.85)), ' : ''}url('${bgImage}');` : ''}
+                    background-color: ${isDark ? '#121418' : '#ffffff'};
+                    background-image: ${isDark ? 'linear-gradient(rgba(18, 20, 24, 0.85), rgba(18, 20, 24, 0.85)), ' : ''}url('${finalBgImage}');
                     background-size: cover;
                     background-position: center;
                     position: relative;
@@ -2493,7 +2492,7 @@ class MenutechFooter extends HTMLElement {
                     width: 40px;
                     height: 40px;
                     border-radius: 50%;
-                    background: ${darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'};
+                    background: ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'};
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -2543,7 +2542,7 @@ class MenutechFooter extends HTMLElement {
                     max-width: 1200px;
                     margin: 60px auto 0;
                     padding-top: 30px;
-                    border-top: 1px solid ${darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
+                    border-top: 1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
                     display: flex;
                     flex-wrap: wrap;
                     justify-content: space-between;
