@@ -695,6 +695,14 @@ class MenutechPromoBase extends HTMLElement {
         this.supabase = null;
     }
 
+    static get observedAttributes() {
+        return ['domain', 'brand', 'logo', 'address', 'phone', 'facebook', 'instagram', 'ctatext', 'ctalink', 'bgimage', 'darkbg', 'schedules', 'legal', 'primarycolor'];
+    }
+
+    attributeChangedCallback() {
+        this.render();
+    }
+
     async connectedCallback() {
         await this.initSupabase();
         this.render();
@@ -2361,6 +2369,14 @@ class MenutechFooter extends HTMLElement {
         this.supabase = null;
     }
 
+    static get observedAttributes() {
+        return ['domain', 'brand', 'logo', 'address', 'phone', 'facebook', 'instagram', 'ctatext', 'ctalink', 'bgimage', 'darkbg', 'schedules', 'legal', 'primarycolor'];
+    }
+
+    attributeChangedCallback() {
+        this.render();
+    }
+
     async connectedCallback() {
         await this.initSupabase();
         this.render();
@@ -2396,7 +2412,22 @@ class MenutechFooter extends HTMLElement {
         const fullData = await this.fetchFooterData(domain);
 
         const footerConfig = (fullData && fullData.config) ? fullData.config : {};
-        const { brand, logo, address, phone, email, fb, ig, tw, ctaText, ctaLink, bgImage, darkBg, links, legal } = footerConfig;
+
+        // Merge with attributes for preview/testing
+        const brand = this.getAttribute('brand') || footerConfig.brand;
+        const logo = this.getAttribute('logo') || footerConfig.logo;
+        const address = this.getAttribute('address') || footerConfig.address;
+        const phone = this.getAttribute('phone') || footerConfig.phone;
+        const fb = this.getAttribute('facebook') || footerConfig.fb;
+        const ig = this.getAttribute('instagram') || footerConfig.ig;
+        const ctaText = this.getAttribute('ctatext') || footerConfig.ctaText;
+        const ctaLink = this.getAttribute('ctalink') || footerConfig.ctaLink;
+        const bgImage = this.getAttribute('bgimage') || footerConfig.bgImage;
+        const darkBgAttr = this.getAttribute('darkbg');
+        const darkBg = darkBgAttr !== null ? darkBgAttr === 'true' : (footerConfig.darkBg !== false);
+        const schedules = this.getAttribute('schedules') || footerConfig.schedules;
+        const legal = this.getAttribute('legal') || footerConfig.legal;
+        const primaryColor = this.getAttribute('primarycolor') || footerConfig.primaryColor || '#ff9533';
 
         // Default values if minimal/no data
         const finalBgImage = bgImage || 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80&w=2000';
@@ -2408,13 +2439,15 @@ class MenutechFooter extends HTMLElement {
         const parseLinks = (text) => {
             if (!text) return [];
             return text.split('\n').filter(line => line.includes(',')).map(line => {
-                const [label, url] = line.split(',');
+                const parts = line.split(',');
+                if (parts.length < 2) return null;
+                const [label, url] = parts;
                 return { label: label.trim(), url: url.trim() };
-            });
+            }).filter(item => item !== null);
         };
 
-        const navLinks = parseLinks(links);
         const legalLinks = parseLinks(legal);
+        const formattedSchedules = schedules ? schedules.trim().replace(/\n/g, '<br>') : '';
 
         const styles = `
             <style>
@@ -2439,7 +2472,7 @@ class MenutechFooter extends HTMLElement {
                     margin: 0 auto;
                     display: grid;
                     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                    gap: 40px;
+                    gap: 60px;
                 }
                 .footer-col h3 {
                     font-size: 1.2rem;
@@ -2464,25 +2497,6 @@ class MenutechFooter extends HTMLElement {
                     opacity: 0.8;
                     margin-bottom: 15px;
                 }
-                .footer-links {
-                    list-style: none;
-                    padding: 0;
-                    margin: 0;
-                }
-                .footer-links li {
-                    margin-bottom: 12px;
-                }
-                .footer-links a {
-                    color: inherit;
-                    text-decoration: none;
-                    opacity: 0.7;
-                    transition: 0.3s;
-                    font-size: 0.95rem;
-                }
-                .footer-links a:hover {
-                    opacity: 1;
-                    padding-left: 5px;
-                }
                 .social-links {
                     display: flex;
                     gap: 15px;
@@ -2501,7 +2515,7 @@ class MenutechFooter extends HTMLElement {
                     transition: 0.3s;
                 }
                 .social-icon:hover {
-                    background: #ff9533;
+                    background: ${primaryColor};
                     color: #ffffff;
                     transform: translateY(-3px);
                 }
@@ -2511,32 +2525,38 @@ class MenutechFooter extends HTMLElement {
                     fill: currentColor;
                 }
                 .cta-box {
-                    background: #ff9533;
-                    padding: 30px;
-                    border-radius: 24px;
+                    background: ${primaryColor}15;
+                    backdrop-filter: blur(10px);
+                    padding: 35px;
+                    border-radius: 32px;
                     text-align: center;
-                    color: #ffffff;
+                    color: inherit;
+                    border: 1.5px solid ${primaryColor}30;
                 }
                 .cta-box h4 {
-                    font-size: 1.3rem;
+                    font-size: 1.4rem;
                     font-weight: 800;
-                    margin: 0 0 15px;
+                    margin: 0 0 20px;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
                 }
                 .cta-btn {
                     display: inline-block;
-                    padding: 12px 28px;
-                    background: #ffffff;
-                    color: #ff9533;
+                    padding: 16px 36px;
+                    background: ${primaryColor};
+                    color: #ffffff;
                     text-decoration: none;
                     font-weight: 800;
-                    border-radius: 12px;
-                    transition: 0.3s;
+                    border-radius: 16px;
+                    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                     text-transform: uppercase;
-                    font-size: 0.9rem;
+                    font-size: 0.95rem;
+                    box-shadow: 0 10px 25px ${primaryColor}40;
                 }
                 .cta-btn:hover {
-                    transform: scale(1.05);
-                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                    transform: translateY(-4px);
+                    box-shadow: 0 15px 35px ${primaryColor}60;
+                    filter: brightness(1.1);
                 }
                 .footer-bottom {
                     max-width: 1200px;
@@ -2549,7 +2569,6 @@ class MenutechFooter extends HTMLElement {
                     align-items: center;
                     gap: 20px;
                     font-size: 0.85rem;
-                    opacity: 0.6;
                 }
                 .legal-links {
                     display: flex;
@@ -2559,15 +2578,6 @@ class MenutechFooter extends HTMLElement {
                     color: inherit;
                     text-decoration: none;
                 }
-                .powered-by {
-                    display: flex;
-                    align-items: center;
-                    gap: 5px;
-                    color: inherit;
-                    text-decoration: none;
-                    font-weight: 700;
-                }
-                .powered-by span { color: #ff9533; }
 
                 @media (max-width: 768px) {
                     .footer-container { padding: 60px 20px 30px; }
@@ -2581,44 +2591,45 @@ class MenutechFooter extends HTMLElement {
         const socialHtml = `
             <div class="social-links">
                 ${fb ? `<a href="${fb}" class="social-icon" target="_blank"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>` : ''}
-                ${ig ? `<a href="${ig}" class="social-icon" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>` : ''}
-                ${tw ? `<a href="${tw}" class="social-icon" target="_blank"><svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a>` : ''}
+                ${ig ? `<a href="${ig}" class="social-icon" target="_blank"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>` : ''}
             </div>
         `;
+
+        // Only show columns that have data
+        const hasContact = brand || logo || address || phone || fb || ig;
 
         this.shadowRoot.innerHTML = `
             ${styles}
             <footer class="footer-container">
                 <div class="footer-content">
+                    ${hasContact ? `
                     <div class="footer-col">
                         ${brandHtml}
                         ${address ? `<p>${address}</p>` : ''}
                         ${phone ? `<p>${phone}</p>` : ''}
-                        ${email ? `<p>${email}</p>` : ''}
-                        ${socialHtml}
-                    </div>
-
-                    ${navLinks.length > 0 ? `
-                    <div class="footer-col">
-                        <h3>Links</h3>
-                        <ul class="footer-links">
-                            ${navLinks.map(link => `<li><a href="${link.url}">${link.label}</a></li>`).join('')}
-                        </ul>
+                        ${(fb || ig) ? socialHtml : ''}
                     </div>
                     ` : ''}
 
-                    ${ctaText ? `
+                    ${formattedSchedules ? `
+                    <div class="footer-col">
+                        <h3>Business Hours</h3>
+                        <p style="opacity: 0.9; font-weight: 500;">${formattedSchedules}</p>
+                    </div>
+                    ` : ''}
+
+                    ${(ctaText || ctaLink) ? `
                     <div class="footer-col">
                         <div class="cta-box">
-                            <h4>${ctaText}</h4>
-                            ${ctaLink ? `<a href="${ctaLink}" class="cta-btn">Click Here</a>` : ''}
+                            <h4>Special Offer</h4>
+                            ${ctaLink ? `<a href="${ctaLink}" class="cta-btn">${ctaText || 'Order Now'}</a>` : ''}
                         </div>
                     </div>
                     ` : ''}
                 </div>
 
                 <div class="footer-bottom">
-                    <div>&copy; ${yearDisplay} Powered by <a href="https://menutech.xyz/" target="_blank" style="color: #ff9533; text-decoration: none; font-weight: 800;">Menutech</a></div>
+                    <div style="opacity: 0.7;">&copy; ${yearDisplay} Powered by <a href="https://menutech.xyz/" target="_blank" style="color: ${primaryColor}; text-decoration: none; font-weight: 800;">Menutech</a></div>
 
                     ${legalLinks.length > 0 ? `
                     <div class="legal-links">
