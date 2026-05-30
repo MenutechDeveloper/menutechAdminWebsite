@@ -2613,7 +2613,7 @@ class MenutechFooter extends HTMLElement {
 
                     ${formattedSchedules ? `
                     <div class="footer-col">
-                        <h3>Business Hours</h3>
+                        <h3>Opening</h3>
                         <p style="opacity: 0.9; font-weight: 500;">${formattedSchedules}</p>
                     </div>
                     ` : ''}
