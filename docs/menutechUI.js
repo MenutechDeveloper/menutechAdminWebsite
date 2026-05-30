@@ -2600,7 +2600,7 @@ class MenutechFooter extends HTMLElement {
 
                     ${navLinks.length > 0 ? `
                     <div class="footer-col">
-                        <h3>Enlaces</h3>
+                        <h3>Links</h3>
                         <ul class="footer-links">
                             ${navLinks.map(link => `<li><a href="${link.url}">${link.label}</a></li>`).join('')}
                         </ul>
@@ -2611,24 +2611,20 @@ class MenutechFooter extends HTMLElement {
                     <div class="footer-col">
                         <div class="cta-box">
                             <h4>${ctaText}</h4>
-                            ${ctaLink ? `<a href="${ctaLink}" class="cta-btn">Click Aquí</a>` : ''}
+                            ${ctaLink ? `<a href="${ctaLink}" class="cta-btn">Click Here</a>` : ''}
                         </div>
                     </div>
                     ` : ''}
                 </div>
 
                 <div class="footer-bottom">
-                    <div>&copy; ${yearDisplay} ${brand || 'Menutech'}. Todos los derechos reservados.</div>
+                    <div>&copy; ${yearDisplay} Powered by <a href="https://menutech.xyz/" target="_blank" style="color: #ff9533; text-decoration: none; font-weight: 800;">Menutech</a></div>
 
                     ${legalLinks.length > 0 ? `
                     <div class="legal-links">
                         ${legalLinks.map(link => `<a href="${link.url}">${link.label}</a>`).join('')}
                     </div>
                     ` : ''}
-
-                    <a href="https://menutech.services" class="powered-by" target="_blank">
-                        Powered by <span>MenuTech</span>
-                    </a>
                 </div>
             </footer>
         `;
