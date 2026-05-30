@@ -2348,3 +2348,294 @@ class MenutechPlatformOrders extends HTMLElement {
 if (!customElements.get('menutech-platform-orders')) {
     customElements.define('menutech-platform-orders', MenutechPlatformOrders);
 }
+
+/**
+ * Menutech Footer Web Component
+ * Usage: <menutech-footer domain="yoursite.com"></menutech-footer>
+ */
+class MenutechFooter extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.config = MT_UI_CONFIG;
+        this.supabase = null;
+    }
+
+    async connectedCallback() {
+        await this.initSupabase();
+        this.render();
+    }
+
+    async initSupabase() {
+        if (this.supabase) return;
+        try {
+            const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
+            this.supabase = createClient(this.config.url, this.config.key);
+        } catch (err) {
+            console.error("MenutechFooter Supabase Init Error:", err);
+        }
+    }
+
+    async fetchFooterData(domain) {
+        if (!this.supabase) await this.initSupabase();
+        try {
+            const { data, error } = await this.supabase
+                .from('menutech_footers')
+                .select('*')
+                .eq('domain', domain)
+                .single();
+            if (error) return null;
+            return data;
+        } catch (err) {
+            return null;
+        }
+    }
+
+    async render() {
+        let domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
+        const fullData = await this.fetchFooterData(domain);
+
+        if (!fullData) {
+            this.shadowRoot.innerHTML = '';
+            return;
+        }
+
+        const footerConfig = fullData.config || {};
+        const { brand, logo, address, phone, email, fb, ig, tw, ctaText, ctaLink, bgImage, darkBg, links, legal } = footerConfig;
+
+        const currentYear = new Date().getFullYear();
+        const yearDisplay = currentYear > 2015 ? `2015 - ${currentYear}` : '2015';
+
+        const parseLinks = (text) => {
+            if (!text) return [];
+            return text.split('\n').filter(line => line.includes(',')).map(line => {
+                const [label, url] = line.split(',');
+                return { label: label.trim(), url: url.trim() };
+            });
+        };
+
+        const navLinks = parseLinks(links);
+        const legalLinks = parseLinks(legal);
+
+        const styles = `
+            <style>
+                :host {
+                    display: block;
+                    width: 100%;
+                    font-family: 'Plus Jakarta Sans', sans-serif;
+                    color: ${darkBg ? '#ffffff' : '#1a1c1e'};
+                    overflow: hidden;
+                    position: relative;
+                }
+                .footer-container {
+                    padding: 80px 24px 40px;
+                    background-color: ${darkBg ? '#121418' : '#ffffff'};
+                    ${bgImage ? `background-image: ${darkBg ? 'linear-gradient(rgba(18, 20, 24, 0.85), rgba(18, 20, 24, 0.85)), ' : ''}url('${bgImage}');` : ''}
+                    background-size: cover;
+                    background-position: center;
+                    position: relative;
+                }
+                .footer-content {
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 40px;
+                }
+                .footer-col h3 {
+                    font-size: 1.2rem;
+                    font-weight: 700;
+                    margin-bottom: 24px;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+                .footer-logo {
+                    max-width: 180px;
+                    margin-bottom: 20px;
+                }
+                .footer-brand {
+                    font-size: 1.5rem;
+                    font-weight: 800;
+                    margin-bottom: 10px;
+                    display: block;
+                }
+                .footer-col p {
+                    font-size: 0.95rem;
+                    line-height: 1.6;
+                    opacity: 0.8;
+                    margin-bottom: 15px;
+                }
+                .footer-links {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                }
+                .footer-links li {
+                    margin-bottom: 12px;
+                }
+                .footer-links a {
+                    color: inherit;
+                    text-decoration: none;
+                    opacity: 0.7;
+                    transition: 0.3s;
+                    font-size: 0.95rem;
+                }
+                .footer-links a:hover {
+                    opacity: 1;
+                    padding-left: 5px;
+                }
+                .social-links {
+                    display: flex;
+                    gap: 15px;
+                    margin-top: 20px;
+                }
+                .social-icon {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    background: ${darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'};
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: inherit;
+                    text-decoration: none;
+                    transition: 0.3s;
+                }
+                .social-icon:hover {
+                    background: #ff9533;
+                    color: #ffffff;
+                    transform: translateY(-3px);
+                }
+                .social-icon svg {
+                    width: 20px;
+                    height: 20px;
+                    fill: currentColor;
+                }
+                .cta-box {
+                    background: #ff9533;
+                    padding: 30px;
+                    border-radius: 24px;
+                    text-align: center;
+                    color: #ffffff;
+                }
+                .cta-box h4 {
+                    font-size: 1.3rem;
+                    font-weight: 800;
+                    margin: 0 0 15px;
+                }
+                .cta-btn {
+                    display: inline-block;
+                    padding: 12px 28px;
+                    background: #ffffff;
+                    color: #ff9533;
+                    text-decoration: none;
+                    font-weight: 800;
+                    border-radius: 12px;
+                    transition: 0.3s;
+                    text-transform: uppercase;
+                    font-size: 0.9rem;
+                }
+                .cta-btn:hover {
+                    transform: scale(1.05);
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                }
+                .footer-bottom {
+                    max-width: 1200px;
+                    margin: 60px auto 0;
+                    padding-top: 30px;
+                    border-top: 1px solid ${darkBg ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 20px;
+                    font-size: 0.85rem;
+                    opacity: 0.6;
+                }
+                .legal-links {
+                    display: flex;
+                    gap: 20px;
+                }
+                .legal-links a {
+                    color: inherit;
+                    text-decoration: none;
+                }
+                .powered-by {
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    color: inherit;
+                    text-decoration: none;
+                    font-weight: 700;
+                }
+                .powered-by span { color: #ff9533; }
+
+                @media (max-width: 768px) {
+                    .footer-container { padding: 60px 20px 30px; }
+                    .footer-bottom { flex-direction: column; text-align: center; }
+                }
+            </style>
+        `;
+
+        const brandHtml = logo ? `<img src="${logo}" alt="${brand}" class="footer-logo">` : (brand ? `<span class="footer-brand">${brand}</span>` : '');
+
+        const socialHtml = `
+            <div class="social-links">
+                ${fb ? `<a href="${fb}" class="social-icon" target="_blank"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>` : ''}
+                ${ig ? `<a href="${ig}" class="social-icon" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>` : ''}
+                ${tw ? `<a href="${tw}" class="social-icon" target="_blank"><svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a>` : ''}
+            </div>
+        `;
+
+        this.shadowRoot.innerHTML = `
+            ${styles}
+            <footer class="footer-container">
+                <div class="footer-content">
+                    <div class="footer-col">
+                        ${brandHtml}
+                        ${address ? `<p>${address}</p>` : ''}
+                        ${phone ? `<p>${phone}</p>` : ''}
+                        ${email ? `<p>${email}</p>` : ''}
+                        ${socialHtml}
+                    </div>
+
+                    ${navLinks.length > 0 ? `
+                    <div class="footer-col">
+                        <h3>Enlaces</h3>
+                        <ul class="footer-links">
+                            ${navLinks.map(link => `<li><a href="${link.url}">${link.label}</a></li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+
+                    ${ctaText ? `
+                    <div class="footer-col">
+                        <div class="cta-box">
+                            <h4>${ctaText}</h4>
+                            ${ctaLink ? `<a href="${ctaLink}" class="cta-btn">Click Aquí</a>` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <div class="footer-bottom">
+                    <div>&copy; ${yearDisplay} ${brand || 'Menutech'}. Todos los derechos reservados.</div>
+
+                    ${legalLinks.length > 0 ? `
+                    <div class="legal-links">
+                        ${legalLinks.map(link => `<a href="${link.url}">${link.label}</a>`).join('')}
+                    </div>
+                    ` : ''}
+
+                    <a href="https://menutech.services" class="powered-by" target="_blank">
+                        Powered by <span>MenuTech</span>
+                    </a>
+                </div>
+            </footer>
+        `;
+    }
+}
+
+if (!customElements.get('menutech-footer')) {
+    customElements.define('menutech-footer', MenutechFooter);
+}
