@@ -696,7 +696,7 @@ class MenutechPromoBase extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['domain', 'brand', 'logo', 'address', 'phone', 'facebook', 'instagram', 'ctatext', 'ctalink', 'bgimage', 'darkbg', 'schedules', 'legal', 'primarycolor'];
+        return ['domain', 'color', 'cantidad', 'tamano', 'velocidad', 'opacidad'];
     }
 
     attributeChangedCallback() {
@@ -2427,6 +2427,7 @@ class MenutechFooter extends HTMLElement {
         const darkBg = darkBgAttr !== null ? darkBgAttr === 'true' : (footerConfig.darkBg !== false);
         const schedules = this.getAttribute('schedules') || footerConfig.schedules;
         const legal = this.getAttribute('legal') || footerConfig.legal;
+        const quickLinksAttr = this.getAttribute('quicklinks') || footerConfig.quickLinks;
         const primaryColor = this.getAttribute('primarycolor') || footerConfig.primaryColor || '#ff9533';
 
         // Default values if minimal/no data
@@ -2447,6 +2448,7 @@ class MenutechFooter extends HTMLElement {
         };
 
         const legalLinks = parseLinks(legal);
+        const quickLinks = parseLinks(quickLinksAttr);
         const formattedSchedules = schedules ? schedules.trim().replace(/\n/g, '<br>') : '';
 
         const styles = `
@@ -2460,9 +2462,9 @@ class MenutechFooter extends HTMLElement {
                     position: relative;
                 }
                 .footer-container {
-                    padding: 80px 24px 40px;
+                    padding: 100px 24px 60px;
                     background-color: ${isDark ? '#121418' : '#ffffff'};
-                    background-image: ${isDark ? 'linear-gradient(rgba(18, 20, 24, 0.85), rgba(18, 20, 24, 0.85)), ' : ''}url('${finalBgImage}');
+                    background-image: ${isDark ? 'linear-gradient(rgba(18, 20, 24, 0.9), rgba(18, 20, 24, 0.9)), ' : ''}url('${finalBgImage}');
                     background-size: cover;
                     background-position: center;
                     position: relative;
@@ -2471,25 +2473,27 @@ class MenutechFooter extends HTMLElement {
                     max-width: 1200px;
                     margin: 0 auto;
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
                     gap: 60px;
                 }
                 .footer-col h3 {
-                    font-size: 1.2rem;
-                    font-weight: 700;
-                    margin-bottom: 24px;
+                    font-size: 1rem;
+                    font-weight: 800;
+                    margin-bottom: 30px;
                     text-transform: uppercase;
-                    letter-spacing: 1px;
+                    letter-spacing: 2px;
+                    color: ${primaryColor};
                 }
                 .footer-logo {
                     max-width: 180px;
-                    margin-bottom: 20px;
+                    margin-bottom: 25px;
                 }
                 .footer-brand {
-                    font-size: 1.5rem;
+                    font-size: 1.6rem;
                     font-weight: 800;
-                    margin-bottom: 10px;
+                    margin-bottom: 15px;
                     display: block;
+                    letter-spacing: -0.5px;
                 }
                 .footer-col p {
                     font-size: 0.95rem;
@@ -2499,89 +2503,105 @@ class MenutechFooter extends HTMLElement {
                 }
                 .social-links {
                     display: flex;
-                    gap: 15px;
-                    margin-top: 20px;
+                    gap: 12px;
+                    margin-top: 25px;
                 }
                 .social-icon {
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 50%;
-                    background: ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'};
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 14px;
+                    background: ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'};
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     color: inherit;
                     text-decoration: none;
-                    transition: 0.3s;
+                    transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                 }
                 .social-icon:hover {
                     background: ${primaryColor};
                     color: #ffffff;
-                    transform: translateY(-3px);
+                    transform: translateY(-5px);
+                    box-shadow: 0 10px 20px ${primaryColor}40;
                 }
                 .social-icon svg {
                     width: 20px;
                     height: 20px;
                     fill: currentColor;
                 }
-                .cta-box {
-                    background: ${primaryColor}15;
-                    backdrop-filter: blur(10px);
-                    padding: 35px;
-                    border-radius: 32px;
-                    text-align: center;
-                    color: inherit;
-                    border: 1.5px solid ${primaryColor}30;
-                }
-                .cta-box h4 {
-                    font-size: 1.4rem;
-                    font-weight: 800;
-                    margin: 0 0 20px;
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                }
                 .cta-btn {
                     display: inline-block;
-                    padding: 16px 36px;
+                    padding: 20px 45px;
                     background: ${primaryColor};
                     color: #ffffff;
                     text-decoration: none;
                     font-weight: 800;
-                    border-radius: 16px;
+                    border-radius: 22px;
                     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                     text-transform: uppercase;
-                    font-size: 0.95rem;
-                    box-shadow: 0 10px 25px ${primaryColor}40;
+                    font-size: 1rem;
+                    border: none;
+                    letter-spacing: 1.5px;
+                    box-shadow: none;
                 }
                 .cta-btn:hover {
-                    transform: translateY(-4px);
-                    box-shadow: 0 15px 35px ${primaryColor}60;
+                    transform: translateY(-5px);
                     filter: brightness(1.1);
+                    box-shadow: none;
                 }
+
+                .footer-list {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                }
+                .footer-list li {
+                    margin-bottom: 12px;
+                }
+                .footer-list a {
+                    color: inherit;
+                    text-decoration: none;
+                    opacity: 0.7;
+                    transition: 0.3s;
+                    font-size: 0.95rem;
+                }
+                .footer-list a:hover {
+                    opacity: 1;
+                    color: ${primaryColor};
+                    padding-left: 5px;
+                }
+
                 .footer-bottom {
                     max-width: 1200px;
-                    margin: 60px auto 0;
-                    padding-top: 30px;
+                    margin: 80px auto 0;
+                    padding-top: 40px;
                     border-top: 1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
                     display: flex;
                     flex-wrap: wrap;
                     justify-content: space-between;
                     align-items: center;
-                    gap: 20px;
+                    gap: 30px;
                     font-size: 0.85rem;
                 }
                 .legal-links {
                     display: flex;
-                    gap: 20px;
+                    gap: 25px;
                 }
                 .legal-links a {
                     color: inherit;
                     text-decoration: none;
+                    opacity: 0.6;
+                    transition: 0.3s;
+                }
+                .legal-links a:hover {
+                    opacity: 1;
+                    color: ${primaryColor};
                 }
 
                 @media (max-width: 768px) {
-                    .footer-container { padding: 60px 20px 30px; }
+                    .footer-container { padding: 60px 20px 40px; }
                     .footer-bottom { flex-direction: column; text-align: center; }
+                    .footer-content { gap: 40px; }
                 }
             </style>
         `;
@@ -2611,6 +2631,15 @@ class MenutechFooter extends HTMLElement {
                     </div>
                     ` : ''}
 
+                    ${quickLinks.length > 0 ? `
+                    <div class="footer-col">
+                        <h3>Quick Links</h3>
+                        <ul class="footer-list">
+                            ${quickLinks.map(link => `<li><a href="${link.url}">${link.label}</a></li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+
                     ${formattedSchedules ? `
                     <div class="footer-col">
                         <h3>Opening</h3>
@@ -2618,18 +2647,15 @@ class MenutechFooter extends HTMLElement {
                     </div>
                     ` : ''}
 
-                    ${(ctaText || ctaLink) ? `
-                    <div class="footer-col">
-                        <div class="cta-box">
-                            <h4>Special Offer</h4>
-                            ${ctaLink ? `<a href="${ctaLink}" class="cta-btn">${ctaText || 'Order Now'}</a>` : ''}
-                        </div>
+                    ${(ctaText && ctaLink) ? `
+                    <div class="footer-col" style="display: flex; align-items: center; justify-content: center;">
+                        <a href="${ctaLink}" class="cta-btn">${ctaText}</a>
                     </div>
                     ` : ''}
                 </div>
 
                 <div class="footer-bottom">
-                    <div style="opacity: 0.7;">&copy; ${yearDisplay} Powered by <a href="https://menutech.xyz/" target="_blank" style="color: ${primaryColor}; text-decoration: none; font-weight: 800;">Menutech</a></div>
+                    <div style="opacity: 0.7;">&copy; ${yearDisplay} Powered by <a href="https://menutech.xyz/" target="_blank" style="color: #ff9533; text-decoration: none; font-weight: 800;">Menutech</a></div>
 
                     ${legalLinks.length > 0 ? `
                     <div class="legal-links">
