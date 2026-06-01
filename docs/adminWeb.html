@@ -508,7 +508,8 @@
                     </div>
 
                     <div class="form-builder-container">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                            <div class="promo-form-group"><label>Primary Color</label><input type="color" id="footer-primary-color" value="#ff9533" style="width: 38px; height: 38px; padding: 2px; cursor: pointer; border-radius: 12px; background: var(--input); display: block; overflow: hidden; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
                             <div class="promo-form-group"><label>Brand Name</label><input type="text" id="footer-brand" placeholder="Restaurant Name"></div>
                             <div class="promo-form-group"><label>Logo URL</label><input type="text" id="footer-logo" placeholder="https://..."></div>
                         </div>
@@ -832,7 +833,7 @@
             document.getElementById('form-btn-text').oninput = (e) => { localForm.buttonText = e.target.value; document.getElementById('floating-footer').classList.remove('hidden'); };
             document.getElementById('form-success-msg').oninput = (e) => { localForm.successMsg = e.target.value; document.getElementById('floating-footer').classList.remove('hidden'); };
 
-            const footerInputs = ['brand', 'logo', 'address', 'phone', 'fb', 'ig', 'custom-code', 'bg-image', 'schedules', 'legal'];
+            const footerInputs = ['brand', 'logo', 'address', 'phone', 'fb', 'ig', 'custom-code', 'bg-image', 'schedules', 'legal', 'primary-color'];
             footerInputs.forEach(id => {
                 const el = document.getElementById(`footer-${id}`);
                 if (!el || id === 'schedules') return;
@@ -975,6 +976,7 @@
             if (data) {
                 footerId = data.id;
                 localFooter = data.config;
+                document.getElementById('footer-primary-color').value = localFooter.primaryColor || '#ff9533';
                 document.getElementById('footer-brand').value = localFooter.brand || '';
                 document.getElementById('footer-logo').value = localFooter.logo || '';
                 document.getElementById('footer-address').value = localFooter.address || '';

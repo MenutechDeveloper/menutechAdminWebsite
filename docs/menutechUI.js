@@ -2677,7 +2677,9 @@ class MenutechFooter extends HTMLElement {
 
                         <div class="f-col">
                             ${socialHtml}
-                            ${customCode ? `<div class="f-cta-box">${customCode}</div>` : ''}
+                            <div class="f-cta-box">
+                                <slot name="custom-code"></slot>
+                            </div>
                         </div>
                     </div>
 
@@ -2692,6 +2694,53 @@ class MenutechFooter extends HTMLElement {
                 </div>
             </div>
         `;
+
+        // Clean up previous custom code elements from Light DOM
+        Array.from(this.querySelectorAll('[slot="custom-code"]')).forEach(el => el.remove());
+
+        // Handle Custom Code and Scripts execution
+        if (customCode) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = customCode;
+
+            const scripts = [];
+            const elements = [];
+            Array.from(tempDiv.childNodes).forEach(node => {
+                if (node.tagName === 'SCRIPT') {
+                    scripts.push(node);
+                } else if (node.nodeType === 1 || node.nodeType === 3) {
+                    elements.push(node);
+                }
+            });
+
+            // Add elements to Light DOM so they can access global styles
+            elements.forEach(node => {
+                if (node.nodeType === 1) node.setAttribute('slot', 'custom-code');
+                // For text nodes, we wrap them or just append if possible.
+                // Better to wrap in a span if it's pure text to allow slotting
+                if (node.nodeType === 3 && node.textContent.trim()) {
+                    const span = document.createElement('span');
+                    span.setAttribute('slot', 'custom-code');
+                    span.textContent = node.textContent;
+                    this.appendChild(span);
+                } else if (node.nodeType === 1) {
+                    this.appendChild(node);
+                }
+            });
+
+            // Execute scripts in the main document scope
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement('script');
+                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                newScript.textContent = oldScript.textContent;
+                const src = newScript.getAttribute('src');
+                if (src && document.querySelector(`script[src="${src}"]`)) return;
+                document.head.appendChild(newScript);
+            });
+        } else {
+            const ctaBox = this.shadowRoot.querySelector('.f-cta-box');
+            if (ctaBox) ctaBox.style.display = 'none';
+        }
 
         this._rendering = false;
     }
