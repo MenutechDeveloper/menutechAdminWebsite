@@ -2370,7 +2370,7 @@ class MenutechFooter extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['domain', 'brand', 'logo', 'address', 'phone', 'facebook', 'instagram', 'customcode', 'bgimage', 'darkbg', 'schedules', 'legal', 'primarycolor'];
+        return ['domain', 'brand', 'logo', 'address', 'phone', 'facebook', 'instagram', 'customcode', 'bgimage', 'schedules', 'quicklinks', 'legal', 'primarycolor'];
     }
 
     attributeChangedCallback() {
@@ -2422,15 +2422,10 @@ class MenutechFooter extends HTMLElement {
         const ig = this.getAttribute('instagram') || footerConfig.ig;
         const customCode = this.getAttribute('customcode') || footerConfig.customCode;
         const bgImage = this.getAttribute('bgimage') || footerConfig.bgImage;
-        const darkBgAttr = this.getAttribute('darkbg');
-        const darkBg = darkBgAttr !== null ? darkBgAttr === 'true' : (footerConfig.darkBg !== false);
         const schedules = this.getAttribute('schedules') || footerConfig.schedules;
         const legal = this.getAttribute('legal') || footerConfig.legal;
         const quickLinksAttr = this.getAttribute('quicklinks') || footerConfig.quickLinks;
         const primaryColor = this.getAttribute('primarycolor') || footerConfig.primaryColor || '#ff9533';
-
-        // Default values if minimal/no data
-        const isDark = darkBg !== false;
 
         const currentYear = new Date().getFullYear();
         const yearDisplay = currentYear > 2015 ? `2015 - ${currentYear}` : '2015';
@@ -2460,7 +2455,7 @@ class MenutechFooter extends HTMLElement {
                     position: relative;
                 }
                 .footer-container {
-                    padding: 100px 24px 60px;
+                    padding: 60px 24px 40px;
                     background-color: #1a1c1e;
                     ${bgImage ? `background-image: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url('${bgImage}');` : ''}
                     background-size: cover;
@@ -2472,121 +2467,96 @@ class MenutechFooter extends HTMLElement {
                     margin: 0 auto;
                     display: grid;
                     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 60px;
-                }
-                .footer-col h3 {
-                    font-size: 1rem;
-                    font-weight: 800;
-                    margin-bottom: 30px;
-                    text-transform: uppercase;
-                    letter-spacing: 2px;
-                    color: #ffffff;
+                    gap: 30px;
+                    text-align: left;
+                    align-items: start;
                 }
                 .footer-logo {
-                    max-width: 180px;
-                    margin-bottom: 25px;
+                    max-width: 140px;
+                    max-height: 80px;
+                    margin-bottom: 15px;
+                    object-fit: contain;
                 }
                 .footer-brand {
-                    font-size: 1.6rem;
+                    font-size: 1.3rem;
                     font-weight: 800;
-                    margin-bottom: 15px;
+                    margin-bottom: 10px;
                     display: block;
                     letter-spacing: -0.5px;
+                    color: #ffffff;
                 }
                 .footer-col p {
-                    font-size: 0.95rem;
-                    line-height: 1.6;
-                    opacity: 0.8;
-                    margin-bottom: 15px;
+                    font-size: 0.85rem;
+                    line-height: 1.5;
+                    opacity: 0.9;
+                    margin-bottom: 8px;
+                    color: #ffffff;
                 }
                 .social-links {
                     display: flex;
-                    gap: 12px;
-                    margin-top: 25px;
+                    gap: 8px;
+                    margin-top: 15px;
                 }
                 .social-icon {
-                    width: 44px;
-                    height: 44px;
-                    border-radius: 14px;
-                    background: ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'};
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 10px;
+                    background: rgba(255,255,255,0.08);
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    color: inherit;
+                    color: #ffffff;
                     text-decoration: none;
-                    transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                    transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                 }
                 .social-icon:hover {
                     background: ${primaryColor};
-                    color: #ffffff;
-                    transform: translateY(-5px);
-                    box-shadow: 0 10px 20px ${primaryColor}40;
+                    transform: translateY(-3px);
                 }
                 .social-icon svg {
-                    width: 20px;
-                    height: 20px;
+                    width: 18px;
+                    height: 18px;
                     fill: currentColor;
                 }
-                .cta-btn {
-                    display: inline-block;
-                    padding: 20px 45px;
-                    background: ${primaryColor};
-                    color: #ffffff;
-                    text-decoration: none;
-                    font-weight: 800;
-                    border-radius: 22px;
-                    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-                    text-transform: uppercase;
-                    font-size: 1rem;
-                    border: none;
-                    letter-spacing: 1.5px;
-                    box-shadow: none;
-                }
-                .cta-btn:hover {
-                    transform: translateY(-5px);
-                    filter: brightness(1.1);
-                    box-shadow: none;
-                }
-
                 .footer-list {
                     list-style: none;
                     padding: 0;
                     margin: 0;
                 }
                 .footer-list li {
-                    margin-bottom: 12px;
+                    margin-bottom: 8px;
                 }
                 .footer-list a {
-                    color: inherit;
+                    color: #ffffff;
                     text-decoration: none;
-                    opacity: 0.7;
+                    opacity: 0.8;
                     transition: 0.3s;
-                    font-size: 0.95rem;
+                    font-size: 0.85rem;
+                    font-weight: 500;
                 }
                 .footer-list a:hover {
                     opacity: 1;
                     color: ${primaryColor};
-                    padding-left: 5px;
                 }
 
                 .footer-bottom {
                     max-width: 1200px;
-                    margin: 80px auto 0;
-                    padding-top: 40px;
+                    margin: 40px auto 0;
+                    padding-top: 25px;
                     border-top: 1px solid rgba(255,255,255,0.1);
                     display: flex;
                     flex-wrap: wrap;
                     justify-content: space-between;
                     align-items: center;
-                    gap: 30px;
-                    font-size: 0.85rem;
+                    gap: 20px;
+                    font-size: 0.75rem;
                 }
                 .legal-links {
                     display: flex;
-                    gap: 25px;
+                    gap: 20px;
                 }
                 .legal-links a {
-                    color: inherit;
+                    color: #ffffff;
                     text-decoration: none;
                     opacity: 0.6;
                     transition: 0.3s;
@@ -2597,9 +2567,9 @@ class MenutechFooter extends HTMLElement {
                 }
 
                 @media (max-width: 768px) {
-                    .footer-container { padding: 60px 20px 40px; }
+                    .footer-container { padding: 40px 20px 25px; }
                     .footer-bottom { flex-direction: column; text-align: center; }
-                    .footer-content { gap: 40px; }
+                    .footer-content { gap: 25px; grid-template-columns: 1fr; }
                 }
             </style>
         `;
@@ -2613,9 +2583,6 @@ class MenutechFooter extends HTMLElement {
             </div>
         `;
 
-        // Only show columns that have data
-        const hasContact = brand || logo || address || phone || fb || ig;
-
         this.shadowRoot.innerHTML = `
             ${styles}
             <footer class="footer-container">
@@ -2627,25 +2594,29 @@ class MenutechFooter extends HTMLElement {
                         ${(fb || ig) ? socialHtml : ''}
                     </div>
 
+                    ${quickLinks.length > 0 ? `
                     <div class="footer-col">
-                        <h3>Quick Links</h3>
                         <ul class="footer-list">
-                            ${quickLinks.length > 0 ? quickLinks.map(link => `<li><a href="${link.url}">${link.label}</a></li>`).join('') : '<li><a href="#">Home</a></li><li><a href="#services">Services</a></li>'}
+                            ${quickLinks.map(link => `<li><a href="${link.url}">${link.label}</a></li>`).join('')}
                         </ul>
                     </div>
+                    ` : ''}
 
+                    ${formattedSchedules ? `
                     <div class="footer-col">
-                        <h3>Opening</h3>
-                        <p style="opacity: 0.9; font-weight: 500;">${formattedSchedules || 'Mon - Fri: 9am - 6pm<br>Sat - Sun: Closed'}</p>
+                        <p style="font-weight: 500;">${formattedSchedules}</p>
                     </div>
+                    ` : ''}
 
-                    <div class="footer-col" style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 15px;">
-                        ${customCode || ''}
+                    ${customCode ? `
+                    <div class="footer-col">
+                        ${customCode}
                     </div>
+                    ` : ''}
                 </div>
 
                 <div class="footer-bottom">
-                    <div style="opacity: 0.7;">&copy; ${yearDisplay} Powered by <a href="https://menutech.xyz/" target="_blank" style="color: #ff9533; text-decoration: none; font-weight: 800;">Menutech</a></div>
+                    <div style="opacity: 0.8; color: #ffffff;">&copy; ${yearDisplay} Powered by <a href="https://menutech.xyz/" target="_blank" style="color: #ff9533; text-decoration: none; font-weight: 800;">Menutech</a></div>
 
                     ${legalLinks.length > 0 ? `
                     <div class="legal-links">
