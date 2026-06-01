@@ -2370,7 +2370,7 @@ class MenutechFooter extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['domain', 'brand', 'logo', 'address', 'phone', 'facebook', 'instagram', 'ctatext', 'ctalink', 'bgimage', 'darkbg', 'schedules', 'legal', 'primarycolor'];
+        return ['domain', 'brand', 'logo', 'address', 'phone', 'facebook', 'instagram', 'customcode', 'bgimage', 'darkbg', 'schedules', 'legal', 'primarycolor'];
     }
 
     attributeChangedCallback() {
@@ -2420,8 +2420,7 @@ class MenutechFooter extends HTMLElement {
         const phone = this.getAttribute('phone') || footerConfig.phone;
         const fb = this.getAttribute('facebook') || footerConfig.fb;
         const ig = this.getAttribute('instagram') || footerConfig.ig;
-        const ctaText = this.getAttribute('ctatext') || footerConfig.ctaText;
-        const ctaLink = this.getAttribute('ctalink') || footerConfig.ctaLink;
+        const customCode = this.getAttribute('customcode') || footerConfig.customCode;
         const bgImage = this.getAttribute('bgimage') || footerConfig.bgImage;
         const darkBgAttr = this.getAttribute('darkbg');
         const darkBg = darkBgAttr !== null ? darkBgAttr === 'true' : (footerConfig.darkBg !== false);
@@ -2431,7 +2430,6 @@ class MenutechFooter extends HTMLElement {
         const primaryColor = this.getAttribute('primarycolor') || footerConfig.primaryColor || '#ff9533';
 
         // Default values if minimal/no data
-        const finalBgImage = bgImage || 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80&w=2000';
         const isDark = darkBg !== false;
 
         const currentYear = new Date().getFullYear();
@@ -2457,14 +2455,14 @@ class MenutechFooter extends HTMLElement {
                     display: block;
                     width: 100%;
                     font-family: 'Plus Jakarta Sans', sans-serif;
-                    color: ${isDark ? '#ffffff' : '#1a1c1e'};
+                    color: #ffffff;
                     overflow: hidden;
                     position: relative;
                 }
                 .footer-container {
                     padding: 100px 24px 60px;
-                    background-color: ${isDark ? '#121418' : '#ffffff'};
-                    background-image: ${isDark ? 'linear-gradient(rgba(18, 20, 24, 0.9), rgba(18, 20, 24, 0.9)), ' : ''}url('${finalBgImage}');
+                    background-color: #1a1c1e;
+                    ${bgImage ? `background-image: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url('${bgImage}');` : ''}
                     background-size: cover;
                     background-position: center;
                     position: relative;
@@ -2482,7 +2480,7 @@ class MenutechFooter extends HTMLElement {
                     margin-bottom: 30px;
                     text-transform: uppercase;
                     letter-spacing: 2px;
-                    color: ${primaryColor};
+                    color: #ffffff;
                 }
                 .footer-logo {
                     max-width: 180px;
@@ -2575,7 +2573,7 @@ class MenutechFooter extends HTMLElement {
                     max-width: 1200px;
                     margin: 80px auto 0;
                     padding-top: 40px;
-                    border-top: 1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
+                    border-top: 1px solid rgba(255,255,255,0.1);
                     display: flex;
                     flex-wrap: wrap;
                     justify-content: space-between;
@@ -2622,36 +2620,28 @@ class MenutechFooter extends HTMLElement {
             ${styles}
             <footer class="footer-container">
                 <div class="footer-content">
-                    ${hasContact ? `
                     <div class="footer-col">
                         ${brandHtml}
                         ${address ? `<p>${address}</p>` : ''}
                         ${phone ? `<p>${phone}</p>` : ''}
                         ${(fb || ig) ? socialHtml : ''}
                     </div>
-                    ` : ''}
 
-                    ${quickLinks.length > 0 ? `
                     <div class="footer-col">
                         <h3>Quick Links</h3>
                         <ul class="footer-list">
-                            ${quickLinks.map(link => `<li><a href="${link.url}">${link.label}</a></li>`).join('')}
+                            ${quickLinks.length > 0 ? quickLinks.map(link => `<li><a href="${link.url}">${link.label}</a></li>`).join('') : '<li><a href="#">Home</a></li><li><a href="#services">Services</a></li>'}
                         </ul>
                     </div>
-                    ` : ''}
 
-                    ${formattedSchedules ? `
                     <div class="footer-col">
                         <h3>Opening</h3>
-                        <p style="opacity: 0.9; font-weight: 500;">${formattedSchedules}</p>
+                        <p style="opacity: 0.9; font-weight: 500;">${formattedSchedules || 'Mon - Fri: 9am - 6pm<br>Sat - Sun: Closed'}</p>
                     </div>
-                    ` : ''}
 
-                    ${(ctaText && ctaLink) ? `
-                    <div class="footer-col" style="display: flex; align-items: center; justify-content: center;">
-                        <a href="${ctaLink}" class="cta-btn">${ctaText}</a>
+                    <div class="footer-col" style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 15px;">
+                        ${customCode || ''}
                     </div>
-                    ` : ''}
                 </div>
 
                 <div class="footer-bottom">
