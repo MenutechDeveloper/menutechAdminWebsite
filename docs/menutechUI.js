@@ -2370,7 +2370,7 @@ class MenutechFooter extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['domain', 'brand', 'logo', 'address', 'phone', 'facebook', 'instagram', 'customcode', 'bgimage', 'schedules', 'quicklinks', 'legal', 'primarycolor'];
+        return ['domain', 'brand', 'logo', 'address', 'phone', 'facebook', 'instagram', 'customcode', 'bgimage', 'schedules', 'legal', 'primarycolor'];
     }
 
     attributeChangedCallback() {
@@ -2408,12 +2408,22 @@ class MenutechFooter extends HTMLElement {
     }
 
     async render() {
+        if (this._rendering) return;
+        this._rendering = true;
+
         let domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
-        const fullData = await this.fetchFooterData(domain);
 
-        const footerConfig = (fullData && fullData.config) ? fullData.config : {};
+        // Only fetch if we haven't cached it yet to avoid loops or slow renders
+        if (!this._dbConfig && domain && domain !== 'localhost' && !domain.includes('127.0.0.1')) {
+            const fullData = await this.fetchFooterData(domain);
+            if (fullData && fullData.config) {
+                this._dbConfig = fullData.config;
+            }
+        }
 
-        // Merge with attributes for preview/testing
+        const footerConfig = this._dbConfig || {};
+
+        // Data collection (Attributes override DB)
         const brand = this.getAttribute('brand') || footerConfig.brand;
         const logo = this.getAttribute('logo') || footerConfig.logo;
         const address = this.getAttribute('address') || footerConfig.address;
@@ -2424,11 +2434,15 @@ class MenutechFooter extends HTMLElement {
         const bgImage = this.getAttribute('bgimage') || footerConfig.bgImage;
         const schedules = this.getAttribute('schedules') || footerConfig.schedules;
         const legal = this.getAttribute('legal') || footerConfig.legal;
-        const quickLinksAttr = this.getAttribute('quicklinks') || footerConfig.quickLinks;
         const primaryColor = this.getAttribute('primarycolor') || footerConfig.primaryColor || '#ff9533';
 
         const currentYear = new Date().getFullYear();
         const yearDisplay = currentYear > 2015 ? `2015 - ${currentYear}` : '2015';
+
+        const formattedSchedules = schedules ? schedules.trim().split('\n').map(line => {
+            const [day, time] = line.split(': ');
+            return time ? `<div class="sched-row"><span class="day">${day}</span><span class="time">${time}</span></div>` : `<div class="sched-row solo">${line}</div>`;
+        }).join('') : '';
 
         const parseLinks = (text) => {
             if (!text) return [];
@@ -2439,223 +2453,270 @@ class MenutechFooter extends HTMLElement {
                 return { label: label.trim(), url: url.trim() };
             }).filter(item => item !== null);
         };
-
         const legalLinks = parseLinks(legal);
-        const quickLinks = parseLinks(quickLinksAttr);
-        const formattedSchedules = schedules ? schedules.trim().split('\n').map(line => {
-            const [day, time] = line.split(': ');
-            return time ? `<strong>${day}:</strong> ${time}` : line;
-        }).join('<br>') : '';
 
         const styles = `
             <style>
-                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+                @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
                 :host {
                     display: block;
                     width: 100%;
-                    font-family: 'Plus Jakarta Sans', sans-serif;
+                    font-family: 'Outfit', sans-serif;
                     color: #ffffff;
+                }
+
+                .f-wrapper {
+                    background: #1a1c1e;
+                    position: relative;
+                    padding: 140px 24px 80px;
                     overflow: hidden;
-                    position: relative;
-                }
-                .footer-container {
-                    padding: 80px 24px 60px;
-                    background-color: #1a1c1e;
-                    ${bgImage ? `background-image: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url('${bgImage}');` : ''}
-                    background-size: cover;
-                    background-position: center;
-                    position: relative;
-                }
-                .footer-content {
-                    max-width: 1200px;
-                    margin: 0 auto;
-                    display: grid;
-                    grid-template-columns: 1.5fr 1fr 1fr 1fr;
-                    gap: 60px;
                     text-align: left;
+                }
+
+                .f-overlay {
+                    position: absolute; inset: 0;
+                    background: rgba(18, 20, 24, 0.94);
+                    z-index: 1;
+                }
+
+                ${bgImage ? `
+                .f-bg {
+                    position: absolute; inset: 0;
+                    background: url('${bgImage}') center/cover no-repeat;
+                    opacity: 0.3;
+                    filter: grayscale(100%);
+                    pointer-events: none;
+                    z-index: 0;
+                }
+                ` : ''}
+
+                .f-container {
+                    max-width: 1240px;
+                    margin: 0 auto;
+                    position: relative;
+                    z-index: 2;
+                }
+
+                .f-main {
+                    display: grid;
+                    grid-template-columns: 1.8fr 1.2fr 1fr;
+                    gap: 80px;
                     align-items: start;
                 }
+
                 @media (max-width: 1024px) {
-                    .footer-content { grid-template-columns: 1fr 1fr; gap: 40px; }
+                    .f-main { gap: 50px; grid-template-columns: 1.5fr 1fr 1fr; }
                 }
-                @media (max-width: 600px) {
-                    .footer-content { grid-template-columns: 1fr; gap: 40px; }
-                    .footer-container { padding: 60px 24px 40px; }
+
+                @media (max-width: 768px) {
+                    .f-main { grid-template-columns: 1fr; gap: 70px; text-align: center; }
+                    .f-wrapper { padding: 100px 24px 60px; }
                 }
-                .footer-logo {
-                    max-width: 160px;
-                    max-height: 100px;
-                    margin-bottom: 25px;
+
+                /* Identity Section */
+                .f-brand-logo {
+                    max-width: 240px;
+                    max-height: 120px;
                     object-fit: contain;
-                    display: block;
+                    margin-bottom: 45px;
                 }
-                .footer-brand {
-                    font-size: 1.8rem;
-                    font-weight: 800;
-                    margin-bottom: 20px;
-                    display: block;
-                    letter-spacing: -1px;
-                    color: #ffffff;
-                    line-height: 1.1;
+                @media (max-width: 768px) { .f-brand-logo { margin: 0 auto 45px auto; } }
+
+                .f-brand-name {
+                    font-size: 4rem;
+                    font-weight: 900;
+                    line-height: 0.85;
+                    letter-spacing: -4px;
+                    margin: 0 0 45px 0;
+                    color: #fff;
                 }
-                .footer-col h4 {
+                @media (max-width: 768px) { .f-brand-name { font-size: 3.2rem; letter-spacing: -2px; } }
+
+                .f-info {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 18px;
+                    border-left: 2px solid ${primaryColor};
+                    padding-left: 25px;
+                }
+                @media (max-width: 768px) { .f-info { border-left: none; padding-left: 0; } }
+
+                .f-info p {
+                    font-size: 1.1rem;
+                    font-weight: 500;
+                    color: rgba(255,255,255,0.8);
+                    margin: 0;
+                    line-height: 1.4;
+                }
+                .f-info p b { color: #ffffff; font-weight: 700; opacity: 0.5; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+
+                /* Label Headings */
+                .f-label {
                     font-size: 0.75rem;
                     font-weight: 800;
                     text-transform: uppercase;
-                    letter-spacing: 2px;
-                    margin-bottom: 25px;
-                    color: #ffffff;
-                    opacity: 0.6;
+                    letter-spacing: 3px;
+                    color: ${primaryColor};
+                    margin-bottom: 40px;
+                    display: block;
                 }
-                .footer-col p {
-                    font-size: 0.95rem;
-                    line-height: 1.6;
-                    opacity: 0.8;
-                    margin-bottom: 12px;
-                    color: #ffffff;
+
+                /* Schedule List */
+                .sched-list { display: flex; flex-direction: column; gap: 28px; }
+                .sched-row {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
                 }
-                .social-links {
+
+                .sched-row .day {
+                    font-size: 0.85rem;
+                    font-weight: 700;
+                    color: rgba(255,255,255,0.3);
+                    text-transform: uppercase;
+                }
+                .sched-row .time {
+                    font-size: 1.4rem;
+                    font-weight: 600;
+                    color: #ffffff;
+                    letter-spacing: -0.5px;
+                }
+
+                /* Action Column */
+                .f-socials {
                     display: flex;
                     gap: 12px;
-                    margin-top: 30px;
+                    margin-bottom: 35px;
                 }
-                .social-icon {
-                    width: 44px;
-                    height: 44px;
-                    border-radius: 12px;
-                    background: rgba(255,255,255,0.05);
+                @media (max-width: 768px) { .f-socials { justify-content: center; } }
+
+                .f-social-btn {
+                    width: 58px;
+                    height: 58px;
+                    border-radius: 50%;
+                    background: rgba(255,255,255,0.04);
+                    border: 1px solid rgba(255,255,255,0.1);
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     color: #ffffff;
                     text-decoration: none;
                     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-                    border: 1px solid rgba(255,255,255,0.1);
                 }
-                .social-icon:hover {
+                .f-social-btn:hover {
                     background: ${primaryColor};
-                    transform: translateY(-5px);
                     border-color: ${primaryColor};
-                    box-shadow: 0 10px 20px rgba(255, 149, 51, 0.2);
+                    color: #fff;
+                    transform: translateY(-8px);
                 }
-                .social-icon svg {
-                    width: 20px;
-                    height: 20px;
-                    fill: currentColor;
-                }
-                .footer-list {
-                    list-style: none;
-                    padding: 0;
-                    margin: 0;
-                }
-                .footer-list li {
-                    margin-bottom: 14px;
-                }
-                .footer-list a {
-                    color: #ffffff;
-                    text-decoration: none;
-                    opacity: 0.7;
-                    transition: all 0.3s ease;
-                    font-size: 0.95rem;
-                    font-weight: 500;
-                    display: inline-block;
-                }
-                .footer-list a:hover {
-                    opacity: 1;
-                    color: #ffffff;
-                    transform: translateX(5px);
-                }
+                .f-social-btn svg { width: 22px; height: 22px; fill: currentColor; }
 
-                .footer-bottom {
-                    max-width: 1200px;
-                    margin: 80px auto 0;
-                    padding-top: 30px;
-                    border-top: 1px solid rgba(255,255,255,0.05);
-                    display: flex;
-                    flex-wrap: wrap;
-                    justify-content: space-between;
-                    align-items: center;
-                    gap: 25px;
-                    font-size: 0.85rem;
-                }
-                .legal-links {
-                    display: flex;
-                    gap: 30px;
-                }
-                .legal-links a {
-                    color: #ffffff;
-                    text-decoration: none;
-                    opacity: 0.5;
-                    transition: 0.3s;
-                }
-                .legal-links a:hover {
-                    opacity: 1;
-                }
-
-                .footer-cta-container {
+                .f-cta-box {
                     display: flex;
                     flex-direction: column;
                     gap: 15px;
+                    background: rgba(255,255,255,0.03);
+                    padding: 25px;
+                    border-radius: 24px;
+                    border: 1px solid rgba(255,255,255,0.05);
                 }
+
+                /* Bottom Bar */
+                .f-bottom {
+                    margin-top: 140px;
+                    padding-top: 45px;
+                    border-top: 1px solid rgba(255,255,255,0.06);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                @media (max-width: 768px) {
+                    .f-bottom { flex-direction: column; gap: 35px; margin-top: 100px; text-align: center; }
+                }
+
+                .f-copyright {
+                    font-size: 0.95rem;
+                    font-weight: 500;
+                    color: rgba(255,255,255,0.3);
+                }
+                .f-copyright a {
+                    color: #ff9533 !important;
+                    text-decoration: none;
+                    font-weight: 800;
+                }
+
+                .f-legal {
+                    display: flex;
+                    gap: 35px;
+                }
+                @media (max-width: 480px) { .f-legal { gap: 15px; flex-wrap: wrap; justify-content: center; } }
+                .f-legal a {
+                    color: rgba(255,255,255,0.4);
+                    text-decoration: none;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    transition: 0.3s;
+                }
+                .f-legal a:hover { color: #ffffff; }
             </style>
         `;
 
-        const brandHtml = logo ? `<img src="${logo}" alt="${brand}" class="footer-logo">` : (brand ? `<span class="footer-brand">${brand}</span>` : '');
+        const brandHtml = logo ? `<img src="${logo}" alt="${brand}" class="f-brand-logo">` : (brand ? `<h1 class="f-brand-name">${brand}</h1>` : '');
 
         const socialHtml = `
-            <div class="social-links">
-                ${fb ? `<a href="${fb}" class="social-icon" target="_blank"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>` : ''}
-                ${ig ? `<a href="${ig}" class="social-icon" target="_blank"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>` : ''}
+            <div class="f-socials">
+                ${fb ? `<a href="${fb}" class="f-social-btn" target="_blank"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>` : ''}
+                ${ig ? `<a href="${ig}" class="f-social-btn" target="_blank"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>` : ''}
             </div>
         `;
 
         this.shadowRoot.innerHTML = `
             ${styles}
-            <footer class="footer-container">
-                <div class="footer-content">
-                    <div class="footer-col">
-                        ${brandHtml}
-                        ${address ? `<p style="max-width: 250px;">${address}</p>` : ''}
-                        ${phone ? `<p>${phone}</p>` : ''}
-                        ${(fb || ig) ? socialHtml : ''}
-                    </div>
+            <div class="f-wrapper">
+                ${bgImage ? `<div class="f-bg"></div>` : ''}
+                <div class="f-overlay"></div>
+                <div class="f-container">
+                    <div class="f-main">
+                        <div class="f-col">
+                            ${brandHtml}
+                            <div class="f-info">
+                                ${address ? `<p><b>Address</b>${address}</p>` : ''}
+                                ${phone ? `<p><b>Direct Contact</b>${phone}</p>` : ''}
+                            </div>
+                        </div>
 
-                    ${quickLinks.length > 0 ? `
-                    <div class="footer-col">
-                        <h4>Explore</h4>
-                        <ul class="footer-list">
-                            ${quickLinks.map(link => `<li><a href="${link.url}">${link.label}</a></li>`).join('')}
-                        </ul>
-                    </div>
-                    ` : ''}
+                        ${formattedSchedules ? `
+                        <div class="f-col">
+                            <span class="f-label">Schedule</span>
+                            <div class="sched-list">
+                                ${formattedSchedules}
+                            </div>
+                        </div>
+                        ` : ''}
 
-                    ${formattedSchedules ? `
-                    <div class="footer-col">
-                        <h4>Opening</h4>
-                        <p>${formattedSchedules}</p>
-                    </div>
-                    ` : ''}
-
-                    ${customCode ? `
-                    <div class="footer-col">
-                        <div class="footer-cta-container">
-                            ${customCode}
+                        <div class="f-col">
+                            <span class="f-label">Action Center</span>
+                            ${socialHtml}
+                            <div class="f-cta-box">
+                                ${customCode || ''}
+                            </div>
                         </div>
                     </div>
-                    ` : ''}
-                </div>
 
-                <div class="footer-bottom">
-                    <div style="opacity: 0.6; color: #ffffff;">&copy; ${yearDisplay} Powered by <a href="https://menutech.xyz/" target="_blank" style="color: #ff9533; text-decoration: none; font-weight: 800;">Menutech</a></div>
-
-                    ${legalLinks.length > 0 ? `
-                    <div class="legal-links">
-                        ${legalLinks.map(link => `<a href="${link.url}">${link.label}</a>`).join('')}
+                    <div class="f-bottom">
+                        <div class="f-copyright">&copy; ${yearDisplay} Powered by <a href="https://menutech.xyz/" target="_blank">Menutech</a></div>
+                        ${legalLinks.length > 0 ? `
+                        <div class="f-legal">
+                            ${legalLinks.map(link => `<a href="${link.url}">${link.label}</a>`).join('')}
+                        </div>
+                        ` : ''}
                     </div>
-                    ` : ''}
                 </div>
-            </footer>
+            </div>
         `;
+
+        this._rendering = false;
     }
 }
 
