@@ -2442,10 +2442,14 @@ class MenutechFooter extends HTMLElement {
 
         const legalLinks = parseLinks(legal);
         const quickLinks = parseLinks(quickLinksAttr);
-        const formattedSchedules = schedules ? schedules.trim().replace(/\n/g, '<br>') : '';
+        const formattedSchedules = schedules ? schedules.trim().split('\n').map(line => {
+            const [day, time] = line.split(': ');
+            return time ? `<strong>${day}:</strong> ${time}` : line;
+        }).join('<br>') : '';
 
         const styles = `
             <style>
+                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
                 :host {
                     display: block;
                     width: 100%;
@@ -2455,7 +2459,7 @@ class MenutechFooter extends HTMLElement {
                     position: relative;
                 }
                 .footer-container {
-                    padding: 60px 24px 40px;
+                    padding: 80px 24px 60px;
                     background-color: #1a1c1e;
                     ${bgImage ? `background-image: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url('${bgImage}');` : ''}
                     background-size: cover;
@@ -2466,56 +2470,77 @@ class MenutechFooter extends HTMLElement {
                     max-width: 1200px;
                     margin: 0 auto;
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 30px;
+                    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+                    gap: 60px;
                     text-align: left;
                     align-items: start;
                 }
+                @media (max-width: 1024px) {
+                    .footer-content { grid-template-columns: 1fr 1fr; gap: 40px; }
+                }
+                @media (max-width: 600px) {
+                    .footer-content { grid-template-columns: 1fr; gap: 40px; }
+                    .footer-container { padding: 60px 24px 40px; }
+                }
                 .footer-logo {
-                    max-width: 140px;
-                    max-height: 80px;
-                    margin-bottom: 15px;
+                    max-width: 160px;
+                    max-height: 100px;
+                    margin-bottom: 25px;
                     object-fit: contain;
+                    display: block;
                 }
                 .footer-brand {
-                    font-size: 1.3rem;
+                    font-size: 1.8rem;
                     font-weight: 800;
-                    margin-bottom: 10px;
+                    margin-bottom: 20px;
                     display: block;
-                    letter-spacing: -0.5px;
+                    letter-spacing: -1px;
                     color: #ffffff;
+                    line-height: 1.1;
+                }
+                .footer-col h4 {
+                    font-size: 0.75rem;
+                    font-weight: 800;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    margin-bottom: 25px;
+                    color: #ffffff;
+                    opacity: 0.6;
                 }
                 .footer-col p {
-                    font-size: 0.85rem;
-                    line-height: 1.5;
-                    opacity: 0.9;
-                    margin-bottom: 8px;
+                    font-size: 0.95rem;
+                    line-height: 1.6;
+                    opacity: 0.8;
+                    margin-bottom: 12px;
                     color: #ffffff;
                 }
                 .social-links {
                     display: flex;
-                    gap: 8px;
-                    margin-top: 15px;
+                    gap: 12px;
+                    margin-top: 30px;
                 }
                 .social-icon {
-                    width: 36px;
-                    height: 36px;
-                    border-radius: 10px;
-                    background: rgba(255,255,255,0.08);
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 12px;
+                    background: rgba(255,255,255,0.05);
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     color: #ffffff;
                     text-decoration: none;
-                    transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                    border: 1px solid rgba(255,255,255,0.1);
                 }
                 .social-icon:hover {
                     background: ${primaryColor};
-                    transform: translateY(-3px);
+                    transform: translateY(-5px);
+                    border-color: ${primaryColor};
+                    box-shadow: 0 10px 20px rgba(255, 149, 51, 0.2);
                 }
                 .social-icon svg {
-                    width: 18px;
-                    height: 18px;
+                    width: 20px;
+                    height: 20px;
                     fill: currentColor;
                 }
                 .footer-list {
@@ -2524,52 +2549,53 @@ class MenutechFooter extends HTMLElement {
                     margin: 0;
                 }
                 .footer-list li {
-                    margin-bottom: 8px;
+                    margin-bottom: 14px;
                 }
                 .footer-list a {
                     color: #ffffff;
                     text-decoration: none;
-                    opacity: 0.8;
-                    transition: 0.3s;
-                    font-size: 0.85rem;
+                    opacity: 0.7;
+                    transition: all 0.3s ease;
+                    font-size: 0.95rem;
                     font-weight: 500;
+                    display: inline-block;
                 }
                 .footer-list a:hover {
                     opacity: 1;
-                    color: ${primaryColor};
+                    color: #ffffff;
+                    transform: translateX(5px);
                 }
 
                 .footer-bottom {
                     max-width: 1200px;
-                    margin: 40px auto 0;
-                    padding-top: 25px;
-                    border-top: 1px solid rgba(255,255,255,0.1);
+                    margin: 80px auto 0;
+                    padding-top: 30px;
+                    border-top: 1px solid rgba(255,255,255,0.05);
                     display: flex;
                     flex-wrap: wrap;
                     justify-content: space-between;
                     align-items: center;
-                    gap: 20px;
-                    font-size: 0.75rem;
+                    gap: 25px;
+                    font-size: 0.85rem;
                 }
                 .legal-links {
                     display: flex;
-                    gap: 20px;
+                    gap: 30px;
                 }
                 .legal-links a {
                     color: #ffffff;
                     text-decoration: none;
-                    opacity: 0.6;
+                    opacity: 0.5;
                     transition: 0.3s;
                 }
                 .legal-links a:hover {
                     opacity: 1;
-                    color: ${primaryColor};
                 }
 
-                @media (max-width: 768px) {
-                    .footer-container { padding: 40px 20px 25px; }
-                    .footer-bottom { flex-direction: column; text-align: center; }
-                    .footer-content { gap: 25px; grid-template-columns: 1fr; }
+                .footer-cta-container {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 15px;
                 }
             </style>
         `;
@@ -2589,13 +2615,14 @@ class MenutechFooter extends HTMLElement {
                 <div class="footer-content">
                     <div class="footer-col">
                         ${brandHtml}
-                        ${address ? `<p>${address}</p>` : ''}
+                        ${address ? `<p style="max-width: 250px;">${address}</p>` : ''}
                         ${phone ? `<p>${phone}</p>` : ''}
                         ${(fb || ig) ? socialHtml : ''}
                     </div>
 
                     ${quickLinks.length > 0 ? `
                     <div class="footer-col">
+                        <h4>Explore</h4>
                         <ul class="footer-list">
                             ${quickLinks.map(link => `<li><a href="${link.url}">${link.label}</a></li>`).join('')}
                         </ul>
@@ -2604,19 +2631,22 @@ class MenutechFooter extends HTMLElement {
 
                     ${formattedSchedules ? `
                     <div class="footer-col">
-                        <p style="font-weight: 500;">${formattedSchedules}</p>
+                        <h4>Opening</h4>
+                        <p>${formattedSchedules}</p>
                     </div>
                     ` : ''}
 
                     ${customCode ? `
                     <div class="footer-col">
-                        ${customCode}
+                        <div class="footer-cta-container">
+                            ${customCode}
+                        </div>
                     </div>
                     ` : ''}
                 </div>
 
                 <div class="footer-bottom">
-                    <div style="opacity: 0.8; color: #ffffff;">&copy; ${yearDisplay} Powered by <a href="https://menutech.xyz/" target="_blank" style="color: #ff9533; text-decoration: none; font-weight: 800;">Menutech</a></div>
+                    <div style="opacity: 0.6; color: #ffffff;">&copy; ${yearDisplay} Powered by <a href="https://menutech.xyz/" target="_blank" style="color: #ff9533; text-decoration: none; font-weight: 800;">Menutech</a></div>
 
                     ${legalLinks.length > 0 ? `
                     <div class="legal-links">
