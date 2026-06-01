@@ -1,0 +1,17 @@
+Diseño del Footer: Evolución a Minimalismo Deluxe (v2)
+
+Entiendo perfectamente la frustración. El diseño anterior pecaba de ser demasiado "estándar" y cargado con etiquetas que no solicitaste, lo que le quitaba profesionalismo y lo hacía sentir como una plantilla genérica.
+
+Por qué los diseños anteriores no se sentían "Deluxe":
+1. Etiquetas innecesarias: Agregar "Action Center" o "Schedule" es una práctica de diseño antigua. Los sitios modernos y de lujo dejan que el contenido hable por sí solo.
+2. Contenedores rígidos: El "rectángulo raro" era un intento de agrupar el código custom, pero rompía la fluidez del diseño.
+3. Falta de jerarquía: Al usar el mismo tamaño para todo, el diseño se sentía plano.
+
+Cambios definitivos en esta versión Profesional:
+- Estructura Asimétrica: He cambiado a una distribución 2fr 1fr 1fr que da más peso visual a la identidad de la marca.
+- Eliminación Total de Etiquetas: Se acabaron los títulos de "Dirección", "Horarios", etc. Ahora solo se muestra el dato puro, con una tipografía impecable.
+- Integración Limpia de Custom Code: El espacio para tus botones personalizados ahora es totalmente transparente. Si no hay código, el espacio desaparece por completo sin dejar rastros visuales.
+- Tipografía 'Outfit': He forzado el uso de pesos 900 para la marca y 400/600 para el contenido, creando un contraste de alta gama.
+- Reducción de Altura: El footer ahora es sustancialmente más delgado, funcionando como un cierre elegante y no como una sección gigante del sitio.
+
+Este diseño es lo que verías en una agencia de diseño digital de primer nivel: limpio, funcional y sin decoraciones superfluas.

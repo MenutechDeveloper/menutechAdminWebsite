@@ -2467,16 +2467,16 @@ class MenutechFooter extends HTMLElement {
                 }
 
                 .f-wrapper {
-                    background: #1a1c1e;
+                    background: #0f1113;
                     position: relative;
-                    padding: 140px 24px 80px;
+                    padding: 40px 24px 25px;
                     overflow: hidden;
                     text-align: left;
                 }
 
                 .f-overlay {
                     position: absolute; inset: 0;
-                    background: rgba(18, 20, 24, 0.94);
+                    background: rgba(8, 9, 10, 0.97);
                     z-index: 1;
                 }
 
@@ -2484,7 +2484,7 @@ class MenutechFooter extends HTMLElement {
                 .f-bg {
                     position: absolute; inset: 0;
                     background: url('${bgImage}') center/cover no-repeat;
-                    opacity: 0.3;
+                    opacity: 0.25;
                     filter: grayscale(100%);
                     pointer-events: none;
                     z-index: 0;
@@ -2500,133 +2500,118 @@ class MenutechFooter extends HTMLElement {
 
                 .f-main {
                     display: grid;
-                    grid-template-columns: 1.8fr 1.2fr 1fr;
-                    gap: 80px;
+                    grid-template-columns: 2fr 1fr 1fr;
+                    gap: 60px;
                     align-items: start;
                 }
 
                 @media (max-width: 1024px) {
-                    .f-main { gap: 50px; grid-template-columns: 1.5fr 1fr 1fr; }
+                    .f-main { grid-template-columns: 1.5fr 1fr 1fr; gap: 40px; }
                 }
 
                 @media (max-width: 768px) {
-                    .f-main { grid-template-columns: 1fr; gap: 70px; text-align: center; }
-                    .f-wrapper { padding: 100px 24px 60px; }
+                    .f-main { grid-template-columns: 1fr; gap: 50px; text-align: center; }
+                    .f-wrapper { padding: 40px 24px 30px; }
                 }
 
                 /* Identity Section */
                 .f-brand-logo {
-                    max-width: 240px;
-                    max-height: 120px;
+                    max-width: 200px;
+                    max-height: 90px;
                     object-fit: contain;
-                    margin-bottom: 45px;
+                    margin-bottom: 30px;
                 }
-                @media (max-width: 768px) { .f-brand-logo { margin: 0 auto 45px auto; } }
+                @media (max-width: 768px) { .f-brand-logo { margin: 0 auto 30px auto; } }
 
                 .f-brand-name {
-                    font-size: 4rem;
+                    font-size: 3rem;
                     font-weight: 900;
-                    line-height: 0.85;
-                    letter-spacing: -4px;
-                    margin: 0 0 45px 0;
+                    line-height: 0.9;
+                    letter-spacing: -2px;
+                    margin: 0 0 30px 0;
                     color: #fff;
+                    text-transform: uppercase;
                 }
-                @media (max-width: 768px) { .f-brand-name { font-size: 3.2rem; letter-spacing: -2px; } }
+                @media (max-width: 768px) { .f-brand-name { font-size: 2.5rem; } }
 
                 .f-info {
                     display: flex;
                     flex-direction: column;
-                    gap: 18px;
+                    gap: 15px;
                     border-left: 2px solid ${primaryColor};
-                    padding-left: 25px;
+                    padding-left: 20px;
                 }
                 @media (max-width: 768px) { .f-info { border-left: none; padding-left: 0; } }
 
                 .f-info p {
-                    font-size: 1.1rem;
+                    font-size: 1rem;
                     font-weight: 500;
-                    color: rgba(255,255,255,0.8);
+                    color: rgba(255,255,255,0.7);
                     margin: 0;
                     line-height: 1.4;
                 }
-                .f-info p b { color: #ffffff; font-weight: 700; opacity: 0.5; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
-
-                /* Label Headings */
-                .f-label {
-                    font-size: 0.75rem;
-                    font-weight: 800;
-                    text-transform: uppercase;
-                    letter-spacing: 3px;
-                    color: ${primaryColor};
-                    margin-bottom: 40px;
-                    display: block;
-                }
 
                 /* Schedule List */
-                .sched-list { display: flex; flex-direction: column; gap: 28px; }
+                .sched-list { display: flex; flex-direction: column; gap: 25px; }
                 .sched-row {
                     display: flex;
                     flex-direction: column;
-                    gap: 6px;
+                    gap: 5px;
                 }
 
                 .sched-row .day {
-                    font-size: 0.85rem;
-                    font-weight: 700;
+                    font-size: 0.75rem;
+                    font-weight: 800;
                     color: rgba(255,255,255,0.3);
                     text-transform: uppercase;
+                    letter-spacing: 1px;
                 }
                 .sched-row .time {
-                    font-size: 1.4rem;
+                    font-size: 1.3rem;
                     font-weight: 600;
                     color: #ffffff;
-                    letter-spacing: -0.5px;
                 }
 
                 /* Action Column */
                 .f-socials {
                     display: flex;
-                    gap: 12px;
-                    margin-bottom: 35px;
+                    gap: 15px;
+                    margin-bottom: 30px;
                 }
                 @media (max-width: 768px) { .f-socials { justify-content: center; } }
 
                 .f-social-btn {
-                    width: 58px;
-                    height: 58px;
+                    width: 50px;
+                    height: 50px;
                     border-radius: 50%;
-                    background: rgba(255,255,255,0.04);
+                    background: rgba(255,255,255,0.05);
                     border: 1px solid rgba(255,255,255,0.1);
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     color: #ffffff;
                     text-decoration: none;
-                    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                    transition: all 0.3s ease;
                 }
                 .f-social-btn:hover {
                     background: ${primaryColor};
                     border-color: ${primaryColor};
                     color: #fff;
-                    transform: translateY(-8px);
+                    transform: translateY(-5px);
                 }
-                .f-social-btn svg { width: 22px; height: 22px; fill: currentColor; }
+                .f-social-btn svg { width: 20px; height: 20px; fill: currentColor; }
 
                 .f-cta-box {
                     display: flex;
                     flex-direction: column;
-                    gap: 15px;
-                    background: rgba(255,255,255,0.03);
-                    padding: 25px;
-                    border-radius: 24px;
-                    border: 1px solid rgba(255,255,255,0.05);
+                    gap: 12px;
                 }
 
                 /* Bottom Bar */
                 .f-bottom {
-                    margin-top: 140px;
-                    padding-top: 45px;
-                    border-top: 1px solid rgba(255,255,255,0.06);
+                    margin-top: 40px;
+                    padding-top: 25px;
+                    border-top: 1px solid rgba(255,255,255,0.04);
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
@@ -2681,26 +2666,18 @@ class MenutechFooter extends HTMLElement {
                         <div class="f-col">
                             ${brandHtml}
                             <div class="f-info">
-                                ${address ? `<p><b>Address</b>${address}</p>` : ''}
-                                ${phone ? `<p><b>Direct Contact</b>${phone}</p>` : ''}
+                                ${address ? `<p>${address}</p>` : ''}
+                                ${phone ? `<p>${phone}</p>` : ''}
                             </div>
                         </div>
 
-                        ${formattedSchedules ? `
                         <div class="f-col">
-                            <span class="f-label">Schedule</span>
-                            <div class="sched-list">
-                                ${formattedSchedules}
-                            </div>
+                            ${formattedSchedules ? `<div class="sched-list">${formattedSchedules}</div>` : ''}
                         </div>
-                        ` : ''}
 
                         <div class="f-col">
-                            <span class="f-label">Action Center</span>
                             ${socialHtml}
-                            <div class="f-cta-box">
-                                ${customCode || ''}
-                            </div>
+                            ${customCode ? `<div class="f-cta-box">${customCode}</div>` : ''}
                         </div>
                     </div>
 
