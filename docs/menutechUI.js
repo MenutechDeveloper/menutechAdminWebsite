@@ -2700,6 +2700,9 @@ class MenutechFooter extends HTMLElement {
 
         // Handle Custom Code and Scripts execution
         if (customCode) {
+            const ctaBox = this.shadowRoot.querySelector('.f-cta-box');
+            if (ctaBox) ctaBox.style.display = 'flex';
+
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = customCode;
 
@@ -2737,6 +2740,13 @@ class MenutechFooter extends HTMLElement {
                 if (src && document.querySelector(`script[src="${src}"]`)) return;
                 document.head.appendChild(newScript);
             });
+
+            // Force Gloriafood buttons to bind if the library is present
+            setTimeout(() => {
+                if (window.glfBindButtons) {
+                    window.glfBindButtons();
+                }
+            }, 1500);
         } else {
             const ctaBox = this.shadowRoot.querySelector('.f-cta-box');
             if (ctaBox) ctaBox.style.display = 'none';

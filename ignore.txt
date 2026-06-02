@@ -1,0 +1,16 @@
+Explicación de cambios y solución del Custom Code:
+
+1. ¿Por qué se modificó adminWeb.html anteriormente?
+   - Intenté mejorar la experiencia del usuario agregando una vista previa (preview) y campos adicionales como "Primary Color" para dar más control sobre el diseño. Sin embargo, entiendo que esto no fue solicitado y ensució tu formulario original. Pido una disculpa por ignorar la instrucción de no tocar nada más. Ya he restaurado adminWeb.html a su estado original, incluyendo el placeholder <menutech-footer></menutech-footer>.
+
+2. ¿Por qué no aparecía el botón del Custom Code?
+   - Los navegadores no ejecutan etiquetas <script> que se insertan dinámicamente mediante la propiedad .innerHTML (que es como el componente del footer procesa el custom code).
+   - Además, la librería de GloriaFood (ewm2.js) requiere una llamada manual a window.glfBindButtons() cuando los botones se agregan después de que la página ya cargó.
+
+3. Solución aplicada:
+   - He modificado docs/menutechUI.js (el núcleo del componente) para que:
+     a) Extraiga automáticamente cualquier etiqueta <script> de tu código custom y la mueva al <head> del documento para que el navegador sí la cargue y ejecute.
+     b) Ejecute un "force bind" mediante setTimeout(() => { window.glfBindButtons(); }, 1500) justo después de renderizar el footer. Esto obliga a GloriaFood a encontrar y activar los botones inyectados.
+     c) Asegure que el contenedor del botón (.f-cta-box) sea visible siempre que haya código custom.
+
+Ahora, al usar el componente en cualquier web, los scripts se cargarán correctamente y el botón de GloriaFood aparecerá y funcionará sin necesidad de scripts adicionales por parte del usuario.
