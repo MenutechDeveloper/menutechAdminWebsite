@@ -561,6 +561,11 @@
             </div>
 
             <div class="promo-form-group">
+                <label>Custom Label (Call to Action)</label>
+                <input type="text" id="promo-custom-label" placeholder="e.g. See our special menu!">
+            </div>
+
+            <div class="promo-form-group">
                 <label>Start Date</label>
                 <input type="date" id="promo-start-date">
             </div>
@@ -721,10 +726,13 @@
 
             document.getElementById('btn-copy-promo').onclick = () => {
                 if (!activeDomain) return showToast("Assign a domain to this project first.", "warning");
-                const activeEvents = localPromos.filter(p => p.is_active).map(p => p.event_type);
+                const activeEvents = localPromos.filter(p => p.is_active);
                 if (activeEvents.length === 0) return showToast("No active promos to copy.", "warning");
 
-                const tags = activeEvents.map(ev => `<menutech-${ev} domain="${activeDomain}"></menutech-${ev}>`).join('\n');
+                const tags = activeEvents.map(p => {
+                    const labelAttr = p.custom_label ? ` custom-label="${p.custom_label}"` : '';
+                    return `<menutech-${p.event_type} domain="${activeDomain}"${labelAttr}></menutech-${p.event_type}>`;
+                }).join('\n');
                 const snippet = `<!-- Menutech Promotions -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n${tags}`;
 
                 navigator.clipboard.writeText(snippet).then(() => {
@@ -1041,6 +1049,7 @@
             const promo = localPromos.find(p => p.event_type === eventType) || {
                 event_type: eventType,
                 image_url: '',
+                custom_label: '',
                 start_date: '',
                 end_date: '',
                 display_mode: 'popup',
@@ -1063,6 +1072,7 @@
 
             document.getElementById('promo-start-date').value = promo.start_date || '';
             document.getElementById('promo-end-date').value = promo.end_date || '';
+            document.getElementById('promo-custom-label').value = promo.custom_label || '';
             document.getElementById('promo-display-mode').value = promo.display_mode || 'popup';
             document.getElementById('promo-active').checked = promo.is_active;
 
@@ -1107,6 +1117,7 @@
             const imageUrl = document.getElementById('promo-preview').src;
             const startDate = document.getElementById('promo-start-date').value;
             const endDate = document.getElementById('promo-end-date').value;
+            const customLabel = document.getElementById('promo-custom-label').value;
             const displayMode = document.getElementById('promo-display-mode').value;
             const isActive = document.getElementById('promo-active').checked;
 
@@ -1116,6 +1127,7 @@
                     domain: activeDomain || 'undetermined',
                     event_type: currentPromoEvent,
                     image_url: imageUrl,
+                    custom_label: customLabel,
                     start_date: startDate || null,
                     end_date: endDate || null,
                     display_mode: displayMode,
