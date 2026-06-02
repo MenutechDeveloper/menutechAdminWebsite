@@ -341,13 +341,24 @@
         }
 
         .promo-drop-zone {
-            width: 100%; height: 150px; border-radius: 20px; border: 2px dashed var(--border);
+            width: 100%; aspect-ratio: 1 / 1; max-width: 280px; margin: 0 auto 20px auto; border-radius: 20px; border: 2px dashed var(--border);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.3s; margin-bottom: 20px; overflow: hidden; position: relative;
+            cursor: pointer; transition: 0.3s; overflow: hidden; position: relative;
         }
         .promo-drop-zone:hover { border-color: var(--orange); background: rgba(255,149,51,0.03); }
         .promo-drop-zone img { width: 100%; height: 100%; object-fit: cover; }
         .promo-drop-zone p { font-size: 0.85rem; font-weight: 600; color: var(--text-dim); }
+
+        /* Custom Checkbox Promo */
+        .promo-active-container { display: flex; align-items: center; gap: 12px; margin-top: 10px; cursor: pointer; user-select: none; }
+        .promo-active-container input { display: none; }
+        .custom-cb {
+            width: 24px; height: 24px; background: #000; border: 2.5px solid var(--orange); border-radius: 6px;
+            position: relative; transition: 0.3s; display: flex; align-items: center; justify-content: center;
+        }
+        .promo-active-container input:checked + .custom-cb::after {
+            content: '✓'; color: var(--orange); font-weight: 900; font-size: 14px;
+        }
 
         .modal-actions { display: flex; gap: 15px; margin-top: 30px; }
         .btn-modal { flex: 1; padding: 16px; border-radius: 16px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; border: none; transition: 0.3s; }
@@ -583,10 +594,11 @@
                 </select>
             </div>
 
-            <div class="promo-form-group" style="display:flex; align-items:center; gap:10px;">
-                <input type="checkbox" id="promo-active" style="width:auto;">
-                <label style="margin:0">Active Promo</label>
-            </div>
+            <label class="promo-active-container">
+                <input type="checkbox" id="promo-active">
+                <div class="custom-cb"></div>
+                <span style="font-size: 0.75rem; font-weight: 700; color: var(--orange); text-transform: uppercase;">Active Promo</span>
+            </label>
 
             <div class="modal-actions">
                 <button class="btn-modal btn-modal-cancel" onclick="closePromoModal()">Cancel</button>

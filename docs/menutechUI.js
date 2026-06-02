@@ -792,11 +792,12 @@ class MenutechPromoBase extends HTMLElement {
             ];
             for (let i = 0; i < cantidad; i++) {
                 const x = Math.random() * 100;
-                const size = tamano + Math.random() * tamano;
-                const dur = (5 + Math.random() * 8) / velocidad;
-                const delay = Math.random() * 5;
+                const size = tamano + (Math.random() * tamano);
+                const dur = (10 + Math.random() * 15) / velocidad;
+                const delay = Math.random() * 20; // Positive delay so they appear gradually
                 const img = snowImages[i % snowImages.length];
-                particles += `<div class="particle" style="left:${x}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${img}'); opacity:${opacidad};"></div>`;
+                const drift = (Math.random() * 40 - 20); // Side drift
+                particles += `<div class="particle" style="left:${x}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; --drift:${drift}px; background-image:url('${img}'); opacity:${opacidad};"></div>`;
             }
         } else if (this.eventType === 'halloween') {
             const hwImages = [
@@ -824,14 +825,21 @@ class MenutechPromoBase extends HTMLElement {
                     height: ${isPopup ? '100%' : 'auto'};
                     pointer-events: none;
                     z-index: 9999;
-                    overflow: ${isPopup ? 'hidden' : 'visible'};
                     display: block !important;
                 }
                 .promo-container { font-family: 'Plus Jakarta Sans', sans-serif; }
 
+                .particles-wrapper {
+                    position: ${isPopup ? 'absolute' : 'fixed'};
+                    inset: 0;
+                    overflow: hidden;
+                    pointer-events: none;
+                    z-index: -1;
+                }
+
                 /* Particles */
                 .particle {
-                    position: absolute; top: -20px; background-size: contain; background-repeat: no-repeat;
+                    position: absolute; top: -50px; background-size: contain; background-repeat: no-repeat;
                     animation: fall linear infinite; will-change: transform; opacity: 0.8;
                 }
                 .particle-static {
@@ -839,8 +847,8 @@ class MenutechPromoBase extends HTMLElement {
                     animation: appearDisappear linear infinite; will-change: opacity, transform; opacity: 0;
                 }
                 @keyframes fall {
-                    0% { transform: translateY(0) rotate(0deg); }
-                    100% { transform: translateY(110vh) rotate(360deg); }
+                    0% { transform: translateY(-50px) translateX(0) rotate(0deg); }
+                    100% { transform: translateY(calc(100vh + 50px)) translateX(var(--drift, 0)) rotate(360deg); }
                 }
                 @keyframes appearDisappear {
                     0%, 100% { opacity: 0; transform: scale(0.5); }
@@ -914,8 +922,10 @@ class MenutechPromoBase extends HTMLElement {
         if (promo.display_mode === 'popup') {
             this.shadowRoot.innerHTML = `
                 ${styles}
-                ${this.eventType === 'halloween' ? '<div class="smoke-layer"></div>' : ''}
-                ${particles}
+                <div class="particles-wrapper">
+                    ${this.eventType === 'halloween' ? '<div class="smoke-layer"></div>' : ''}
+                    ${particles}
+                </div>
                 <div class="promo-popup-overlay" id="promo-overlay">
                     <div class="promo-popup-card">
                         <button class="close-btn" id="close-promo" title="Close">
@@ -945,8 +955,10 @@ class MenutechPromoBase extends HTMLElement {
         } else {
             this.shadowRoot.innerHTML = `
                 ${styles}
-                ${this.eventType === 'halloween' ? '<div class="smoke-layer"></div>' : ''}
-                ${particles}
+                <div class="particles-wrapper">
+                    ${this.eventType === 'halloween' ? '<div class="smoke-layer"></div>' : ''}
+                    ${particles}
+                </div>
                 <div class="promo-section">
                     <img src="${imageUrl}" alt="${this.eventType} promotion">
                     ${customLabel ? `
