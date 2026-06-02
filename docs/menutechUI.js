@@ -696,7 +696,7 @@ class MenutechPromoBase extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['domain', 'color', 'cantidad', 'tamano', 'velocidad', 'opacidad'];
+        return ['domain', 'color', 'cantidad', 'tamano', 'velocidad', 'opacidad', 'custom-label'];
     }
 
     attributeChangedCallback() {
@@ -723,7 +723,7 @@ class MenutechPromoBase extends HTMLElement {
         try {
             const { data, error } = await this.supabase
                 .from('promos')
-                .select('*')
+                .select('*, custom_label')
                 .eq('domain', domain)
                 .eq('event_type', this.eventType)
                 .eq('is_active', true)
@@ -770,10 +770,11 @@ class MenutechPromoBase extends HTMLElement {
         }
 
         const color = this.getAttribute("color") || (this.eventType === 'halloween' ? "#ff6600" : "#ffffff");
-        const cantidad = parseInt(this.getAttribute("cantidad")) || 50;
-        const tamano = parseFloat(this.getAttribute("tamano")) || 5;
+        const cantidad = parseInt(this.getAttribute("cantidad")) || (this.eventType === 'christmas' ? 80 : 50);
+        const tamano = parseFloat(this.getAttribute("tamano")) || (this.eventType === 'christmas' ? 10 : 5);
         const velocidad = parseFloat(this.getAttribute("velocidad")) || 1;
         const opacidad = parseFloat(this.getAttribute("opacidad")) || 0.8;
+        const customLabel = this.getAttribute("custom-label") || promo.custom_label;
 
         // Particle generation based on event type
         let particles = "";
@@ -786,7 +787,7 @@ class MenutechPromoBase extends HTMLElement {
             for (let i = 0; i < cantidad; i++) {
                 const x = Math.random() * 100;
                 const size = tamano + Math.random() * tamano;
-                const dur = (5 + Math.random() * 5) / velocidad;
+                const dur = (5 + Math.random() * 8) / velocidad;
                 const delay = Math.random() * 5;
                 const img = snowImages[i % snowImages.length];
                 particles += `<div class="particle" style="left:${x}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${img}'); opacity:${opacidad};"></div>`;
@@ -818,7 +819,7 @@ class MenutechPromoBase extends HTMLElement {
                     pointer-events: none;
                     z-index: 9999;
                     overflow: ${isPopup ? 'hidden' : 'visible'};
-                    display: block;
+                    display: block !important;
                 }
                 .promo-container { font-family: 'Plus Jakarta Sans', sans-serif; }
 
@@ -851,29 +852,45 @@ class MenutechPromoBase extends HTMLElement {
                 }
 
                 .promo-popup-overlay {
-                    position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+                    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
                     display: flex; align-items: center; justify-content: center; z-index: 10000;
                     animation: fadeIn 0.5s ease;
                     pointer-events: auto;
                 }
                 .promo-popup-card {
-                    position: relative; max-width: 90%; max-height: 90%; border-radius: 30px;
-                    overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.5);
-                    animation: scaleUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+                    position: relative; max-width: 500px; width: 90%; border-radius: 32px;
+                    overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+                    animation: scaleUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                    background: #fff; display: flex; flex-direction: column;
                 }
-                .promo-popup-card img { display: block; max-width: 100%; max-height: 85vh; object-fit: contain; }
+                .promo-popup-card img { display: block; width: 100%; height: auto; max-height: 70vh; object-fit: cover; }
+
+                .cta-container { padding: 25px; text-align: center; background: #fff; }
+                .btn-cta {
+                    display: inline-block; padding: 16px 32px; background: #ff9533; color: #fff;
+                    text-decoration: none; border-radius: 16px; font-weight: 800; font-size: 1rem;
+                    text-transform: uppercase; letter-spacing: 1px; transition: 0.3s;
+                    box-shadow: 0 10px 20px rgba(255, 149, 51, 0.3);
+                }
+                .btn-cta:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(255, 149, 51, 0.4); }
+
                 .close-btn {
-                    position: absolute; top: 20px; right: 20px; width: 40px; height: 40px;
-                    border-radius: 50%; background: white; border: none; cursor: pointer;
-                    display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+                    position: absolute; top: 15px; right: 15px; width: 38px; height: 38px;
+                    border-radius: 50%; background: rgba(255,255,255,0.9); border: none; cursor: pointer;
+                    display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                    z-index: 10; transition: 0.3s;
                 }
+                .close-btn:hover { transform: rotate(90deg) scale(1.1); background: #fff; }
+
                 .promo-section {
-                    width: 100%; max-width: 650px; margin: 40px auto; padding: 0 24px;
+                    width: 100%; max-width: 700px; margin: 60px auto; padding: 0 24px;
                     display: flex; flex-direction: column; align-items: center; box-sizing: border-box;
+                    text-align: center;
                 }
                 .promo-section img {
-                    display: block; width: auto; max-width: 100%; max-height: 80vh;
-                    object-fit: contain; border-radius: 28px; box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+                    display: block; width: 100%; max-width: 600px; height: auto; max-height: 80vh;
+                    object-fit: cover; border-radius: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+                    margin-bottom: 30px;
                 }
 
                 @media (max-width: 768px) {
@@ -893,16 +910,30 @@ class MenutechPromoBase extends HTMLElement {
                 ${particles}
                 <div class="promo-popup-overlay" id="promo-overlay">
                     <div class="promo-popup-card">
-                        <button class="close-btn" id="close-promo">
+                        <button class="close-btn" id="close-promo" title="Close">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;color:#000"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </button>
                         <img src="${promo.image_url}" alt="${this.eventType} promotion">
+                        ${customLabel ? `
+                            <div class="cta-container">
+                                <a href="#" class="btn-cta" id="cta-button">${customLabel}</a>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
             `;
             this.shadowRoot.getElementById('close-promo').onclick = () => {
                 this.shadowRoot.getElementById('promo-overlay').style.display = 'none';
             };
+            if (customLabel) {
+                this.shadowRoot.getElementById('cta-button').onclick = (e) => {
+                    e.preventDefault();
+                    this.shadowRoot.getElementById('promo-overlay').style.display = 'none';
+                    // Optional: add smooth scroll to menu if it exists
+                    const menu = document.querySelector('menutech-platform-orders, menutech-gallery');
+                    if (menu) menu.scrollIntoView({ behavior: 'smooth' });
+                };
+            }
         } else {
             this.shadowRoot.innerHTML = `
                 ${styles}
@@ -910,8 +941,18 @@ class MenutechPromoBase extends HTMLElement {
                 ${particles}
                 <div class="promo-section">
                     <img src="${promo.image_url}" alt="${this.eventType} promotion">
+                    ${customLabel ? `
+                        <a href="#" class="btn-cta" id="cta-button-section">${customLabel}</a>
+                    ` : ''}
                 </div>
             `;
+            if (customLabel) {
+                this.shadowRoot.getElementById('cta-button-section').onclick = (e) => {
+                    e.preventDefault();
+                    const menu = document.querySelector('menutech-platform-orders, menutech-gallery');
+                    if (menu) menu.scrollIntoView({ behavior: 'smooth' });
+                };
+            }
         }
     }
 }
