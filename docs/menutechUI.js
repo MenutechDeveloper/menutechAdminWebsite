@@ -723,7 +723,7 @@ class MenutechPromoBase extends HTMLElement {
         try {
             const { data, error } = await this.supabase
                 .from('promos')
-                .select('*, custom_label')
+                .select('*')
                 .eq('domain', domain)
                 .eq('event_type', this.eventType)
                 .eq('is_active', true)
@@ -774,7 +774,13 @@ class MenutechPromoBase extends HTMLElement {
         const tamano = parseFloat(this.getAttribute("tamano")) || (this.eventType === 'christmas' ? 10 : 5);
         const velocidad = parseFloat(this.getAttribute("velocidad")) || 1;
         const opacidad = parseFloat(this.getAttribute("opacidad")) || 0.8;
-        const customLabel = this.getAttribute("custom-label") || promo.custom_label;
+
+        let customLabel = this.getAttribute("custom-label") || promo.custom_label;
+
+        // Try to extract label from image_url fragment if not already provided
+        if (!customLabel && promo.image_url && promo.image_url.includes('#l=')) {
+            customLabel = decodeURIComponent(promo.image_url.split('#l=')[1].split('&')[0]);
+        }
 
         // Particle generation based on event type
         let particles = "";
@@ -903,6 +909,8 @@ class MenutechPromoBase extends HTMLElement {
             </style>
         `;
 
+        const imageUrl = promo.image_url ? promo.image_url.split('#')[0] : '';
+
         if (promo.display_mode === 'popup') {
             this.shadowRoot.innerHTML = `
                 ${styles}
@@ -913,7 +921,7 @@ class MenutechPromoBase extends HTMLElement {
                         <button class="close-btn" id="close-promo" title="Close">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;color:#000"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </button>
-                        <img src="${promo.image_url}" alt="${this.eventType} promotion">
+                        <img src="${imageUrl}" alt="${this.eventType} promotion">
                         ${customLabel ? `
                             <div class="cta-container">
                                 <a href="#" class="btn-cta" id="cta-button">${customLabel}</a>
@@ -940,7 +948,7 @@ class MenutechPromoBase extends HTMLElement {
                 ${this.eventType === 'halloween' ? '<div class="smoke-layer"></div>' : ''}
                 ${particles}
                 <div class="promo-section">
-                    <img src="${promo.image_url}" alt="${this.eventType} promotion">
+                    <img src="${imageUrl}" alt="${this.eventType} promotion">
                     ${customLabel ? `
                         <a href="#" class="btn-cta" id="cta-button-section">${customLabel}</a>
                     ` : ''}

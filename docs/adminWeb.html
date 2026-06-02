@@ -730,7 +730,11 @@
                 if (activeEvents.length === 0) return showToast("No active promos to copy.", "warning");
 
                 const tags = activeEvents.map(p => {
-                    const labelAttr = p.custom_label ? ` custom-label="${p.custom_label}"` : '';
+                    let label = p.custom_label || '';
+                    if (p.image_url && p.image_url.includes('#l=')) {
+                        label = decodeURIComponent(p.image_url.split('#l=')[1].split('&')[0]);
+                    }
+                    const labelAttr = label ? ` custom-label="${label}"` : '';
                     return `<menutech-${p.event_type} domain="${activeDomain}"${labelAttr}></menutech-${p.event_type}>`;
                 }).join('\n');
                 const snippet = `<!-- Menutech Promotions -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n${tags}`;
@@ -1049,19 +1053,24 @@
             const promo = localPromos.find(p => p.event_type === eventType) || {
                 event_type: eventType,
                 image_url: '',
-                custom_label: '',
                 start_date: '',
                 end_date: '',
                 display_mode: 'popup',
                 is_active: false
             };
 
+            // Extract custom label from URL fragment if present
+            let labelFromUrl = '';
+            if (promo.image_url && promo.image_url.includes('#l=')) {
+                labelFromUrl = decodeURIComponent(promo.image_url.split('#l=')[1].split('&')[0]);
+            }
+
             document.getElementById('promo-modal-title').textContent = `Configure ${eventType.charAt(0).toUpperCase() + eventType.slice(1)} Promo`;
             const preview = document.getElementById('promo-preview');
             const placeholder = document.getElementById('promo-drop-placeholder');
 
             if (promo.image_url) {
-                preview.src = promo.image_url;
+                preview.src = promo.image_url.split('#')[0];
                 preview.classList.remove('hidden');
                 placeholder.classList.add('hidden');
             } else {
@@ -1072,7 +1081,7 @@
 
             document.getElementById('promo-start-date').value = promo.start_date || '';
             document.getElementById('promo-end-date').value = promo.end_date || '';
-            document.getElementById('promo-custom-label').value = promo.custom_label || '';
+            document.getElementById('promo-custom-label').value = labelFromUrl || promo.custom_label || '';
             document.getElementById('promo-display-mode').value = promo.display_mode || 'popup';
             document.getElementById('promo-active').checked = promo.is_active;
 
@@ -1114,12 +1123,17 @@
             btn.textContent = "SAVING...";
             btn.disabled = true;
 
-            const imageUrl = document.getElementById('promo-preview').src;
+            let imageUrl = document.getElementById('promo-preview').src;
             const startDate = document.getElementById('promo-start-date').value;
             const endDate = document.getElementById('promo-end-date').value;
             const customLabel = document.getElementById('promo-custom-label').value;
             const displayMode = document.getElementById('promo-display-mode').value;
             const isActive = document.getElementById('promo-active').checked;
+
+            // Append custom label to URL fragment to avoid schema issues
+            if (customLabel) {
+                imageUrl = `${imageUrl.split('#')[0]}#l=${encodeURIComponent(customLabel)}`;
+            }
 
             try {
                 const { error } = await sb.from('promos').upsert({
@@ -1127,7 +1141,6 @@
                     domain: activeDomain || 'undetermined',
                     event_type: currentPromoEvent,
                     image_url: imageUrl,
-                    custom_label: customLabel,
                     start_date: startDate || null,
                     end_date: endDate || null,
                     display_mode: displayMode,
