@@ -2370,7 +2370,7 @@ class MenutechFooter extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['domain', 'brand', 'logo', 'address', 'phone', 'facebook', 'instagram', 'customcode', 'bgimage', 'schedules', 'legal', 'primarycolor'];
+        return ['domain', 'address', 'phone', 'facebook', 'instagram', 'bgimage', 'legal', 'primarycolor'];
     }
 
     attributeChangedCallback() {
@@ -2413,7 +2413,6 @@ class MenutechFooter extends HTMLElement {
 
         let domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
 
-        // Only fetch if we haven't cached it yet to avoid loops or slow renders
         if (!this._dbConfig && domain && domain !== 'localhost' && !domain.includes('127.0.0.1')) {
             const fullData = await this.fetchFooterData(domain);
             if (fullData && fullData.config) {
@@ -2423,26 +2422,16 @@ class MenutechFooter extends HTMLElement {
 
         const footerConfig = this._dbConfig || {};
 
-        // Data collection (Attributes override DB)
-        const brand = this.getAttribute('brand') || footerConfig.brand;
-        const logo = this.getAttribute('logo') || footerConfig.logo;
         const address = this.getAttribute('address') || footerConfig.address;
         const phone = this.getAttribute('phone') || footerConfig.phone;
         const fb = this.getAttribute('facebook') || footerConfig.fb;
         const ig = this.getAttribute('instagram') || footerConfig.ig;
-        const customCode = this.getAttribute('customcode') || footerConfig.customCode;
         const bgImage = this.getAttribute('bgimage') || footerConfig.bgImage;
-        const schedules = this.getAttribute('schedules') || footerConfig.schedules;
         const legal = this.getAttribute('legal') || footerConfig.legal;
         const primaryColor = this.getAttribute('primarycolor') || footerConfig.primaryColor || '#ff9533';
 
         const currentYear = new Date().getFullYear();
         const yearDisplay = currentYear > 2015 ? `2015 - ${currentYear}` : '2015';
-
-        const formattedSchedules = schedules ? schedules.trim().split('\n').map(line => {
-            const [day, time] = line.split(': ');
-            return time ? `<div class="sched-row"><span class="day">${day}</span><span class="time">${time}</span></div>` : `<div class="sched-row solo">${line}</div>`;
-        }).join('') : '';
 
         const parseLinks = (text) => {
             if (!text) return [];
@@ -2469,9 +2458,9 @@ class MenutechFooter extends HTMLElement {
                 .f-wrapper {
                     background: #0f1113;
                     position: relative;
-                    padding: 40px 24px 25px;
+                    padding: 60px 24px 40px;
                     overflow: hidden;
-                    text-align: left;
+                    text-align: center;
                 }
 
                 .f-overlay {
@@ -2496,93 +2485,44 @@ class MenutechFooter extends HTMLElement {
                     margin: 0 auto;
                     position: relative;
                     z-index: 2;
-                }
-
-                .f-main {
-                    display: grid;
-                    grid-template-columns: 2fr 1fr 1fr;
-                    gap: 60px;
-                    align-items: start;
-                }
-
-                @media (max-width: 1024px) {
-                    .f-main { grid-template-columns: 1.5fr 1fr 1fr; gap: 40px; }
-                }
-
-                @media (max-width: 768px) {
-                    .f-main { grid-template-columns: 1fr; gap: 50px; text-align: center; }
-                    .f-wrapper { padding: 40px 24px 30px; }
-                }
-
-                /* Identity Section */
-                .f-brand-logo {
-                    max-width: 200px;
-                    max-height: 90px;
-                    object-fit: contain;
-                    margin-bottom: 30px;
-                }
-                @media (max-width: 768px) { .f-brand-logo { margin: 0 auto 30px auto; } }
-
-                .f-brand-name {
-                    font-size: 3rem;
-                    font-weight: 900;
-                    line-height: 0.9;
-                    letter-spacing: -2px;
-                    margin: 0 0 30px 0;
-                    color: #fff;
-                    text-transform: uppercase;
-                }
-                @media (max-width: 768px) { .f-brand-name { font-size: 2.5rem; } }
-
-                .f-info {
                     display: flex;
                     flex-direction: column;
-                    gap: 15px;
-                    border-left: 2px solid ${primaryColor};
-                    padding-left: 20px;
-                }
-                @media (max-width: 768px) { .f-info { border-left: none; padding-left: 0; } }
-
-                .f-info p {
-                    font-size: 1rem;
-                    font-weight: 500;
-                    color: rgba(255,255,255,0.7);
-                    margin: 0;
-                    line-height: 1.4;
+                    align-items: center;
+                    gap: 30px;
                 }
 
-                /* Schedule List */
-                .sched-list { display: flex; flex-direction: column; gap: 25px; }
-                .sched-row {
+                .f-row {
                     display: flex;
-                    flex-direction: column;
-                    gap: 5px;
+                    align-items: center;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                    gap: 20px;
+                    width: 100%;
                 }
 
-                .sched-row .day {
-                    font-size: 0.75rem;
-                    font-weight: 800;
-                    color: rgba(255,255,255,0.3);
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                }
-                .sched-row .time {
-                    font-size: 1.3rem;
-                    font-weight: 600;
+                .f-phone {
+                    font-size: 1.4rem;
+                    font-weight: 700;
                     color: #ffffff;
+                    margin: 0;
                 }
 
-                /* Action Column */
+                .f-address {
+                    font-size: 1.1rem;
+                    font-weight: 500;
+                    color: rgba(255,255,255,0.8);
+                    margin: 0;
+                    max-width: 600px;
+                }
+
                 .f-socials {
                     display: flex;
                     gap: 15px;
-                    margin-bottom: 30px;
                 }
-                @media (max-width: 768px) { .f-socials { justify-content: center; } }
 
                 .f-social-btn {
-                    width: 50px;
-                    height: 50px;
+                    width: 44px;
+                    height: 44px;
                     border-radius: 50%;
                     background: rgba(255,255,255,0.05);
                     border: 1px solid rgba(255,255,255,0.1);
@@ -2597,33 +2537,30 @@ class MenutechFooter extends HTMLElement {
                     background: ${primaryColor};
                     border-color: ${primaryColor};
                     color: #fff;
-                    transform: translateY(-5px);
+                    transform: translateY(-3px);
                 }
-                .f-social-btn svg { width: 20px; height: 20px; fill: currentColor; }
+                .f-social-btn svg { width: 18px; height: 18px; fill: currentColor; }
 
-                .f-cta-box {
+                .f-legal {
                     display: flex;
-                    flex-direction: column;
-                    gap: 12px;
+                    gap: 25px;
+                    justify-content: center;
+                    flex-wrap: wrap;
                 }
-
-                /* Bottom Bar */
-                .f-bottom {
-                    margin-top: 40px;
-                    padding-top: 25px;
-                    border-top: 1px solid rgba(255,255,255,0.04);
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
+                .f-legal a {
+                    color: rgba(255,255,255,0.5);
+                    text-decoration: none;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    transition: 0.3s;
                 }
-                @media (max-width: 768px) {
-                    .f-bottom { flex-direction: column; gap: 35px; margin-top: 100px; text-align: center; }
-                }
+                .f-legal a:hover { color: #ffffff; }
 
                 .f-copyright {
-                    font-size: 0.95rem;
+                    font-size: 0.9rem;
                     font-weight: 500;
                     color: rgba(255,255,255,0.3);
+                    margin-top: 10px;
                 }
                 .f-copyright a {
                     color: #ff9533 !important;
@@ -2631,23 +2568,14 @@ class MenutechFooter extends HTMLElement {
                     font-weight: 800;
                 }
 
-                .f-legal {
-                    display: flex;
-                    gap: 35px;
+                @media (max-width: 768px) {
+                    .f-wrapper { padding: 50px 20px 30px; }
+                    .f-phone { font-size: 1.2rem; }
+                    .f-address { font-size: 1rem; }
+                    .f-container { gap: 25px; }
                 }
-                @media (max-width: 480px) { .f-legal { gap: 15px; flex-wrap: wrap; justify-content: center; } }
-                .f-legal a {
-                    color: rgba(255,255,255,0.4);
-                    text-decoration: none;
-                    font-size: 0.9rem;
-                    font-weight: 600;
-                    transition: 0.3s;
-                }
-                .f-legal a:hover { color: #ffffff; }
             </style>
         `;
-
-        const brandHtml = logo ? `<img src="${logo}" alt="${brand}" class="f-brand-logo">` : (brand ? `<h1 class="f-brand-name">${brand}</h1>` : '');
 
         const socialHtml = `
             <div class="f-socials">
@@ -2662,95 +2590,27 @@ class MenutechFooter extends HTMLElement {
                 ${bgImage ? `<div class="f-bg"></div>` : ''}
                 <div class="f-overlay"></div>
                 <div class="f-container">
-                    <div class="f-main">
-                        <div class="f-col">
-                            ${brandHtml}
-                            <div class="f-info">
-                                ${address ? `<p>${address}</p>` : ''}
-                                ${phone ? `<p>${phone}</p>` : ''}
-                            </div>
-                        </div>
-
-                        <div class="f-col">
-                            ${formattedSchedules ? `<div class="sched-list">${formattedSchedules}</div>` : ''}
-                        </div>
-
-                        <div class="f-col">
-                            ${socialHtml}
-                            <div class="f-cta-box">
-                                <slot name="custom-code"></slot>
-                            </div>
-                        </div>
+                    <div class="f-row">
+                        ${phone ? `<p class="f-phone">${phone}</p>` : ''}
+                        ${socialHtml}
                     </div>
 
-                    <div class="f-bottom">
-                        <div class="f-copyright">&copy; ${yearDisplay} Powered by <a href="https://menutech.xyz/" target="_blank">Menutech</a></div>
-                        ${legalLinks.length > 0 ? `
-                        <div class="f-legal">
-                            ${legalLinks.map(link => `<a href="${link.url}">${link.label}</a>`).join('')}
+                    ${address ? `<div class="f-row"><p class="f-address">${address}</p></div>` : ''}
+
+                    ${legalLinks.length > 0 ? `
+                        <div class="f-row">
+                            <div class="f-legal">
+                                ${legalLinks.map(link => `<a href="${link.url}">${link.label}</a>`).join('')}
+                            </div>
                         </div>
-                        ` : ''}
+                    ` : ''}
+
+                    <div class="f-row">
+                        <div class="f-copyright">&copy; ${yearDisplay} Powered by <a href="https://menutech.xyz/" target="_blank">Menutech</a></div>
                     </div>
                 </div>
             </div>
         `;
-
-        // Clean up previous custom code elements from Light DOM
-        Array.from(this.querySelectorAll('[slot="custom-code"]')).forEach(el => el.remove());
-
-        // Handle Custom Code and Scripts execution
-        if (customCode) {
-            const ctaBox = this.shadowRoot.querySelector('.f-cta-box');
-            if (ctaBox) ctaBox.style.display = 'flex';
-
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = customCode;
-
-            const scripts = [];
-            const elements = [];
-            Array.from(tempDiv.childNodes).forEach(node => {
-                if (node.tagName === 'SCRIPT') {
-                    scripts.push(node);
-                } else if (node.nodeType === 1 || node.nodeType === 3) {
-                    elements.push(node);
-                }
-            });
-
-            // Add elements to Light DOM so they can access global styles
-            elements.forEach(node => {
-                if (node.nodeType === 1) node.setAttribute('slot', 'custom-code');
-                // For text nodes, we wrap them or just append if possible.
-                // Better to wrap in a span if it's pure text to allow slotting
-                if (node.nodeType === 3 && node.textContent.trim()) {
-                    const span = document.createElement('span');
-                    span.setAttribute('slot', 'custom-code');
-                    span.textContent = node.textContent;
-                    this.appendChild(span);
-                } else if (node.nodeType === 1) {
-                    this.appendChild(node);
-                }
-            });
-
-            // Execute scripts in the main document scope
-            scripts.forEach(oldScript => {
-                const newScript = document.createElement('script');
-                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                newScript.textContent = oldScript.textContent;
-                const src = newScript.getAttribute('src');
-                if (src && document.querySelector(`script[src="${src}"]`)) return;
-                document.head.appendChild(newScript);
-            });
-
-            // Force Gloriafood buttons to bind if the library is present
-            setTimeout(() => {
-                if (window.glfBindButtons) {
-                    window.glfBindButtons();
-                }
-            }, 1500);
-        } else {
-            const ctaBox = this.shadowRoot.querySelector('.f-cta-box');
-            if (ctaBox) ctaBox.style.display = 'none';
-        }
 
         this._rendering = false;
     }
