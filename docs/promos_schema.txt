@@ -4,8 +4,7 @@ CREATE TABLE public.promos (
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     domain TEXT NOT NULL,
     event_type TEXT NOT NULL, -- 'christmas', 'halloween', 'valentine', 'president'
-    image_url TEXT,
-    custom_label TEXT,
+    image_url TEXT, -- NOTE: Custom labels are stored as a URL fragment #l=LabelText for backward compatibility
     start_date DATE,
     end_date DATE,
     display_mode TEXT DEFAULT 'popup', -- 'popup' or 'section'
