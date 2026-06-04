@@ -1069,8 +1069,9 @@
                     if (ev === 'president') {
                         isConfigured = promo.is_active;
                     } else {
-                        // For Christmas, Halloween, and Valentine's: active OR has dates
-                        isConfigured = promo.is_active || (promo.start_date && promo.end_date);
+                        // Color if active, or has dates, or has a custom label
+                        const hasLabel = promo.custom_label || (promo.image_url && promo.image_url.includes('#l='));
+                        isConfigured = promo.is_active || (promo.start_date && promo.end_date) || hasLabel;
                     }
                 }
 
