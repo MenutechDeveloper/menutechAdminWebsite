@@ -800,19 +800,26 @@ class MenutechPromoBase extends HTMLElement {
                 particles += `<div class="particle" style="left:${x}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; --drift:${drift}px; background-image:url('${img}'); opacity:${opacidad};"></div>`;
             }
         } else if (this.eventType === 'halloween') {
-            const hwImages = [
-                "https://menutechdeveloper.github.io/libreria/hw1.png",
-                "https://menutechdeveloper.github.io/libreria/hw2.png",
-                "https://menutechdeveloper.github.io/libreria/hw3.png"
-            ];
+            const pumpkinSVG = `data:image/svg+xml;base64,${btoa('<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 20C30 20 15 35 15 55C15 75 30 90 50 90C70 90 85 75 85 55C85 35 70 20 50 20Z" fill="#ff6600"/><path d="M45 10L55 10L52 25L48 25Z" fill="#4a3000"/><path d="M35 45L45 50L35 55Z" fill="#ffff00"/><path d="M65 45L55 50L65 55Z" fill="#ffff00"/><path d="M30 65C40 75 60 75 70 65C60 70 40 70 30 65Z" fill="#4a3000"/></svg>')}`;
             for (let i = 0; i < cantidad; i++) {
                 const x = Math.random() * 100;
                 const y = Math.random() * 100;
                 const size = (tamano * 2) + Math.random() * (tamano * 2);
                 const dur = (4 + Math.random() * 4) / velocidad;
                 const delay = Math.random() * 3;
-                const img = hwImages[i % hwImages.length];
-                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${img}'); opacity:0;"></div>`;
+                const maxOp = 0.4 + Math.random() * opacidad;
+                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${pumpkinSVG}'); opacity:0; --max-op:${maxOp};"></div>`;
+            }
+        } else if (this.eventType === 'valentine') {
+            const heartSVG = `data:image/svg+xml;base64,${btoa('<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 85C50 85 10 60 10 35C10 15 30 10 50 30C70 10 90 15 90 35C90 60 50 85 50 85Z" fill="#ff0000"/></svg>')}`;
+            for (let i = 0; i < cantidad; i++) {
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const size = tamano + Math.random() * tamano;
+                const dur = (3 + Math.random() * 4) / velocidad;
+                const delay = Math.random() * 5;
+                const maxOp = 0.3 + Math.random() * opacidad;
+                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${heartSVG}'); opacity:0; --max-op:${maxOp};"></div>`;
             }
         }
 
@@ -852,7 +859,7 @@ class MenutechPromoBase extends HTMLElement {
                 }
                 @keyframes appearDisappear {
                     0%, 100% { opacity: 0; transform: scale(0.5); }
-                    50% { opacity: 0.8; transform: scale(1.1); }
+                    50% { opacity: var(--max-op, 0.8); transform: scale(1.1); }
                 }
 
                 /* Halloween Smoke */
