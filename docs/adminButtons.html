@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Custom Button Editor — Restaurantes</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
+<title>Menutech Buttons — Custom Editor</title>
+<link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+<link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
 <script src="https://menutechdeveloper.github.io/libreria/menutechlibrary.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
@@ -104,9 +105,12 @@ input[type=checkbox]:checked + .switch::after { transform: translateX(20px); }
 .pair.anim-enabled .btn .btn-text { opacity: 0; margin-left: 0; }
 .pair.anim-enabled .btn:hover .btn-text { opacity: 1; margin-left: 6px; }
 .icon {
-    width: 22px; height: 22px; flex-shrink: 0;
+    width: 26px; height: 26px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     transition: transform .32s ease;
+    background: rgba(0,0,0,0.1);
+    border-radius: 6px;
+    padding: 2px;
 }
 .icon svg { width: 100%; height: 100%; }
 
@@ -171,23 +175,92 @@ body.dark-mode .design-3 .btn:hover { background: rgba(255,255,255,0.05); }
     box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 9999;
 }
 .copy-popup.show { opacity: 1; transform: translateY(0); }
+
+#user-display-pill #user-name, #user-display-pill #user-role-label { color: var(--text); transition: color 0.3s; }
+#user-display-pill.admin-glow {
+    background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%) !important;
+    background-size: 400% 400% !important; animation: foil-shine 25s ease infinite; border: none !important;
+}
+#user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
+
+#user-display-pill.dev-glow {
+    background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%) !important;
+    background-size: 400% 400% !important; animation: foil-shine 25s ease infinite; border: none !important;
+}
+#user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
+
+#user-display-pill.owner-glow {
+    background: #000 !important;
+    background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 20%, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 80%, rgba(255,255,255,0.1) 100%) !important;
+    background-size: 400% 400% !important; animation: foil-shine 25s ease infinite; border: none !important;
+}
+#user-display-pill.owner-glow #user-name, #user-display-pill.owner-glow #user-role-label { color: #fff !important; }
+
+@keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+.pill-menu {
+    position: absolute; top: calc(100% + 12px); right: 0; background: var(--card);
+    border: 1px solid var(--border); border-radius: 24px; padding: 12px;
+    min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2); opacity: 0;
+    transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
+}
+#user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.pill-menu-item {
+    padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600;
+    color: var(--text); display: flex; align-items: center; gap: 10px; cursor: pointer;
+    transition: 0.2s; text-decoration: none;
+}
+.pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
+.pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+
+#top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; }
+.btn-panel-top { background: var(--orange); color: #000; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; }
+.btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); }
+
+.theme-switch { width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+.theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
+.theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+.sun-icon { color: var(--orange); }
+.moon-icon { color: #8b5cf6; display: none; }
+body.dark-mode .sun-icon { display: none; }
+body.dark-mode .moon-icon { display: block; }
+
+#user-display-pill { background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border); display: none; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); min-width: 220px; justify-content: flex-start; }
+#user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); }
+.pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
 </style>
 </head>
 <body>
-<div class="copy-popup" id="copypopup">Código copiado</div>
+<div class="copy-popup" id="copypopup">Code copied</div>
 
-<div id="top-nav" style="position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000;">
-    <button class="btn-panel-top" onclick="location.href='index.html'" style="background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase;">PANEL</button>
+<div id="top-nav">
+    <div id="nav-left"><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div class="theme-switch" id="theme-toggle">
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </div>
+        <div id="user-display-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <div class="pill-info">
+                <div id="user-name" style="font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif;">&nbsp;</div>
+                <div id="user-role-label" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">&nbsp;</div>
+            </div>
+            <div class="pill-menu">
+                <a href="index.html" class="pill-menu-item">Home</a>
+                <div class="pill-menu-item danger">Logout</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="container">
-  <h1 style="margin-top: 60px;">Menutech Buttons</h1>
-  <p class="lead">Personaliza y copia el código de tus botones.</p>
+  <img src="https://menutech.services/assets/img/logomt.png" style="width: 100%; max-width: 320px; height: auto; margin: 60px auto 40px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15));" alt="Menutech Logo">
   <div class="design-grid">
 
     <div class="card design-1">
       <div class="card-header">
-        <div class="card-title">Moderno</div>
+        <div class="card-title">Modern</div>
         <div class="controls"><label><input type="checkbox" class="toggle-anim" data-pair="pair-1" checked><span class="switch"></span></label></div>
       </div>
       <div class="pair pair-1 anim-enabled">
@@ -201,21 +274,21 @@ body.dark-mode .design-3 .btn:hover { background: rgba(255,255,255,0.05); }
       <div class="config-panel">
         <strong>Menutech Color</strong><br>
         <input type="color" id="d1-ic" value="#ffffff"><br><br>
-        <strong>Colores</strong><br>
-        Orden: <input type="color" id="d1-o1" value="#e63946"> <input type="color" id="d1-o2" value="#ff6b6b">
-        Texto: <input type="color" id="d1-text1" value="#ffffff"><br>
-        Reserva: <input type="color" id="d1-r1" value="#009688"> <input type="color" id="d1-r2" value="#26a69a">
-        Texto: <input type="color" id="d1-text2" value="#ffffff"><br><br>
-        <strong>Enlaces</strong><br>
+        <strong>Colors</strong><br>
+        Order: <input type="color" id="d1-o1" value="#e63946"> <input type="color" id="d1-o2" value="#ff6b6b">
+        Text: <input type="color" id="d1-text1" value="#ffffff"><br>
+        Reservation: <input type="color" id="d1-r1" value="#009688"> <input type="color" id="d1-r2" value="#26a69a">
+        Text: <input type="color" id="d1-text2" value="#ffffff"><br><br>
+        <strong>Links</strong><br>
         CUID: <input type="text" id="d1-cuid" value="52230bb2-0d10-491a-80a6-3c5603e87152">
         RUID: <input type="text" id="d1-ruid" value="010d211a-aff0-4aa2-b4d0-739fce78437a">
-        <button class="copy-btn" data-target="1">Copiar Código</button>
+        <button class="copy-btn" data-target="1">Copy Code</button>
       </div>
     </div>
 
     <div class="card design-2">
       <div class="card-header">
-        <div class="card-title">Clásico</div>
+        <div class="card-title">Classic</div>
         <div class="controls"><label><input type="checkbox" class="toggle-anim" data-pair="pair-2" checked><span class="switch"></span></label></div>
       </div>
       <div class="pair pair-2 anim-enabled">
@@ -229,15 +302,15 @@ body.dark-mode .design-3 .btn:hover { background: rgba(255,255,255,0.05); }
       <div class="config-panel">
         <strong>Menutech Color</strong><br>
         <input type="color" id="d2-ic" value="#ffffff"><br><br>
-        <strong>Colores</strong><br>
-        Orden: <input type="color" id="d2-o" value="#f2a04a">
-        Texto: <input type="color" id="d2-text1" value="#1b1b1b"><br>
-        Reserva: <input type="color" id="d2-r" value="#2f4854">
-        Texto: <input type="color" id="d2-text2" value="#ffffff"><br><br>
-        <strong>Enlaces</strong><br>
+        <strong>Colors</strong><br>
+        Order: <input type="color" id="d2-o" value="#f2a04a">
+        Text: <input type="color" id="d2-text1" value="#1b1b1b"><br>
+        Reservation: <input type="color" id="d2-r" value="#2f4854">
+        Text: <input type="color" id="d2-text2" value="#ffffff"><br><br>
+        <strong>Links</strong><br>
         CUID: <input type="text" id="d2-cuid" value="52230bb2-0d10-491a-80a6-3c5603e87152">
         RUID: <input type="text" id="d2-ruid" value="010d211a-aff0-4aa2-b4d0-739fce78437a">
-        <button class="copy-btn" data-target="2">Copiar Código</button>
+        <button class="copy-btn" data-target="2">Copy Code</button>
       </div>
     </div>
 
@@ -257,20 +330,71 @@ body.dark-mode .design-3 .btn:hover { background: rgba(255,255,255,0.05); }
       <div class="config-panel">
         <strong>Menutech Color</strong><br>
         <input type="color" id="d3-ic" value="#ffffff"><br><br>
-        <strong>Colores</strong><br>
-        Borde Orden: <input type="color" id="d3-o" value="#ffd166">
-        Texto Orden: <input type="color" id="d3-text1" value="#ffffff"><br>
-        Borde Reserva: <input type="color" id="d3-r" value="#8ecae6">
-        Texto Reserva: <input type="color" id="d3-text2" value="#ffffff"><br><br>
-        <strong>Enlaces</strong><br>
+        <strong>Colors</strong><br>
+        Order: <input type="color" id="d3-o" value="#ffd166">
+        Text: <input type="color" id="d3-text1" value="#ffffff"><br>
+        Reservation: <input type="color" id="d3-r" value="#8ecae6">
+        Text: <input type="color" id="d3-text2" value="#ffffff"><br><br>
+        <strong>Links</strong><br>
         CUID: <input type="text" id="d3-cuid" value="52230bb2-0d10-491a-80a6-3c5603e87152">
         RUID: <input type="text" id="d3-ruid" value="010d211a-aff0-4aa2-b4d0-739fce78437a">
-        <button class="copy-btn" data-target="3">Copiar Código</button>
+        <button class="copy-btn" data-target="3">Copy Code</button>
       </div>
     </div>
 
   </div>
 </div>
+
+<script type="module">
+    import { MT_CONFIG } from './config.js';
+    import { supabase as sb } from './supabase.js';
+    let user = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        initTheme();
+        checkSession();
+    });
+
+    async function checkSession() {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session) {
+            user = session.user;
+            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            const pill = document.getElementById('user-display-pill');
+            const nameEl = document.getElementById('user-name'), roleEl = document.getElementById('user-role-label');
+
+            if (profile) {
+                const role = (profile.role || 'user').trim().toUpperCase();
+                nameEl.textContent = profile.username || user.email.split('@')[0];
+                roleEl.textContent = profile.role || 'user';
+
+                if (role === 'ADMIN') pill.classList.add('admin-glow');
+                else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
+                else pill.classList.add('owner-glow');
+            }
+            pill.style.display = 'flex';
+        } else {
+            window.location.href = 'index.html';
+        }
+    }
+
+    function initTheme() {
+        const toggle = document.getElementById('theme-toggle');
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme === 'dark') document.body.classList.add('dark-mode');
+        toggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        });
+    }
+
+    window.logout = async () => { await sb.auth.signOut(); location.href = 'index.html'; };
+
+    const pill = document.getElementById('user-display-pill');
+    pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
+    document.addEventListener('click', () => pill.classList.remove('active'));
+    document.querySelector('.pill-menu-item.danger').onclick = (e) => { e.stopPropagation(); window.logout(); };
+</script>
 
 <script src="botones.js" defer></script>
 <script>
