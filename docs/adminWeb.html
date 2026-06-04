@@ -628,9 +628,10 @@
                 <span style="font-size: 0.75rem; font-weight: 700; color: var(--orange); text-transform: uppercase;">Active Promo</span>
             </label>
 
-            <div class="modal-actions">
-                <button class="btn-modal btn-modal-cancel" onclick="closePromoModal()">Cancel</button>
-                <button class="btn-modal btn-modal-save" id="btn-save-promo">Save Promo</button>
+            <div class="modal-actions" style="flex-wrap: wrap;">
+                <button class="btn-modal btn-modal-cancel" style="flex: 1 1 100px;" onclick="closePromoModal()">Cancel</button>
+                <button class="btn-modal btn-modal-cancel" style="flex: 1 1 100px; border-color: var(--orange); color: var(--orange);" onclick="resetPromo()">Reset Config</button>
+                <button class="btn-modal btn-modal-save" style="flex: 1 1 200px;" id="btn-save-promo">Save Promo</button>
             </div>
         </div>
     </div>
@@ -1212,6 +1213,14 @@
         window.closePromoModal = () => {
             document.getElementById('promo-modal').classList.remove('active');
             currentPromoEvent = null;
+        };
+
+        window.resetPromo = () => {
+            document.getElementById('promo-start-date').value = '';
+            document.getElementById('promo-end-date').value = '';
+            document.getElementById('promo-custom-label').value = '';
+            document.getElementById('promo-active').checked = false;
+            showToast("Configuration cleared. Re-save to apply.", "warning");
         };
 
         async function handlePromoFileUpload(file) {

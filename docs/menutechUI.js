@@ -797,22 +797,20 @@ class MenutechPromoBase extends HTMLElement {
             ];
             for (let i = 0; i < cantidad; i++) {
                 const x = Math.random() * 100;
-                const y = Math.random() * 100;
                 const size = tamano + (Math.random() * tamano);
-                const dur = (6 + Math.random() * 8) / velocidad;
-                const delay = Math.random() * 15;
+                const dur = (8 + Math.random() * 12) / velocidad;
+                const delay = Math.random() * 20;
                 const img = snowImages[i % snowImages.length];
-                const maxOp = 0.5 + Math.random() * opacidad;
-                const startScale = 0.3 + Math.random() * 0.4;
-                const endScale = 0.9 + Math.random() * 0.4;
-                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${img}'); opacity:0; --max-op:${maxOp}; --start-scale:${startScale}; --end-scale:${endScale};"></div>`;
+                const drift = (Math.random() * 60 - 30);
+                const op = 0.4 + Math.random() * opacidad;
+                particles += `<div class="particle" style="left:${x}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; --drift:${drift}px; background-image:url('${img}'); opacity:${op};"></div>`;
             }
         } else if (this.eventType === 'halloween') {
             const pumpkinSVG = `data:image/svg+xml;base64,${btoa('<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 20C30 20 15 35 15 55C15 75 30 90 50 90C70 90 85 75 85 55C85 35 70 20 50 20Z" fill="#ff6600"/><path d="M45 10L55 10L52 25L48 25Z" fill="#4a3000"/><path d="M35 45L45 50L35 55Z" fill="#ffff00"/><path d="M65 45L55 50L65 55Z" fill="#ffff00"/><path d="M30 65C40 75 60 75 70 65C60 70 40 70 30 65Z" fill="#4a3000"/></svg>')}`;
             for (let i = 0; i < cantidad; i++) {
                 const x = Math.random() * 100;
                 const y = Math.random() * 100;
-                const size = (tamano * 1.5) + Math.random() * (tamano * 2);
+                const size = (tamano * 3) + Math.random() * (tamano * 4);
                 const dur = (5 + Math.random() * 8) / velocidad;
                 const delay = Math.random() * 12;
                 const maxOp = 0.4 + Math.random() * opacidad;
