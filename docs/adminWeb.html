@@ -304,6 +304,42 @@
             opacity: 0.8;
             transition: all 0.4s;
             filter: grayscale(1);
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+        .promo-slot svg {
+            pointer-events: none;
+        }
+
+        .promo-carousel-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .drag-indicator {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: var(--orange);
+            font-weight: 800;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            pointer-events: none;
+            z-index: 10;
+            animation: drag-blink 1.5s infinite;
+            background: var(--card);
+            padding: 12px;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        @keyframes drag-blink {
+            0%, 100% { opacity: 1; transform: translateY(-50%) translateX(0); }
+            50% { opacity: 0.3; transform: translateY(-50%) translateX(10px); }
         }
         .promo-slot.active img {
             filter: grayscale(0);
@@ -454,27 +490,33 @@
                         <h2>Event Promotions</h2>
                         <button id="btn-copy-promo" class="btn-copy hidden" style="width: auto; margin-top: 0; padding: 12px 24px;">COPY PROMO CODE</button>
                     </div>
-                    <div class="promo-grid">
-                        <div class="promo-slot" id="slot-christmas" onclick="openPromoModal('christmas')">
-                            <img src="./assets/img/navidad.png" alt="Christmas">
+                    <div class="promo-carousel-wrapper">
+                        <div class="drag-indicator" id="drag-indicator">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            <span>DRAG</span>
                         </div>
-                        <div class="promo-slot" id="slot-halloween" onclick="openPromoModal('halloween')">
-                            <img src="./assets/img/halloween.png" alt="Halloween">
-                        </div>
-                        <div class="promo-slot" id="slot-valentine" onclick="openPromoModal('valentine')">
-                            <img src="./assets/img/valentine.png" alt="Valentine">
-                        </div>
-                        <div class="promo-slot" id="slot-president" onclick="openPromoModal('president')">
-                            <span>President's Day</span>
-                        </div>
-                        <div class="promo-slot" id="slot-newyear" onclick="openPromoModal('newyear')">
-                            <span>New Year's Day</span>
-                        </div>
-                        <div class="promo-slot" id="slot-independence" onclick="openPromoModal('independence')">
-                            <span>Independence Day</span>
-                        </div>
-                        <div class="promo-slot" id="slot-thanksgiving" onclick="openPromoModal('thanksgiving')">
-                            <span>Thanksgiving</span>
+                        <div class="promo-grid">
+                            <div class="promo-slot" id="slot-christmas" onclick="openPromoModal('christmas')">
+                                <img src="./assets/img/navidad.png" alt="Christmas">
+                            </div>
+                            <div class="promo-slot" id="slot-halloween" onclick="openPromoModal('halloween')">
+                                <img src="./assets/img/halloween.png" alt="Halloween">
+                            </div>
+                            <div class="promo-slot" id="slot-valentine" onclick="openPromoModal('valentine')">
+                                <img src="./assets/img/valentine.png" alt="Valentine">
+                            </div>
+                            <div class="promo-slot" id="slot-president" onclick="openPromoModal('president')">
+                                <span>President's Day</span>
+                            </div>
+                            <div class="promo-slot" id="slot-newyear" onclick="openPromoModal('newyear')">
+                                <span>New Year's Day</span>
+                            </div>
+                            <div class="promo-slot" id="slot-independence" onclick="openPromoModal('independence')">
+                                <span>Independence Day</span>
+                            </div>
+                            <div class="promo-slot" id="slot-thanksgiving" onclick="openPromoModal('thanksgiving')">
+                                <span>Thanksgiving</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -756,37 +798,57 @@
         function initEvents() {
             // Drag-to-scroll for Event Promotions
             const promoGrid = document.querySelector('.promo-grid');
+            const dragIndicator = document.getElementById('drag-indicator');
             let isDown = false;
             let startX;
             let scrollLeft;
             let isDragging = false;
 
-            promoGrid.addEventListener('mousedown', (e) => {
+            const hideIndicator = () => {
+                if (dragIndicator) {
+                    dragIndicator.style.display = 'none';
+                    promoGrid.removeEventListener('scroll', hideIndicator);
+                }
+            };
+            promoGrid.addEventListener('scroll', hideIndicator, { once: true });
+
+            const startDrag = (e) => {
                 isDown = true;
                 promoGrid.classList.add('active');
-                startX = e.pageX - promoGrid.offsetLeft;
+                const pageX = e.pageX || (e.touches && e.touches[0].pageX);
+                startX = pageX - promoGrid.offsetLeft;
                 scrollLeft = promoGrid.scrollLeft;
                 isDragging = false;
-            });
+                hideIndicator();
+            };
 
-            promoGrid.addEventListener('mouseleave', () => {
+            const stopDrag = () => {
                 isDown = false;
                 promoGrid.classList.remove('active');
-            });
+            };
 
-            promoGrid.addEventListener('mouseup', () => {
-                isDown = false;
-                promoGrid.classList.remove('active');
-            });
-
-            promoGrid.addEventListener('mousemove', (e) => {
+            const moveDrag = (e) => {
                 if (!isDown) return;
-                e.preventDefault();
-                const x = e.pageX - promoGrid.offsetLeft;
+                const pageX = e.pageX || (e.touches && e.touches[0].pageX);
+                const x = pageX - promoGrid.offsetLeft;
                 const walk = (x - startX) * 2;
-                if (Math.abs(walk) > 5) isDragging = true;
+                if (Math.abs(walk) > 5) {
+                    isDragging = true;
+                    e.preventDefault();
+                }
                 promoGrid.scrollLeft = scrollLeft - walk;
-            });
+            };
+
+            promoGrid.addEventListener('mousedown', startDrag);
+            promoGrid.addEventListener('touchstart', startDrag, { passive: true });
+
+            promoGrid.addEventListener('mouseleave', stopDrag);
+            promoGrid.addEventListener('mouseup', stopDrag);
+            promoGrid.addEventListener('touchend', stopDrag);
+            promoGrid.addEventListener('touchcancel', stopDrag);
+
+            promoGrid.addEventListener('mousemove', moveDrag);
+            promoGrid.addEventListener('touchmove', moveDrag, { passive: false });
 
             // Prevent opening modal if dragging
             promoGrid.addEventListener('click', (e) => {
