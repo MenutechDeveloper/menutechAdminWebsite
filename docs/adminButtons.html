@@ -1,0 +1,309 @@
+<!doctype html> 
+<html lang="es"> 
+<head> 
+<meta charset="utf-8" /> 
+<meta name="viewport" content="width=device-width,initial-scale=1" /> 
+<title>Custom Button Editor — Restaurantes</title> 
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet"> 
+<script src="https://menutechdeveloper.github.io/libreria/menutechlibrary.js"></script> 
+<style> 
+:root{ 
+  --bg-page:#0f0f10; 
+  --card:#151515; 
+  --muted:#9aa0a6; 
+  --accent:#ff8c00; 
+} 
+*{box-sizing:border-box} 
+body{ 
+  margin:0; 
+  font-family:'Poppins',sans-serif; 
+  background:var(--bg-page); 
+  color:#fff; 
+  padding:36px; 
+} 
+.container{max-width:1100px;margin:0 auto;} 
+h1{text-align:center;margin:0 0 22px;font-size:22px;} 
+p.lead{text-align:center;color:var(--muted);margin:6px 0 28px;} 
+.design-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;} 
+.card{ 
+  background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01)); 
+  border-radius:12px;padding:16px; 
+  border:1px solid rgba(255,255,255,0.03); 
+  box-shadow:0 6px 20px rgba(0,0,0,0.6); 
+} 
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;} 
+.card-title{font-weight:600;font-size:15px;} 
+.controls{display:flex;gap:8px;align-items:center;} 
+.controls label{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted);cursor:pointer;} 
+.switch{width:40px;height:22px;background:#222;border-radius:20px;position:relative;border:1px solid rgba(255,255,255,0.04);} 
+.switch::after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:all .22s ease;} 
+input[type=checkbox]{display:none} 
+input[type=checkbox]:checked + .switch{background:linear-gradient(90deg,#2ecc71,#06d6a0);} 
+input[type=checkbox]:checked + .switch::after{transform:translateX(18px);} 
+.pair{display:flex;flex-direction:row;align-items:center;gap:12px;padding-top:6px; flex-wrap: wrap;}
+@media (max-width: 768px) {
+  .pair {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+.btn{ 
+  display:inline-flex;align-items:center;gap:12px;white-space:nowrap; 
+  border:none;text-decoration:none;font-weight:600;cursor:pointer; 
+  overflow:hidden;border-radius:10px;transition:all .36s cubic-bezier(.2,.9,.2,1); 
+  box-shadow:0 6px 18px rgba(0,0,0,0.45); 
+  padding:12px 16px;min-height:44px; 
+} 
+.pair.anim-enabled .btn{width:52px;padding-left:12px;padding-right:12px;} 
+.pair:not(.anim-enabled) .btn{width:auto;} 
+.btn .btn-text{opacity:1;transition:opacity .32s ease,margin .32s ease;margin-left:0;} 
+.pair.anim-enabled .btn .btn-text{opacity:0;margin-left:0;} 
+.pair.anim-enabled .btn:hover .btn-text{opacity:1;margin-left:6px;} 
+.icon{ 
+  width:22px;height:22px;flex-shrink:0; 
+  display:flex;align-items:center;justify-content:center; 
+  transition:transform .32s ease; 
+} 
+.icon svg{width:100%;height:100%;} 
+ 
+.pair.anim-enabled .btn:hover .icon{transform:translateX(6px);} 
+ 
+/* design 1 */ 
+.design-1 .btn-order{border-radius:26px;background:linear-gradient(135deg,#e63946,#ff6b6b);color:#fff;} 
+.design-1 .btn-reserve{border-radius:26px;background:linear-gradient(135deg,#009688,#26a69a);color:#fff;} 
+.design-1 .pair.anim-enabled .btn:hover{width:auto;padding-right:22px;} 
+ 
+/* design 2 */ 
+.design-2 .btn-order{background:#f2a04a;color:#1b1b1b;border-radius:6px;} 
+.design-2 .btn-reserve{background:#2f4854;color:#fff;border-radius:6px;} 
+.design-2 .pair.anim-enabled .btn:hover{width:auto;padding-right:22px;transform:translateY(-3px);} 
+ 
+/* design 3 */ 
+.design-3 .btn{background:transparent;color:#fff;border-radius:8px;border:2px solid rgba(255,255,255,0.3);box-shadow:none;padding:10px 14px;} 
+.design-3 .btn-order{--accent:#ffd166;border-color:rgba(255,209,102,0.5);} 
+.design-3 .btn-reserve{--accent:#8ecae6;border-color:rgba(142,202,230,0.5);} 
+.design-3 .btn:hover{background:rgba(255,255,255,0.05);transform:translateY(-4px);border-color:rgba(255,255,255,0.6);} 
+.design-3 .pair.anim-enabled .btn:hover{width:auto;padding-right:18px;} 
+ 
+.note{color:var(--muted);font-size:13px;margin-top:10px;} 
+.config-panel{margin-top:10px;padding:8px;background:#1c1c1c;border-radius:8px;font-size:13px;} 
+.config-panel label{display:flex;align-items:center;gap:6px;margin-bottom:6px;} 
+.config-panel input[type=color]{width:28px;height:28px;border:none;border-radius:4px;background:transparent;cursor:pointer;} 
+.config-panel input[type=text]{width:100%;padding:4px 8px;border-radius:6px;border:none;background:#111;color:#ddd;font-size:12px;} 
+.copy-btn{margin-top:8px;background:var(--accent);border:none;padding:8px 12px;border-radius:6px;cursor:pointer;color:#fff;font-weight:600;} 
+.copy-btn:hover{background:#ffa733;} 
+@media(max-width:980px){.design-grid{grid-template-columns:1fr;}} 
+ 
+/* popup */ 
+.copy-popup{ 
+  position:fixed;top:20px;right:20px;background:#06d6a0; 
+  color:#000;padding:12px 20px;border-radius:8px;font-weight:600; 
+  opacity:0;transform:translateY(-20px);transition:.35s; 
+  box-shadow:0 4px 14px rgba(0,0,0,0.4);z-index:9999; 
+} 
+.copy-popup.show{opacity:1;transform:translateY(0);} 
+</style> 
+</head> 
+<body> 
+<div class="copy-popup" id="copypopup">Código copiado</div> 
+ 
+<div class="container"> 
+  <h1></br></br></h1> 
+  <p class="lead"></br></br></p> 
+  <div class="design-grid"> 
+ 
+    <div class="card design-1"> 
+      <div class="card-header"> 
+        <div class="card-title">Moderno</div> 
+        <div class="controls"><label><input type="checkbox" class="toggle-anim" data-pair="pair-1" checked><span class="switch"></span></label></div> 
+      </div> 
+      <div class="pair pair-1 anim-enabled"> 
+        <span class="glf-button btn btn-order" data-glf-cuid="52230bb2-0d10-491a-80a6-3c5603e87152" data-glf-ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"> 
+          <i class="icon menutech-mago" id="d1-icon1"></i><span class="btn-text">See MENU & Order Now!</span> 
+        </span> 
+        <span class="glf-button btn btn-reserve reservation" data-glf-cuid="52230bb2-0d10-491a-80a6-3c5603e87152" data-glf-ruid="010d211a-aff0-4aa2-b4d0-739fce78437a" data-glf-reservation="true"> 
+          <i class="icon menutech-mago" id="d1-icon2"></i><span class="btn-text">Table Reservation</span> 
+        </span> 
+      </div> 
+      <div class="config-panel"> 
+        <strong>Menutech Color</strong><br> 
+        <input type="color" id="d1-ic" value="#ffffff"><br><br> 
+        <strong>Colores</strong><br> 
+        Orden: <input type="color" id="d1-o1" value="#e63946"> <input type="color" id="d1-o2" value="#ff6b6b"> 
+        Texto: <input type="color" id="d1-text1" value="#ffffff"><br> 
+        Reserva: <input type="color" id="d1-r1" value="#009688"> <input type="color" id="d1-r2" value="#26a69a"> 
+        Texto: <input type="color" id="d1-text2" value="#ffffff"><br><br> 
+        <strong>Enlaces</strong><br> 
+        CUID: <input type="text" id="d1-cuid" value="52230bb2-0d10-491a-80a6-3c5603e87152"> 
+        RUID: <input type="text" id="d1-ruid" value="010d211a-aff0-4aa2-b4d0-739fce78437a"> 
+        <button class="copy-btn" data-target="1">Copiar Código</button> 
+      </div> 
+    </div> 
+ 
+    <div class="card design-2"> 
+      <div class="card-header"> 
+        <div class="card-title">Clásico</div> 
+        <div class="controls"><label><input type="checkbox" class="toggle-anim" data-pair="pair-2" checked><span class="switch"></span></label></div> 
+      </div> 
+      <div class="pair pair-2 anim-enabled"> 
+        <span class="glf-button btn btn-order" data-glf-cuid="52230bb2-0d10-491a-80a6-3c5603e87152" data-glf-ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"> 
+          <i class="icon menutech-mago" id="d2-icon1"></i><span class="btn-text">See MENU & Order Now!</span> 
+        </span> 
+        <span class="glf-button btn btn-reserve reservation" data-glf-cuid="52230bb2-0d10-491a-80a6-3c5603e87152" data-glf-ruid="010d211a-aff0-4aa2-b4d0-739fce78437a" data-glf-reservation="true"> 
+          <i class="icon menutech-mago" id="d2-icon2"></i><span class="btn-text">Table Reservation</span> 
+        </span> 
+      </div> 
+      <div class="config-panel"> 
+        <strong>Menutech Color</strong><br> 
+        <input type="color" id="d2-ic" value="#ffffff"><br><br> 
+        <strong>Colores</strong><br> 
+        Orden: <input type="color" id="d2-o" value="#f2a04a"> 
+        Texto: <input type="color" id="d2-text1" value="#1b1b1b"><br> 
+        Reserva: <input type="color" id="d2-r" value="#2f4854"> 
+        Texto: <input type="color" id="d2-text2" value="#ffffff"><br><br> 
+        <strong>Enlaces</strong><br> 
+        CUID: <input type="text" id="d2-cuid" value="52230bb2-0d10-491a-80a6-3c5603e87152"> 
+        RUID: <input type="text" id="d2-ruid" value="010d211a-aff0-4aa2-b4d0-739fce78437a"> 
+        <button class="copy-btn" data-target="2">Copiar Código</button> 
+      </div> 
+    </div> 
+ 
+    <div class="card design-3"> 
+      <div class="card-header"> 
+        <div class="card-title">Outline</div> 
+        <div class="controls"><label><input type="checkbox" class="toggle-anim" data-pair="pair-3" checked><span class="switch"></span></label></div> 
+      </div> 
+      <div class="pair pair-3 anim-enabled"> 
+        <span class="glf-button btn btn-order" data-glf-cuid="52230bb2-0d10-491a-80a6-3c5603e87152" data-glf-ruid="010d211a-aff0-4aa2-b4d0-739fce78437a"> 
+          <i class="icon menutech-mago" id="d3-icon1"></i><span class="btn-text">See MENU & Order Now!</span> 
+        </span> 
+        <span class="glf-button btn btn-reserve reservation" data-glf-cuid="52230bb2-0d10-491a-80a6-3c5603e87152" data-glf-ruid="010d211a-aff0-4aa2-b4d0-739fce78437a" data-glf-reservation="true"> 
+          <i class="icon menutech-mago" id="d3-icon2"></i><span class="btn-text">Table Reservation</span> 
+        </span> 
+      </div> 
+      <div class="config-panel"> 
+        <strong>Menutech Color</strong><br> 
+        <input type="color" id="d3-ic" value="#ffffff"><br><br> 
+        <strong>Colores</strong><br> 
+        Borde Orden: <input type="color" id="d3-o" value="#ffd166"> 
+        Texto Orden: <input type="color" id="d3-text1" value="#ffffff"><br> 
+        Borde Reserva: <input type="color" id="d3-r" value="#8ecae6"> 
+        Texto Reserva: <input type="color" id="d3-text2" value="#ffffff"><br><br> 
+        <strong>Enlaces</strong><br> 
+        CUID: <input type="text" id="d3-cuid" value="52230bb2-0d10-491a-80a6-3c5603e87152"> 
+        RUID: <input type="text" id="d3-ruid" value="010d211a-aff0-4aa2-b4d0-739fce78437a"> 
+        <button class="copy-btn" data-target="3">Copiar Código</button> 
+      </div> 
+    </div> 
+ 
+  </div> 
+</div> 
+ 
+<script src="botones.js" defer></script>
+<script>
+document.querySelectorAll('.toggle-anim').forEach(cb=>{ 
+  const pair=document.querySelector('.'+cb.dataset.pair); 
+  cb.checked?pair.classList.add('anim-enabled'):pair.classList.remove('anim-enabled'); 
+  cb.addEventListener('change',()=>pair.classList.toggle('anim-enabled',cb.checked)); 
+}); 
+ 
+function loadMenuTechIcon(el,color){ 
+  fetch("https://menutechdeveloper.github.io/libreria/icons/mago.svg") 
+    .then(r=>r.text()) 
+    .then(svg=>{ 
+      svg=svg.replace(/fill="[^"]*"/g,'fill="currentColor"'); 
+      svg = svg.replace(/<svg([^>]*)>/i, '<svg$1 width="22" height="22">');
+      el.innerHTML=svg; 
+      el.style.color=color; 
+    }); 
+} 
+ 
+['1','2','3'].forEach(id=>{ 
+  loadMenuTechIcon(document.getElementById(`d${id}-icon1`),document.getElementById(`d${id}-ic`).value); 
+  loadMenuTechIcon(document.getElementById(`d${id}-icon2`),document.getElementById(`d${id}-ic`).value); 
+}); 
+ 
+document.querySelectorAll('input[id$="-ic"]').forEach(input=>{ 
+  input.addEventListener('input',()=>{ 
+    const id=input.id.split('-')[0].replace('d',''); 
+    loadMenuTechIcon(document.getElementById(`d${id}-icon1`),input.value); 
+    loadMenuTechIcon(document.getElementById(`d${id}-icon2`),input.value); 
+  }); 
+}); 
+ 
+function setGradient(btn, c1, c2, text){btn.style.background=`linear-gradient(135deg,${c1},${c2})`;btn.style.color=text;} 
+function setFlat(btn, c, text){btn.style.background=c;btn.style.color=text;} 
+function setOutline(btn, border,text){btn.style.borderColor=border;btn.style.color=text;} 
+ 
+['1','2','3'].forEach(id=>{ 
+  document.querySelector(`[data-target="${id}"]`).addEventListener('click',()=>{ 
+    const card=document.querySelector(`.design-${id}`); 
+    const cuid=card.querySelector(`#d${id}-cuid`).value; 
+    const ruid=card.querySelector(`#d${id}-ruid`).value;
+    const iconColor = card.querySelector(`#d${id}-ic`).value;
+    
+    let orderButton, reservationButton;
+
+    if (id === '1') {
+      const o1 = card.querySelector('#d1-o1').value;
+      const o2 = card.querySelector('#d1-o2').value;
+      const t1 = card.querySelector('#d1-text1').value;
+      const r1 = card.querySelector('#d1-r1').value;
+      const r2 = card.querySelector('#d1-r2').value;
+      const t2 = card.querySelector('#d1-text2').value;
+      orderButton = `<menutech-orders cuid="${cuid}" ruid="${ruid}" color="${iconColor}" background="linear-gradient(135deg, ${o1}, ${o2})" textColor="${t1}"></menutech-orders>`;
+      reservationButton = `<menutech-reservations cuid="${cuid}" ruid="${ruid}" color="${iconColor}" background="linear-gradient(135deg, ${r1}, ${r2})" textColor="${t2}"></menutech-reservations>`;
+    } else if (id === '2') {
+      const o = card.querySelector('#d2-o').value;
+      const t1 = card.querySelector('#d2-text1').value;
+      const r = card.querySelector('#d2-r').value;
+      const t2 = card.querySelector('#d2-text2').value;
+      orderButton = `<menutech-orders cuid="${cuid}" ruid="${ruid}" color="${iconColor}" background="${o}" textColor="${t1}"></menutech-orders>`;
+      reservationButton = `<menutech-reservations cuid="${cuid}" ruid="${ruid}" color="${iconColor}" background="${r}" textColor="${t2}"></menutech-reservations>`;
+    } else { // id === '3'
+      const o = card.querySelector('#d3-o').value;
+      const t1 = card.querySelector('#d3-text1').value;
+      const r = card.querySelector('#d3-r').value;
+      const t2 = card.querySelector('#d3-text2').value;
+      orderButton = `<menutech-orders cuid="${cuid}" ruid="${ruid}" color="${iconColor}" border-color="${o}" textColor="${t1}"></menutech-orders>`;
+      reservationButton = `<menutech-reservations cuid="${cuid}" ruid="${ruid}" color="${iconColor}" border-color="${r}" textColor="${t2}"></menutech-reservations>`;
+    }
+ 
+    const scriptTag='<'+'script src="https://www.fbgcdn.com/embedder/js/ewm2.js" defer async></'+'script>'; 
+    const htmlToCopy=`${orderButton}\n${reservationButton}\n${scriptTag}`; 
+ 
+    navigator.clipboard.writeText(htmlToCopy).then(()=>{ 
+      const p=document.getElementById("copypopup"); 
+      p.classList.add("show"); 
+      setTimeout(()=>p.classList.remove("show"),2000); 
+    }); 
+  }); 
+}); 
+ 
+document.querySelectorAll('input[type=color]').forEach(input=>{ 
+  input.addEventListener('input',()=>{ 
+    const id=input.id; 
+    if(id.startsWith('d1-')){ 
+      const card=document.querySelector('.design-1'); 
+      const order=card.querySelector('.btn-order'),reserve=card.querySelector('.btn-reserve'); 
+      setGradient(order,card.querySelector('#d1-o1').value,card.querySelector('#d1-o2').value,card.querySelector('#d1-text1').value); 
+      setGradient(reserve,card.querySelector('#d1-r1').value,card.querySelector('#d1-r2').value,card.querySelector('#d1-text2').value); 
+    } 
+    if(id.startsWith('d2-')){ 
+      const card=document.querySelector('.design-2'); 
+      const order=card.querySelector('.btn-order'),reserve=card.querySelector('.btn-reserve'); 
+      setFlat(order,card.querySelector('#d2-o').value,card.querySelector('#d2-text1').value); 
+      setFlat(reserve,card.querySelector('#d2-r').value,card.querySelector('#d2-text2').value); 
+    } 
+    if(id.startsWith('d3-')){ 
+      const card=document.querySelector('.design-3'); 
+      const order=card.querySelector('.btn-order'),reserve=card.querySelector('.btn-reserve'); 
+      setOutline(order,card.querySelector('#d3-o').value,card.querySelector('#d3-text1').value); 
+      setOutline(reserve,card.querySelector('#d3-r').value,card.querySelector('#d3-text2').value); 
+    } 
+  }); 
+}); 
+</script> 
+ 
+</body> 
+</html> 
