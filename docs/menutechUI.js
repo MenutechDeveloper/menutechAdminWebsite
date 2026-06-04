@@ -751,6 +751,9 @@ class MenutechPromoBase extends HTMLElement {
                 case 'halloween': eventDate = new Date(currentYear, 9, 31); break;
                 case 'valentine': eventDate = new Date(currentYear, 1, 14); break;
                 case 'president': eventDate = new Date(currentYear, 1, 15); break; // Simplified
+                case 'newyear': eventDate = new Date(currentYear, 0, 1); break;
+                case 'independence': eventDate = new Date(currentYear, 6, 4); break;
+                case 'thanksgiving': eventDate = new Date(currentYear, 10, 28); break; // Simplified to Nov 28
             }
             return now.toDateString() === eventDate.toDateString();
         }
@@ -821,6 +824,12 @@ class MenutechPromoBase extends HTMLElement {
                 const maxOp = 0.3 + Math.random() * opacidad;
                 particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${heartSVG}'); opacity:0; --max-op:${maxOp};"></div>`;
             }
+        } else if (this.eventType === 'newyear') {
+            // New Year particles placeholder
+        } else if (this.eventType === 'independence') {
+            // Independence Day particles placeholder
+        } else if (this.eventType === 'thanksgiving') {
+            // Thanksgiving particles placeholder
         }
 
         const isPopup = promo.display_mode === 'popup';
@@ -988,6 +997,9 @@ customElements.define('menutech-christmas', class extends MenutechPromoBase { co
 customElements.define('menutech-halloween', class extends MenutechPromoBase { constructor() { super('halloween'); } });
 customElements.define('menutech-valentine', class extends MenutechPromoBase { constructor() { super('valentine'); } });
 customElements.define('menutech-president', class extends MenutechPromoBase { constructor() { super('president'); } });
+customElements.define('menutech-newyear', class extends MenutechPromoBase { constructor() { super('newyear'); } });
+customElements.define('menutech-independence', class extends MenutechPromoBase { constructor() { super('independence'); } });
+customElements.define('menutech-thanksgiving', class extends MenutechPromoBase { constructor() { super('thanksgiving'); } });
 
 /**
  * Menutech Forms Web Component
