@@ -726,7 +726,6 @@ class MenutechPromoBase extends HTMLElement {
                 .select('*')
                 .eq('domain', domain)
                 .eq('event_type', this.eventType)
-                .eq('is_active', true)
                 .single();
 
             if (error) return null;
@@ -736,38 +735,41 @@ class MenutechPromoBase extends HTMLElement {
         }
     }
 
-    isPromoValid(promo) {
-        if (!promo) return false;
-        const now = new Date();
-        const start = promo.start_date ? new Date(promo.start_date) : null;
-        const end = promo.end_date ? new Date(promo.end_date) : null;
-
-        // Default event dates fallback if no dates provided
-        if (!start && !end) {
-            const currentYear = now.getFullYear();
-            let eventDate;
-            switch(this.eventType) {
-                case 'christmas': eventDate = new Date(currentYear, 11, 25); break;
-                case 'halloween': eventDate = new Date(currentYear, 9, 31); break;
-                case 'valentine': eventDate = new Date(currentYear, 1, 14); break;
-                case 'president': eventDate = new Date(currentYear, 1, 15); break; // Simplified
-                case 'newyear': eventDate = new Date(currentYear, 0, 1); break;
-                case 'independence': eventDate = new Date(currentYear, 6, 4); break;
-                case 'thanksgiving': eventDate = new Date(currentYear, 10, 28); break; // Simplified to Nov 28
-            }
-            return now.toDateString() === eventDate.toDateString();
+    getHolidayDate(year) {
+        switch(this.eventType) {
+            case 'christmas': return new Date(year, 11, 25);
+            case 'halloween': return new Date(year, 9, 30);
+            case 'valentine': return new Date(year, 1, 14);
+            case 'president': return new Date(year, 1, 15);
+            case 'newyear': return new Date(year, 0, 1);
+            case 'independence': return new Date(year, 6, 4);
+            case 'thanksgiving': return new Date(year, 10, 28);
+            default: return null;
         }
-
-        if (start && now < start) return false;
-        if (end && now > end) return false;
-        return true;
     }
 
     async render() {
         let domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
         const promo = await this.fetchPromoData(domain);
 
-        if (!this.isPromoValid(promo)) {
+        const now = new Date();
+        const holidayDate = this.getHolidayDate(now.getFullYear());
+        const isHoliday = holidayDate && now.toDateString() === holidayDate.toDateString();
+
+        const hasDates = promo && (promo.start_date || promo.end_date);
+        let isWithinRange = false;
+        if (hasDates) {
+            const start = promo.start_date ? new Date(promo.start_date) : null;
+            const end = promo.end_date ? new Date(promo.end_date) : null;
+            if (start) start.setHours(0,0,0,0);
+            if (end) end.setHours(23,59,59,999);
+            isWithinRange = (!start || now >= start) && (!end || now <= end);
+        }
+
+        const showParticles = isHoliday || isWithinRange;
+        const showPromoContent = promo && promo.is_active && (isWithinRange || (!hasDates && isHoliday));
+
+        if (!showParticles && !showPromoContent) {
             this.shadowRoot.innerHTML = '';
             return;
         }
@@ -795,44 +797,97 @@ class MenutechPromoBase extends HTMLElement {
             ];
             for (let i = 0; i < cantidad; i++) {
                 const x = Math.random() * 100;
+                const y = Math.random() * 100;
                 const size = tamano + (Math.random() * tamano);
-                const dur = (10 + Math.random() * 15) / velocidad;
-                const delay = Math.random() * 20; // Positive delay so they appear gradually
+                const dur = (6 + Math.random() * 8) / velocidad;
+                const delay = Math.random() * 15;
                 const img = snowImages[i % snowImages.length];
-                const drift = (Math.random() * 40 - 20); // Side drift
-                particles += `<div class="particle" style="left:${x}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; --drift:${drift}px; background-image:url('${img}'); opacity:${opacidad};"></div>`;
+                const maxOp = 0.5 + Math.random() * opacidad;
+                const startScale = 0.3 + Math.random() * 0.4;
+                const endScale = 0.9 + Math.random() * 0.4;
+                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${img}'); opacity:0; --max-op:${maxOp}; --start-scale:${startScale}; --end-scale:${endScale};"></div>`;
             }
         } else if (this.eventType === 'halloween') {
             const pumpkinSVG = `data:image/svg+xml;base64,${btoa('<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 20C30 20 15 35 15 55C15 75 30 90 50 90C70 90 85 75 85 55C85 35 70 20 50 20Z" fill="#ff6600"/><path d="M45 10L55 10L52 25L48 25Z" fill="#4a3000"/><path d="M35 45L45 50L35 55Z" fill="#ffff00"/><path d="M65 45L55 50L65 55Z" fill="#ffff00"/><path d="M30 65C40 75 60 75 70 65C60 70 40 70 30 65Z" fill="#4a3000"/></svg>')}`;
             for (let i = 0; i < cantidad; i++) {
                 const x = Math.random() * 100;
                 const y = Math.random() * 100;
-                const size = (tamano * 2) + Math.random() * (tamano * 2);
-                const dur = (4 + Math.random() * 4) / velocidad;
-                const delay = Math.random() * 3;
+                const size = (tamano * 1.5) + Math.random() * (tamano * 2);
+                const dur = (5 + Math.random() * 8) / velocidad;
+                const delay = Math.random() * 12;
                 const maxOp = 0.4 + Math.random() * opacidad;
-                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${pumpkinSVG}'); opacity:0; --max-op:${maxOp};"></div>`;
+                const startScale = 0.2 + Math.random() * 0.4;
+                const endScale = 0.8 + Math.random() * 0.5;
+                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${pumpkinSVG}'); opacity:0; --max-op:${maxOp}; --start-scale:${startScale}; --end-scale:${endScale};"></div>`;
             }
         } else if (this.eventType === 'valentine') {
             const heartSVG = `data:image/svg+xml;base64,${btoa('<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 85C50 85 10 60 10 35C10 15 30 10 50 30C70 10 90 15 90 35C90 60 50 85 50 85Z" fill="#ff0000"/></svg>')}`;
             for (let i = 0; i < cantidad; i++) {
                 const x = Math.random() * 100;
                 const y = Math.random() * 100;
-                const size = tamano + Math.random() * tamano;
-                const dur = (3 + Math.random() * 4) / velocidad;
-                const delay = Math.random() * 5;
+                const size = tamano + Math.random() * (tamano * 1.5);
+                const dur = (4 + Math.random() * 7) / velocidad;
+                const delay = Math.random() * 10;
                 const maxOp = 0.3 + Math.random() * opacidad;
-                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${heartSVG}'); opacity:0; --max-op:${maxOp};"></div>`;
+                const startScale = 0.3 + Math.random() * 0.4;
+                const endScale = 0.9 + Math.random() * 0.4;
+                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${heartSVG}'); opacity:0; --max-op:${maxOp}; --start-scale:${startScale}; --end-scale:${endScale};"></div>`;
             }
         } else if (this.eventType === 'newyear') {
-            // New Year particles placeholder
+            const starSVG = `data:image/svg+xml;base64,${btoa('<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#FFD700"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>')}`;
+            for (let i = 0; i < cantidad; i++) {
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const size = tamano + Math.random() * tamano;
+                const dur = (3 + Math.random() * 5) / velocidad;
+                const delay = Math.random() * 10;
+                const maxOp = 0.3 + Math.random() * opacidad;
+                const startScale = 0.3 + Math.random() * 0.4;
+                const endScale = 0.9 + Math.random() * 0.4;
+                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${starSVG}'); opacity:0; --max-op:${maxOp}; --start-scale:${startScale}; --end-scale:${endScale};"></div>`;
+            }
         } else if (this.eventType === 'independence') {
-            // Independence Day particles placeholder
+            const fireworkSVG = `data:image/svg+xml;base64,${btoa('<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#fff"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="4" r="1"/><circle cx="12" cy="20" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="20" cy="12" r="1"/><circle cx="6.3" cy="6.3" r="1"/><circle cx="17.7" cy="17.7" r="1"/><circle cx="6.3" cy="17.7" r="1"/><circle cx="17.7" cy="6.3" r="1"/></svg>')}`;
+            for (let i = 0; i < cantidad; i++) {
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const size = tamano + Math.random() * tamano;
+                const dur = (2 + Math.random() * 3) / velocidad;
+                const delay = Math.random() * 8;
+                const maxOp = 0.5 + Math.random() * opacidad;
+                const startScale = 0.1 + Math.random() * 0.3;
+                const endScale = 1.0 + Math.random() * 0.6;
+                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${fireworkSVG}'); opacity:0; --max-op:${maxOp}; --start-scale:${startScale}; --end-scale:${endScale};"></div>`;
+            }
         } else if (this.eventType === 'thanksgiving') {
-            // Thanksgiving particles placeholder
+            const leafSVG = `data:image/svg+xml;base64,${btoa('<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#D2691E"><path d="M12 2s-1 2-1 4c0 3 2 4 3 6s-1 4-3 4-3-2-3-6c0-2-1-4-1-4s-1 2-1 4c0 6 4 10 10 10s10-4 10-10c0-2-1-4-1-4z"/></svg>')}`;
+            for (let i = 0; i < cantidad; i++) {
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const size = tamano + Math.random() * tamano;
+                const dur = (4 + Math.random() * 6) / velocidad;
+                const delay = Math.random() * 12;
+                const maxOp = 0.4 + Math.random() * opacidad;
+                const startScale = 0.4 + Math.random() * 0.3;
+                const endScale = 0.8 + Math.random() * 0.4;
+                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${leafSVG}'); opacity:0; --max-op:${maxOp}; --start-scale:${startScale}; --end-scale:${endScale};"></div>`;
+            }
+        } else if (this.eventType === 'president') {
+            const eagleSVG = `data:image/svg+xml;base64,${btoa('<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#3c3b6e"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg>')}`;
+            for (let i = 0; i < cantidad; i++) {
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const size = tamano + Math.random() * tamano;
+                const dur = (4 + Math.random() * 5) / velocidad;
+                const delay = Math.random() * 10;
+                const maxOp = 0.3 + Math.random() * opacidad;
+                const startScale = 0.3 + Math.random() * 0.3;
+                const endScale = 0.7 + Math.random() * 0.5;
+                particles += `<div class="particle-static" style="left:${x}%; top:${y}%; width:${size}px; height:${size}px; animation-duration:${dur}s; animation-delay:${delay}s; background-image:url('${eagleSVG}'); opacity:0; --max-op:${maxOp}; --start-scale:${startScale}; --end-scale:${endScale};"></div>`;
+            }
         }
 
-        const isPopup = promo.display_mode === 'popup';
+        const isPopup = promo && promo.display_mode === 'popup';
         const styles = `
             <style>
                 :host {
@@ -867,8 +922,8 @@ class MenutechPromoBase extends HTMLElement {
                     100% { transform: translateY(calc(100vh + 50px)) translateX(var(--drift, 0)) rotate(360deg); }
                 }
                 @keyframes appearDisappear {
-                    0%, 100% { opacity: 0; transform: scale(0.5); }
-                    50% { opacity: var(--max-op, 0.8); transform: scale(1.1); }
+                    0%, 100% { opacity: 0; transform: scale(var(--start-scale, 0.5)); }
+                    50% { opacity: var(--max-op, 0.8); transform: scale(var(--end-scale, 1.1)); }
                 }
 
                 /* Halloween Smoke */
@@ -933,15 +988,24 @@ class MenutechPromoBase extends HTMLElement {
             </style>
         `;
 
-        const imageUrl = promo.image_url ? promo.image_url.split('#')[0] : '';
+        const imageUrl = (promo && promo.image_url) ? promo.image_url.split('#')[0] : '';
+
+        const particlesHTML = `
+            <div class="particles-wrapper">
+                ${this.eventType === 'halloween' ? '<div class="smoke-layer"></div>' : ''}
+                ${particles}
+            </div>
+        `;
+
+        if (!showPromoContent) {
+            this.shadowRoot.innerHTML = `${styles}${particlesHTML}`;
+            return;
+        }
 
         if (promo.display_mode === 'popup') {
             this.shadowRoot.innerHTML = `
                 ${styles}
-                <div class="particles-wrapper">
-                    ${this.eventType === 'halloween' ? '<div class="smoke-layer"></div>' : ''}
-                    ${particles}
-                </div>
+                ${particlesHTML}
                 <div class="promo-popup-overlay" id="promo-overlay">
                     <div class="promo-popup-card">
                         <button class="close-btn" id="close-promo" title="Close">
@@ -971,10 +1035,7 @@ class MenutechPromoBase extends HTMLElement {
         } else {
             this.shadowRoot.innerHTML = `
                 ${styles}
-                <div class="particles-wrapper">
-                    ${this.eventType === 'halloween' ? '<div class="smoke-layer"></div>' : ''}
-                    ${particles}
-                </div>
+                ${particlesHTML}
                 <div class="promo-section">
                     <img src="${imageUrl}" alt="${this.eventType} promotion">
                     ${customLabel ? `
