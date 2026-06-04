@@ -227,18 +227,26 @@
 
         /* Promotions Styles */
         .promo-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            display: flex;
+            overflow-x: auto;
             gap: 20px;
             margin-bottom: 40px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            cursor: grab;
+            user-select: none;
         }
+        .promo-grid::-webkit-scrollbar { display: none; }
+        .promo-grid:active { cursor: grabbing; }
+
         @media (max-width: 480px) {
             .promo-grid { gap: 10px; }
-            .promo-slot { padding: 5px; border-radius: 16px; }
+            .promo-slot { padding: 5px; border-radius: 16px; flex: 0 0 150px !important; }
             .promo-slot svg { width: 30px; height: 30px; margin-bottom: 5px; }
             .promo-slot span { font-size: 0.6rem; letter-spacing: 0.5px; }
         }
         .promo-slot {
+            flex: 0 0 273px;
             aspect-ratio: 1/1;
             background: var(--input);
             border: 2px dashed var(--border);
@@ -458,6 +466,15 @@
                         </div>
                         <div class="promo-slot" id="slot-president" onclick="openPromoModal('president')">
                             <span>President's Day</span>
+                        </div>
+                        <div class="promo-slot" id="slot-newyear" onclick="openPromoModal('newyear')">
+                            <span>New Year's Day</span>
+                        </div>
+                        <div class="promo-slot" id="slot-independence" onclick="openPromoModal('independence')">
+                            <span>Independence Day</span>
+                        </div>
+                        <div class="promo-slot" id="slot-thanksgiving" onclick="openPromoModal('thanksgiving')">
+                            <span>Thanksgiving</span>
                         </div>
                     </div>
                 </div>
@@ -736,6 +753,48 @@
         }
 
         function initEvents() {
+            // Drag-to-scroll for Event Promotions
+            const promoGrid = document.querySelector('.promo-grid');
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+            let isDragging = false;
+
+            promoGrid.addEventListener('mousedown', (e) => {
+                isDown = true;
+                promoGrid.classList.add('active');
+                startX = e.pageX - promoGrid.offsetLeft;
+                scrollLeft = promoGrid.scrollLeft;
+                isDragging = false;
+            });
+
+            promoGrid.addEventListener('mouseleave', () => {
+                isDown = false;
+                promoGrid.classList.remove('active');
+            });
+
+            promoGrid.addEventListener('mouseup', () => {
+                isDown = false;
+                promoGrid.classList.remove('active');
+            });
+
+            promoGrid.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - promoGrid.offsetLeft;
+                const walk = (x - startX) * 2;
+                if (Math.abs(walk) > 5) isDragging = true;
+                promoGrid.scrollLeft = scrollLeft - walk;
+            });
+
+            // Prevent opening modal if dragging
+            promoGrid.addEventListener('click', (e) => {
+                if (isDragging) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+
             document.getElementById('sidebar-tab').onclick = () => document.getElementById('sidebar-container').classList.toggle('collapsed');
             const pill = document.getElementById('user-display-pill');
             pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
@@ -1059,14 +1118,14 @@
         };
 
         function updatePromoGrid() {
-            const events = ['christmas', 'halloween', 'valentine', 'president'];
+            const events = ['christmas', 'halloween', 'valentine', 'president', 'newyear', 'independence', 'thanksgiving'];
             events.forEach(ev => {
                 const slot = document.getElementById(`slot-${ev}`);
                 const promo = localPromos.find(p => p.event_type === ev);
 
                 let isConfigured = false;
                 if (promo) {
-                    if (ev === 'president') {
+                    if (['president', 'newyear', 'independence', 'thanksgiving'].includes(ev)) {
                         isConfigured = promo.is_active;
                     } else {
                         // Color if active, or has dates, or has a custom label
@@ -1085,6 +1144,10 @@
 
         window.openPromoModal = (eventType) => {
             currentPromoEvent = eventType;
+            let displayTitle = eventType.charAt(0).toUpperCase() + eventType.slice(1);
+            if (eventType === 'newyear') displayTitle = "New Year's Day";
+            if (eventType === 'independence') displayTitle = "Independence Day";
+            if (eventType === 'thanksgiving') displayTitle = "Thanksgiving";
             const promo = localPromos.find(p => p.event_type === eventType) || {
                 event_type: eventType,
                 image_url: '',
@@ -1100,7 +1163,7 @@
                 labelFromUrl = decodeURIComponent(promo.image_url.split('#l=')[1].split('&')[0]);
             }
 
-            document.getElementById('promo-modal-title').textContent = `Configure ${eventType.charAt(0).toUpperCase() + eventType.slice(1)} Promo`;
+            document.getElementById('promo-modal-title').textContent = `Configure ${displayTitle} Promo`;
             const preview = document.getElementById('promo-preview');
             const placeholder = document.getElementById('promo-drop-placeholder');
 
