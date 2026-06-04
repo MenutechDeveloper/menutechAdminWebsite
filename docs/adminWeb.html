@@ -808,17 +808,18 @@
 
             document.getElementById('btn-copy-promo').onclick = () => {
                 if (!activeDomain) return showToast("Assign a domain to this project first.", "warning");
-                const activeEvents = localPromos.filter(p => p.is_active);
-                if (activeEvents.length === 0) return showToast("No active promos to copy.", "warning");
+                const events = ['christmas', 'halloween', 'valentine', 'president', 'newyear', 'independence', 'thanksgiving'];
 
-                const tags = activeEvents.map(p => {
-                    let label = p.custom_label || '';
-                    if (p.image_url && p.image_url.includes('#l=')) {
+                const tags = events.map(ev => {
+                    const p = localPromos.find(x => x.event_type === ev);
+                    let label = p ? (p.custom_label || '') : '';
+                    if (p && p.image_url && p.image_url.includes('#l=')) {
                         label = decodeURIComponent(p.image_url.split('#l=')[1].split('&')[0]);
                     }
                     const labelAttr = label ? ` custom-label="${label}"` : '';
-                    return `<menutech-${p.event_type} domain="${activeDomain}"${labelAttr}></menutech-${p.event_type}>`;
+                    return `<menutech-${ev} domain="${activeDomain}"${labelAttr}></menutech-${ev}>`;
                 }).join('\n');
+
                 const snippet = `<!-- Menutech Promotions -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n${tags}`;
 
                 navigator.clipboard.writeText(snippet).then(() => {
@@ -1119,22 +1120,44 @@
 
         function updatePromoGrid() {
             const events = ['christmas', 'halloween', 'valentine', 'president', 'newyear', 'independence', 'thanksgiving'];
+            const now = new Date();
+            const year = now.getFullYear();
+
+            const getHolidayDate = (ev) => {
+                switch(ev) {
+                    case 'christmas': return new Date(year, 11, 25);
+                    case 'halloween': return new Date(year, 9, 30);
+                    case 'valentine': return new Date(year, 1, 14);
+                    case 'president': return new Date(year, 1, 15);
+                    case 'newyear': return new Date(year, 0, 1);
+                    case 'independence': return new Date(year, 6, 4);
+                    case 'thanksgiving': return new Date(year, 10, 28);
+                    default: return null;
+                }
+            };
+
             events.forEach(ev => {
                 const slot = document.getElementById(`slot-${ev}`);
                 const promo = localPromos.find(p => p.event_type === ev);
+                const holiday = getHolidayDate(ev);
 
-                let isConfigured = false;
+                let isValid = false;
                 if (promo) {
-                    if (['president', 'newyear', 'independence', 'thanksgiving'].includes(ev)) {
-                        isConfigured = promo.is_active;
-                    } else {
-                        // Color if active, or has dates, or has a custom label
-                        const hasLabel = promo.custom_label || (promo.image_url && promo.image_url.includes('#l='));
-                        isConfigured = promo.is_active || (promo.start_date && promo.end_date) || hasLabel;
+                    const hasDates = promo.start_date || promo.end_date;
+                    if (hasDates) {
+                        const end = promo.end_date ? new Date(promo.end_date) : null;
+                        if (end) end.setHours(23,59,59,999);
+                        isValid = !end || now <= end;
+                    } else if (holiday) {
+                        holiday.setHours(23,59,59,999);
+                        isValid = now <= holiday;
                     }
+                } else if (holiday) {
+                    holiday.setHours(23,59,59,999);
+                    isValid = now <= holiday;
                 }
 
-                if (isConfigured) {
+                if (isValid && promo) {
                     slot.classList.add('active');
                 } else {
                     slot.classList.remove('active');
