@@ -797,8 +797,8 @@ class MenutechPromoBase extends HTMLElement {
             ];
             for (let i = 0; i < cantidad; i++) {
                 const x = Math.random() * 100;
-                const size = tamano + (Math.random() * tamano);
-                const dur = (8 + Math.random() * 12) / velocidad;
+                const size = tamano + 5 + (Math.random() * tamano);
+                const dur = (6 + Math.random() * 10) / velocidad;
                 const delay = Math.random() * 20;
                 const img = snowImages[i % snowImages.length];
                 const drift = (Math.random() * 60 - 30);
@@ -810,8 +810,8 @@ class MenutechPromoBase extends HTMLElement {
             for (let i = 0; i < cantidad; i++) {
                 const x = Math.random() * 100;
                 const y = Math.random() * 100;
-                const size = (tamano * 3) + Math.random() * (tamano * 4);
-                const dur = (5 + Math.random() * 8) / velocidad;
+                const size = (tamano * 3) + 5 + Math.random() * (tamano * 4);
+                const dur = (4 + Math.random() * 6) / velocidad;
                 const delay = Math.random() * 12;
                 const maxOp = 0.4 + Math.random() * opacidad;
                 const startScale = 0.2 + Math.random() * 0.4;
@@ -823,8 +823,8 @@ class MenutechPromoBase extends HTMLElement {
             for (let i = 0; i < cantidad; i++) {
                 const x = Math.random() * 100;
                 const y = Math.random() * 100;
-                const size = tamano + Math.random() * (tamano * 1.5);
-                const dur = (4 + Math.random() * 7) / velocidad;
+                const size = tamano + 5 + Math.random() * (tamano * 1.5);
+                const dur = (3 + Math.random() * 5) / velocidad;
                 const delay = Math.random() * 10;
                 const maxOp = 0.3 + Math.random() * opacidad;
                 const startScale = 0.3 + Math.random() * 0.4;
