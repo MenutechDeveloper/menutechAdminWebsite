@@ -1204,23 +1204,21 @@
                 const promo = localPromos.find(p => p.event_type === ev);
                 const holiday = getHolidayDate(ev);
 
-                let isValid = false;
-                if (promo) {
+                let isActiveInGrid = false;
+                if (promo && promo.is_active) {
                     const hasDates = promo.start_date || promo.end_date;
                     if (hasDates) {
+                        const start = promo.start_date ? new Date(promo.start_date) : null;
                         const end = promo.end_date ? new Date(promo.end_date) : null;
+                        if (start) start.setHours(0,0,0,0);
                         if (end) end.setHours(23,59,59,999);
-                        isValid = !end || now <= end;
+                        isActiveInGrid = (!start || now >= start) && (!end || now <= end);
                     } else if (holiday) {
-                        holiday.setHours(23,59,59,999);
-                        isValid = now <= holiday;
+                        isActiveInGrid = now.toDateString() === holiday.toDateString();
                     }
-                } else if (holiday) {
-                    holiday.setHours(23,59,59,999);
-                    isValid = now <= holiday;
                 }
 
-                if (isValid && promo) {
+                if (isActiveInGrid) {
                     slot.classList.add('active');
                 } else {
                     slot.classList.remove('active');
@@ -1282,6 +1280,22 @@
             document.getElementById('promo-end-date').value = '';
             document.getElementById('promo-custom-label').value = '';
             document.getElementById('promo-active').checked = false;
+
+            const preview = document.getElementById('promo-preview');
+            const placeholder = document.getElementById('promo-drop-placeholder');
+            if (preview) {
+                preview.src = '';
+                preview.classList.add('hidden');
+            }
+            if (placeholder) {
+                placeholder.classList.remove('hidden');
+            }
+
+            if (currentPromoEvent) {
+                const slot = document.getElementById(`slot-${currentPromoEvent}`);
+                if (slot) slot.classList.remove('active');
+            }
+
             showToast("Configuration cleared. Re-save to apply.", "warning");
         };
 
