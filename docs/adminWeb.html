@@ -681,6 +681,20 @@
     <script type="module">
         import { MT_CONFIG } from './config.js';
         import { supabase as sb } from './supabase.js';
+
+        const optimizeCloudinaryUrl = (url, options = {}) => {
+            if (!url || typeof url !== 'string' || !url.includes('res.cloudinary.com')) return url;
+            const [baseUrl, hash] = url.split('#');
+            if (!baseUrl.includes('/upload/')) return url;
+            const parts = baseUrl.split('/upload/');
+            let transformations = ['f_auto', 'q_auto'];
+            if (options.width) transformations.push(`w_${options.width}`);
+            if (options.height) transformations.push(`h_${options.height}`);
+            if (options.crop) transformations.push(`c_${options.crop}`);
+            const transformationString = transformations.join(',');
+            const optimizedUrl = `${parts[0]}/upload/${transformationString}/${parts[1]}`;
+            return hash ? `${optimizedUrl}#${hash}` : optimizedUrl;
+        };
         let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
         let localGallery = [];
         let localPromos = [];
@@ -1248,7 +1262,7 @@
             const placeholder = document.getElementById('promo-drop-placeholder');
 
             if (promo.image_url) {
-                preview.src = promo.image_url.split('#')[0];
+                preview.src = optimizeCloudinaryUrl(promo.image_url.split('#')[0], { width: 500 });
                 preview.classList.remove('hidden');
                 placeholder.classList.add('hidden');
             } else {
@@ -1307,7 +1321,7 @@
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
                 const d = await res.json();
                 const preview = document.getElementById('promo-preview');
-                preview.src = d.secure_url;
+                preview.src = optimizeCloudinaryUrl(d.secure_url, { width: 500 });
                 preview.classList.remove('hidden');
                 placeholder.classList.add('hidden');
                 placeholder.innerHTML = '<p>Drag & Drop Promo Image</p><span style="font-size:0.75rem; color:var(--text-dim)">or click to select</span>';
