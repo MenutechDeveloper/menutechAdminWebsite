@@ -4,6 +4,26 @@ const MT_UI_CONFIG = {
 };
 
 /**
+ * Cloudinary Optimization Helper
+ * @param {string} url - Original Cloudinary URL
+ * @param {object} options - Optimization options (width, height, crop)
+ * @returns {string} Optimized URL
+ */
+window.optimizeCloudinaryUrl = (url, options = {}) => {
+    if (!url || typeof url !== 'string' || !url.includes('res.cloudinary.com')) return url;
+    const [baseUrl, hash] = url.split('#');
+    if (!baseUrl.includes('/upload/')) return url;
+    const parts = baseUrl.split('/upload/');
+    let transformations = ['f_auto', 'q_auto'];
+    if (options.width) transformations.push(`w_${options.width}`);
+    if (options.height) transformations.push(`h_${options.height}`);
+    if (options.crop) transformations.push(`c_${options.crop}`);
+    const transformationString = transformations.join(',');
+    const optimizedUrl = `${parts[0]}/upload/${transformationString}/${parts[1]}`;
+    return hash ? `${optimizedUrl}#${hash}` : optimizedUrl;
+};
+
+/**
  * Menutech Gallery Web Component
  * Usage: <menutech-gallery domain="yoursite.com"></menutech-gallery>
  */
@@ -560,16 +580,19 @@ class MenutechGallery extends HTMLElement {
 
             if (type === 'slider') {
                 await this.loadSwiper();
-                const slidesHtml = images.map((img, i) => `
-                    <div class="swiper-slide">
-                        <img src="${img.image_url}" />
-                        ${isAdmin ? `
-                            <div class="admin-overlay">
-                                <button class="btn-delete" data-index="${i}">Remove</button>
-                            </div>
-                        ` : ''}
-                    </div>
-                `).join('');
+                const slidesHtml = images.map((img, i) => {
+                    const optimizedUrl = window.optimizeCloudinaryUrl(img.image_url, { width: 500, height: 500, crop: 'fill' });
+                    return `
+                        <div class="swiper-slide">
+                            <img src="${optimizedUrl}" loading="lazy" width="450" height="450" />
+                            ${isAdmin ? `
+                                <div class="admin-overlay">
+                                    <button class="btn-delete" data-index="${i}">Remove</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
 
                 this.shadowRoot.innerHTML = `
                     ${styles}
@@ -609,13 +632,14 @@ class MenutechGallery extends HTMLElement {
             } else if (type === 'bento') {
                 const itemsHtml = images.map((img, i) => {
                     const match = img.image_url.match(/#s=(\d)x(\d)/);
-                    const sw = match ? match[1] : 2;
-                    const sh = match ? match[2] : 2;
+                    const sw = match ? parseInt(match[1]) : 2;
+                    const sh = match ? parseInt(match[2]) : 2;
+                    const optimizedUrl = window.optimizeCloudinaryUrl(img.image_url, { width: sw * 250, height: sh * 250, crop: 'fill' });
 
                     return `
                         <div class="gallery-item" data-index="${i}" style="grid-column: span ${sw}; grid-row: span ${sh};" draggable="${isAdmin}">
                             <div class="item-inner">
-                                <img src="${img.image_url}" loading="lazy">
+                                <img src="${optimizedUrl}" loading="lazy" width="${sw * 250}" height="${sh * 250}">
                                 ${isAdmin ? `
                                     <div class="admin-overlay">
                                         <button class="btn-delete" data-index="${i}">Remove</button>
@@ -640,16 +664,19 @@ class MenutechGallery extends HTMLElement {
                 if (isAdmin) this.initBentoAdmin();
 
             } else {
-                const itemsHtml = images.map((img, i) => `
-                    <div class="gallery-item ${this.getPattern(i)}">
-                        <img src="${img.image_url}" loading="lazy">
-                        ${isAdmin ? `
-                            <div class="admin-overlay">
-                                <button class="btn-delete" data-index="${i}">Remove</button>
-                            </div>
-                        ` : ''}
-                    </div>
-                `).join('');
+                const itemsHtml = images.map((img, i) => {
+                    const optimizedUrl = window.optimizeCloudinaryUrl(img.image_url, { width: 500, height: 500, crop: 'fill' });
+                    return `
+                        <div class="gallery-item ${this.getPattern(i)}">
+                            <img src="${optimizedUrl}" loading="lazy" width="300" height="300">
+                            ${isAdmin ? `
+                                <div class="admin-overlay">
+                                    <button class="btn-delete" data-index="${i}">Remove</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
 
                 this.shadowRoot.innerHTML = `${styles}<div class="gallery-grid">${itemsHtml}</div>`;
             }
@@ -986,7 +1013,8 @@ class MenutechPromoBase extends HTMLElement {
             </style>
         `;
 
-        const imageUrl = (promo && promo.image_url) ? promo.image_url.split('#')[0] : '';
+        const rawImageUrl = (promo && promo.image_url) ? promo.image_url.split('#')[0] : '';
+        const imageUrl = window.optimizeCloudinaryUrl(rawImageUrl, { width: 1000 });
 
         const particlesHTML = `
             <div class="particles-wrapper">
@@ -1009,7 +1037,7 @@ class MenutechPromoBase extends HTMLElement {
                         <button class="close-btn" id="close-promo" title="Close">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;color:#000"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </button>
-                        <img src="${imageUrl}" alt="${this.eventType} promotion">
+                        <img src="${imageUrl}" alt="${this.eventType} promotion" loading="lazy" width="500" height="500">
                         ${customLabel ? `
                             <div class="cta-container">
                                 <a href="#" class="btn-cta" id="cta-button">${customLabel}</a>
@@ -1035,7 +1063,7 @@ class MenutechPromoBase extends HTMLElement {
                 ${styles}
                 ${particlesHTML}
                 <div class="promo-section">
-                    <img src="${imageUrl}" alt="${this.eventType} promotion">
+                    <img src="${imageUrl}" alt="${this.eventType} promotion" loading="lazy" width="600" height="600">
                     ${customLabel ? `
                         <a href="#" class="btn-cta" id="cta-button-section">${customLabel}</a>
                     ` : ''}
@@ -1827,11 +1855,12 @@ class MenutechPlatformOrders extends HTMLElement {
             </style>
         `;
 
+        const optimizedCoverUrl = cover_url ? window.optimizeCloudinaryUrl(cover_url, { width: 1000 }) : '';
         const coverHtml = cover_url ? `
             <div class="cover-container">
                 ${cover_type === 'video'
                     ? `<video src="${cover_url}" autoplay loop muted playsinline></video>`
-                    : `<img src="${cover_url}">`
+                    : `<img src="${optimizedCoverUrl}" width="940" height="200">`
                 }
             </div>
         ` : '';
@@ -1857,7 +1886,7 @@ class MenutechPlatformOrders extends HTMLElement {
                                     </div>
                                     <div class="dish-price">$${dish.price}</div>
                                 </div>
-                                ${dish.image ? `<div class="dish-image"><img src="${dish.image}"></div>` : ''}
+                                ${dish.image ? `<div class="dish-image"><img src="${window.optimizeCloudinaryUrl(dish.image, { width: 200, height: 200, crop: 'fill' })}" loading="lazy" width="100" height="100"></div>` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -1866,7 +1895,7 @@ class MenutechPlatformOrders extends HTMLElement {
                         ${(cat.dishes || []).map(dish => `
                             <div class="mode2-item" data-dish='${JSON.stringify(dish).replace(/'/g, "&apos;")}'>
                                 <div class="mode2-top-row">
-                                    ${dish.image ? `<div class="mode2-image"><img src="${dish.image}"></div>` : ''}
+                                    ${dish.image ? `<div class="mode2-image"><img src="${window.optimizeCloudinaryUrl(dish.image, { width: 200, height: 200, crop: 'fill' })}" loading="lazy" width="80" height="80"></div>` : ''}
                                     <div class="mode2-left">
                                         <div class="mode2-name-price">
                                             <span class="mode2-name">${dish.name}</span>
@@ -2045,7 +2074,7 @@ class MenutechPlatformOrders extends HTMLElement {
 
         popupContent.innerHTML = `
             <div class="popup-img">
-                ${dish.image ? `<img src="${dish.image}">` : '<div style="height:100%; background:#f0f0f0;"></div>'}
+                ${dish.image ? `<img src="${window.optimizeCloudinaryUrl(dish.image, { width: 600 })}" width="500" height="250">` : '<div style="height:100%; background:#f0f0f0;"></div>'}
                 <button class="close-popup">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
