@@ -1045,7 +1045,7 @@
             html = html.replace(/data-glf-ruid=""/g, `data-glf-ruid="${ruid}"`);
 
             if (pageData.logoImg) {
-                html = html.replace(/https:\/\/menutech\.services\/assets\/img\/logomt\.png/g, pageData.logoImg);
+                html = html.replace(/https:\/\/menutech\.services\/assets\/img\/logomt.png/g, window.optimizeCloudinaryUrl(pageData.logoImg, { width: 250 }));
             }
             if (pageData.heroAddress) {
                 html = html.replace(/100 Tenth Avenue, New York City, NY 1001/g, pageData.heroAddress);

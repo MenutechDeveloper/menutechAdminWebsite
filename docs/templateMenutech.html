@@ -131,7 +131,7 @@ a {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-image: url('https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg');
+    background-image: url('https://res.cloudinary.com/dbbjxhvz5/image/upload/f_auto,q_auto,w_1200/v1777151404/yiebnrm6l10wizbcdbp2.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -318,7 +318,7 @@ a {
 .promo-section {
     position: relative;
     padding: 80px 0;
-    background-image: url('https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg');
+    background-image: url('https://res.cloudinary.com/dbbjxhvz5/image/upload/f_auto,q_auto,w_1200/v1777151404/yiebnrm6l10wizbcdbp2.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -404,7 +404,7 @@ a {
 .catering-section {
     position: relative;
     padding: 100px 0;
-    background-image: url('https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg');
+    background-image: url('https://res.cloudinary.com/dbbjxhvz5/image/upload/f_auto,q_auto,w_1200/v1777151404/yiebnrm6l10wizbcdbp2.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -715,7 +715,7 @@ a {
         <div class="hero-overlay"></div>
         <div class="hero-content">
             <div class="hero-logo-container">
-                <img src="https://menutech.services/assets/img/logomt.png" id="hero-logo" alt="Logo" class="hero-logo">
+                <img src="https://menutech.services/assets/img/logomt.png" id="hero-logo" alt="Logo" class="hero-logo" width="120" height="120">
             </div>
             <h2 class="hero-subtitle">
                 <span></span>
@@ -775,8 +775,8 @@ a {
                     <p id="about-p3">Our mission is to help you savor the moments that truly matter. Enjoy great food. Sip on a refreshing drink. And above all, unwind and feel at home. We sincerely appreciate your continued support and trust</p>
                 </div>
                 <div class="about-images">
-                    <img id="about-img-1" src="https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg" alt="Grilled Salmon" class="about-image">
-                    <img id="about-img-2" src="https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg" alt="Caprese Salad" class="about-image">
+                    <img id="about-img-1" src="https://res.cloudinary.com/dbbjxhvz5/image/upload/f_auto,q_auto,w_600/v1777151404/yiebnrm6l10wizbcdbp2.jpg" alt="Grilled Salmon" class="about-image" loading="lazy" width="400" height="350">
+                    <img id="about-img-2" src="https://res.cloudinary.com/dbbjxhvz5/image/upload/f_auto,q_auto,w_600/v1777151404/yiebnrm6l10wizbcdbp2.jpg" alt="Caprese Salad" class="about-image" loading="lazy" width="400" height="350">
                 </div>
             </div>
         </div>
@@ -926,7 +926,7 @@ a {
                     <p id="delivery-p3">Simply select "Delivery" at the checkout screen and we hope you'll appreciate our food delivery service.</p>
                 </div>
                 <div class="delivery-image-container">
-                    <img id="delivery-image" src="https://res.cloudinary.com/dbbjxhvz5/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg" alt="Pizza Delivery" class="delivery-image">
+                    <img id="delivery-image" src="https://res.cloudinary.com/dbbjxhvz5/image/upload/f_auto,q_auto,w_800/v1777151404/yiebnrm6l10wizbcdbp2.jpg" alt="Pizza Delivery" class="delivery-image" loading="lazy" width="600" height="400">
                 </div>
             </div>
         </div>
@@ -954,6 +954,20 @@ a {
 
     <script>
         /* Menutech bilingual and dynamic content logic */
+        const optimizeCloudinaryUrl = (url, options = {}) => {
+            if (!url || typeof url !== 'string' || !url.includes('res.cloudinary.com')) return url;
+            const [baseUrl, hash] = url.split('#');
+            if (!baseUrl.includes('/upload/')) return url;
+            const parts = baseUrl.split('/upload/');
+            let transformations = ['f_auto', 'q_auto'];
+            if (options.width) transformations.push(`w_${options.width}`);
+            if (options.height) transformations.push(`h_${options.height}`);
+            if (options.crop) transformations.push(`c_${options.crop}`);
+            const transformationString = transformations.join(',');
+            const optimizedUrl = `${parts[0]}/upload/${transformationString}/${parts[1]}`;
+            return hash ? `${optimizedUrl}#${hash}` : optimizedUrl;
+        };
+
         const SOCIAL_ICONS = {
             instagram: `<svg style="width:24px;height:24px;fill:currentColor" viewBox="0 0 24 24"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8A3.6 3.6 0 0 0 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6A3.6 3.6 0 0 0 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>`,
             facebook: `<svg style="width:24px;height:24px;fill:currentColor" viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z"/></svg>`,
@@ -1002,8 +1016,9 @@ a {
             if (data.logoImg) {
                 const logo = document.getElementById('hero-logo');
                 const favicon = document.getElementById('favicon');
-                if (logo) logo.src = data.logoImg;
-                if (favicon) favicon.href = data.logoImg;
+                const optimizedLogo = optimizeCloudinaryUrl(data.logoImg, { width: 250 });
+                if (logo) logo.src = optimizedLogo;
+                if (favicon) favicon.href = optimizedLogo;
             }
 
             // Hero Address
@@ -1064,29 +1079,29 @@ a {
             // Hero
             if (data.heroImg) {
                 const heroSection = document.getElementById('hero-section');
-                if (heroSection) heroSection.style.backgroundImage = `url('${data.heroImg}')`;
+                if (heroSection) heroSection.style.backgroundImage = `url('${optimizeCloudinaryUrl(data.heroImg, { width: 1200 })}')`;
             }
 
             // Section Images
             if (data.aboutImg1) {
                 const img = document.getElementById('about-img-1');
-                if (img) img.src = data.aboutImg1;
+                if (img) img.src = optimizeCloudinaryUrl(data.aboutImg1, { width: 600 });
             }
             if (data.aboutImg2) {
                 const img = document.getElementById('about-img-2');
-                if (img) img.src = data.aboutImg2;
+                if (img) img.src = optimizeCloudinaryUrl(data.aboutImg2, { width: 600 });
             }
             if (data.promoBg) {
                 const el = document.getElementById('promo-section');
-                if (el) el.style.backgroundImage = `url('${data.promoBg}')`;
+                if (el) el.style.backgroundImage = `url('${optimizeCloudinaryUrl(data.promoBg, { width: 1200 })}')`;
             }
             if (data.cateringBg) {
                 const el = document.getElementById('catering-section');
-                if (el) el.style.backgroundImage = `url('${data.cateringBg}')`;
+                if (el) el.style.backgroundImage = `url('${optimizeCloudinaryUrl(data.cateringBg, { width: 1200 })}')`;
             }
             if (data.deliveryImg) {
                 const img = document.getElementById('delivery-image');
-                if (img) img.src = data.deliveryImg;
+                if (img) img.src = optimizeCloudinaryUrl(data.deliveryImg, { width: 800 });
             }
 
             // Info Section
@@ -1125,7 +1140,7 @@ a {
                 const container = document.getElementById('gallery-container');
                 if (container) {
                     container.innerHTML = data.gallery.map(img => `
-                        <img src="${img}" class="gallery-img">
+                        <img src="${optimizeCloudinaryUrl(img, { width: 500, height: 500, crop: 'fill' })}" class="gallery-img" loading="lazy" width="400" height="400">
                     `).join('');
                 }
             }
