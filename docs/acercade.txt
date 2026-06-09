@@ -1,0 +1,30 @@
+# Información sobre el Almacenamiento de Imágenes y Cambio de Cloudinary
+
+Hola, he revisado tu proyecto y aquí tienes las respuestas a tus dudas sobre el cambio de cuenta de Cloudinary:
+
+## 1. ¿Se perderán las imágenes si suspenden la cuenta actual?
+**Sí.** Las imágenes que has cargado en `adminTemplate` y `adminWeb` no se guardan dentro de los archivos del proyecto ni en la base de datos de Supabase de forma física. Lo que se guarda es un **enlace (URL)** que apunta a los servidores de Cloudinary (ej. `res.cloudinary.com/dbbjxhvz5/...`).
+
+Si tu cuenta de Cloudinary (`dbbjxhvz5`) es suspendida el 15 de junio, esos enlaces dejarán de funcionar y las imágenes desaparecerán de las páginas web de tus usuarios.
+
+## 2. Solución implementada
+He actualizado la configuración central del proyecto para que, a partir de ahora, todas las nuevas imágenes que cargues se guarden en tu nueva cuenta:
+
+*   **Nuevo Cloud Name:** `dzklt0a5u`
+*   **Nuevo Upload Preset:** `Menutech`
+
+Este cambio se ha aplicado en:
+*   `docs/config.js` (Configuración de subida)
+*   `docs/adminTemplate.html` y `docs/templateMenutech.html` (Enlaces predefinidos y plantillas)
+
+## 3. ¿Cómo pasar las imágenes actuales al nuevo Cloudinary?
+No existe una forma automática de "pasar" las imágenes mediante código sin que se rompan los enlaces actuales, ya que cada imagen en la nueva cuenta tendrá una URL distinta. Sin embargo, aquí tienes la solución para no perder nada:
+
+1.  **Migración Manual:** Debes descargar las imágenes de tu cuenta antigua (`dbbjxhvz5`) y subirlas a la nueva cuenta (`dzklt0a5u`).
+2.  **Actualización de Base de Datos:** Una vez subidas a la nueva cuenta, las URLs en la base de datos (tablas `menutech_web_templates`, `galeria`, `promos`, `menutech_footers`) seguirán apuntando a la cuenta vieja. Tendrás que editar cada perfil desde el panel administrativo y volver a seleccionar/subir las imágenes para que se generen los nuevos enlaces.
+3.  **Herramientas de Cloudinary:** Cloudinary ofrece herramientas de migración entre cuentas, pero esto se hace desde su propia consola de administración, no desde el código del proyecto.
+
+## Recomendación final
+Para asegurar que el proyecto permanezca tal cual lo tienes, te recomiendo subir las imágenes a la nueva cuenta lo antes posible y actualizar los enlaces en el panel de administración antes del 15 de junio. El código ya está listo para trabajar con tu nueva cuenta `dzklt0a5u`.
+
+No se ha modificado nada más del proyecto, por lo que la estructura y el funcionamiento permanecen idénticos.
