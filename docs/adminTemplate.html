@@ -618,6 +618,20 @@
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
         import { MT_CONFIG } from './config.js';
 
+        window.optimizeCloudinaryUrl = (url, options = {}) => {
+            if (!url || typeof url !== 'string' || !url.includes('res.cloudinary.com')) return url;
+            const [baseUrl, hash] = url.split('#');
+            if (!baseUrl.includes('/upload/')) return url;
+            const parts = baseUrl.split('/upload/');
+            let transformations = ['f_auto', 'q_auto'];
+            if (options.width) transformations.push(`w_${options.width}`);
+            if (options.height) transformations.push(`h_${options.height}`);
+            if (options.crop) transformations.push(`c_${options.crop}`);
+            const transformationString = transformations.join(',');
+            const optimizedUrl = `${parts[0]}/upload/${transformationString}/${parts[1]}`;
+            return hash ? `${optimizedUrl}#${hash}` : optimizedUrl;
+        };
+
         window.sb = createClient(MT_CONFIG.SUPABASE_URL, MT_CONFIG.SUPABASE_KEY);
         const sb = window.sb;
 
@@ -1439,7 +1453,7 @@
                 const preview = document.getElementById(`${img.id}-preview`);
                 const placeholder = document.getElementById(`${img.id}-placeholder`);
                 if (preview && img.url) {
-                    preview.src = img.url;
+                    preview.src = window.optimizeCloudinaryUrl(img.url, { width: 400 });
                     preview.classList.remove('hidden');
                     if (placeholder) placeholder.classList.add('hidden');
                 }
@@ -1457,7 +1471,7 @@
             const container = document.getElementById('gallery-items');
             container.innerHTML = pageData.gallery.map((img, index) => `
                 <div class="gallery-item">
-                    <img src="${img}">
+                    <img src="${window.optimizeCloudinaryUrl(img, { width: 200, height: 200, crop: 'fill' })}">
                     <button class="remove-btn" onclick="window.removeGalleryItem(${index})">×</button>
                 </div>
             `).join('');
@@ -1515,7 +1529,7 @@
                             const preview = document.getElementById(`${id}-preview`);
                             const placeholder = document.getElementById(`${id}-placeholder`);
                             if (preview) {
-                                preview.src = d.secure_url;
+                                preview.src = window.optimizeCloudinaryUrl(d.secure_url, { width: 400 });
                                 preview.classList.remove('hidden');
                                 if (placeholder) placeholder.classList.add('hidden');
                             }

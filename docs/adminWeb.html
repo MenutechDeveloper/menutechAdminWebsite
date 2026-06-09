@@ -682,7 +682,7 @@
         import { MT_CONFIG } from './config.js';
         import { supabase as sb } from './supabase.js';
 
-        const optimizeCloudinaryUrl = (url, options = {}) => {
+        window.optimizeCloudinaryUrl = (url, options = {}) => {
             if (!url || typeof url !== 'string' || !url.includes('res.cloudinary.com')) return url;
             const [baseUrl, hash] = url.split('#');
             if (!baseUrl.includes('/upload/')) return url;
@@ -1262,7 +1262,7 @@
             const placeholder = document.getElementById('promo-drop-placeholder');
 
             if (promo.image_url) {
-                preview.src = optimizeCloudinaryUrl(promo.image_url.split('#')[0], { width: 500 });
+                preview.src = window.optimizeCloudinaryUrl(promo.image_url.split('#')[0], { width: 500 });
                 preview.classList.remove('hidden');
                 placeholder.classList.add('hidden');
             } else {
@@ -1321,7 +1321,7 @@
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
                 const d = await res.json();
                 const preview = document.getElementById('promo-preview');
-                preview.src = optimizeCloudinaryUrl(d.secure_url, { width: 500 });
+                preview.src = window.optimizeCloudinaryUrl(d.secure_url, { width: 500 });
                 preview.classList.remove('hidden');
                 placeholder.classList.add('hidden');
                 placeholder.innerHTML = '<p>Drag & Drop Promo Image</p><span style="font-size:0.75rem; color:var(--text-dim)">or click to select</span>';
