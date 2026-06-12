@@ -949,6 +949,9 @@ a {
                     <p id="footer-hours">Monday - Sunday: 5PM - 10PM</p>
                 </div>
             </div>
+            <div style="text-align: center; margin-top: 40px; font-size: 14px; color: #9a9a9a; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                © 2015 - <span id="copyright-year"></span> Powered by <a href="https://menutech.xyz/" target="_blank" style="color: #ff9533; font-weight: 800;">Menutech</a>
+            </div>
         </div>
     </footer>
 
@@ -1203,6 +1206,10 @@ a {
 
         // Initialize from embedded state (for exported files)
         document.addEventListener('DOMContentLoaded', () => {
+            // Set current year
+            const yearEl = document.getElementById('copyright-year');
+            if (yearEl) yearEl.textContent = new Date().getFullYear();
+
             if (window.MENU_TECH_STATE) {
                 updateUI(window.MENU_TECH_STATE);
             }
