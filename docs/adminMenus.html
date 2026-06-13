@@ -249,6 +249,13 @@
         .dish-img { width: 60px; height: 60px; border-radius: 12px; background: var(--card); overflow: hidden; cursor: pointer; }
         .dish-img img { width: 100%; height: 100%; object-fit: cover; }
         .dish-info { flex: 1; }
+        .dish-card input {
+            background: transparent !important;
+            border: none !important;
+            color: var(--text);
+            font-family: inherit;
+            outline: none;
+        }
         .dish-price { font-weight: 700; color: var(--orange); }
 
         .btn-add-main {
@@ -359,18 +366,6 @@
                 </div>
 
                 <div id="menu-editor" class="hidden">
-                    <div class="component-header">
-                        <h2>Menu Design</h2>
-                        <div style="display:flex; gap:10px;">
-                            <label style="cursor:pointer; padding:10px 20px; border-radius:14px; border:1px solid var(--border); font-size:0.8rem; font-weight:800; transition:0.3s;" id="label-mode1">
-                                <input type="radio" name="menu-style" value="mode1" onchange="updateStyle(this.value)" style="display:none"> Mode 1
-                            </label>
-                            <label style="cursor:pointer; padding:10px 20px; border-radius:14px; border:1px solid var(--border); font-size:0.8rem; font-weight:800; transition:0.3s;" id="label-mode2">
-                                <input type="radio" name="menu-style" value="mode2" onchange="updateStyle(this.value)" style="display:none"> Mode 2
-                            </label>
-                        </div>
-                    </div>
-
                     <div class="component-header"><h2>Menu Cover</h2></div>
                     <div class="cover-section" id="cover-drop-zone">
                         <div class="placeholder" id="cover-placeholder">
@@ -469,7 +464,7 @@
         import { supabase as sb } from './supabase.js';
 
         let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
-        let menuData = { cover_url: '', cover_type: 'image', menu_style: 'mode1', config: { categories: [], toppings: [] } };
+        let menuData = { cover_url: '', cover_type: 'image', menu_style: 'mode2', config: { categories: [], toppings: [] } };
         let allOwners = [];
         let hasChanges = false;
 
@@ -586,7 +581,7 @@
             if (!activeOwnerId) return;
             setChanges(false);
             // Clear existing data to prevent bleed-through
-            menuData = { cover_url: '', cover_type: 'image', menu_style: 'mode1', config: { categories: [], toppings: [] } };
+            menuData = { cover_url: '', cover_type: 'image', menu_style: 'mode2', config: { categories: [], toppings: [] } };
 
             document.getElementById('menu-editor').classList.add('hidden');
             document.getElementById('no-menu-container').classList.add('hidden');
@@ -600,7 +595,7 @@
             if (data) {
                 menuData = data;
                 if (!menuData.config) menuData.config = { categories: [], toppings: [] };
-                if (!menuData.menu_style) menuData.menu_style = 'mode1';
+                menuData.menu_style = 'mode2';
                 // Ensure Topping IDs
                 (menuData.config.toppings || []).forEach(tg => {
                     if (!tg.id) tg.id = 'tg-' + Math.random().toString(36).substr(2, 9);
@@ -617,7 +612,7 @@
             menuData = {
                 cover_url: '',
                 cover_type: 'image',
-                menu_style: 'mode1',
+                menu_style: 'mode2',
                 slug: document.getElementById('slug-input').value,
                 config: { categories: [], toppings: [] }
             };
@@ -625,19 +620,6 @@
             document.getElementById('menu-editor').classList.remove('hidden');
             renderMenuEditor();
             setChanges(true);
-        };
-
-        window.updateStyle = (style) => {
-            setChanges(true);
-            menuData.menu_style = style;
-            const l1 = document.getElementById('label-mode1');
-            const l2 = document.getElementById('label-mode2');
-            if (l1 && l2) {
-                l1.style.background = style === 'mode1' ? 'var(--orange)' : 'var(--card)';
-                l1.style.color = style === 'mode1' ? '#fff' : 'var(--text-dim)';
-                l2.style.background = style === 'mode2' ? 'var(--orange)' : 'var(--card)';
-                l2.style.color = style === 'mode2' ? '#fff' : 'var(--text-dim)';
-            }
         };
 
         async function showApp(profile) {
@@ -704,7 +686,6 @@
         }
 
         function renderMenuEditor() {
-            updateStyle(menuData.menu_style || 'mode1');
             renderCover();
             renderCategories();
             renderToppings();
