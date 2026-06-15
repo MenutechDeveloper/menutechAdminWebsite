@@ -11,11 +11,12 @@ function injectMenuTechStyles() {
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap');
 
     menutech-orders, menutech-reservations {
-      display: inline-block !important;
+      display: block !important;
       font-family: 'Poppins', sans-serif !important;
-      margin: 8px !important;
+      margin: 8px auto !important;
       vertical-align: middle !important;
       text-align: center !important;
+      width: fit-content !important;
     }
     .menutech-btn {
       display: inline-flex !important;
