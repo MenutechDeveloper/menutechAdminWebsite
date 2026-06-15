@@ -142,6 +142,22 @@
         .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
         .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
 
+        .btn-copy {
+            background: #fff5eb;
+            border: 1px solid #ffd8b0;
+            color: var(--orange);
+            padding: 12px 24px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+        }
+        .btn-copy:hover { background: var(--orange); color: #fff; }
+
         .orders-grid { display: grid; gap: 24px; }
         .order-card {
             background: var(--card); border: 1.5px solid var(--border); border-radius: 24px;
@@ -254,6 +270,9 @@
             </div>
 
             <div class="main-content">
+                <div id="snippet-section" class="hidden" style="display: flex; justify-content: center; margin-bottom: 40px;">
+                    <button id="btn-copy-snippet" class="btn-copy" style="width: 100%; max-width: 800px;">COPY ORDERS CODE</button>
+                </div>
                 <div id="orders-list" class="orders-grid">
                     <div class="empty-state">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -281,24 +300,17 @@
             user = session.user;
 
             const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-            if (!profile) {
-                userRole = 'owner';
-                activeOwnerId = user.id;
-                showApp(null);
-                loadOrders();
-                subscribeToOrders();
-                return;
-            }
 
-            userRole = (profile.role || 'owner').toLowerCase();
+            userRole = (profile?.role || 'OWNER').trim().toUpperCase();
             activeOwnerId = user.id;
 
-            const csRoles = ['cs', 'admincs'];
-            const adminRoles = ['admin', 'developer'];
+            const csRoles = ['CS', 'ADMINCS'];
+            const adminRoles = ['ADMIN', 'DEVELOPER'];
 
             if (adminRoles.includes(userRole) || csRoles.includes(userRole)) {
                 document.getElementById('sidebar-container').classList.remove('hidden');
                 document.getElementById('sidebar-container').classList.add('collapsed');
+                document.getElementById('snippet-section').classList.remove('hidden');
                 await setupContextSwitcher();
             }
 
@@ -310,15 +322,22 @@
         async function showApp(profile) {
             document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('top-nav').classList.remove('hidden');
-            if (profile) {
-                document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
-                document.getElementById('user-role-label').textContent = profile.role || 'User';
 
-                const pill = document.getElementById('user-display-pill');
+            const pill = document.getElementById('user-display-pill');
+            const nameEl = document.getElementById('user-name');
+            const roleEl = document.getElementById('user-role-label');
+
+            if (profile) {
+                nameEl.textContent = profile.username || user.email.split('@')[0];
+                roleEl.textContent = profile.role || 'User';
                 const role = (profile.role || 'user').trim().toUpperCase();
                 if (role === 'ADMIN') pill.classList.add('admin-glow');
                 else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
                 else pill.classList.add('owner-glow');
+            } else {
+                nameEl.textContent = user.email.split('@')[0];
+                roleEl.textContent = 'Owner';
+                pill.classList.add('owner-glow');
             }
         }
 
@@ -523,6 +542,16 @@
             pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
             document.addEventListener('click', () => pill.classList.remove('active'));
             window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
+
+            document.getElementById('btn-copy-snippet').onclick = () => {
+                const domain = allOwners.find(o => o.id === activeOwnerId)?.domain || 'your-domain';
+                const snippet = `<!-- Menutech Orders -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-platform-orders domain="${domain}" view="popup"></menutech-platform-orders>`;
+                navigator.clipboard.writeText(snippet).then(() => {
+                    const btn = document.getElementById('btn-copy-snippet');
+                    btn.textContent = "COPIED!";
+                    setTimeout(() => btn.textContent = "COPY ORDERS CODE", 2000);
+                });
+            };
         }
 
         init();
