@@ -172,9 +172,30 @@
         .tab-btn.active .count { background: rgba(255,255,255,0.2); }
 
         /* Layout Split */
-        .orders-split-view { display: flex; gap: 24px; height: calc(100vh - 350px); min-height: 500px; }
+        .orders-split-view { display: flex; gap: 24px; height: calc(100vh - 300px); min-height: 500px; }
         .orders-list-pane { flex: 0 0 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 10px; }
-        .order-details-pane { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 40px; overflow-y: auto; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.02); }
+        .order-details-pane {
+            flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 24px;
+            display: flex; flex-direction: column; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.02);
+            overflow: hidden; /* Header and footer stay, items scroll */
+        }
+
+        /* Progress Tracker */
+        .order-progress-tracker {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+            padding: 10px 0; border-bottom: 1px solid var(--border);
+        }
+        .progress-step { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; position: relative; }
+        .progress-step:not(:last-child)::after {
+            content: ''; position: absolute; top: 12px; right: -50%; width: 100%; height: 2px; background: var(--border); z-index: 1;
+        }
+        .progress-step.active:not(:last-child)::after { background: var(--orange); }
+        .progress-step .dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border); background: var(--card); z-index: 2; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: var(--text-dim); }
+        .progress-step.active .dot { border-color: var(--orange); background: var(--orange); color: #fff; }
+        .progress-step.completed .dot { border-color: var(--success); background: var(--success); color: #fff; }
+        .progress-step .label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.5px; }
+        .progress-step.active .label { color: var(--orange); }
+        .progress-step.completed .label { color: var(--success); }
 
         /* Compact Card */
         .order-card-compact {
@@ -194,21 +215,21 @@
         .order-card-compact .order-time { font-size: 0.75rem; font-weight: 600; margin-top: 10px; display: block; color: var(--orange); }
 
         /* Full Details Styling */
-        .details-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
-        .details-header h2 { font-family: 'Outfit'; font-size: 2rem; }
-        .details-header .status-tag { padding: 6px 16px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+        .details-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .details-header h2 { font-family: 'Outfit'; font-size: 1.5rem; }
+        .details-header .status-tag { padding: 6px 16px; border-radius: 30px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
         .status-tag.pending { background: rgba(255,149,51,0.1); color: var(--orange); }
         .status-tag.accepted { background: rgba(59,130,246,0.1); color: var(--info); }
         .status-tag.finished { background: rgba(5,150,105,0.1); color: var(--success); }
         .status-tag.rejected { background: rgba(220,38,38,0.1); color: var(--error); }
 
-        .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-bottom: 40px; }
-        .info-group label { display: block; font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
-        .info-group p { font-size: 1rem; font-weight: 600; }
+        .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .info-group label { display: block; font-size: 0.6rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
+        .info-group p { font-size: 0.85rem; font-weight: 600; }
         .info-group a { color: var(--info); text-decoration: none; border-bottom: 1px dashed var(--info); }
 
-        .items-section { background: var(--input); border-radius: 24px; padding: 30px; margin-bottom: 30px; }
-        .items-section h3 { font-family: 'Outfit'; margin-bottom: 20px; font-size: 1.2rem; }
+        .items-section { background: var(--input); border-radius: 20px; padding: 20px; margin-bottom: 20px; flex: 1; overflow-y: auto; }
+        .items-section h3 { font-family: 'Outfit'; margin-bottom: 15px; font-size: 1rem; }
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
         .item-row:last-child { border-bottom: none; }
         .item-row:hover { opacity: 0.7; }
@@ -217,8 +238,8 @@
         .item-price { font-weight: 700; color: var(--orange); }
         .item-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; padding-left: 0; }
 
-        .details-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 30px; }
-        .total-amount { font-size: 2.2rem; font-weight: 800; font-family: 'Outfit'; color: var(--orange); }
+        .details-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 20px; }
+        .total-amount { font-size: 1.8rem; font-weight: 800; font-family: 'Outfit'; color: var(--orange); }
 
         .actions-bar { display: flex; gap: 15px; }
         .btn { padding: 14px 32px; border-radius: 18px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; letter-spacing: 1px; }
@@ -542,15 +563,37 @@
             const paymentMethod = (order.payment_method || 'N/A').charAt(0).toUpperCase() + (order.payment_method || 'N/A').slice(1);
             const statusLabel = order.status === 'accepted' ? 'In Process' : order.status.charAt(0).toUpperCase() + order.status.slice(1);
 
+            const isPending = order.status === 'pending';
+            const isAccepted = order.status === 'accepted';
+            const isFinished = order.status === 'finished';
+            const isRejected = order.status === 'rejected';
+
             pane.innerHTML = `
                 <button class="close-details" onclick="closeDetails()">✕</button>
                 <div class="details-header">
                     <div>
                         <h2>${order.customer_name}</h2>
-                        <p style="color:var(--text-dim); margin-top:5px;">${dateStr}</p>
+                        <p style="color:var(--text-dim); margin-top:5px; font-size:0.8rem;">${dateStr}</p>
                     </div>
                     <div class="status-tag ${order.status}">${statusLabel}</div>
                 </div>
+
+                ${!isRejected ? `
+                <div class="order-progress-tracker">
+                    <div class="progress-step ${isPending || isAccepted || isFinished ? 'active' : ''} ${isAccepted || isFinished ? 'completed' : ''}">
+                        <div class="dot">${isAccepted || isFinished ? '✓' : '1'}</div>
+                        <div class="label">Pending</div>
+                    </div>
+                    <div class="progress-step ${isAccepted || isFinished ? 'active' : ''} ${isFinished ? 'completed' : ''}">
+                        <div class="dot">${isFinished ? '✓' : '2'}</div>
+                        <div class="label">In Process</div>
+                    </div>
+                    <div class="progress-step ${isFinished ? 'active' : ''} ${isFinished ? 'completed' : ''}">
+                        <div class="dot">${isFinished ? '✓' : '3'}</div>
+                        <div class="label">Finished</div>
+                    </div>
+                </div>
+                ` : ''}
 
                 <div class="details-grid">
                     <div class="info-group">
