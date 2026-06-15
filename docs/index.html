@@ -289,8 +289,9 @@
 
                     const qrRoles = ['DESIGN', 'ADMINDESIGN', 'RETENTION'];
                     const csRoles = ['CS', 'ADMINCS'];
+                    const adminRoles = ['ADMIN', 'DEVELOPER'];
 
-                    if (role === 'ADMIN' || role === 'DEVELOPER') {
+                    if (adminRoles.includes(role)) {
                         document.getElementById('card-buttons').classList.remove('hidden');
                         if (role === 'ADMIN') {
                             document.getElementById('card-lab').classList.remove('hidden');
