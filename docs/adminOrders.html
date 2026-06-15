@@ -18,6 +18,7 @@
             --border: #f8e8d8;
             --success: #059669;
             --error: #dc2626;
+            --info: #3b82f6;
             --dev: #8b5cf6;
         }
 
@@ -35,13 +36,13 @@
 
         .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
 
-        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 80px 24px; animation: fadeIn 1s ease-out; }
+        .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 80px 24px; animation: fadeIn 1s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        header { text-align: center; margin-bottom: 72px; }
-        .logo-main { width: 100%; max-width: 280px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
+        header { text-align: center; margin-bottom: 40px; }
+        .logo-main { width: 100%; max-width: 200px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
 
-        .dashboard-layout { display: flex; min-height: calc(100vh - 160px); gap: 40px; }
+        .dashboard-layout { display: flex; min-height: calc(100vh - 160px); gap: 20px; position: relative; }
 
         /* Unified Sidebar Container */
         .sidebar-container {
@@ -52,7 +53,7 @@
         .sidebar-container.collapsed { transform: translateX(-340px) !important; }
 
         .sidebar { width: 340px; height: 600px; display: flex; flex-direction: column; gap: 20px; }
-        .main-content { flex: 1; min-width: 0; }
+        .main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
 
         .search-box { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 24px; position: relative; cursor: default; transition: opacity 0.3s; user-select: none; z-index: 100; box-shadow: 0 20px 50px rgba(0,0,0,0.15); height: 100%; display: flex; flex-direction: column; }
         .search-box label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--orange); text-transform: uppercase; margin-bottom: 15px; margin-left: 5px; pointer-events: none; }
@@ -72,9 +73,6 @@
             width: 45px; height: 160px; background: var(--orange); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 0 16px 16px 0; cursor: pointer; writing-mode: vertical-lr; text-orientation: mixed; font-weight: 800; font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; box-shadow: 10px 0 30px rgba(255, 149, 51, 0.2); transition: 0.4s; margin-top: 40px; position: relative;
         }
         .sidebar-tab:hover { width: 55px; padding-left: 10px; }
-
-        .component-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .component-header h2 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 700; }
 
         #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
         #top-nav > * { pointer-events: auto; }
@@ -158,55 +156,100 @@
         }
         .btn-copy:hover { background: var(--orange); color: #fff; }
 
-        .orders-grid { display: grid; gap: 24px; }
-        .order-card {
-            background: var(--card); border: 1.5px solid var(--border); border-radius: 24px;
-            padding: 30px; transition: 0.3s; position: relative; overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+        /* Tabs Styling */
+        .tabs-container {
+            display: flex; gap: 10px; margin-bottom: 20px; background: var(--card); padding: 10px; border-radius: 24px; border: 1px solid var(--border);
+            overflow-x: auto; scrollbar-width: none;
         }
-        .order-card.pending { border-left: 8px solid var(--orange); }
-        .order-card.accepted { border-left: 8px solid var(--success); }
-        .order-card.rejected { border-left: 8px solid var(--error); opacity: 0.7; }
-
-        .order-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-        .cust-info h3 { font-family: 'Outfit', sans-serif; font-size: 1.4rem; margin-bottom: 5px; }
-        .cust-info p { font-size: 0.9rem; color: var(--text-dim); }
-
-        .order-details-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;
-            padding: 15px; background: var(--input); border-radius: 18px; font-size: 0.85rem;
+        .tabs-container::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            flex: 1; padding: 12px 20px; border-radius: 16px; border: none; background: transparent; color: var(--text-dim);
+            font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.3s; white-space: nowrap;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .detail-item strong { display: block; color: var(--orange); font-size: 0.7rem; text-transform: uppercase; margin-bottom: 2px; }
+        .tab-btn.active { background: var(--orange); color: #fff; box-shadow: 0 8px 20px rgba(255, 149, 51, 0.2); }
+        .tab-btn .count { background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; }
+        .tab-btn.active .count { background: rgba(255,255,255,0.2); }
 
-        .order-items { margin: 20px 0; padding: 20px; background: var(--input); border-radius: 18px; }
-        .item-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95rem; }
-        .item-details { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 5px; padding-left: 10px; }
+        /* Layout Split */
+        .orders-split-view { display: flex; gap: 24px; height: calc(100vh - 350px); min-height: 500px; }
+        .orders-list-pane { flex: 0 0 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 10px; }
+        .order-details-pane { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 40px; overflow-y: auto; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.02); }
 
-        .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
-        .total-price { font-size: 1.5rem; font-weight: 800; color: var(--orange); }
-
-        .actions { display: flex; gap: 15px; }
-        .btn {
-            padding: 12px 24px; border-radius: 14px; border: none; font-weight: 800;
-            text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.85rem;
+        /* Compact Card */
+        .order-card-compact {
+            background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; cursor: pointer; transition: 0.3s;
+            position: relative; overflow: hidden;
         }
-        .btn-accept { background: var(--success); color: #fff; }
+        .order-card-compact:hover { border-color: var(--orange); transform: translateX(5px); }
+        .order-card-compact.active { border-color: var(--orange); background: rgba(255, 149, 51, 0.04); border-width: 2px; }
+        .order-card-compact .status-dot { width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 20px; right: 20px; }
+        .order-card-compact.pending .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
+        .order-card-compact.accepted .status-dot { background: var(--info); box-shadow: 0 0 10px var(--info); }
+        .order-card-compact.finished .status-dot { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        .order-card-compact.rejected .status-dot { background: var(--error); }
+
+        .order-card-compact h4 { font-size: 1rem; font-family: 'Outfit'; margin-bottom: 4px; }
+        .order-card-compact p { font-size: 0.8rem; color: var(--text-dim); }
+        .order-card-compact .order-time { font-size: 0.75rem; font-weight: 600; margin-top: 10px; display: block; color: var(--orange); }
+
+        /* Full Details Styling */
+        .details-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+        .details-header h2 { font-family: 'Outfit'; font-size: 2rem; }
+        .details-header .status-tag { padding: 6px 16px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+        .status-tag.pending { background: rgba(255,149,51,0.1); color: var(--orange); }
+        .status-tag.accepted { background: rgba(59,130,246,0.1); color: var(--info); }
+        .status-tag.finished { background: rgba(5,150,105,0.1); color: var(--success); }
+        .status-tag.rejected { background: rgba(220,38,38,0.1); color: var(--error); }
+
+        .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-bottom: 40px; }
+        .info-group label { display: block; font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
+        .info-group p { font-size: 1rem; font-weight: 600; }
+        .info-group a { color: var(--info); text-decoration: none; border-bottom: 1px dashed var(--info); }
+
+        .items-section { background: var(--input); border-radius: 24px; padding: 30px; margin-bottom: 30px; }
+        .items-section h3 { font-family: 'Outfit'; margin-bottom: 20px; font-size: 1.2rem; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
+        .item-row:last-child { border-bottom: none; }
+        .item-row:hover { opacity: 0.7; }
+        .item-row.crossed .item-name { text-decoration: line-through; opacity: 0.5; }
+        .item-name { font-weight: 600; }
+        .item-price { font-weight: 700; color: var(--orange); }
+        .item-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; padding-left: 0; }
+
+        .details-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 30px; }
+        .total-amount { font-size: 2.2rem; font-weight: 800; font-family: 'Outfit'; color: var(--orange); }
+
+        .actions-bar { display: flex; gap: 15px; }
+        .btn { padding: 14px 32px; border-radius: 18px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; letter-spacing: 1px; }
+        .btn-accept { background: var(--info); color: #fff; }
+        .btn-finish { background: var(--success); color: #fff; }
         .btn-reject { background: var(--error); color: #fff; }
-        .btn-whatsapp { background: #25D366; color: #fff; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 
-        .status-badge {
-            position: absolute; top: 20px; right: 20px; padding: 6px 14px;
-            border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+        .empty-details { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); text-align: center; }
+        .empty-details svg { width: 80px; height: 80px; opacity: 0.1; margin-bottom: 20px; }
+
+        /* Responsive Mobile Styles */
+        @media (max-width: 1024px) {
+            .orders-split-view { flex-direction: column; height: auto; }
+            .orders-list-pane { flex: none; height: auto; max-height: 500px; }
+            .order-details-pane { min-height: 400px; padding: 25px; }
+            .container { padding: 60px 15px; }
         }
-        .pending .status-badge { background: rgba(255,149,51,0.15); color: var(--orange); }
-        .accepted .status-badge { background: rgba(5,150,105,0.15); color: var(--success); }
-        .rejected .status-badge { background: rgba(220,38,38,0.15); color: var(--error); }
 
-        .empty-state { text-align: center; padding: 100px 20px; color: var(--text-dim); }
-        .empty-state svg { width: 64px; height: 64px; margin-bottom: 20px; opacity: 0.3; }
+        @media (max-width: 768px) {
+            .order-details-pane {
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 7000;
+                border-radius: 0; transform: translateY(100%); transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            .order-details-pane.open { transform: translateY(0); }
+            .close-details { display: block !important; position: absolute; top: 20px; right: 20px; background: var(--input); border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; }
+            .details-header h2 { font-size: 1.5rem; padding-right: 40px; }
+            .total-amount { font-size: 1.8rem; }
+        }
 
-        .hidden { display: none !important; }
+        .close-details { display: none; }
 
         /* Toast Notification */
         #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
@@ -219,6 +262,8 @@
 
         .loader { border: 3px solid rgba(255, 149, 51, 0.1); width: 28px; height: 28px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 1s linear infinite; margin: 0 auto; }
         @keyframes rotate { to { transform: rotate(360deg); } }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -249,8 +294,8 @@
     <div class="container hidden" id="main-app">
         <header>
             <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
-            <h1 style="font-family:'Outfit';">Real-time Orders</h1>
-            <p id="orders-subtitle" style="color:var(--text-dim); margin-top:10px;">Waiting for new orders...</p>
+            <h1 style="font-family:'Outfit';">Orders Dashboard</h1>
+            <p id="orders-subtitle" style="color:var(--text-dim); margin-top:10px;">Monitor and manage your incoming orders</p>
         </header>
 
         <div class="dashboard-layout">
@@ -270,13 +315,27 @@
             </div>
 
             <div class="main-content">
-                <div id="snippet-section" class="hidden" style="display: flex; justify-content: center; margin-bottom: 40px;">
-                    <button id="btn-copy-snippet" class="btn-copy" style="width: 100%; max-width: 800px;">COPY ORDERS CODE</button>
+                <div id="snippet-section" class="hidden" style="display: flex; justify-content: center; margin-bottom: 20px;">
+                    <button id="btn-copy-snippet" class="btn-copy">COPY ORDERS CODE</button>
                 </div>
-                <div id="orders-list" class="orders-grid">
-                    <div class="empty-state">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        <p>No orders yet. They will appear here in real-time.</p>
+
+                <div class="tabs-container">
+                    <button class="tab-btn active" onclick="switchTab('pending')">Pending <span class="count" id="count-pending">0</span></button>
+                    <button class="tab-btn" onclick="switchTab('accepted')">In Process <span class="count" id="count-accepted">0</span></button>
+                    <button class="tab-btn" onclick="switchTab('finished')">Finished <span class="count" id="count-finished">0</span></button>
+                    <button class="tab-btn" onclick="switchTab('rejected')">Rejected <span class="count" id="count-rejected">0</span></button>
+                </div>
+
+                <div class="orders-split-view">
+                    <div id="orders-list" class="orders-list-pane">
+                        <!-- Compact orders will appear here -->
+                    </div>
+                    <div id="order-details" class="order-details-pane">
+                        <div class="empty-details">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
+                            <h3>Select an order to view details</h3>
+                            <p>All the order information will appear here</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -290,6 +349,9 @@
         let orders = [];
         let allOwners = [];
         let ordersChannel = null;
+        let currentTab = 'pending';
+        let selectedOrderId = null;
+        let crossedItems = new Set();
 
         async function init() {
             initTheme();
@@ -370,10 +432,7 @@
             document.getElementById('project-info').classList.remove('hidden');
             renderOwners(allOwners);
 
-            // Cleanup previous subscription
-            if (ordersChannel) {
-                sb.removeChannel(ordersChannel);
-            }
+            if (ordersChannel) sb.removeChannel(ordersChannel);
 
             loadOrders();
             subscribeToOrders();
@@ -387,6 +446,7 @@
 
             if (data) {
                 orders = data;
+                updateCounts();
                 renderOrders();
             }
         }
@@ -400,6 +460,7 @@
                     filter: `user_id=eq.${activeOwnerId}`
                 }, (payload) => {
                     orders.unshift(payload.new);
+                    updateCounts();
                     renderOrders();
                     playNotification();
                 })
@@ -412,74 +473,179 @@
                     const idx = orders.findIndex(o => o.id === payload.new.id);
                     if (idx !== -1) {
                         orders[idx] = payload.new;
+                        updateCounts();
                         renderOrders();
+                        if (selectedOrderId === payload.new.id) renderDetails(payload.new);
                     }
                 })
                 .subscribe();
         }
 
+        function updateCounts() {
+            const pending = orders.filter(o => o.status === 'pending').length;
+            const accepted = orders.filter(o => o.status === 'accepted').length;
+            const finished = orders.filter(o => o.status === 'finished').length;
+            const rejected = orders.filter(o => o.status === 'rejected').length;
+
+            document.getElementById('count-pending').textContent = pending;
+            document.getElementById('count-accepted').textContent = accepted;
+            document.getElementById('count-finished').textContent = finished;
+            document.getElementById('count-rejected').textContent = rejected;
+        }
+
+        window.switchTab = (tab) => {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${tab}'`));
+            });
+            renderOrders();
+        };
+
         function renderOrders() {
             const list = document.getElementById('orders-list');
-            if (orders.length === 0) {
-                list.innerHTML = `
-                    <div class="empty-state">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        <p>No orders yet. They will appear here in real-time.</p>
-                    </div>
-                `;
+            const filtered = orders.filter(o => o.status === currentTab);
+
+            if (filtered.length === 0) {
+                list.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-dim); opacity:0.5;">No orders in this stage</div>`;
                 return;
             }
 
-            list.innerHTML = orders.map(order => `
-                <div class="order-card ${order.status}">
-                    <div class="status-badge">${order.status}</div>
-                    <div class="order-header">
-                        <div class="cust-info">
-                            <h3>${order.customer_name}</h3>
-                            <p>${order.customer_phone}</p>
-                            <p>${new Date(order.created_at).toLocaleString()}</p>
-                        </div>
-                    </div>
-
-                    <div class="order-details-grid">
-                        <div class="detail-item"><strong>Tipo</strong>${order.order_type === 'delivery' ? 'Domicilio' : 'Recoger'}</div>
-                        <div class="detail-item"><strong>Pago</strong>${order.payment_method || 'N/A'}</div>
-                        <div class="detail-item"><strong>Entrega</strong>${order.delivery_time_mode === 'later' ? `${order.delivery_date} ${order.delivery_time}` : 'Lo antes posible'}</div>
-                        ${order.order_type === 'delivery' ? `<div class="detail-item"><strong>Dirección</strong>${order.address}</div>` : ''}
-                        ${order.reference ? `<div class="detail-item" style="grid-column: span 2"><strong>Referencia</strong>${order.reference}</div>` : ''}
-                    </div>
-
-                    <div class="order-items">
-                        ${order.items.map(item => `
-                            <div class="item-row">
-                                <span>${item.quantity > 1 ? item.quantity + 'x ' : ''}${item.name}</span>
-                                <strong>$${(item.total || (item.price * (item.quantity || 1))).toFixed(2)}</strong>
-                            </div>
-                            ${item.size || (item.toppings && item.toppings.length > 0) || item.instructions ? `
-                                <div class="item-details">
-                                    ${item.size ? `Talla: ${item.size}` : ''}
-                                    ${item.toppings && item.toppings.length > 0 ? `<br>Toppings: ${item.toppings.join(', ')}` : ''}
-                                    ${item.instructions ? `<br><span style="color:var(--orange); font-style:italic;">Instrucciones: "${item.instructions}"</span>` : ''}
-                                </div>
-                            ` : ''}
-                        `).join('')}
-                    </div>
-
-                    ${order.customer_notes || order.instructions ? `<p style="font-size:0.85rem; color:var(--text-dim); margin-bottom:20px;"><strong>Notas:</strong> ${order.customer_notes || ''} ${order.instructions || ''}</p>` : ''}
-
-                    <div class="order-footer">
-                        <div class="total-price">Total: $${order.total.toFixed(2)}</div>
-                        <div class="actions">
-                            <button class="btn btn-whatsapp" onclick="sendWhatsApp('${order.id}')">WhatsApp</button>
-                            ${order.status === 'pending' ? `
-                                <button class="btn btn-reject" onclick="updateOrderStatus('${order.id}', 'rejected')">Reject</button>
-                                <button class="btn btn-accept" onclick="updateOrderStatus('${order.id}', 'accepted')">Accept</button>
-                            ` : ''}
-                        </div>
-                    </div>
+            list.innerHTML = filtered.map(order => `
+                <div class="order-card-compact ${order.status} ${selectedOrderId === order.id ? 'active' : ''}" onclick="selectOrder('${order.id}')">
+                    <div class="status-dot"></div>
+                    <h4>${order.customer_name}</h4>
+                    <p>${order.items.length} items • $${order.total.toFixed(2)}</p>
+                    <span class="order-time">${new Date(order.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                 </div>
             `).join('');
         }
+
+        window.selectOrder = (id) => {
+            selectedOrderId = id;
+            const order = orders.find(o => o.id === id);
+            renderOrders();
+            renderDetails(order);
+            if (window.innerWidth <= 768) {
+                document.getElementById('order-details').classList.add('open');
+            }
+        };
+
+        function renderDetails(order) {
+            const pane = document.getElementById('order-details');
+            if (!order) {
+                pane.innerHTML = `<div class="empty-details"><h3>Select an order</h3></div>`;
+                return;
+            }
+
+            const dateStr = new Date(order.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+            const deliveryType = order.order_type === 'delivery' ? 'Delivery' : 'Pickup';
+            const paymentMethod = (order.payment_method || 'N/A').charAt(0).toUpperCase() + (order.payment_method || 'N/A').slice(1);
+            const statusLabel = order.status === 'accepted' ? 'In Process' : order.status.charAt(0).toUpperCase() + order.status.slice(1);
+
+            pane.innerHTML = `
+                <button class="close-details" onclick="closeDetails()">✕</button>
+                <div class="details-header">
+                    <div>
+                        <h2>${order.customer_name}</h2>
+                        <p style="color:var(--text-dim); margin-top:5px;">${dateStr}</p>
+                    </div>
+                    <div class="status-tag ${order.status}">${statusLabel}</div>
+                </div>
+
+                <div class="details-grid">
+                    <div class="info-group">
+                        <label>Phone Number</label>
+                        <p><a href="tel:${order.customer_phone}">${order.customer_phone}</a></p>
+                    </div>
+                    <div class="info-group">
+                        <label>Order Type</label>
+                        <p>${deliveryType}</p>
+                    </div>
+                    <div class="info-group">
+                        <label>Payment Method</label>
+                        <p>${paymentMethod}</p>
+                    </div>
+                    <div class="info-group">
+                        <label>Expected Time</label>
+                        <p>${order.delivery_time_mode === 'later' ? `${order.delivery_date} ${order.delivery_time}` : 'As soon as possible'}</p>
+                    </div>
+                    ${order.order_type === 'delivery' ? `
+                        <div class="info-group" style="grid-column: 1 / -1;">
+                            <label>Delivery Address</label>
+                            <p>${order.address}</p>
+                            ${order.reference ? `<p style="font-size:0.85rem; color:var(--text-dim); margin-top:5px;"><strong>Ref:</strong> ${order.reference}</p>` : ''}
+                        </div>
+                    ` : ''}
+                    ${order.customer_notes ? `
+                         <div class="info-group" style="grid-column: 1 / -1;">
+                            <label>Customer Notes</label>
+                            <p style="font-style:italic; font-weight:400;">"${order.customer_notes}"</p>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="items-section">
+                    <h3>Order Items</h3>
+                    ${order.items.map((item, idx) => {
+                        const itemId = `${order.id}-${idx}`;
+                        const isCrossed = crossedItems.has(itemId);
+                        return `
+                            <div class="item-row ${isCrossed ? 'crossed' : ''}" onclick="toggleItem('${itemId}')">
+                                <div>
+                                    <span class="item-name">${item.quantity > 1 ? item.quantity + 'x ' : ''}${item.name}</span>
+                                    <div class="item-meta">
+                                        ${item.size ? `Size: ${item.size} • ` : ''}
+                                        ${item.toppings && item.toppings.length > 0 ? `Toppings: ${item.toppings.join(', ')} • ` : ''}
+                                        ${item.instructions ? `<span style="color:var(--orange)">Note: "${item.instructions}"</span>` : ''}
+                                    </div>
+                                </div>
+                                <div class="item-price">$${(item.total || (item.price * (item.quantity || 1))).toFixed(2)}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <div class="details-footer">
+                    <div class="total-amount">Total: $${order.total.toFixed(2)}</div>
+                    <div class="actions-bar">
+                        ${order.status === 'pending' ? `
+                            <button class="btn btn-reject" onclick="updateOrderStatus('${order.id}', 'rejected')">Reject</button>
+                            <button class="btn btn-accept" onclick="updateOrderStatus('${order.id}', 'accepted')">Accept</button>
+                        ` : ''}
+                        ${order.status === 'accepted' ? `
+                            <button class="btn btn-finish" onclick="updateOrderStatus('${order.id}', 'finished')">Finish</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        window.closeDetails = () => {
+            document.getElementById('order-details').classList.remove('open');
+        };
+
+        window.toggleItem = (itemId) => {
+            if (crossedItems.has(itemId)) crossedItems.delete(itemId);
+            else crossedItems.add(itemId);
+            const order = orders.find(o => o.id === selectedOrderId);
+            renderDetails(order);
+        };
+
+        window.updateOrderStatus = async (id, status) => {
+            const { error } = await sb.from('menutech_orders')
+                .update({ status })
+                .eq('id', id);
+
+            if (error) {
+                showToast('Error updating order: ' + error.message, 'error');
+            } else {
+                showToast(`Order marked as ${status === 'accepted' ? 'In Process' : status}`);
+                if (status === 'rejected' || status === 'finished') {
+                    selectedOrderId = null;
+                    if (window.innerWidth <= 768) closeDetails();
+                }
+            }
+        };
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -492,42 +658,6 @@
                 setTimeout(() => toast.remove(), 500);
             }, 6000);
         }
-
-        window.updateOrderStatus = async (id, status) => {
-            const { error } = await sb.from('menutech_orders')
-                .update({ status })
-                .eq('id', id);
-
-            if (error) {
-                showToast('Error updating order: ' + error.message, 'error');
-            } else {
-                showToast(`Order ${status} successfully`);
-            }
-        };
-
-        window.sendWhatsApp = (orderId) => {
-            const order = orders.find(o => o.id === orderId);
-            if (!order) return;
-
-            let text = `*NUEVO PEDIDO - ${order.customer_name}*\n\n`;
-            order.items.forEach(item => {
-                text += `• ${item.quantity}x ${item.name} ($${(item.total || item.price).toFixed(2)})\n`;
-                if (item.size) text += `  _Size: ${item.size}_\n`;
-                if (item.toppings && item.toppings.length > 0) text += `  _Toppings: ${item.toppings.join(', ')}_\n`;
-                if (item.instructions) text += `  _Nota: ${item.instructions}_\n`;
-            });
-
-            text += `\n*TOTAL: $${order.total.toFixed(2)}*\n`;
-            text += `\n*DETALLES DE ENTREGA*\n`;
-            text += `Tipo: ${order.order_type === 'delivery' ? 'Domicilio' : 'Recoger'}\n`;
-            if (order.address) text += `Dir: ${order.address}\n`;
-            if (order.reference) text += `Ref: ${order.reference}\n`;
-            text += `Hora: ${order.delivery_time_mode === 'later' ? `${order.delivery_date} ${order.delivery_time}` : 'Lo antes posible'}\n`;
-            text += `Pago: ${order.payment_method === 'cash' ? 'Efectivo' : 'Transferencia'}\n`;
-
-            const phone = order.customer_phone.replace(/\D/g, '');
-            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
-        };
 
         function playNotification() {
             const audio = new Audio('https://menutech.services/assets/audio/notification.mp3');
