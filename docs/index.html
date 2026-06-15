@@ -289,9 +289,8 @@
 
                     const qrRoles = ['DESIGN', 'ADMINDESIGN', 'RETENTION'];
                     const csRoles = ['CS', 'ADMINCS'];
-                    const adminRoles = ['ADMIN', 'DEVELOPER'];
 
-                    if (adminRoles.includes(role)) {
+                    if (role === 'ADMIN' || role === 'DEVELOPER') {
                         document.getElementById('card-buttons').classList.remove('hidden');
                         if (role === 'ADMIN') {
                             document.getElementById('card-lab').classList.remove('hidden');
@@ -307,11 +306,12 @@
                         grid.style.maxWidth = '800px';
                         grid.style.margin = '40px auto 0 auto';
                     } else if (csRoles.includes(role)) {
-                        // CS roles only see Deluxe Web, Template Web, and Orders slots
+                        // CS roles only see Deluxe Web and Template Web slots
                         document.getElementById('card-users').classList.add('hidden');
                         document.getElementById('card-qr-gen').classList.add('hidden');
                         document.getElementById('card-qr-admin').classList.add('hidden');
                         document.getElementById('card-menus').classList.add('hidden');
+                        document.getElementById('card-orders').classList.add('hidden');
                         document.getElementById('card-customer-website').classList.add('hidden');
                         document.getElementById('card-lab').classList.add('hidden');
                     } else if (qrRoles.includes(role)) {

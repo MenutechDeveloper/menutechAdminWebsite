@@ -300,14 +300,19 @@
             user = session.user;
 
             const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            if (!profile) {
+                userRole = 'owner';
+                activeOwnerId = user.id;
+                showApp(null);
+                loadOrders();
+                subscribeToOrders();
+                return;
+            }
 
-            userRole = (profile?.role || 'OWNER').trim().toUpperCase();
+            userRole = profile.role;
             activeOwnerId = user.id;
 
-            const csRoles = ['CS', 'ADMINCS'];
-            const adminRoles = ['ADMIN', 'DEVELOPER'];
-
-            if (adminRoles.includes(userRole) || csRoles.includes(userRole)) {
+            if (userRole === 'admin' || userRole === 'developer' || userRole === 'CS' || userRole === 'adminCS') {
                 document.getElementById('sidebar-container').classList.remove('hidden');
                 document.getElementById('sidebar-container').classList.add('collapsed');
                 document.getElementById('snippet-section').classList.remove('hidden');
@@ -330,6 +335,7 @@
             if (profile) {
                 nameEl.textContent = profile.username || user.email.split('@')[0];
                 roleEl.textContent = profile.role || 'User';
+
                 const role = (profile.role || 'user').trim().toUpperCase();
                 if (role === 'ADMIN') pill.classList.add('admin-glow');
                 else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
