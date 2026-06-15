@@ -2576,7 +2576,7 @@ class MenutechPlatformOrders extends HTMLElement {
         if (!this.supabase) await this.initSupabase();
 
         try {
-            const { error } = await this.supabase.from('menutech_orders').insert({
+            const orderData = {
                 user_id: this.menuData.user_id,
                 items: this.cart,
                 total: total,
@@ -2590,9 +2590,14 @@ class MenutechPlatformOrders extends HTMLElement {
                 delivery_time: time,
                 payment_method: payment,
                 status: 'pending'
-            });
+            };
 
-            if (error) throw error;
+            const { error } = await this.supabase.from('menutech_orders').insert(orderData);
+
+            if (error) {
+                console.error('Supabase error inserting order:', error);
+                throw error;
+            }
 
             this.showSuccessAnimation();
             this.cart = [];
