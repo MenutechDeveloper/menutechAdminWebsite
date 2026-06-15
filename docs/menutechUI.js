@@ -2620,7 +2620,7 @@ class MenutechPlatformOrders extends HTMLElement {
             </style>
             <div class="check-mark" style="animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)">✓</div>
             <h1 style="font-family:'Outfit'; margin:0;">Order Received!</h1>
-            <p style="color:#666; margin:10px 0 30px;">We are processing your order, please stay tuned to your WhatsApp.</p>
+            <p style="color:#666; margin:10px 0 30px;">We are processing your order, please stay tuned for updates.</p>
             <div style="background:#fff7ed; color:#c2410c; padding:12px 24px; border-radius:20px; font-weight:700; font-size:0.9rem; display:flex; align-items:center; gap:10px;">
                 <span style="width:8px; height:8px; background:#f97316; border-radius:50%; display:inline-block;"></span>
                 PENDING CONFIRMATION
