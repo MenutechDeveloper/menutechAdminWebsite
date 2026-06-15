@@ -306,12 +306,11 @@
                         grid.style.maxWidth = '800px';
                         grid.style.margin = '40px auto 0 auto';
                     } else if (csRoles.includes(role)) {
-                        // CS roles only see Deluxe Web and Template Web slots
+                        // CS roles only see Deluxe Web, Template Web, and Orders slots
                         document.getElementById('card-users').classList.add('hidden');
                         document.getElementById('card-qr-gen').classList.add('hidden');
                         document.getElementById('card-qr-admin').classList.add('hidden');
                         document.getElementById('card-menus').classList.add('hidden');
-                        document.getElementById('card-orders').classList.add('hidden');
                         document.getElementById('card-customer-website').classList.add('hidden');
                         document.getElementById('card-lab').classList.add('hidden');
                     } else if (qrRoles.includes(role)) {
