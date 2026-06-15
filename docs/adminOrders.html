@@ -18,7 +18,7 @@
             --border: #f8e8d8;
             --success: #059669;
             --error: #dc2626;
-            --info: #3b82f6;
+            --info: #f59e0b; /* Amber/Dark Orange instead of Blue */
             --dev: #8b5cf6;
         }
 
@@ -180,23 +180,6 @@
             overflow: hidden; /* Header and footer stay, items scroll */
         }
 
-        /* Progress Tracker */
-        .order-progress-tracker {
-            display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
-            padding: 10px 0; border-bottom: 1px solid var(--border);
-        }
-        .progress-step { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; position: relative; }
-        .progress-step:not(:last-child)::after {
-            content: ''; position: absolute; top: 12px; right: -50%; width: 100%; height: 2px; background: var(--border); z-index: 1;
-        }
-        .progress-step.active:not(:last-child)::after { background: var(--orange); }
-        .progress-step .dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border); background: var(--card); z-index: 2; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: var(--text-dim); }
-        .progress-step.active .dot { border-color: var(--orange); background: var(--orange); color: #fff; }
-        .progress-step.completed .dot { border-color: var(--success); background: var(--success); color: #fff; }
-        .progress-step .label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.5px; }
-        .progress-step.active .label { color: var(--orange); }
-        .progress-step.completed .label { color: var(--success); }
-
         /* Compact Card */
         .order-card-compact {
             background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; cursor: pointer; transition: 0.3s;
@@ -206,7 +189,7 @@
         .order-card-compact.active { border-color: var(--orange); background: rgba(255, 149, 51, 0.04); border-width: 2px; }
         .order-card-compact .status-dot { width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 20px; right: 20px; }
         .order-card-compact.pending .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
-        .order-card-compact.accepted .status-dot { background: var(--info); box-shadow: 0 0 10px var(--info); }
+        .order-card-compact.accepted .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
         .order-card-compact.finished .status-dot { background: var(--success); box-shadow: 0 0 10px var(--success); }
         .order-card-compact.rejected .status-dot { background: var(--error); }
 
@@ -219,14 +202,14 @@
         .details-header h2 { font-family: 'Outfit'; font-size: 1.5rem; }
         .details-header .status-tag { padding: 6px 16px; border-radius: 30px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
         .status-tag.pending { background: rgba(255,149,51,0.1); color: var(--orange); }
-        .status-tag.accepted { background: rgba(59,130,246,0.1); color: var(--info); }
+        .status-tag.accepted { background: rgba(255,149,51,0.1); color: var(--orange); }
         .status-tag.finished { background: rgba(5,150,105,0.1); color: var(--success); }
         .status-tag.rejected { background: rgba(220,38,38,0.1); color: var(--error); }
 
         .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .info-group label { display: block; font-size: 0.6rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
         .info-group p { font-size: 0.85rem; font-weight: 600; }
-        .info-group a { color: var(--info); text-decoration: none; border-bottom: 1px dashed var(--info); }
+        .info-group a { color: var(--orange); text-decoration: none; border-bottom: 1px dashed var(--orange); }
 
         .items-section { background: var(--input); border-radius: 20px; padding: 20px; margin-bottom: 20px; flex: 1; overflow-y: auto; }
         .items-section h3 { font-family: 'Outfit'; margin-bottom: 15px; font-size: 1rem; }
@@ -243,7 +226,7 @@
 
         .actions-bar { display: flex; gap: 15px; }
         .btn { padding: 14px 32px; border-radius: 18px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; letter-spacing: 1px; }
-        .btn-accept { background: var(--info); color: #fff; }
+        .btn-accept { background: var(--orange); color: #fff; }
         .btn-finish { background: var(--success); color: #fff; }
         .btn-reject { background: var(--error); color: #fff; }
         .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
@@ -341,10 +324,10 @@
                 </div>
 
                 <div class="tabs-container">
-                    <button class="tab-btn active" onclick="switchTab('pending')">Pending <span class="count" id="count-pending">0</span></button>
-                    <button class="tab-btn" onclick="switchTab('accepted')">In Process <span class="count" id="count-accepted">0</span></button>
-                    <button class="tab-btn" onclick="switchTab('finished')">Finished <span class="count" id="count-finished">0</span></button>
-                    <button class="tab-btn" onclick="switchTab('rejected')">Rejected <span class="count" id="count-rejected">0</span></button>
+                    <button class="tab-btn active" data-tab="pending" onclick="switchTab('pending')">Pending <span class="count" id="count-pending">0</span></button>
+                    <button class="tab-btn" data-tab="accepted" onclick="switchTab('accepted')">In Process <span class="count" id="count-accepted">0</span></button>
+                    <button class="tab-btn" data-tab="finished" onclick="switchTab('finished')">Finished <span class="count" id="count-finished">0</span></button>
+                    <button class="tab-btn" data-tab="rejected" onclick="switchTab('rejected')">Rejected <span class="count" id="count-rejected">0</span></button>
                 </div>
 
                 <div class="orders-split-view">
@@ -517,7 +500,7 @@
         window.switchTab = (tab) => {
             currentTab = tab;
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${tab}'`));
+                btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
             });
             renderOrders();
         };
@@ -577,23 +560,6 @@
                     </div>
                     <div class="status-tag ${order.status}">${statusLabel}</div>
                 </div>
-
-                ${!isRejected ? `
-                <div class="order-progress-tracker">
-                    <div class="progress-step ${isPending || isAccepted || isFinished ? 'active' : ''} ${isAccepted || isFinished ? 'completed' : ''}">
-                        <div class="dot">${isAccepted || isFinished ? '✓' : '1'}</div>
-                        <div class="label">Pending</div>
-                    </div>
-                    <div class="progress-step ${isAccepted || isFinished ? 'active' : ''} ${isFinished ? 'completed' : ''}">
-                        <div class="dot">${isFinished ? '✓' : '2'}</div>
-                        <div class="label">In Process</div>
-                    </div>
-                    <div class="progress-step ${isFinished ? 'active' : ''} ${isFinished ? 'completed' : ''}">
-                        <div class="dot">${isFinished ? '✓' : '3'}</div>
-                        <div class="label">Finished</div>
-                    </div>
-                </div>
-                ` : ''}
 
                 <div class="details-grid">
                     <div class="info-group">
@@ -683,6 +649,11 @@
                 showToast('Error updating order: ' + error.message, 'error');
             } else {
                 showToast(`Order marked as ${status === 'accepted' ? 'In Process' : status}`);
+
+                // Real-time listener will update the list and details
+                // But we manually switch the tab for the user's convenience
+                switchTab(status);
+
                 if (status === 'rejected' || status === 'finished') {
                     selectedOrderId = null;
                     if (window.innerWidth <= 768) closeDetails();
