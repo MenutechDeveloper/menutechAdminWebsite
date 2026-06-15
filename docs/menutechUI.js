@@ -2129,8 +2129,8 @@ class MenutechPlatformOrders extends HTMLElement {
                 `).join('')}
 
                 <div class="option-group">
-                    <div class="option-title">INSTRUCCIONES ESPECIALES</div>
-                    <textarea id="dish-instructions" placeholder="Ejem: Sin cebolla, extra salsa..." style="width:100%; padding:15px; border-radius:12px; border:1.5px solid #eee; font-family:inherit; min-height:80px; resize:none; box-sizing:border-box; font-size:0.9rem;"></textarea>
+                    <div class="option-title">SPECIAL INSTRUCTIONS</div>
+                    <textarea id="dish-instructions" style="width:100%; padding:15px; border-radius:12px; border:1.5px solid #eee; font-family:inherit; min-height:80px; resize:none; box-sizing:border-box; font-size:0.9rem;"></textarea>
                 </div>
 
                 <div style="display:flex; align-items:center; gap:15px; margin-top:25px;">
@@ -2139,7 +2139,7 @@ class MenutechPlatformOrders extends HTMLElement {
                         <span id="dish-qty" style="width:36px; text-align:center; font-weight:800; font-size:1rem; color:#333;">1</span>
                         <button class="qty-btn" id="qty-plus" style="width:36px; height:36px; border:none; background:none; font-size:1.2rem; cursor:pointer; color:#333; font-weight:800;">+</button>
                     </div>
-                    <button class="add-to-cart" style="margin-top:0; flex:1;">AGREGAR AL CARRITO • $${basePrice}</button>
+                    <button class="add-to-cart" style="margin-top:0; flex:1;">ADD TO CART • $${basePrice}</button>
                 </div>
             </div>
         `;
@@ -2206,7 +2206,7 @@ class MenutechPlatformOrders extends HTMLElement {
 
         const total = baseTotal * qty;
         const btn = popupContent.querySelector('.add-to-cart');
-        btn.textContent = `AGREGAR AL CARRITO • $${total.toFixed(2)}`;
+        btn.textContent = `ADD TO CART • $${total.toFixed(2)}`;
 
         btn.onclick = () => {
             const item = {
@@ -2281,7 +2281,7 @@ class MenutechPlatformOrders extends HTMLElement {
         popupContent.innerHTML = `
             <div class="popup-body" style="padding:0">
                 <div style="padding:20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f0f0f0;">
-                    <h2 style="margin:0; font-size:1.4rem;">FINALIZAR PEDIDO</h2>
+                    <h2 style="margin:0; font-size:1.4rem;">CHECKOUT</h2>
                     <button class="close-popup" style="position:static; border:1px solid #eee;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
@@ -2292,45 +2292,45 @@ class MenutechPlatformOrders extends HTMLElement {
                     <div class="cart-left-col" style="overflow-y:auto; scrollbar-width:none; height: 100%;">
                         <!-- Section: Contact Info -->
                         <div class="cart-section">
-                            <div class="cart-section-header">1. DATOS DE CONTACTO <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                            <div class="cart-section-header">1. CONTACT INFORMATION <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                             <div class="cart-section-content">
                                 <div class="cart-input-group">
-                                    <label>NOMBRE COMPLETO</label>
-                                    <input type="text" id="cust-name" class="cart-input" placeholder="Tu nombre...">
+                                    <label>FULL NAME</label>
+                                    <input type="text" id="cust-name" class="cart-input">
                                 </div>
                                 <div class="cart-input-group">
-                                    <label>TELÉFONO (WHATSAPP)</label>
-                                    <input type="tel" id="cust-phone" class="cart-input" placeholder="10 dígitos...">
+                                    <label>PHONE</label>
+                                    <input type="tel" id="cust-phone" class="cart-input">
                                 </div>
                             </div>
                         </div>
 
                         <!-- Section: Type of Order -->
                         <div class="cart-section">
-                            <div class="cart-section-header">2. TIPO DE PEDIDO <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                            <div class="cart-section-header">2. ORDER TYPE <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                             <div class="cart-section-content">
                                 <div class="type-option active" data-type="pickup">
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-                                        RECOGER EN RESTAURANTE
+                                        PICKUP AT RESTAURANT
                                     </div>
                                     <div class="option-check">✓</div>
                                 </div>
                                 <div class="type-option" data-type="delivery">
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                                        ENTREGA A DOMICILIO
+                                        HOME DELIVERY
                                     </div>
                                     <div class="option-check">✓</div>
                                 </div>
                                 <div id="delivery-fields" style="display:none; margin-top:15px;">
                                     <div class="cart-input-group">
-                                        <label>DIRECCIÓN COMPLETA</label>
-                                        <input type="text" id="order-address" class="cart-input" placeholder="Calle, número, colonia...">
+                                        <label>FULL ADDRESS</label>
+                                        <input type="text" id="order-address" class="cart-input">
                                     </div>
                                     <div class="cart-input-group">
-                                        <label>REFERENCIA / INDICACIONES</label>
-                                        <input type="text" id="order-reference" class="cart-input" placeholder="Portón azul, junto al Oxxo...">
+                                        <label>REFERENCE / INDICATIONS</label>
+                                        <input type="text" id="order-reference" class="cart-input">
                                     </div>
                                 </div>
                             </div>
@@ -2338,29 +2338,29 @@ class MenutechPlatformOrders extends HTMLElement {
 
                         <!-- Section: Schedule -->
                         <div class="cart-section">
-                            <div class="cart-section-header">3. ELEGIR HORA DISPONIBLE <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                            <div class="cart-section-header">3. CHOOSE AVAILABLE TIME <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                             <div class="cart-section-content">
                                 <div class="time-option active" data-time="asap">
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                        LO ANTES POSIBLE (30 MIN APROX.)
+                                        AS SOON AS POSSIBLE (30 MIN APPROX.)
                                     </div>
                                     <div class="option-check">✓</div>
                                 </div>
                                 <div class="time-option" data-time="later">
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                        PROGRAMAR PARA MÁS TARDE
+                                        SCHEDULE FOR LATER
                                     </div>
                                     <div class="option-check">✓</div>
                                 </div>
                                 <div id="later-fields" style="display:none; margin-top:15px; gap:10px;">
                                     <div class="cart-input-group" style="flex:1">
-                                        <label>FECHA</label>
+                                        <label>DATE</label>
                                         <input type="date" id="order-date" class="cart-input">
                                     </div>
                                     <div class="cart-input-group" style="flex:1">
-                                        <label>HORA</label>
+                                        <label>TIME</label>
                                         <input type="time" id="order-time" class="cart-input">
                                     </div>
                                 </div>
@@ -2369,19 +2369,19 @@ class MenutechPlatformOrders extends HTMLElement {
 
                         <!-- Section: Payment Method -->
                         <div class="cart-section">
-                            <div class="cart-section-header">4. MÉTODO DE PAGO <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                            <div class="cart-section-header">4. PAYMENT METHOD <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                             <div class="cart-section-content">
                                 <div class="payment-option active" data-pay="cash">
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-                                        EFECTIVO
+                                        CASH
                                     </div>
                                     <div class="option-check">✓</div>
                                 </div>
                                 <div class="payment-option" data-pay="transfer">
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-                                        TRANSFERENCIA BANCARIA
+                                        BANK TRANSFER
                                     </div>
                                     <div class="option-check">✓</div>
                                 </div>
@@ -2392,7 +2392,7 @@ class MenutechPlatformOrders extends HTMLElement {
                     <!-- Right Column: Summary & Items -->
                     <div class="cart-right-col">
                         <div style="padding:20px; flex:1; overflow-y:auto; scrollbar-width:none;">
-                            <div style="font-weight:800; font-size:0.8rem; color:#888; text-transform:uppercase; margin-bottom:15px; letter-spacing:0.5px;">RESUMEN DE PRODUCTOS</div>
+                            <div style="font-weight:800; font-size:0.8rem; color:#888; text-transform:uppercase; margin-bottom:15px; letter-spacing:0.5px;">PRODUCTS SUMMARY</div>
                             ${this.cart.map((item, i) => `
                                 <div class="cart-item">
                                     <div class="cart-item-info">
@@ -2419,9 +2419,9 @@ class MenutechPlatformOrders extends HTMLElement {
 
                         <div class="order-summary" style="margin:0; padding:20px; background:#f0f0f0; border-top:1.5px solid #eee;">
                             <div class="summary-row"><span>SUBTOTAL</span><span>$${subtotal.toFixed(2)}</span></div>
-                            <div class="summary-row"><span>ENVÍO</span><span>$0.00</span></div>
+                            <div class="summary-row"><span>SHIPPING</span><span>$0.00</span></div>
                             <div class="summary-row total" style="border-top-color:#ddd;"><span>TOTAL</span><span>$${total.toFixed(2)}</span></div>
-                            <button class="add-to-cart" id="send-order-btn" style="margin-top:20px; width:100%;">ENVIAR PEDIDO • $${total.toFixed(2)}</button>
+                            <button class="add-to-cart" id="send-order-btn" style="margin-top:20px; width:100%;">SEND ORDER • $${total.toFixed(2)}</button>
                         </div>
                     </div>
                 </div>
@@ -2556,7 +2556,7 @@ class MenutechPlatformOrders extends HTMLElement {
         const phone = popupContent.querySelector('#cust-phone').value;
 
         if (!name || !phone) {
-            this.showModal('DATOS FALTANTES', 'Por favor completa tu nombre y teléfono.');
+            this.showModal('MISSING DATA', 'Please complete your name and phone.');
             return;
         }
 
@@ -2570,7 +2570,7 @@ class MenutechPlatformOrders extends HTMLElement {
 
         const total = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
         const btn = popupContent.querySelector('#send-order-btn');
-        btn.textContent = 'ENVIANDO...';
+        btn.textContent = 'SENDING...';
         btn.disabled = true;
 
         if (!this.supabase) await this.initSupabase();
@@ -2599,8 +2599,8 @@ class MenutechPlatformOrders extends HTMLElement {
             this.updateCartUI();
             this.shadowRoot.getElementById('popup').style.display = 'none';
         } catch (e) {
-            this.showModal('ERROR', 'Error al enviar pedido: ' + e.message);
-            btn.textContent = `ENVIAR PEDIDO • $${total.toFixed(2)}`;
+            this.showModal('ERROR', 'Error sending order: ' + e.message);
+            btn.textContent = `SEND ORDER • $${total.toFixed(2)}`;
             btn.disabled = false;
         }
     }
@@ -2614,13 +2614,13 @@ class MenutechPlatformOrders extends HTMLElement {
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             </style>
             <div class="check-mark" style="animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)">✓</div>
-            <h1 style="font-family:'Outfit'; margin:0;">¡Ya nos llegó tu pedido!</h1>
-            <p style="color:#666; margin:10px 0 30px;">Estamos procesando tu orden, por favor mantente al tanto de tu WhatsApp.</p>
+            <h1 style="font-family:'Outfit'; margin:0;">Order Received!</h1>
+            <p style="color:#666; margin:10px 0 30px;">We are processing your order, please stay tuned to your WhatsApp.</p>
             <div style="background:#fff7ed; color:#c2410c; padding:12px 24px; border-radius:20px; font-weight:700; font-size:0.9rem; display:flex; align-items:center; gap:10px;">
                 <span style="width:8px; height:8px; background:#f97316; border-radius:50%; display:inline-block;"></span>
-                FALTA POR CONFIRMAR
+                PENDING CONFIRMATION
             </div>
-            <button id="close-anim" style="margin-top:50px; background:#1a1c1e; color:#fff; border:none; padding:15px 40px; border-radius:20px; font-weight:700; cursor:pointer;">LISTO</button>
+            <button id="close-anim" style="margin-top:50px; background:#1a1c1e; color:#fff; border:none; padding:15px 40px; border-radius:20px; font-weight:700; cursor:pointer;">DONE</button>
         `;
         this.shadowRoot.appendChild(anim);
         this.shadowRoot.getElementById('close-anim').onclick = () => anim.remove();
