@@ -1420,6 +1420,7 @@ class MenutechPlatformOrders extends HTMLElement {
         this.shadowRoot.innerHTML = `
             <style>
                 :host { display: block; font-family: 'Helvetica', 'Arial', sans-serif; }
+                :host { display: block; text-align: center; }
                 .btn-see-menu {
                     background: #ff9533;
                     color: #fff;
@@ -1435,6 +1436,7 @@ class MenutechPlatformOrders extends HTMLElement {
                     display: inline-flex;
                     align-items: center;
                     gap: 10px;
+                    margin: 0 auto;
                 }
                 .btn-see-menu:hover {
                     transform: translateY(-3px);
@@ -1700,11 +1702,12 @@ class MenutechPlatformOrders extends HTMLElement {
                 .popup-overlay.side-popup { align-items: center; justify-content: center; }
 
                 .popup-card {
-                    background: #fff; width: 100%; max-width: 500px; border-radius: 24px;
+                    background: #fff; width: 95%; max-width: 500px; border-radius: 24px;
                     max-height: 90vh; overflow-y: auto; position: relative;
                     scrollbar-width: none; -ms-overflow-style: none;
                     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
                     transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+                    margin: auto;
                 }
 
                 /* Cart Styles */
@@ -1731,11 +1734,18 @@ class MenutechPlatformOrders extends HTMLElement {
                     .cart-right-col { width: 100%; }
                 }
 
-                .cart-item { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #f9f9f9; }
+                .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f9f9f9; }
                 .cart-item:last-child { border: none; }
+                .cart-item-info { flex: 1; }
                 .cart-item-info h4 { margin: 0; font-size: 1rem; }
                 .cart-item-info p { margin: 4px 0 0; font-size: 0.8rem; color: #888; }
+                .cart-item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
                 .cart-item-price { font-weight: 700; }
+                .cart-qty-controls { display: flex; align-items: center; background: #f0f0f0; border-radius: 8px; padding: 2px; }
+                .cart-qty-btn { width: 24px; height: 24px; border: none; background: none; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #333; }
+                .cart-qty-val { width: 24px; text-align: center; font-size: 0.85rem; font-weight: 800; }
+                .remove-item { color: #ff4444; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+                .remove-item:hover { color: #cc0000; transform: scale(1.1); }
 
                 .cart-input-group { margin-bottom: 15px; }
                 .cart-input-group label { display: block; font-size: 0.75rem; font-weight: 700; margin-bottom: 8px; color: #666; }
@@ -1797,7 +1807,9 @@ class MenutechPlatformOrders extends HTMLElement {
                     position: absolute; top: 20px; right: 20px; width: 40px; height: 40px;
                     border-radius: 50%; background: #fff; border: none; cursor: pointer;
                     display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                    z-index: 100; transition: 0.3s;
                 }
+                .close-popup:hover { transform: scale(1.1); background: #f8f8f8; }
 
                 .popup-body { padding: 25px; font-family: 'Helvetica', 'Arial', sans-serif; }
                 .popup-body h2 { margin: 0; font-size: 1.4rem; font-weight: 800; text-transform: uppercase; color: #333; }
@@ -2241,6 +2253,20 @@ class MenutechPlatformOrders extends HTMLElement {
     openCartPopup() {
         const overlay = this.shadowRoot.getElementById('popup');
         const popupContent = this.shadowRoot.getElementById('popup-content');
+
+        // Save current form values if they exist
+        const currentVals = {
+            name: popupContent.querySelector('#cust-name')?.value || '',
+            phone: popupContent.querySelector('#cust-phone')?.value || '',
+            address: popupContent.querySelector('#order-address')?.value || '',
+            reference: popupContent.querySelector('#order-reference')?.value || '',
+            date: popupContent.querySelector('#order-date')?.value || '',
+            time: popupContent.querySelector('#order-time')?.value || '',
+            type: popupContent.querySelector('.type-option.active')?.dataset.type || 'pickup',
+            timeMode: popupContent.querySelector('.time-option.active')?.dataset.time || 'asap',
+            pay: popupContent.querySelector('.payment-option.active')?.dataset.pay || 'cash'
+        };
+
         overlay.classList.remove('side-popup');
         popupContent.classList.remove('open-left', 'open-right');
 
@@ -2370,11 +2396,23 @@ class MenutechPlatformOrders extends HTMLElement {
                             ${this.cart.map((item, i) => `
                                 <div class="cart-item">
                                     <div class="cart-item-info">
-                                        <h4 style="text-transform:uppercase; font-family:'Helvetica', 'Arial', sans-serif;">${item.quantity > 1 ? item.quantity + 'x ' : ''}${item.name}</h4>
+                                        <h4 style="text-transform:uppercase; font-family:'Helvetica', 'Arial', sans-serif;">${item.name}</h4>
                                         <p style="font-size:0.75rem;">${item.size ? item.size : ''} ${item.toppings.length > 0 ? '• ' + item.toppings.join(', ') : ''}</p>
                                         ${item.instructions ? `<p style="color:#ff9533; font-style:italic; font-size:0.75rem;">"${item.instructions}"</p>` : ''}
                                     </div>
-                                    <div class="cart-item-price" style="font-family:'Helvetica', 'Arial', sans-serif;">$${(item.total || item.price).toFixed(2)}</div>
+                                    <div class="cart-item-right">
+                                        <div class="cart-item-price" style="font-family:'Helvetica', 'Arial', sans-serif;">$${(item.total || (item.price * item.quantity)).toFixed(2)}</div>
+                                        <div style="display:flex; align-items:center; gap:10px;">
+                                            <div class="cart-qty-controls">
+                                                <button class="cart-qty-btn cart-minus" data-index="${i}">-</button>
+                                                <span class="cart-qty-val">${item.quantity}</span>
+                                                <button class="cart-qty-btn cart-plus" data-index="${i}">+</button>
+                                            </div>
+                                            <div class="remove-item" data-index="${i}">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px; height:16px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
@@ -2392,6 +2430,29 @@ class MenutechPlatformOrders extends HTMLElement {
 
         overlay.style.display = 'flex';
         popupContent.querySelector('.close-popup').onclick = () => overlay.style.display = 'none';
+
+        // Restore values
+        if (currentVals.name) popupContent.querySelector('#cust-name').value = currentVals.name;
+        if (currentVals.phone) popupContent.querySelector('#cust-phone').value = currentVals.phone;
+        if (popupContent.querySelector('#order-address')) popupContent.querySelector('#order-address').value = currentVals.address;
+        if (popupContent.querySelector('#order-reference')) popupContent.querySelector('#order-reference').value = currentVals.reference;
+        if (popupContent.querySelector('#order-date')) popupContent.querySelector('#order-date').value = currentVals.date;
+        if (popupContent.querySelector('#order-time')) popupContent.querySelector('#order-time').value = currentVals.time;
+
+        // Restore active states
+        if (currentVals.type === 'delivery') {
+            popupContent.querySelectorAll('.type-option').forEach(o => o.classList.toggle('active', o.dataset.type === 'delivery'));
+            const df = popupContent.querySelector('#delivery-fields');
+            if (df) df.style.display = 'block';
+        }
+        if (currentVals.timeMode === 'later') {
+            popupContent.querySelectorAll('.time-option').forEach(o => o.classList.toggle('active', o.dataset.time === 'later'));
+            const lf = popupContent.querySelector('#later-fields');
+            if (lf) lf.style.display = 'flex';
+        }
+        if (currentVals.pay === 'transfer') {
+            popupContent.querySelectorAll('.payment-option').forEach(o => o.classList.toggle('active', o.dataset.pay === 'transfer'));
+        }
 
         // Exclusive Accordion logic
         popupContent.querySelectorAll('.cart-section-header').forEach(header => {
@@ -2442,6 +2503,51 @@ class MenutechPlatformOrders extends HTMLElement {
 
         const sendBtn = popupContent.querySelector('#send-order-btn');
         if (sendBtn) sendBtn.onclick = () => this.sendOrder();
+
+        // Cart manipulation logic
+        popupContent.querySelectorAll('.cart-plus').forEach(btn => {
+            btn.onclick = () => {
+                const index = parseInt(btn.dataset.index);
+                this.updateItemQuantity(index, 1);
+            };
+        });
+
+        popupContent.querySelectorAll('.cart-minus').forEach(btn => {
+            btn.onclick = () => {
+                const index = parseInt(btn.dataset.index);
+                this.updateItemQuantity(index, -1);
+            };
+        });
+
+        popupContent.querySelectorAll('.remove-item').forEach(btn => {
+            btn.onclick = () => {
+                const index = parseInt(btn.dataset.index);
+                this.removeItem(index);
+            };
+        });
+    }
+
+    updateItemQuantity(index, delta) {
+        if (this.cart[index]) {
+            this.cart[index].quantity += delta;
+            if (this.cart[index].quantity < 1) {
+                this.removeItem(index);
+            } else {
+                this.cart[index].total = this.cart[index].price * this.cart[index].quantity;
+                this.updateCartUI();
+                this.openCartPopup(); // Refresh popup
+            }
+        }
+    }
+
+    removeItem(index) {
+        this.cart.splice(index, 1);
+        this.updateCartUI();
+        if (this.cart.length > 0) {
+            this.openCartPopup(); // Refresh popup
+        } else {
+            this.shadowRoot.getElementById('popup').style.display = 'none';
+        }
     }
 
     async sendOrder() {
