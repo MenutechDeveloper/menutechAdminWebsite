@@ -16,7 +16,7 @@
             --text: #1a1c1e;
             --text-dim: #4a5568;
             --border: #f8e8d8;
-            --success: #059669;
+            --success: #ff9533;
             --error: #dc2626;
             --info: #f59e0b; /* Amber/Dark Orange instead of Blue */
             --dev: #8b5cf6;
@@ -190,7 +190,8 @@
         .order-card-compact .status-dot { width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 20px; right: 20px; }
         .order-card-compact.pending .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
         .order-card-compact.accepted .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
-        .order-card-compact.finished .status-dot { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        .order-card-compact.finished .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
+        .order-card-compact.delivered .status-dot { background: var(--orange); opacity: 0.6; }
         .order-card-compact.rejected .status-dot { background: var(--error); }
 
         .order-card-compact h4 { font-size: 1rem; font-family: 'Outfit'; margin-bottom: 4px; }
@@ -203,7 +204,8 @@
         .details-header .status-tag { padding: 6px 16px; border-radius: 30px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
         .status-tag.pending { background: rgba(255,149,51,0.1); color: var(--orange); }
         .status-tag.accepted { background: rgba(255,149,51,0.1); color: var(--orange); }
-        .status-tag.finished { background: rgba(5,150,105,0.1); color: var(--success); }
+        .status-tag.finished { background: rgba(255,149,51,0.1); color: var(--orange); }
+        .status-tag.delivered { background: rgba(255,149,51,0.05); color: var(--orange); opacity: 0.8; }
         .status-tag.rejected { background: rgba(220,38,38,0.1); color: var(--error); }
 
         .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px; }
@@ -227,12 +229,25 @@
         .actions-bar { display: flex; gap: 15px; }
         .btn { padding: 14px 32px; border-radius: 18px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; letter-spacing: 1px; }
         .btn-accept { background: var(--orange); color: #fff; }
-        .btn-finish { background: var(--success); color: #fff; }
+        .btn-finish { background: var(--orange); color: #fff; }
+        .btn-delivered { background: var(--orange); color: #fff; }
         .btn-reject { background: var(--error); color: #fff; }
         .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 
         .empty-details { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); text-align: center; }
         .empty-details svg { width: 80px; height: 80px; opacity: 0.1; margin-bottom: 20px; }
+
+        /* History Filters */
+        .history-filters {
+            display: flex; gap: 8px; margin-bottom: 15px; padding: 0 5px;
+        }
+        .filter-chip {
+            padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--card);
+            font-size: 0.7rem; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .filter-chip:hover { border-color: var(--orange); color: var(--orange); }
+        .filter-chip.active { background: var(--orange); border-color: var(--orange); color: #fff; box-shadow: 0 4px 12px rgba(255, 149, 51, 0.2); }
 
         /* Responsive Mobile Styles */
         @media (max-width: 1024px) {
@@ -319,15 +334,17 @@
             </div>
 
             <div class="main-content">
-                <div id="snippet-section" class="hidden" style="display: flex; justify-content: center; margin-bottom: 20px;">
-                    <button id="btn-copy-snippet" class="btn-copy">COPY ORDERS CODE</button>
-                </div>
-
                 <div class="tabs-container">
                     <button class="tab-btn active" data-tab="pending" onclick="switchTab('pending')">Pending <span class="count" id="count-pending">0</span></button>
                     <button class="tab-btn" data-tab="accepted" onclick="switchTab('accepted')">In Process <span class="count" id="count-accepted">0</span></button>
-                    <button class="tab-btn" data-tab="finished" onclick="switchTab('finished')">Finished <span class="count" id="count-finished">0</span></button>
-                    <button class="tab-btn" data-tab="rejected" onclick="switchTab('rejected')">Rejected <span class="count" id="count-rejected">0</span></button>
+                    <button class="tab-btn" data-tab="finished" onclick="switchTab('finished')">Ready <span class="count" id="count-finished">0</span></button>
+                    <button class="tab-btn" data-tab="history" onclick="switchTab('history')">History <span class="count" id="count-history">0</span></button>
+                </div>
+
+                <div id="history-filters" class="history-filters hidden">
+                    <button class="filter-chip active" onclick="setHistoryFilter('today')">Today</button>
+                    <button class="filter-chip" onclick="setHistoryFilter('week')">This Week</button>
+                    <button class="filter-chip" onclick="setHistoryFilter('month')">This Month</button>
                 </div>
 
                 <div class="orders-split-view">
@@ -354,6 +371,7 @@
         let allOwners = [];
         let ordersChannel = null;
         let currentTab = 'pending';
+        let historyFilter = 'today';
         let selectedOrderId = null;
         let crossedItems = new Set();
 
@@ -489,12 +507,12 @@
             const pending = orders.filter(o => o.status === 'pending').length;
             const accepted = orders.filter(o => o.status === 'accepted').length;
             const finished = orders.filter(o => o.status === 'finished').length;
-            const rejected = orders.filter(o => o.status === 'rejected').length;
+            const history = orders.filter(o => o.status === 'delivered' || o.status === 'rejected').length;
 
             document.getElementById('count-pending').textContent = pending;
             document.getElementById('count-accepted').textContent = accepted;
             document.getElementById('count-finished').textContent = finished;
-            document.getElementById('count-rejected').textContent = rejected;
+            document.getElementById('count-history').textContent = history;
         }
 
         window.switchTab = (tab) => {
@@ -502,12 +520,43 @@
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
             });
+
+            const filters = document.getElementById('history-filters');
+            if (tab === 'history') filters.classList.remove('hidden');
+            else filters.classList.add('hidden');
+
+            renderOrders();
+        };
+
+        window.setHistoryFilter = (filter) => {
+            historyFilter = filter;
+            document.querySelectorAll('.filter-chip').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(filter));
+            });
             renderOrders();
         };
 
         function renderOrders() {
             const list = document.getElementById('orders-list');
-            const filtered = orders.filter(o => o.status === currentTab);
+            let filtered = [];
+
+            if (currentTab === 'history') {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                const lastWeek = today - (7 * 24 * 60 * 60 * 1000);
+                const lastMonth = today - (30 * 24 * 60 * 60 * 1000);
+
+                filtered = orders.filter(o => {
+                    if (o.status !== 'delivered' && o.status !== 'rejected') return false;
+                    const orderDate = new Date(o.created_at).getTime();
+                    if (historyFilter === 'today') return orderDate >= today;
+                    if (historyFilter === 'week') return orderDate >= lastWeek;
+                    if (historyFilter === 'month') return orderDate >= lastMonth;
+                    return true;
+                });
+            } else {
+                filtered = orders.filter(o => o.status === currentTab);
+            }
 
             if (filtered.length === 0) {
                 list.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-dim); opacity:0.5;">No orders in this stage</div>`;
@@ -519,7 +568,7 @@
                     <div class="status-dot"></div>
                     <h4>${order.customer_name}</h4>
                     <p>${order.items.length} items • $${order.total.toFixed(2)}</p>
-                    <span class="order-time">${new Date(order.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    <span class="order-time">${new Date(order.created_at).toLocaleDateString()} ${new Date(order.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                 </div>
             `).join('');
         }
@@ -544,11 +593,14 @@
             const dateStr = new Date(order.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
             const deliveryType = order.order_type === 'delivery' ? 'Delivery' : 'Pickup';
             const paymentMethod = (order.payment_method || 'N/A').charAt(0).toUpperCase() + (order.payment_method || 'N/A').slice(1);
-            const statusLabel = order.status === 'accepted' ? 'In Process' : order.status.charAt(0).toUpperCase() + order.status.slice(1);
+            let statusLabel = order.status.charAt(0).toUpperCase() + order.status.slice(1);
+            if (order.status === 'accepted') statusLabel = 'In Process';
+            if (order.status === 'finished') statusLabel = 'Ready';
 
             const isPending = order.status === 'pending';
             const isAccepted = order.status === 'accepted';
             const isFinished = order.status === 'finished';
+            const isDelivered = order.status === 'delivered';
             const isRejected = order.status === 'rejected';
 
             pane.innerHTML = `
@@ -622,7 +674,10 @@
                             <button class="btn btn-accept" onclick="updateOrderStatus('${order.id}', 'accepted')">Accept</button>
                         ` : ''}
                         ${order.status === 'accepted' ? `
-                            <button class="btn btn-finish" onclick="updateOrderStatus('${order.id}', 'finished')">Finish</button>
+                            <button class="btn btn-finish" onclick="updateOrderStatus('${order.id}', 'finished')">Ready</button>
+                        ` : ''}
+                        ${order.status === 'finished' ? `
+                            <button class="btn btn-delivered" onclick="updateOrderStatus('${order.id}', 'delivered')">Mark as Delivered</button>
                         ` : ''}
                     </div>
                 </div>
@@ -641,20 +696,36 @@
         };
 
         window.updateOrderStatus = async (id, status) => {
+            // Optimistic update
+            const orderIdx = orders.findIndex(o => o.id === id);
+            if (orderIdx !== -1) {
+                orders[orderIdx].status = status;
+                updateCounts();
+                renderOrders();
+                if (selectedOrderId === id) renderDetails(orders[orderIdx]);
+            }
+
             const { error } = await sb.from('menutech_orders')
                 .update({ status })
                 .eq('id', id);
 
             if (error) {
                 showToast('Error updating order: ' + error.message, 'error');
+                // Revert optimistic update on error (optional, but good practice)
+                loadOrders();
             } else {
-                showToast(`Order marked as ${status === 'accepted' ? 'In Process' : status}`);
+                let statusMsg = status;
+                if (status === 'accepted') statusMsg = 'In Process';
+                if (status === 'finished') statusMsg = 'Ready';
+                if (status === 'delivered') statusMsg = 'Delivered';
+                showToast(`Order marked as ${statusMsg}`);
 
-                // Real-time listener will update the list and details
-                // But we manually switch the tab for the user's convenience
-                switchTab(status);
+                // Switch tab automatically if moving to next stage
+                if (status === 'history') switchTab('history');
+                else if (status === 'delivered') switchTab('history');
+                else switchTab(status);
 
-                if (status === 'rejected' || status === 'finished') {
+                if (status === 'rejected' || status === 'delivered') {
                     selectedOrderId = null;
                     if (window.innerWidth <= 768) closeDetails();
                 }
@@ -693,15 +764,6 @@
             document.addEventListener('click', () => pill.classList.remove('active'));
             window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
 
-            document.getElementById('btn-copy-snippet').onclick = () => {
-                const domain = allOwners.find(o => o.id === activeOwnerId)?.domain || 'your-domain';
-                const snippet = `<!-- Menutech Orders -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-platform-orders domain="${domain}" view="popup"></menutech-platform-orders>`;
-                navigator.clipboard.writeText(snippet).then(() => {
-                    const btn = document.getElementById('btn-copy-snippet');
-                    btn.textContent = "COPIED!";
-                    setTimeout(() => btn.textContent = "COPY ORDERS CODE", 2000);
-                });
-            };
         }
 
         init();
