@@ -172,12 +172,12 @@
         .tab-btn.active .count { background: rgba(255,255,255,0.2); }
 
         /* Layout Split */
-        .orders-split-view { display: flex; gap: 24px; height: calc(100vh - 300px); min-height: 500px; }
-        .orders-list-pane { flex: 0 0 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 10px; }
+        .orders-split-view { display: flex; gap: 24px; min-height: 500px; align-items: flex-start; }
+        .orders-list-pane { flex: 0 0 380px; max-height: calc(100vh - 200px); overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 10px; }
         .order-details-pane {
-            flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 20px;
+            flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 20px;
             display: flex; flex-direction: column; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.02);
-            overflow: hidden; /* Header and footer stay, items scroll */
+            overflow: hidden; min-height: 200px;
         }
 
         /* Compact Card */
@@ -199,8 +199,8 @@
         .order-card-compact .order-time { font-size: 0.75rem; font-weight: 600; margin-top: 10px; display: block; color: var(--orange); }
 
         /* Full Details Styling */
-        .details-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-        .details-header h2 { font-family: 'Outfit'; font-size: 1.5rem; }
+        .details-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .details-header h2 { font-family: 'Outfit'; font-size: 1.3rem; }
         .details-header .status-tag { padding: 6px 16px; border-radius: 30px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
         .status-tag.pending { background: rgba(255,149,51,0.1); color: var(--orange); }
         .status-tag.accepted { background: rgba(255,149,51,0.1); color: var(--orange); }
@@ -208,13 +208,13 @@
         .status-tag.delivered { background: rgba(255,149,51,0.05); color: var(--orange); opacity: 0.8; }
         .status-tag.rejected { background: rgba(220,38,38,0.1); color: var(--error); }
 
-        .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 15px; }
-        .info-group label { display: block; font-size: 0.6rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
-        .info-group p { font-size: 0.85rem; font-weight: 600; }
+        .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .info-group label { display: block; font-size: 0.55rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.5px; }
+        .info-group p { font-size: 0.8rem; font-weight: 600; }
         .info-group a { color: var(--orange); text-decoration: none; border-bottom: 1px dashed var(--orange); }
 
-        .items-section { background: var(--input); border-radius: 20px; padding: 15px; margin-bottom: 15px; flex: 1; overflow-y: auto; }
-        .items-section h3 { font-family: 'Outfit'; margin-bottom: 15px; font-size: 1rem; }
+        .items-section { background: var(--input); border-radius: 16px; padding: 15px; margin-bottom: 15px; max-height: 400px; overflow-y: auto; }
+        .items-section h3 { font-family: 'Outfit'; margin-bottom: 10px; font-size: 0.95rem; }
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
         .item-row:last-child { border-bottom: none; }
         .item-row:hover { opacity: 0.7; }
@@ -223,8 +223,8 @@
         .item-price { font-weight: 700; color: var(--orange); }
         .item-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; padding-left: 0; }
 
-        .details-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 15px; }
-        .total-amount { font-size: 1.5rem; font-weight: 800; font-family: 'Outfit'; color: var(--orange); }
+        .details-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px; }
+        .total-amount { font-size: 1.3rem; font-weight: 800; font-family: 'Outfit'; color: var(--orange); }
 
         .actions-bar { display: flex; gap: 15px; }
         .btn { padding: 14px 32px; border-radius: 18px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; letter-spacing: 1px; }
@@ -315,8 +315,6 @@
     <div class="container hidden" id="main-app">
         <header>
             <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
-            <h1 style="font-family:'Outfit';">Orders Dashboard</h1>
-            <p id="orders-subtitle" style="color:var(--text-dim); margin-top:10px;">Monitor and manage your incoming orders</p>
         </header>
 
         <div class="dashboard-layout">
@@ -461,6 +459,14 @@
             subscribeToOrders();
         }
 
+        function mapOrder(o) {
+            return {
+                ...o,
+                items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
+                total: parseFloat(o.total_amount || 0)
+            };
+        }
+
         async function loadOrders() {
             const { data, error } = await sb.from('menutech_orders')
                 .select('*')
@@ -468,7 +474,7 @@
                 .order('created_at', { ascending: false });
 
             if (data) {
-                orders = data;
+                orders = data.map(mapOrder);
                 updateCounts();
                 renderOrders();
             }
@@ -482,7 +488,7 @@
                     table: 'menutech_orders',
                     filter: `user_id=eq.${activeOwnerId}`
                 }, (payload) => {
-                    orders.unshift(payload.new);
+                    orders.unshift(mapOrder(payload.new));
                     updateCounts();
                     renderOrders();
                     playNotification();
@@ -495,10 +501,10 @@
                 }, (payload) => {
                     const idx = orders.findIndex(o => o.id === payload.new.id);
                     if (idx !== -1) {
-                        orders[idx] = payload.new;
+                        orders[idx] = mapOrder(payload.new);
                         updateCounts();
                         renderOrders();
-                        if (selectedOrderId === payload.new.id) renderDetails(payload.new);
+                        if (selectedOrderId === payload.new.id) renderDetails(orders[idx]);
                     }
                 })
                 .subscribe();
