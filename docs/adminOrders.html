@@ -399,7 +399,6 @@
             if (userRole === 'admin' || userRole === 'developer' || userRole === 'CS' || userRole === 'adminCS') {
                 document.getElementById('sidebar-container').classList.remove('hidden');
                 document.getElementById('sidebar-container').classList.add('collapsed');
-                document.getElementById('snippet-section').classList.remove('hidden');
                 await setupContextSwitcher();
             }
 
@@ -721,9 +720,11 @@
                 showToast(`Order marked as ${statusMsg}`);
 
                 // Switch tab automatically if moving to next stage
-                if (status === 'history') switchTab('history');
-                else if (status === 'delivered') switchTab('history');
-                else switchTab(status);
+                if (status === 'history' || status === 'delivered' || status === 'rejected') {
+                    switchTab('history');
+                } else {
+                    switchTab(status);
+                }
 
                 if (status === 'rejected' || status === 'delivered') {
                     selectedOrderId = null;
