@@ -190,6 +190,7 @@
         .order-card-compact .status-dot { width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 20px; right: 20px; }
         .order-card-compact.pending .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
         .order-card-compact.accepted .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
+        .order-card-compact.preparing .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
         .order-card-compact.finished .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
         .order-card-compact.delivered .status-dot { background: var(--orange); opacity: 0.6; }
         .order-card-compact.rejected .status-dot { background: var(--error); }
@@ -204,6 +205,7 @@
         .details-header .status-tag { padding: 6px 16px; border-radius: 30px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
         .status-tag.pending { background: rgba(255,149,51,0.1); color: var(--orange); }
         .status-tag.accepted { background: rgba(255,149,51,0.1); color: var(--orange); }
+        .status-tag.preparing { background: rgba(255,149,51,0.1); color: var(--orange); }
         .status-tag.finished { background: rgba(255,149,51,0.1); color: var(--orange); }
         .status-tag.delivered { background: rgba(255,149,51,0.05); color: var(--orange); opacity: 0.8; }
         .status-tag.rejected { background: rgba(220,38,38,0.1); color: var(--error); }
@@ -374,6 +376,7 @@
         let historyFilter = 'today';
         let selectedOrderId = null;
         let crossedItems = new Set();
+        let alertAudio = null;
 
         async function init() {
             initTheme();
@@ -463,7 +466,7 @@
             return {
                 ...o,
                 items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
-                total: parseFloat(o.total_amount || 0)
+                total: parseFloat(o.total_amount || o.total || 0)
             };
         }
 
@@ -512,7 +515,7 @@
 
         function updateCounts() {
             const pending = orders.filter(o => o.status === 'pending').length;
-            const accepted = orders.filter(o => o.status === 'accepted').length;
+            const accepted = orders.filter(o => o.status === 'accepted' || o.status === 'preparing').length;
             const finished = orders.filter(o => o.status === 'finished').length;
             const history = orders.filter(o => o.status === 'delivered' || o.status === 'rejected').length;
 
@@ -520,6 +523,29 @@
             document.getElementById('count-accepted').textContent = accepted;
             document.getElementById('count-finished').textContent = finished;
             document.getElementById('count-history').textContent = history;
+
+            if (pending > 0) {
+                toggleAlertSound(true);
+            } else {
+                toggleAlertSound(false);
+            }
+        }
+
+        function toggleAlertSound(play) {
+            if (play) {
+                if (!alertAudio) {
+                    alertAudio = new Audio('https://menutech.services/assets/audio/notification.mp3');
+                    alertAudio.loop = true;
+                }
+                alertAudio.play().catch(e => {
+                    // console.log('Audio play blocked, waiting for interaction');
+                });
+            } else {
+                if (alertAudio) {
+                    alertAudio.pause();
+                    alertAudio.currentTime = 0;
+                }
+            }
         }
 
         window.switchTab = (tab) => {
@@ -565,6 +591,8 @@
                     if (historyFilter === 'month') return oTs >= lastMonthTs;
                     return true;
                 });
+            } else if (currentTab === 'accepted') {
+                filtered = orders.filter(o => o.status === 'accepted' || o.status === 'preparing');
             } else {
                 filtered = orders.filter(o => o.status === currentTab);
             }
@@ -605,7 +633,8 @@
             const deliveryType = order.order_type === 'delivery' ? 'Delivery' : 'Pickup';
             const paymentMethod = (order.payment_method || 'N/A').charAt(0).toUpperCase() + (order.payment_method || 'N/A').slice(1);
             let statusLabel = order.status.charAt(0).toUpperCase() + order.status.slice(1);
-            if (order.status === 'accepted') statusLabel = 'In Process';
+            if (order.status === 'accepted') statusLabel = 'Accepted';
+            if (order.status === 'preparing') statusLabel = 'Preparing';
             if (order.status === 'finished') statusLabel = 'Ready';
 
             const isPending = order.status === 'pending';
@@ -685,6 +714,9 @@
                             <button class="btn btn-accept" onclick="updateOrderStatus('${order.id}', 'accepted')">Accept</button>
                         ` : ''}
                         ${order.status === 'accepted' ? `
+                            <button class="btn btn-finish" onclick="updateOrderStatus('${order.id}', 'preparing')">Prepare</button>
+                        ` : ''}
+                        ${order.status === 'preparing' ? `
                             <button class="btn btn-finish" onclick="updateOrderStatus('${order.id}', 'finished')">Ready</button>
                         ` : ''}
                         ${order.status === 'finished' ? `
@@ -707,33 +739,47 @@
         };
 
         window.updateOrderStatus = async (id, status) => {
+            const updates = { status };
+            const now = new Date().toISOString();
+
+            if (status === 'accepted') updates.accepted_at = now;
+            else if (status === 'preparing') updates.preparing_at = now;
+            else if (status === 'finished') updates.ready_at = now;
+            else if (status === 'delivered') updates.delivered_at = now;
+            else if (status === 'rejected') {
+                updates.rejected_at = now;
+                const reason = prompt("Optional: Reason for rejection");
+                if (reason !== null && reason.trim() !== "") updates.rejection_reason = reason;
+            }
+
             // Optimistic update
             const orderIdx = orders.findIndex(o => o.id === id);
             if (orderIdx !== -1) {
-                orders[orderIdx].status = status;
+                Object.assign(orders[orderIdx], updates);
                 updateCounts();
                 renderOrders();
                 if (selectedOrderId === id) renderDetails(orders[orderIdx]);
             }
 
             const { error } = await sb.from('menutech_orders')
-                .update({ status })
+                .update(updates)
                 .eq('id', id);
 
             if (error) {
                 showToast('Error updating order: ' + error.message, 'error');
-                // Revert optimistic update on error (optional, but good practice)
                 loadOrders();
             } else {
                 let statusMsg = status;
-                if (status === 'accepted') statusMsg = 'In Process';
+                if (status === 'accepted') statusMsg = 'Accepted';
+                if (status === 'preparing') statusMsg = 'In Preparation';
                 if (status === 'finished') statusMsg = 'Ready';
                 if (status === 'delivered') statusMsg = 'Delivered';
                 showToast(`Order marked as ${statusMsg}`);
 
-                // Switch tab automatically if moving to next stage
                 if (status === 'history' || status === 'delivered' || status === 'rejected') {
                     switchTab('history');
+                } else if (status === 'accepted' || status === 'preparing') {
+                    switchTab('accepted');
                 } else {
                     switchTab(status);
                 }

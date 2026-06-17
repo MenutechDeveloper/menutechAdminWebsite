@@ -1371,11 +1371,13 @@ class MenutechPlatformOrders extends HTMLElement {
         this.supabase = null;
         this.menuData = null;
         this.cart = [];
+        this.trackingChannel = null;
     }
 
     async connectedCallback() {
         await this.initSupabase();
         this.render();
+        this.checkExistingOrder();
     }
 
     async initSupabase() {
@@ -1413,6 +1415,41 @@ class MenutechPlatformOrders extends HTMLElement {
             this.renderLoading();
             this.loadData();
         }
+        this.renderFloatingTracker();
+    }
+
+    renderFloatingTracker() {
+        const lastOrderId = localStorage.getItem('mt_last_order_id');
+        if (!lastOrderId) {
+            const existing = this.shadowRoot.getElementById('floating-tracker');
+            if (existing) existing.remove();
+            return;
+        }
+
+        let tracker = this.shadowRoot.getElementById('floating-tracker');
+        if (!tracker) {
+            tracker = document.createElement('div');
+            tracker.id = 'floating-tracker';
+            this.shadowRoot.appendChild(tracker);
+        }
+
+        tracker.innerHTML = `
+            <style>
+                #floating-tracker {
+                    position: fixed; bottom: 100px; right: 30px; z-index: 400;
+                    background: #1a1c1e; color: #fff; padding: 12px 20px;
+                    border-radius: 30px; cursor: pointer; display: flex; align-items: center; gap: 10px;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideIn 0.5s ease;
+                    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.85rem; font-weight: 700;
+                }
+                @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+                .tracker-dot { width: 8px; height: 8px; background: #ff9533; border-radius: 50%; animation: pulse 1.5s infinite; }
+                @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+            </style>
+            <div class="tracker-dot"></div>
+            <span>TRACK MY ORDER</span>
+        `;
+        tracker.onclick = () => this.showOrderTracking(lastOrderId);
     }
 
     renderPopupTrigger() {
@@ -2254,12 +2291,15 @@ class MenutechPlatformOrders extends HTMLElement {
         const overlay = this.shadowRoot.getElementById('popup');
         const popupContent = this.shadowRoot.getElementById('popup-content');
 
+        // Load saved values from localStorage
+        const savedData = JSON.parse(localStorage.getItem('mt_customer_info') || '{}');
+
         // Save current form values if they exist
         const currentVals = {
-            name: popupContent.querySelector('#cust-name')?.value || '',
-            phone: popupContent.querySelector('#cust-phone')?.value || '',
-            address: popupContent.querySelector('#order-address')?.value || '',
-            reference: popupContent.querySelector('#order-reference')?.value || '',
+            name: popupContent.querySelector('#cust-name')?.value || savedData.name || '',
+            phone: popupContent.querySelector('#cust-phone')?.value || savedData.phone || '',
+            address: popupContent.querySelector('#order-address')?.value || savedData.address || '',
+            reference: popupContent.querySelector('#order-reference')?.value || savedData.reference || '',
             date: popupContent.querySelector('#order-date')?.value || '',
             time: popupContent.querySelector('#order-time')?.value || '',
             type: popupContent.querySelector('.type-option.active')?.dataset.type || 'pickup',
@@ -2568,6 +2608,9 @@ class MenutechPlatformOrders extends HTMLElement {
         const time = popupContent.querySelector('#order-time')?.value || '';
         const payment = popupContent.querySelector('.payment-option.active').dataset.pay;
 
+        // Save to localStorage
+        localStorage.setItem('mt_customer_info', JSON.stringify({ name, phone, address, reference }));
+
         const total = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
         const btn = popupContent.querySelector('#send-order-btn');
         btn.textContent = 'SENDING...';
@@ -2592,14 +2635,18 @@ class MenutechPlatformOrders extends HTMLElement {
                 status: 'pending'
             };
 
-            const { error } = await this.supabase.from('menutech_orders').insert(orderData);
+            const { data, error } = await this.supabase.from('menutech_orders').insert(orderData).select('id').single();
 
             if (error) {
                 console.error('Supabase error inserting order:', error);
                 throw error;
             }
 
-            this.showSuccessAnimation();
+            if (data && data.id) {
+                localStorage.setItem('mt_last_order_id', data.id);
+            }
+
+            this.showSuccessAnimation(data ? data.id : null);
             this.cart = [];
             this.updateCartUI();
             this.shadowRoot.getElementById('popup').style.display = 'none';
@@ -2610,7 +2657,19 @@ class MenutechPlatformOrders extends HTMLElement {
         }
     }
 
-    showSuccessAnimation() {
+    async checkExistingOrder() {
+        const lastId = localStorage.getItem('mt_last_order_id');
+        if (!lastId) return;
+
+        if (!this.supabase) await this.initSupabase();
+        const { data } = await this.supabase.from('menutech_orders').select('status').eq('id', lastId).single();
+        if (data && (data.status === 'delivered' || data.status === 'rejected')) {
+            localStorage.removeItem('mt_last_order_id');
+            this.renderFloatingTracker();
+        }
+    }
+
+    showSuccessAnimation(orderId) {
         const anim = document.createElement('div');
         anim.className = 'sending-animation';
         anim.innerHTML = `
@@ -2623,13 +2682,152 @@ class MenutechPlatformOrders extends HTMLElement {
             <p style="color:#666; margin:10px 0 30px;">We are processing your order, please stay tuned for updates.</p>
             <div style="background:#fff7ed; color:#c2410c; padding:12px 24px; border-radius:20px; font-weight:700; font-size:0.9rem; display:flex; align-items:center; gap:10px;">
                 <span style="width:8px; height:8px; background:#f97316; border-radius:50%; display:inline-block;"></span>
-                PENDING CONFIRMATION
+                SENDING ORDER...
             </div>
-            <button id="close-anim" style="margin-top:50px; background:#1a1c1e; color:#fff; border:none; padding:15px 40px; border-radius:20px; font-weight:700; cursor:pointer;">DONE</button>
+            <button id="track-btn" style="margin-top:50px; background:#ff9533; color:#fff; border:none; padding:15px 40px; border-radius:20px; font-weight:700; cursor:pointer; width: 100%; max-width: 300px;">TRACK MY ORDER</button>
+            <button id="close-anim" style="margin-top:15px; background:transparent; color:#666; border:none; padding:10px; font-weight:600; cursor:pointer;">DONE</button>
         `;
         this.shadowRoot.appendChild(anim);
-        this.shadowRoot.getElementById('close-anim').onclick = () => anim.remove();
+
+        this.shadowRoot.getElementById('track-btn').onclick = () => {
+            anim.remove();
+            if (orderId) this.showOrderTracking(orderId);
+        };
+
+        this.shadowRoot.getElementById('close-anim').onclick = () => {
+            anim.remove();
+            this.renderFloatingTracker();
+        };
+
+        if (orderId) {
+            setTimeout(() => {
+                const statusLabel = anim.querySelector('div > span + span');
+                if (statusLabel) statusLabel.textContent = 'WAITING FOR CONFIRMATION';
+            }, 2000);
+        }
     }
+
+    async showOrderTracking(orderId) {
+        if (!this.supabase) await this.initSupabase();
+
+        // Subscribe to real-time updates
+        if (this.trackingChannel) this.supabase.removeChannel(this.trackingChannel);
+        this.trackingChannel = this.supabase.channel('tracking_' + orderId)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'menutech_orders', filter: 'id=eq.' + orderId },
+                payload => this.updateTrackingUI(payload.new))
+            .subscribe();
+
+        const { data: order } = await this.supabase.from('menutech_orders').select('*').eq('id', orderId).single();
+        if (order) {
+            this.renderTrackingModal(order);
+        }
+    }
+
+    renderTrackingModal(order) {
+        const overlay = this.shadowRoot.getElementById('popup');
+        const popupContent = this.shadowRoot.getElementById('popup-content');
+        overlay.style.display = 'flex';
+        overlay.classList.remove('side-popup');
+        popupContent.style.maxWidth = '500px';
+
+        this.updateTrackingUI(order);
+    }
+
+    updateTrackingUI(order) {
+        const popupContent = this.shadowRoot.getElementById('popup-content');
+        if (!popupContent) return;
+
+        const status = order.status;
+        const steps = [
+            { id: 'pending', label: 'Received', active: true },
+            { id: 'accepted', label: 'Accepted', active: ['accepted', 'preparing', 'finished', 'delivered'].includes(status) },
+            { id: 'preparing', label: 'Preparing', active: ['preparing', 'finished', 'delivered'].includes(status) },
+            { id: 'finished', label: 'Ready', active: ['finished', 'delivered'].includes(status) },
+            { id: 'delivered', label: 'Delivered', active: status === 'delivered' }
+        ];
+
+        if (status === 'rejected') {
+            steps[1] = { id: 'rejected', label: 'Rejected', active: true, error: true };
+            steps.splice(2);
+        }
+
+        let currentMsg = "We're processing your order.";
+        if (status === 'accepted') currentMsg = "Your order has been accepted!";
+        if (status === 'preparing') currentMsg = "Chef is preparing your food!";
+        if (status === 'finished') currentMsg = "Your order is ready!";
+        if (status === 'delivered') currentMsg = "Order delivered. Enjoy!";
+        if (status === 'rejected') currentMsg = "Order rejected: " + (order.rejection_reason || "Not specified");
+
+        popupContent.innerHTML = `
+            <style>
+                .tracking-container { padding: 40px 30px; font-family: 'Plus Jakarta Sans', sans-serif; text-align: center; }
+                .tracking-title { font-family: 'Outfit'; font-size: 1.8rem; margin-bottom: 10px; }
+                .tracking-msg { color: #666; margin-bottom: 40px; line-height: 1.5; }
+                .steps-container { position: relative; display: flex; flex-direction: column; gap: 30px; text-align: left; max-width: 250px; margin: 0 auto; }
+                .steps-container::before { content: ''; position: absolute; left: 14px; top: 0; bottom: 0; width: 2px; background: #eee; z-index: 0; }
+                .step { display: flex; align-items: center; gap: 20px; position: relative; z-index: 1; }
+                .step-dot { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 2px solid #eee; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: 0.3s; }
+                .step.active .step-dot { border-color: #ff9533; background: #ff9533; color: #fff; box-shadow: 0 0 15px rgba(255,149,51,0.4); }
+                .step.active .step-label { color: #1a1c1e; font-weight: 800; }
+                .step.error .step-dot { border-color: #ef4444; background: #ef4444; }
+                .step-label { color: #94a3b8; font-weight: 600; font-size: 0.95rem; }
+                .order-id { margin-top: 40px; font-size: 0.7rem; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; }
+                .btn-track-done { margin-top: 30px; width: 100%; padding: 16px; border-radius: 16px; border: none; background: #1a1c1e; color: #fff; font-weight: 700; cursor: pointer; }
+            </style>
+            <div class="tracking-container">
+                <button class="close-popup" style="right: 20px; top: 20px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <h2 class="tracking-title">Track Order</h2>
+                <p class="tracking-msg">${currentMsg}</p>
+
+                <div class="steps-container">
+                    ${steps.map(step => `
+                        <div class="step ${step.active ? 'active' : ''} ${step.error ? 'error' : ''}">
+                            <div class="step-dot">${step.active ? '✓' : ''}</div>
+                            <div class="step-label">${step.label}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="order-id">Order ID: ${order.id.substring(0, 8)}</div>
+                ${(status === 'delivered' || status === 'rejected') ? `
+                    <button class="btn-track-done" id="track-finish-btn">ORDER AGAIN</button>
+                ` : `
+                    <button class="btn-track-done" id="track-close-btn">CLOSE</button>
+                `}
+            </div>
+        `;
+
+        popupContent.querySelector('.close-popup').onclick = () => {
+            this.shadowRoot.getElementById('popup').style.display = 'none';
+            this.renderFloatingTracker();
+        };
+
+        const finishBtn = popupContent.querySelector('#track-finish-btn');
+        if (finishBtn) {
+            finishBtn.onclick = () => {
+                localStorage.removeItem('mt_last_order_id');
+                this.shadowRoot.getElementById('popup').style.display = 'none';
+                this.renderFloatingTracker();
+                if (this.trackingChannel) this.supabase.removeChannel(this.trackingChannel);
+            };
+        }
+
+        const closeBtn = popupContent.querySelector('#track-close-btn');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                this.shadowRoot.getElementById('popup').style.display = 'none';
+                this.renderFloatingTracker();
+            };
+        }
+
+        if (status === 'delivered' || status === 'rejected') {
+             // We don't remove mt_last_order_id immediately so they can see the result,
+             // but maybe we should after they close.
+        }
+    }
+
 }
 
 if (!customElements.get('menutech-platform-orders')) {
