@@ -30,4 +30,23 @@ BEGIN
     END IF;
 END $$;
 
+-- Enable Realtime for the table
+ALTER TABLE public.menutech_orders REPLICA IDENTITY FULL;
+
+-- Add table to the Supabase Realtime publication
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables
+        WHERE pubname = 'supabase_realtime'
+        AND schemaname = 'public'
+        AND tablename = 'menutech_orders'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.menutech_orders;
+    END IF;
+EXCEPTION WHEN OTHERS THEN
+    -- Fallback for environments where publication might not be accessible or exists differently
+    NULL;
+END $$;
+
 COMMENT ON COLUMN public.menutech_orders.status IS 'Status: pending, accepted, preparing, finished, delivered, rejected';

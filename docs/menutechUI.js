@@ -2710,30 +2710,40 @@ class MenutechPlatformOrders extends HTMLElement {
     async showOrderTracking(orderId) {
         if (!this.supabase) await this.initSupabase();
 
-        // Subscribe to real-time updates
-        if (this.trackingChannel) this.supabase.removeChannel(this.trackingChannel);
-        this.trackingChannel = this.supabase.channel('tracking_' + orderId)
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'menutech_orders', filter: 'id=eq.' + orderId },
-                payload => this.updateTrackingUI(payload.new))
-            .subscribe();
-
-        const { data: order } = await this.supabase.from('menutech_orders').select('*').eq('id', orderId).single();
-        if (order) {
-            this.renderTrackingModal(order);
-        }
-    }
-
-    renderTrackingModal(order) {
+        // Open modal immediately with loading state
         const overlay = this.shadowRoot.getElementById('popup');
         const popupContent = this.shadowRoot.getElementById('popup-content');
         overlay.style.display = 'flex';
         overlay.classList.remove('side-popup');
         popupContent.style.maxWidth = '500px';
+        popupContent.innerHTML = '<div style="padding: 100px; text-align: center; color: #ff9533; font-weight: 600;">Loading Tracking...</div>';
 
-        this.updateTrackingUI(order);
+        // Subscribe to real-time updates
+        if (this.trackingChannel) this.supabase.removeChannel(this.trackingChannel);
+
+        this.trackingChannel = this.supabase.channel('tracking_' + orderId.substring(0, 8))
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'menutech_orders',
+                filter: 'id=eq.' + orderId
+            }, (payload) => {
+                console.log('Order status updated:', payload.new.status);
+                this.renderTrackingUI(payload.new);
+            })
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('Subscribed to tracking for:', orderId);
+                }
+            });
+
+        const { data: order } = await this.supabase.from('menutech_orders').select('*').eq('id', orderId).single();
+        if (order) {
+            this.renderTrackingUI(order);
+        }
     }
 
-    updateTrackingUI(order) {
+    renderTrackingUI(order) {
         const popupContent = this.shadowRoot.getElementById('popup-content');
         if (!popupContent) return;
 
