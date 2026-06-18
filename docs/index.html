@@ -302,6 +302,12 @@
                         document.getElementById('card-qr-gen').classList.add('hidden');
                         document.getElementById('card-qr-admin').classList.add('hidden');
                         document.getElementById('card-customer-website').classList.add('hidden');
+
+                        document.getElementById('card-web').style.order = "1";
+                        document.getElementById('card-template').style.order = "2";
+                        document.getElementById('card-menus').style.order = "3";
+                        document.getElementById('card-orders').style.order = "4";
+
                         const grid = document.getElementById('main-bento');
                         grid.style.maxWidth = '800px';
                         grid.style.margin = '40px auto 0 auto';
