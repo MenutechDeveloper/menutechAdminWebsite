@@ -484,33 +484,46 @@
         }
 
         function subscribeToOrders() {
-            ordersChannel = sb.channel('menutech_orders_' + activeOwnerId)
+            // Use a clean channel name
+            const channelName = 'orders_realtime_' + activeOwnerId.substring(0, 8);
+            ordersChannel = sb.channel(channelName)
                 .on('postgres_changes', {
-                    event: 'INSERT',
+                    event: '*', // Listen to all events for better reliability
                     schema: 'public',
-                    table: 'menutech_orders',
-                    filter: `user_id=eq.${activeOwnerId}`
+                    table: 'menutech_orders'
                 }, (payload) => {
-                    orders.unshift(mapOrder(payload.new));
-                    updateCounts();
-                    renderOrders();
-                    playNotification();
-                })
-                .on('postgres_changes', {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'menutech_orders',
-                    filter: `user_id=eq.${activeOwnerId}`
-                }, (payload) => {
-                    const idx = orders.findIndex(o => o.id === payload.new.id);
-                    if (idx !== -1) {
-                        orders[idx] = mapOrder(payload.new);
-                        updateCounts();
-                        renderOrders();
-                        if (selectedOrderId === payload.new.id) renderDetails(orders[idx]);
+                    // Filter by ownerId in JS to avoid subscription filter issues
+                    if (payload.new && payload.new.user_id === activeOwnerId) {
+                        if (payload.eventType === 'INSERT') {
+                            const newOrder = mapOrder(payload.new);
+                            // Avoid duplicates
+                            if (!orders.find(o => o.id === newOrder.id)) {
+                                orders.unshift(newOrder);
+                                updateCounts();
+                                renderOrders();
+                                // Ensure sound alert starts
+                                toggleAlertSound(true);
+                            }
+                        } else if (payload.eventType === 'UPDATE') {
+                            const idx = orders.findIndex(o => o.id === payload.new.id);
+                            if (idx !== -1) {
+                                orders[idx] = mapOrder(payload.new);
+                                updateCounts();
+                                renderOrders();
+                                if (selectedOrderId === payload.new.id) renderDetails(orders[idx]);
+                            }
+                        } else if (payload.eventType === 'DELETE') {
+                            orders = orders.filter(o => o.id !== payload.old.id);
+                            updateCounts();
+                            renderOrders();
+                        }
                     }
                 })
-                .subscribe();
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        console.log('Realtime subscription active for owner:', activeOwnerId);
+                    }
+                });
         }
 
         function updateCounts() {
@@ -537,9 +550,20 @@
                     alertAudio = new Audio('https://menutech.services/assets/audio/notification.mp3');
                     alertAudio.loop = true;
                 }
-                alertAudio.play().catch(e => {
-                    // console.log('Audio play blocked, waiting for interaction');
-                });
+
+                // If it's already playing, don't restart
+                if (alertAudio.paused) {
+                    alertAudio.play().catch(e => {
+                        // If blocked, we'll try again on next interaction
+                        const retry = () => {
+                            if (orders.some(o => o.status === 'pending')) {
+                                alertAudio.play();
+                            }
+                            document.removeEventListener('click', retry);
+                        };
+                        document.addEventListener('click', retry);
+                    });
+                }
             } else {
                 if (alertAudio) {
                     alertAudio.pause();
@@ -803,10 +827,6 @@
             }, 6000);
         }
 
-        function playNotification() {
-            const audio = new Audio('https://menutech.services/assets/audio/notification.mp3');
-            audio.play().catch(e => console.log('Audio play blocked'));
-        }
 
         function initTheme() {
             if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
