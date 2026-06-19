@@ -9,3 +9,13 @@ test-results/
 .playwright/
 *.png
 *.spec.js
+
+# Flutter
+android/.dart_tool/
+android/.flutter-plugins
+android/.flutter-plugins-dependencies
+android/.metadata
+android/.pub-cache/
+android/.pub/
+android/build/
+android/menutech_admin.iml
