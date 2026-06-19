@@ -38,6 +38,7 @@ dependencies:
   shared_preferences: ^2.5.5
   intl: ^0.20.2
   flutter_thermal_printer_pos: ^0.0.4
+  audioplayers: ^6.7.1
 
 dev_dependencies:
   flutter_test:

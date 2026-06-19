@@ -34,10 +34,32 @@ class DashboardScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Expanded(
               child: GridView.count(
-                crossAxisCount: 1,
+                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
                 mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
                 childAspectRatio: 2.5,
                 children: [
+                  _buildBentoCard(
+                    context,
+                    title: 'Deluxe Website',
+                    description: 'Customize your gallery and manage domain content.',
+                    icon: Icons.web_outlined,
+                    route: '/placeholder',
+                  ),
+                  _buildBentoCard(
+                    context,
+                    title: 'Template Web',
+                    description: 'Customize and export your professional website.',
+                    icon: Icons.language_outlined,
+                    route: '/placeholder',
+                  ),
+                  _buildBentoCard(
+                    context,
+                    title: 'Menus',
+                    description: 'Create and manage digital menus.',
+                    icon: Icons.restaurant_menu_outlined,
+                    route: '/placeholder',
+                  ),
                   _buildBentoCard(
                     context,
                     title: 'Orders',
@@ -48,7 +70,7 @@ class DashboardScreen extends StatelessWidget {
                   _buildBentoCard(
                     context,
                     title: 'Printer Settings',
-                    description: 'Configure and manage your Epson Ethernet printers.',
+                    description: 'Configure and manage your Epson printers.',
                     icon: Icons.print_outlined,
                     route: '/settings',
                   ),
@@ -69,7 +91,15 @@ class DashboardScreen extends StatelessWidget {
     required String route,
   }) {
     return InkWell(
-      onTap: () => Navigator.of(context).pushNamed(route),
+      onTap: () {
+        if (route == '/placeholder') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Module coming soon to native app. Use web version for now.'))
+          );
+        } else {
+          Navigator.of(context).pushNamed(route);
+        }
+      },
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
@@ -102,11 +132,15 @@ class DashboardScreen extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     description,
-                    style: const TextStyle(color: Colors.grey, fontSize: 14),
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
