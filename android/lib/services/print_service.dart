@@ -2,11 +2,14 @@ import 'package:intl/intl.dart';
 import '../models/order_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_thermal_printer_pos/flutter_thermal_printer_pos.dart';
+import 'supabase_service.dart';
 
 class PrintService {
   static final PrintService _instance = PrintService._internal();
   factory PrintService() => _instance;
   PrintService._internal();
+
+  final SupabaseService _supabase = SupabaseService();
 
   Future<List<String>> getSavedPrinterIps() async {
     final prefs = await SharedPreferences.getInstance();
@@ -29,9 +32,26 @@ class PrintService {
     await prefs.setStringList('printer_ips', ips);
   }
 
+  Future<Map<String, dynamic>?> getTicketConfig() async {
+    try {
+      final userId = _supabase.currentUser?.id;
+      if (userId == null) return null;
+
+      final response = await _supabase.client
+          .from('menutech_tickets')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+      return response;
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<bool> printTicket(OrderModel order, String ip) async {
     try {
-      final payload = _buildPayload(order);
+      final config = await getTicketConfig();
+      final payload = _buildPayload(order, config);
 
       await FlutterThermalPrinterPos.printTcp(
         ip: ip,
@@ -44,16 +64,18 @@ class PrintService {
 
       return true;
     } catch (e) {
-      // Production code should use proper logging
       return false;
     }
   }
 
-  String _buildPayload(OrderModel order) {
+  String _buildPayload(OrderModel order, Map<String, dynamic>? config) {
     StringBuffer sb = StringBuffer();
 
+    final header = config?['header_text'] ?? "MENUTECH";
+    final footer = config?['footer_text'] ?? "Thank you for your order!\nPowered by Menutech";
+
     // Header
-    sb.writeln("[C]<b>MENUTECH</b>");
+    sb.writeln("[C]<b>$header</b>");
     sb.writeln("[C]ORDER TICKET");
     sb.writeln("[C]================================");
 
@@ -101,8 +123,7 @@ class PrintService {
     }
 
     sb.writeln("[C]================================");
-    sb.writeln("[C]Thank you for your order!");
-    sb.writeln("[C]Powered by Menutech");
+    sb.writeln("[C]$footer");
 
     return sb.toString();
   }

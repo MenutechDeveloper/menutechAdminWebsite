@@ -4,14 +4,36 @@ import '../models/order_model.dart';
 import '../services/supabase_service.dart';
 import '../services/print_service.dart';
 
-class OrderDetailScreen extends StatefulWidget {
+class OrderDetailScreen extends StatelessWidget {
   const OrderDetailScreen({super.key});
 
   @override
-  State<OrderDetailScreen> createState() => _OrderDetailScreenState();
+  Widget build(BuildContext context) {
+    final order = ModalRoute.of(context)!.settings.arguments as OrderModel;
+    return Scaffold(
+      appBar: AppBar(title: Text("Order #${order.id.substring(0, 5)}")),
+      body: OrderDetailView(order: order),
+    );
+  }
 }
 
-class _OrderDetailScreenState extends State<OrderDetailScreen> {
+class OrderDetailView extends StatefulWidget {
+  final OrderModel order;
+  final bool isTablet;
+  final VoidCallback? onStatusChanged;
+
+  const OrderDetailView({
+    super.key,
+    required this.order,
+    this.isTablet = false,
+    this.onStatusChanged,
+  });
+
+  @override
+  State<OrderDetailView> createState() => _OrderDetailViewState();
+}
+
+class _OrderDetailViewState extends State<OrderDetailView> {
   final SupabaseService _supabase = SupabaseService();
   final PrintService _printService = PrintService();
   bool _isUpdating = false;
@@ -35,7 +57,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     try {
       await _supabase.client.from('menutech_orders').update(updates).eq('id', id);
-      if (mounted) Navigator.of(context).pop();
+      if (widget.onStatusChanged != null) widget.onStatusChanged!();
+      if (!widget.isTablet && mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
@@ -91,73 +114,73 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final order = ModalRoute.of(context)!.settings.arguments as OrderModel;
+    final order = widget.order;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Order #${order.id.substring(0, 5)}"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.print),
-            onPressed: () => _showPrintDialog(order),
-          )
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(order.customerName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                    Text(DateFormat('MMM d, yyyy - h:mm a').format(order.createdAt), style: const TextStyle(color: Colors.grey)),
-                  ],
-                ),
-                _buildStatusTag(order.status),
-              ],
-            ),
-            const Divider(height: 40),
-            _buildInfoRow("Phone", order.customerPhone),
-            _buildInfoRow("Type", order.orderType.toUpperCase()),
-            _buildInfoRow("Payment", order.paymentMethod ?? 'N/A'),
-            if (order.address != null) _buildInfoRow("Address", order.address!),
-            if (order.reference != null) _buildInfoRow("Reference", order.reference!),
-            if (order.customerNotes != null) ...[
-              const SizedBox(height: 10),
-              const Text("Customer Notes:", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFFF9533))),
-              Text("\"${order.customerNotes}\"", style: const TextStyle(fontStyle: FontStyle.italic)),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(order.customerName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(DateFormat('MMM d, yyyy - h:mm a').format(order.createdAt), style: const TextStyle(color: Colors.grey)),
+                ],
+              ),
+              _buildStatusTag(order.status),
             ],
-            const SizedBox(height: 30),
-            const Text("Order Items", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: () => _showPrintDialog(order),
+            icon: const Icon(Icons.print),
+            label: const Text("PRINT TICKET"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF9533),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+          ),
+          const Divider(height: 40),
+          _buildInfoRow("Phone", order.customerPhone),
+          _buildInfoRow("Type", order.orderType.toUpperCase()),
+          _buildInfoRow("Payment", order.paymentMethod ?? 'N/A'),
+          if (order.address != null) _buildInfoRow("Address", order.address!),
+          if (order.reference != null) _buildInfoRow("Reference", order.reference!),
+          if (order.customerNotes != null) ...[
             const SizedBox(height: 10),
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEFEF5),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFF8E8D8)),
-              ),
-              child: Column(
-                children: order.items.map((item) => _buildItemRow(item)).toList(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Total", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                Text("\$${order.totalAmount.toStringAsFixed(2)}",
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFFFF9533))),
-              ],
-            ),
-            const SizedBox(height: 40),
-            _buildActionButtons(order),
+            const Text("Customer Notes:", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFFF9533))),
+            Text("\"${order.customerNotes}\"", style: const TextStyle(fontStyle: FontStyle.italic)),
           ],
-        ),
+          const SizedBox(height: 30),
+          const Text("Order Items", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEFEF5),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFF8E8D8)),
+            ),
+            child: Column(
+              children: order.items.map((item) => _buildItemRow(item)).toList(),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Total", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Text("\$${order.totalAmount.toStringAsFixed(2)}",
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFFFF9533))),
+            ],
+          ),
+          const SizedBox(height: 40),
+          _buildActionButtons(order),
+        ],
       ),
     );
   }

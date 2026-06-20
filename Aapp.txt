@@ -1,0 +1,28 @@
+Integración App Android Menutech:
+
+1. Autenticación:
+   - La app utiliza el mismo Supabase Auth que la plataforma web. Los usuarios (Owners) pueden ingresar con sus mismas credenciales de menutech.io.
+
+2. Configuración de Tickets (Web):
+   - Se ha añadido un nuevo módulo "Tickets" en el Dashboard web (index.html) exclusivo para Owners.
+   - Al hacer clic, los redirige a tickets.html, donde pueden configurar el nombre del restaurante (Header), mensajes de agradecimiento (Footer) y alternar la visibilidad del logo.
+   - Esta configuración se almacena en la tabla de Supabase `menutech_tickets`.
+
+3. Configuración de Impresoras (App):
+   - La gestión de impresoras se realiza en la App Android dentro del módulo "Printer Settings".
+   - Soporta una o múltiples impresoras EPSON TM-T20III mediante su dirección IP (Ethernet, puerto 9100).
+   - Los ajustes de IP se guardan localmente en el dispositivo para facilitar el acceso rápido.
+
+4. Sincronización en Tiempo Real:
+   - La app se suscribe a los cambios de la tabla `menutech_orders`.
+   - Cuando llega una nueva orden pendiente, la app reproduce un sonido de alerta (notification.mp3) en bucle hasta que es procesada.
+   - El restaurante puede avanzar el pedido (Aceptado -> Preparando -> Listo -> Entregado) desde la app, y el cliente verá el progreso en tiempo real en la web.
+
+5. Diseño Adaptable (Tablets):
+   - La interfaz de Órdenes cambia automáticamente a un modo de panel dividido (Master-Detail) en tablets para permitir la visualización simultánea de la lista y los detalles.
+
+6. Impresión de Tickets:
+   - En la vista de detalles de cada orden, hay un botón "PRINT TICKET".
+   - Al presionarlo, la app obtiene la configuración de diseño desde Supabase y envía el comando ESC/POS a la impresora seleccionada.
+
+Nota: Para habilitar esta funcionalidad, se debe ejecutar el archivo SQL `docs/tickets_schema.sql` en la base de datos de Supabase.

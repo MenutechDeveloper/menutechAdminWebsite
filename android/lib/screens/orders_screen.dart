@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../models/order_model.dart';
 import '../services/supabase_service.dart';
+import 'order_detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -13,17 +15,34 @@ class OrdersScreen extends StatefulWidget {
 class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final SupabaseService _supabase = SupabaseService();
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  OrderModel? _selectedOrder;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _audioPlayer.setReleaseMode(ReleaseMode.loop);
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _audioPlayer.dispose();
     super.dispose();
+  }
+
+  void _updateAlertSound(bool shouldPlay) async {
+    if (shouldPlay) {
+      if (_audioPlayer.state != PlayerState.playing) {
+        await _audioPlayer.play(UrlSource('https://menutech.services/assets/audio/notification.mp3'));
+      }
+    } else {
+      if (_audioPlayer.state == PlayerState.playing) {
+        await _audioPlayer.stop();
+      }
+    }
   }
 
   @override
@@ -60,17 +79,56 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
 
           final allOrders = snapshot.data!.map((json) => OrderModel.fromJson(json)).toList();
 
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildOrderList(allOrders.where((o) => o.status == 'pending').toList()),
-              _buildOrderList(allOrders.where((o) => o.status == 'accepted' || o.status == 'preparing').toList()),
-              _buildOrderList(allOrders.where((o) => o.status == 'finished').toList()),
-              _buildOrderList(allOrders.where((o) => o.status == 'delivered' || o.status == 'rejected').toList()),
-            ],
+          final pendingCount = allOrders.where((o) => o.status == 'pending').length;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _updateAlertSound(pendingCount > 0);
+          });
+
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth > 720) {
+                return Row(
+                  children: [
+                    SizedBox(
+                      width: 350,
+                      child: _buildTabViews(allOrders),
+                    ),
+                    const VerticalDivider(width: 1, color: Color(0xFFF8E8D8)),
+                    Expanded(
+                      child: _selectedOrder == null
+                        ? const Center(child: Text("Select an order to view details"))
+                        : OrderDetailView(
+                            order: allOrders.firstWhere(
+                              (o) => o.id == _selectedOrder!.id,
+                              orElse: () => _selectedOrder!
+                            ),
+                            isTablet: true,
+                            onStatusChanged: () {
+                              // Optional: handle something after status change
+                            },
+                          ),
+                    ),
+                  ],
+                );
+              } else {
+                return _buildTabViews(allOrders);
+              }
+            },
           );
         },
       ),
+    );
+  }
+
+  Widget _buildTabViews(List<OrderModel> allOrders) {
+    return TabBarView(
+      controller: _tabController,
+      children: [
+        _buildOrderList(allOrders.where((o) => o.status == 'pending').toList()),
+        _buildOrderList(allOrders.where((o) => o.status == 'accepted' || o.status == 'preparing').toList()),
+        _buildOrderList(allOrders.where((o) => o.status == 'finished').toList()),
+        _buildOrderList(allOrders.where((o) => o.status == 'delivered' || o.status == 'rejected').toList()),
+      ],
     );
   }
 
@@ -85,15 +143,26 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final order = orders[index];
+        final isSelected = _selectedOrder?.id == order.id;
+
         return Card(
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Color(0xFFF8E8D8)),
+            side: BorderSide(
+              color: isSelected ? const Color(0xFFFF9533) : const Color(0xFFF8E8D8),
+              width: isSelected ? 2 : 1,
+            ),
           ),
+          color: isSelected ? const Color(0xFFFF9533).withOpacity(0.05) : Colors.white,
           child: ListTile(
             contentPadding: const EdgeInsets.all(16),
-            onTap: () => Navigator.of(context).pushNamed('/order-detail', arguments: order),
+            onTap: () {
+              setState(() => _selectedOrder = order);
+              if (MediaQuery.of(context).size.width <= 720) {
+                Navigator.of(context).pushNamed('/order-detail', arguments: order);
+              }
+            },
             leading: Container(
               width: 8,
               height: double.infinity,
@@ -104,21 +173,20 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             ),
             title: Text(
               order.customerName,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 4),
-                Text("${order.items.length} items • \$${order.totalAmount.toStringAsFixed(2)}"),
-                const SizedBox(height: 8),
+                Text("${order.items.length} items • \$${order.totalAmount.toStringAsFixed(2)}", style: const TextStyle(fontSize: 12)),
+                const SizedBox(height: 4),
                 Text(
                   DateFormat('MMM d, h:mm a').format(order.createdAt),
-                  style: const TextStyle(color: Color(0xFFFF9533), fontWeight: FontWeight.w600, fontSize: 12),
+                  style: const TextStyle(color: Color(0xFFFF9533), fontWeight: FontWeight.w600, fontSize: 11),
                 ),
               ],
             ),
-            trailing: const Icon(Icons.chevron_right),
           ),
         );
       },
