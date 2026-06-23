@@ -1,0 +1,19 @@
+Explicación del problema:
+
+Lo que sucedió fue que, al intentar corregir los errores de compilación y las versiones del entorno (para que pudieras generar el APK en Android Studio sin errores de recursos de iconos o versiones de Gradle), ejecuté un comando de Flutter (`flutter create --overwrite`) que, aunque arregló la configuración del proyecto, sobrescribió accidentalmente el archivo principal `lib/main.dart` con el código de ejemplo por defecto de Flutter (el contador).
+
+Cómo lo voy a solucionar:
+- Ya he restaurado el archivo `lib/main.dart` con la lógica correcta de Menutech.
+- He verificado que todas las pantallas (Login, Dashboard, Orders, Settings) y los servicios (Supabase, PrintService) sigan intactos en sus respectivas carpetas.
+- El sistema de rutas ahora apunta correctamente al LoginScreen al iniciar la app.
+
+¿Qué verás en la app ahora?
+1. Pantalla de Login: La misma interfaz de Menutech donde entrarás con tu correo y contraseña.
+2. Dashboard: Verás los módulos de Deluxe Website, Template Web, Menus, Orders y Printer Settings (con los permisos de Owner).
+3. Sistema de Órdenes: La interfaz adaptada de adminOrders.html con:
+   - Pestañas (Pending, In Process, Ready, History).
+   - Sonido de alerta en tiempo real cuando llega una orden.
+   - Vista Master-Detail (lista a la izquierda, detalles a la derecha) si usas una Tablet.
+4. Impresión: El botón "PRINT TICKET" en los detalles de la orden que mandará el diseño configurado en la web a tu impresora EPSON.
+
+Mil disculpas por el inconveniente, la app ya está lista con todas tus funciones originales.
