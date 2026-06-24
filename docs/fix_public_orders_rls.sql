@@ -11,9 +11,9 @@ ALTER TABLE public.menutech_orders ENABLE ROW LEVEL SECURITY;
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_policy
+        SELECT 1 FROM pg_policies
         WHERE tablename = 'menutech_orders'
-        AND polname = 'Allow public insert'
+        AND policyname = 'Allow public insert'
     ) THEN
         CREATE POLICY "Allow public insert" ON public.menutech_orders
         FOR INSERT
@@ -24,14 +24,12 @@ END $$;
 
 -- 3. Create policy to allow ANYONE to select orders (for tracking)
 -- REQUIRED: This is necessary so customers can see their order status in the tracking screen.
--- SECURITY NOTE: Because orders use random UUIDs, it is difficult to "guess" an order ID.
--- However, this policy technically allows any anonymous user to attempt to read orders.
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_policy
+        SELECT 1 FROM pg_policies
         WHERE tablename = 'menutech_orders'
-        AND polname = 'Allow public select'
+        AND policyname = 'Allow public select'
     ) THEN
         CREATE POLICY "Allow public select" ON public.menutech_orders
         FOR SELECT
@@ -42,16 +40,13 @@ END $$;
 
 -- 4. Add Management Access (Owners and Admins)
 -- This ensures that restaurant owners can see their own orders and admins can see all.
--- We use a separate block so it doesn't fail if your schema is different.
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_policy
+        SELECT 1 FROM pg_policies
         WHERE tablename = 'menutech_orders'
-        AND polname = 'Management access v2'
+        AND policyname = 'Management access v2'
     ) THEN
-        -- This policy depends on 'user_id' and 'profiles' table existing.
-        -- If they don't exist, this specific block might fail but others will work.
         EXECUTE 'CREATE POLICY "Management access v2" ON public.menutech_orders
         FOR ALL
         TO authenticated
@@ -65,12 +60,10 @@ BEGIN
         )';
     END IF;
 EXCEPTION WHEN OTHERS THEN
-    -- If this management policy fails due to schema mismatch, we ignore it
-    -- so the main Public Insert fix still works.
-    RAISE NOTICE 'Management policy could not be created, possibly due to schema mismatch. Skipping.';
+    RAISE NOTICE 'Management policy skipping...';
 END $$;
 
--- 5. Enable Realtime (Required for the tracking screen to update automatically)
+-- 5. Enable Realtime
 ALTER TABLE public.menutech_orders REPLICA IDENTITY FULL;
 
 -- Add to publication if missing
@@ -86,5 +79,5 @@ BEGIN
     END IF;
 EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
--- Notify PostgREST to reload the schema
+-- Notify PostgREST
 NOTIFY pgrst, 'reload schema';
