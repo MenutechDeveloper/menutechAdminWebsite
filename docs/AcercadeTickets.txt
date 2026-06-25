@@ -1,0 +1,41 @@
+CONFIGURACIÓN DE TICKETS - MENUTECH
+
+Este documento explica el funcionamiento del sistema de diseño y configuración de tickets para las órdenes de Menutech, integrando la interfaz web y la aplicación móvil.
+
+1. CONFIGURACIÓN DESDE LA WEB (tickets.html)
+-------------------------------------------
+La página `tickets.html` permite a los dueños de restaurantes y administradores personalizar el recibo que se imprime cuando se recibe una orden.
+
+- Acceso Administrativo: Los roles ADMIN, DEVELOPER y CS pueden usar el panel lateral "Find Project" para buscar y editar la configuración de cualquier restaurante.
+- Personalización de Logo: Se puede subir un logo personalizado del restaurante mediante Cloudinary. Este logo aparecerá en la parte superior del ticket impreso.
+- Encabezado y Pie de Página: Se pueden definir textos personalizados para el encabezado (ej. nombre del restaurante) y el pie de página (ej. agradecimiento o instrucciones de entrega).
+- Vista Previa: El panel derecho muestra una simulación en tiempo real de cómo se verá el ticket de 80mm antes de guardarlo.
+
+2. ALMACENAMIENTO (Supabase)
+----------------------------
+La configuración se guarda en la tabla `public.menutech_tickets` vinculada al `user_id` del dueño. Los datos se almacenan en un formato JSONB que incluye:
+- `header_text`: Texto del encabezado.
+- `footer_text`: Texto del pie de página.
+- `show_logo`: Booleano para activar/desactivar la imagen.
+- `logo_url`: URL de la imagen del logo almacenada en Cloudinary.
+
+3. IMPRESIÓN DESDE LA APP ANDROID
+---------------------------------
+La aplicación móvil de administración utiliza esta configuración de forma dinámica al imprimir una orden.
+
+- Recuperación de Datos: Cuando se pulsa "Print Ticket" en la app, el servicio `PrintService.dart` consulta automáticamente la configuración específica del dueño de esa orden (usando el `user_id` de la orden).
+- Generación de Payload: El sistema construye un comando ESC/POS compatible con impresoras térmicas Ethernet (80mm):
+    - Utiliza el tag `[I]` para descargar e imprimir el logo del restaurante desde la URL configurada.
+    - Aplica los textos de encabezado y pie de página personalizados.
+    - Incluye automáticamente los datos de la orden: ID, cliente, teléfono, dirección, lista de productos y total.
+- Compatibilidad: El sistema está optimizado para impresoras como la Epson TM-T20III y similares que soporten comandos ESC/POS estándar.
+
+4. FLUJO DE TRABAJO
+-------------------
+1. El administrador o dueño configura el diseño en `tickets.html` y guarda los cambios.
+2. Un cliente realiza un pedido desde el sitio web del restaurante (ej. lasalsita.com).
+3. La orden aparece en tiempo real en la aplicación móvil de administración.
+4. El personal del restaurante pulsa "Print Ticket".
+5. La impresora emite el ticket con el diseño, logo y datos configurados previamente en la web.
+
+Nota: No es necesario realizar cambios manuales en la aplicación para cada restaurante; todo se controla de forma centralizada desde el panel de tickets en la web.

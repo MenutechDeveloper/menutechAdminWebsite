@@ -32,11 +32,8 @@ class PrintService {
     await prefs.setStringList('printer_ips', ips);
   }
 
-  Future<Map<String, dynamic>?> getTicketConfig() async {
+  Future<Map<String, dynamic>?> getTicketConfig(String userId) async {
     try {
-      final userId = _supabase.currentUser?.id;
-      if (userId == null) return null;
-
       final response = await _supabase.client
           .from('menutech_tickets')
           .select()
@@ -50,7 +47,7 @@ class PrintService {
 
   Future<bool> printTicket(OrderModel order, String ip) async {
     try {
-      final config = await getTicketConfig();
+      final config = await getTicketConfig(order.userId);
       final payload = _buildPayload(order, config);
 
       await FlutterThermalPrinterPos.printTcp(
@@ -68,11 +65,23 @@ class PrintService {
     }
   }
 
-  String _buildPayload(OrderModel order, Map<String, dynamic>? config) {
+  String _buildPayload(OrderModel order, Map<String, dynamic>? configData) {
     StringBuffer sb = StringBuffer();
 
+    final config = configData?['config'] as Map<String, dynamic>?;
     final header = config?['header_text'] ?? "MENUTECH";
     final footer = config?['footer_text'] ?? "Thank you for your order!\nPowered by Menutech";
+    final logoUrl = config?['logo_url'] as String?;
+    final showLogo = config?['show_logo'] ?? true;
+
+    // Logo
+    if (showLogo) {
+      if (logoUrl != null && logoUrl.isNotEmpty) {
+        sb.writeln("[I]$logoUrl");
+      } else {
+        sb.writeln("[I]https://menutech.services/assets/img/logomt.png");
+      }
+    }
 
     // Header
     sb.writeln("[C]<b>$header</b>");
