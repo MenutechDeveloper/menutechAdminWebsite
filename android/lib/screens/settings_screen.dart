@@ -21,7 +21,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadPrinters() async {
     final ips = await _printService.getSavedPrinterIps();
+    if (ips.isEmpty) {
+      final remoteIp = await _printService.getRemotePrinterIp();
+      if (remoteIp != null) {
+        await _printService.savePrinterIp(remoteIp);
+        final updatedIps = await _printService.getSavedPrinterIps();
+        setState(() => _printerIps = updatedIps);
+        return;
+      }
+    }
     setState(() => _printerIps = ips);
+  }
+
+  Future<void> _discoverPrinters() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(color: Color(0xFFFF9533)),
+            SizedBox(height: 20),
+            Text("Searching for printers on local network..."),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final discovered = await _printService.discoverPrinters();
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      if (discovered.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No printers found'), backgroundColor: Colors.orange),
+        );
+      } else {
+        // Save all found printers to local storage, but only the last one will sync to Supabase
+        // because of the unique user_id constraint in the table.
+        for (var ip in discovered) {
+          await _printService.savePrinterIp(ip);
+        }
+        await _loadPrinters();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Found and configured ${discovered.length} printer(s)'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error searching printers: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   Future<void> _addPrinter() async {
@@ -85,6 +143,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: IconButton.styleFrom(backgroundColor: const Color(0xFFFF9533)),
                 ),
               ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _discoverPrinters,
+                icon: const Icon(Icons.search),
+                label: const Text("SEARCH PRINTERS AUTOMATICALLY"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF9533),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
             ),
             const SizedBox(height: 30),
             Expanded(

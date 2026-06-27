@@ -1,7 +1,11 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:intl/intl.dart';
 import '../models/order_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_thermal_printer_pos/flutter_thermal_printer_pos.dart';
+import 'package:network_info_plus/network_info_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'supabase_service.dart';
 
 class PrintService {
@@ -22,6 +26,78 @@ class PrintService {
     if (!ips.contains(ip)) {
       ips.add(ip);
       await prefs.setStringList('printer_ips', ips);
+    }
+
+    // Also save to Supabase
+    final user = _supabase.currentUser;
+    if (user != null) {
+      try {
+        await _supabase.client.from('menutech_tickets').upsert({
+          'user_id': user.id,
+          'printer_ip': ip,
+          'updated_at': DateTime.now().toIso8601String(),
+        }, onConflict: 'user_id');
+      } catch (e) {
+        // Error saving IP to Supabase
+      }
+    }
+  }
+
+  Future<String?> getRemotePrinterIp() async {
+    final user = _supabase.currentUser;
+    if (user == null) return null;
+
+    try {
+      final response = await _supabase.client
+          .from('menutech_tickets')
+          .select('printer_ip')
+          .eq('user_id', user.id)
+          .maybeSingle();
+      return response?['printer_ip'] as String?;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<List<String>> discoverPrinters() async {
+    List<String> discoveredIps = [];
+
+    // Request permissions
+    final status = await Permission.locationWhenInUse.request();
+    if (!status.isGranted) return [];
+
+    final info = NetworkInfo();
+    String? wifiIP = await info.getWifiIP();
+
+    if (wifiIP == null) return [];
+
+    final String subnet = wifiIP.substring(0, wifiIP.lastIndexOf('.'));
+
+    // Scan in chunks to avoid socket exhaustion
+    const int chunkSize = 30;
+    for (int i = 1; i < 255; i += chunkSize) {
+      final List<Future<String?>> tasks = [];
+      for (int j = i; j < i + chunkSize && j < 255; j++) {
+        tasks.add(_checkPrinter('$subnet.$j'));
+      }
+      final results = await Future.wait(tasks);
+      for (var result in results) {
+        if (result != null) discoveredIps.add(result);
+      }
+      // If we found at least one, we can stop early if we want "auto-connect"
+      // but let's find all and let the UI handle it.
+    }
+
+    return discoveredIps;
+  }
+
+  Future<String?> _checkPrinter(String host) async {
+    try {
+      final socket = await Socket.connect(host, 9100, timeout: const Duration(milliseconds: 700));
+      socket.destroy();
+      return host;
+    } catch (e) {
+      return null;
     }
   }
 
