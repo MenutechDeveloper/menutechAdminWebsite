@@ -1,0 +1,43 @@
+INFORMACIÓN SOBRE LA CONFIGURACIÓN DE LA APP (ICONOS Y POLÍTICAS)
+
+Este documento explica dónde colocar los archivos necesarios para que la app se vea profesional y cumpla con los requisitos de la Google Play Store.
+
+1. PAQUETE DE ICONOS (APP ICON)
+-------------------------------
+Para cambiar el icono de Android por el de tu app, debes reemplazar los archivos 'ic_launcher.png' e 'ic_launcher_round.png' en las siguientes carpetas dentro de tu proyecto:
+
+Ruta base: android/android/app/src/main/res/
+
+Medidas por carpeta:
+- mipmap-mdpi: 48x48 px
+- mipmap-hdpi: 72x72 px
+- mipmap-xhdpi: 96x96 px
+- mipmap-xxhdpi: 144x144 px
+- mipmap-xxxhdpi: 192x192 px
+
+Además, para la Google Play Store necesitarás un icono de 512x512 px (formato PNG de 32 bits con canal alfa).
+
+Nota: Los archivos deben llamarse exactamente 'ic_launcher.png' para el icono cuadrado e 'ic_launcher_round.png' para el icono redondo.
+
+2. POLÍTICAS DE PRIVACIDAD
+--------------------------
+Para publicar en Google Play, es OBLIGATORIO tener una Política de Privacidad accesible tanto dentro de la app como en una URL pública.
+
+Ubicación en la App (Ya configurado en el código):
+- Pantalla de Inicio (Login): Se ha agregado un botón de "Privacy Policy" debajo del botón de Sign In.
+- Pantalla de Configuración (Settings): Se ha agregado una opción de "Privacy Policy" en la lista.
+
+Lo que debes hacer:
+- Debes redactar tu política de privacidad (puedes usar un generador online).
+- El formato debe ser texto claro y legible.
+- Google Play requiere que proporciones una URL (ejemplo: https://menutech.xyz/privacy-policy) al subir la app en la consola.
+- En el código de Flutter (login_screen.dart y settings_screen.dart), puedes reemplazar el texto de ejemplo en el 'showDialog' con tu texto real o hacer que abra el link de tu web.
+
+3. GENERACIÓN DEL APK / AAB
+---------------------------
+Una vez que hayas reemplazado los iconos en todas las carpetas 'mipmap', puedes generar el archivo final ejecutando:
+
+Para pruebas (APK): flutter build apk --split-per-abi
+Para Google Play (AAB): flutter build appbundle
+
+¡Con esto tu app tendrá el icono correcto y cumplirá con las normativas de privacidad!

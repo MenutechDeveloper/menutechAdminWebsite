@@ -160,6 +160,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: 30),
+            ListTile(
+              leading: const Icon(Icons.privacy_tip_outlined, color: Colors.grey),
+              title: const Text("Privacy Policy"),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Privacy Policy'),
+                    content: const SingleChildScrollView(
+                      child: Text(
+                        'Your privacy policy text goes here. '
+                        'For Google Play, you should also provide a web link to your full privacy policy.',
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Close'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            const Divider(),
+            const SizedBox(height: 10),
             Expanded(
               child: ListView.separated(
                 itemCount: _printerIps.length,
