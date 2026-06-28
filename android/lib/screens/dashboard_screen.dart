@@ -1,85 +1,134 @@
 import 'package:flutter/material.dart';
 import '../services/supabase_service.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  Map<String, dynamic>? _profile;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final user = SupabaseService().currentUser;
+    if (user != null) {
+      final profile = await SupabaseService().getUserProfile(user.id);
+      if (mounted) {
+        setState(() {
+          _profile = profile;
+          _isLoading = false;
+        });
+      }
+    } else {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final String role = (_profile?['role'] ?? 'OWNER').toString().toUpperCase();
+    final bool isPrivileged = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'].contains(role);
+    final String restaurantName = _profile?['username'] ?? 'Restaurant';
+
     return Scaffold(
       appBar: AppBar(
-        title: Image.network('https://menutech.services/assets/img/logomt.png', height: 40),
+        title: Image.network('https://menutech.services/assets/img/logomt.png', height: 45),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await SupabaseService().signOut();
-              if (context.mounted) {
-                Navigator.of(context).pushReplacementNamed('/login');
-              }
-            },
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.power_settings_new_rounded, color: Color(0xFFFF9533), size: 28),
+              onPressed: () async {
+                await SupabaseService().signOut();
+                if (context.mounted) {
+                  Navigator.of(context).pushReplacementNamed('/login');
+                }
+              },
+            ),
           )
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Select a module',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
-                mainAxisSpacing: 20,
-                crossAxisSpacing: 20,
-                childAspectRatio: 2.5,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF9533)))
+          : Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildBentoCard(
-                    context,
-                    title: 'Deluxe Website',
-                    description: 'Customize your gallery and manage domain content.',
-                    icon: Icons.web_outlined,
-                    route: '/placeholder',
+                  Text(
+                    restaurantName,
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Outfit',
+                    ),
                   ),
-                  _buildBentoCard(
-                    context,
-                    title: 'Template Web',
-                    description: 'Customize and export your professional website.',
-                    icon: Icons.language_outlined,
-                    route: '/placeholder',
+                  const Text(
+                    'Welcome to your dashboard',
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
-                  _buildBentoCard(
-                    context,
-                    title: 'Menus',
-                    description: 'Create and manage digital menus.',
-                    icon: Icons.restaurant_menu_outlined,
-                    route: '/placeholder',
-                  ),
-                  _buildBentoCard(
-                    context,
-                    title: 'Orders',
-                    description: 'Manage incoming restaurant orders in real-time.',
-                    icon: Icons.shopping_bag_outlined,
-                    route: '/orders',
-                  ),
-                  _buildBentoCard(
-                    context,
-                    title: 'Printer Settings',
-                    description: 'Configure and manage your Epson printers.',
-                    icon: Icons.print_outlined,
-                    route: '/settings',
+                  const SizedBox(height: 30),
+                  Expanded(
+                    child: GridView.count(
+                      crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
+                      mainAxisSpacing: 20,
+                      crossAxisSpacing: 20,
+                      childAspectRatio: 2.5,
+                      children: [
+                        if (isPrivileged)
+                          _buildBentoCard(
+                            context,
+                            title: 'Deluxe Website',
+                            description: 'Customize your gallery and manage domain content.',
+                            icon: Icons.web_outlined,
+                            route: '/placeholder',
+                          ),
+                        if (isPrivileged)
+                          _buildBentoCard(
+                            context,
+                            title: 'Template Web',
+                            description: 'Customize and export your professional website.',
+                            icon: Icons.language_outlined,
+                            route: '/placeholder',
+                          ),
+                        if (isPrivileged)
+                          _buildBentoCard(
+                            context,
+                            title: 'Menus',
+                            description: 'Create and manage digital menus.',
+                            icon: Icons.restaurant_menu_outlined,
+                            route: '/placeholder',
+                          ),
+                        _buildBentoCard(
+                          context,
+                          title: 'Orders',
+                          description: 'Manage incoming restaurant orders in real-time.',
+                          icon: Icons.shopping_bag_outlined,
+                          route: '/orders',
+                        ),
+                        _buildBentoCard(
+                          context,
+                          title: 'Printer Settings',
+                          description: 'Configure and manage your Epson printers.',
+                          icon: Icons.print_outlined,
+                          route: '/settings',
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
