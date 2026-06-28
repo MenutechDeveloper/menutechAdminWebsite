@@ -101,6 +101,33 @@ class _LoginScreenState extends State<LoginScreen> {
                         : const Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   ),
                 ),
+                const SizedBox(height: 20),
+                TextButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Privacy Policy'),
+                        content: const SingleChildScrollView(
+                          child: Text(
+                            'Your privacy policy text goes here. '
+                            'For Google Play, you should also provide a web link to your full privacy policy.',
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Close'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Privacy Policy',
+                    style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline),
+                  ),
+                ),
               ],
             ),
           ),
