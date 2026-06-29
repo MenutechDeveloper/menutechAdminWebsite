@@ -1,43 +1,49 @@
 INFORMACIÓN SOBRE LA CONFIGURACIÓN DE LA APP (ICONOS Y POLÍTICAS)
 
-Este documento explica dónde colocar los archivos necesarios para que la app se vea profesional y cumpla con los requisitos de la Google Play Store.
+Este documento explica cómo configurar los iconos y las políticas para que tu app se vea profesional y sea aceptada en la Google Play Store.
 
-1. PAQUETE DE ICONOS (APP ICON)
--------------------------------
-Para cambiar el icono de Android por el de tu app, debes reemplazar los archivos 'ic_launcher.png' e 'ic_launcher_round.png' en las siguientes carpetas dentro de tu proyecto:
+1. ¿POR QUÉ APARECE EL ICONO DE ANDROID EN LUGAR DEL MÍO?
+---------------------------------------------------------
+Si has reemplazado los archivos PNG pero sigues viendo el icono de Android, es debido a los "Adaptive Icons" (Iconos Adaptativos) introducidos en Android 8.0+.
 
+En la ruta 'android/android/app/src/main/res/mipmap-anydpi-v26/', existen dos archivos XML:
+- ic_launcher.xml
+- ic_launcher_round.xml
+
+Estos archivos tienen prioridad sobre las imágenes PNG en dispositivos modernos. Por defecto, están configurados para usar un fondo blanco y una capa de frente que puede estar apuntando al recurso equivocado o escalando mal.
+
+SOLUCIÓN PARA EL ICONO:
+A. Si quieres usar tus imágenes PNG:
+   Asegúrate de que tus imágenes 'ic_launcher.png' en todas las carpetas 'mipmap-xxxx' NO tengan bordes transparentes excesivos. Android recortará la imagen en un círculo o cuadrado según el dispositivo.
+
+B. Si quieres configurar el Icono Adaptativo correctamente:
+   1. El fondo se define en: 'android/android/app/src/main/res/values/ic_launcher_background.xml'. Puedes cambiar el color hexadecimal ahí (ej: #FFFFFF para blanco).
+   2. El frente (foreground) usa por defecto '@mipmap/ic_launcher'. Si tu PNG ya tiene fondo, se verá "doble fondo". Para que se vea bien, el PNG del frente debería tener fondo transparente y solo el logo en el centro.
+
+2. MEDIDAS DE ICONOS (PNG)
+---------------------------
 Ruta base: android/android/app/src/main/res/
 
-Medidas por carpeta:
 - mipmap-mdpi: 48x48 px
 - mipmap-hdpi: 72x72 px
 - mipmap-xhdpi: 96x96 px
 - mipmap-xxhdpi: 144x144 px
 - mipmap-xxxhdpi: 192x192 px
 
-Además, para la Google Play Store necesitarás un icono de 512x512 px (formato PNG de 32 bits con canal alfa).
+3. POLÍTICAS DE PRIVACIDAD (WEB LINK)
+--------------------------------------
+Como bien mencionaste, la política de privacidad es un ENLACE WEB, no un archivo interno. Google Play exige que la política esté alojada en una URL pública.
 
-Nota: Los archivos deben llamarse exactamente 'ic_launcher.png' para el icono cuadrado e 'ic_launcher_round.png' para el icono redondo.
+Configuración actual en la App:
+- Ya hemos configurado la app para que los botones de "Privacy Policy" (en Login y Settings) redireccionen automáticamente a: https://menutech.xyz/privacy-policy
+- Hemos añadido la librería 'url_launcher' para que el enlace se abra correctamente en el navegador del celular.
 
-2. POLÍTICAS DE PRIVACIDAD
---------------------------
-Para publicar en Google Play, es OBLIGATORIO tener una Política de Privacidad accesible tanto dentro de la app como en una URL pública.
-
-Ubicación en la App (Ya configurado en el código):
-- Pantalla de Inicio (Login): Se ha agregado un botón de "Privacy Policy" debajo del botón de Sign In.
-- Pantalla de Configuración (Settings): Se ha agregado una opción de "Privacy Policy" en la lista.
-
-Lo que debes hacer:
-- Debes redactar tu política de privacidad (puedes usar un generador online).
-- El formato debe ser texto claro y legible.
-- Google Play requiere que proporciones una URL (ejemplo: https://menutech.xyz/privacy-policy) al subir la app en la consola.
-- En el código de Flutter (login_screen.dart y settings_screen.dart), puedes reemplazar el texto de ejemplo en el 'showDialog' con tu texto real o hacer que abra el link de tu web.
-
-3. GENERACIÓN DEL APK / AAB
+4. GENERACIÓN DEL APK / AAB
 ---------------------------
-Una vez que hayas reemplazado los iconos en todas las carpetas 'mipmap', puedes generar el archivo final ejecutando:
+Para aplicar estos cambios y generar los archivos para subir a la tienda:
 
-Para pruebas (APK): flutter build apk --split-per-abi
-Para Google Play (AAB): flutter build appbundle
+1. Ve a la carpeta 'android/'.
+2. Ejecuta: flutter build appbundle (para la tienda)
+   o: flutter build apk (para probar en tu celular)
 
-¡Con esto tu app tendrá el icono correcto y cumplirá con las normativas de privacidad!
+¡Con esto el icono debería aparecer correctamente y el link de políticas funcionará perfectamente!
