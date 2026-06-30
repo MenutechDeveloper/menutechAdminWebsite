@@ -1,0 +1,10 @@
+Comprobación de Configuración de Tickets - Menutech
+
+La configuración de los tickets ha sido verificada y funciona de la siguiente manera:
+
+1. Detección de Impresoras: La aplicación escanea automáticamente la red local buscando dispositivos en el puerto 9100 (estándar para impresoras térmicas Ethernet/ESC POS).
+2. Sincronización: Al detectar una impresora, su dirección IP se guarda localmente y se sincroniza con la base de datos (tabla public.menutech_tickets, columna printer_ip) para que esté disponible en otros dispositivos del mismo usuario.
+3. Formato de Ticket: El diseño del ticket impreso desde la app ahora coincide con la configuración establecida en tickets.html. Utiliza el encabezado, pie de página y logo (opcional) configurados por el usuario.
+4. Mejoras Realizadas: Se actualizó el formato del payload para cumplir con los requisitos del paquete flutter_thermal_printer_pos, asegurando que el logo y la alineación de los artículos (Nombre a la izquierda, Precio a la derecha) sean correctos.
+
+Todo está correctamente configurado y listo para usar.
