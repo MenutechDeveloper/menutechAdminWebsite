@@ -157,18 +157,19 @@
         input, textarea, select { width: 100%; padding: 15px; border-radius: 16px; border: 1px solid var(--border); background: var(--input); color: var(--text); font-family: inherit; font-size: 0.9rem; transition: 0.3s; }
         input:focus, textarea:focus { border-color: var(--orange); outline: none; }
 
-        .btn-save { width: 100%; padding: 18px; border-radius: 20px; border: none; background: var(--orange); color: #000; font-weight: 800; cursor: pointer; transition: 0.3s; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-save { width: auto; min-width: 150px; padding: 12px 30px; border-radius: 12px; border: none; background: var(--orange); color: #fff; font-weight: 800; cursor: pointer; transition: 0.3s; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-left: auto; }
         .btn-save:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(255,149,51,0.3); }
 
         .logo-drop-zone {
-            width: 100%; height: 200px; border-radius: 20px; border: 2px dashed var(--border); background: var(--input);
+            width: 150px; height: 150px; border-radius: 20px; border: 2px dashed var(--border); background: var(--input);
             display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s;
             margin-top: 10px; overflow: hidden; position: relative;
         }
         .logo-drop-zone:hover { border-color: var(--orange); background: rgba(255,149,51,0.03); }
         .logo-drop-zone img { width: 100%; height: 100%; object-fit: contain; }
-        .logo-drop-zone p { font-size: 0.8rem; font-weight: 600; color: var(--text-dim); }
+        .logo-drop-zone p { font-size: 0.7rem; font-weight: 600; color: var(--text-dim); text-align: center; padding: 10px; }
 
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .dynamic-list { display: flex; flex-direction: column; gap: 15px; }
         .dynamic-item { display: flex; gap: 10px; align-items: center; animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -236,27 +237,32 @@
                         <div class="logo-drop-zone" id="logo-drop-zone">
                             <img id="logo-preview-img" class="hidden">
                             <div id="logo-placeholder">
-                                <p>Upload Logo</p>
-                                <span style="font-size:0.7rem; color:var(--text-dim)">Click or drag image (Resized to 500x500)</span>
+                                <p>click or drag image</p>
                             </div>
                             <input type="file" id="logo-file-input" class="hidden" accept="image/*">
                         </div>
                     </div>
-                    <div class="group">
-                        <label>Restaurant Name</label>
-                        <input type="text" id="res-name" placeholder="La Salsita Pinchi">
+
+                    <div class="form-grid">
+                        <div class="group">
+                            <label>Restaurant Name</label>
+                            <input type="text" id="res-name" placeholder="La Salsita Pinchi">
+                        </div>
+                        <div class="group">
+                            <label>Owner Name</label>
+                            <input type="text" id="res-owner" placeholder="John Doe">
+                        </div>
                     </div>
-                    <div class="group">
-                        <label>Owner Name</label>
-                        <input type="text" id="res-owner" placeholder="John Doe">
-                    </div>
-                    <div class="group">
-                        <label>Phone Number</label>
-                        <input type="text" id="res-phone" placeholder="+52 123 456 7890">
-                    </div>
-                    <div class="group">
-                        <label>Address</label>
-                        <textarea id="res-address" placeholder="123 Main St, City, Country"></textarea>
+
+                    <div class="form-grid">
+                        <div class="group">
+                            <label>Phone Number</label>
+                            <input type="text" id="res-phone" placeholder="+52 123 456 7890">
+                        </div>
+                        <div class="group">
+                            <label>Address</label>
+                            <input type="text" id="res-address" placeholder="123 Main St, City, Country">
+                        </div>
                     </div>
 
                     <div class="group">
@@ -266,12 +272,12 @@
                     </div>
 
                     <div class="group">
-                        <label>Schedule</label>
+                        <label>Opening Hours</label>
                         <div id="schedule-list" class="dynamic-list"></div>
                         <button class="btn-add" onclick="addSchedule()">+ Add Schedule Entry</button>
                     </div>
 
-                    <button class="btn-save" id="btn-save">Save Restaurant Info</button>
+                    <button class="btn-save" id="btn-save">Save</button>
                 </div>
             </div>
         </div>
@@ -418,6 +424,51 @@
             }
         }
 
+        async function syncToOtherModules(payload) {
+            const { user_id, name, logo_url, phone, address, schedule } = payload;
+            const openingHours = schedule.map(s => `${s.day}: ${s.hours}`).join(', ');
+            const defaultLogo = 'https://menutech.services/assets/img/logomt.png';
+
+            // 1. Sync to Tickets (only if unconfigured)
+            const { data: ticketData } = await sb.from('menutech_tickets').select('*').eq('user_id', user_id).maybeSingle();
+            const isTicketUnconfigured = !ticketData ||
+                (!ticketData.config?.logo_url && (!ticketData.config?.header_text || ticketData.config?.header_text === 'MENUTECH'));
+
+            if (isTicketUnconfigured) {
+                const ticketConfig = ticketData?.config || { show_logo: true, footer_text: "" };
+                if (name) ticketConfig.header_text = name;
+                if (logo_url) ticketConfig.logo_url = logo_url;
+
+                await sb.from('menutech_tickets').upsert({
+                    user_id,
+                    domain: activeDomain || null,
+                    config: ticketConfig,
+                    updated_at: new Date().toISOString()
+                });
+            }
+
+            // 2. Sync to Web Templates (only if unconfigured)
+            const { data: webData } = await sb.from('menutech_web_templates').select('*').eq('user_id', user_id).maybeSingle();
+            const isWebUnconfigured = !webData ||
+                (!webData.config?.logoImg || webData.config?.logoImg === defaultLogo);
+
+            if (isWebUnconfigured) {
+                let webConfig = webData?.config || {};
+                if (name) webConfig.title = name;
+                if (logo_url) webConfig.logoImg = logo_url;
+                if (!webConfig.contact) webConfig.contact = {};
+                if (phone) webConfig.contact.phone = phone;
+                if (address) webConfig.contact.address = address;
+                if (openingHours) webConfig.contact.hours = openingHours;
+
+                await sb.from('menutech_web_templates').upsert({
+                    user_id,
+                    config: webConfig,
+                    updated_at: new Date().toISOString()
+                });
+            }
+        }
+
         async function saveRestaurantInfo() {
             const btn = document.getElementById('btn-save');
             btn.textContent = "Saving...";
@@ -441,7 +492,7 @@
                 owner_name: document.getElementById('res-owner').value,
                 phone: document.getElementById('res-phone').value,
                 address: document.getElementById('res-address').value,
-                logo_url: logoUrlOriginal.includes('restaurantInfo.html') ? null : logoUrlOriginal,
+                logo_url: (logoUrlOriginal && !logoUrlOriginal.includes('restaurantInfo.html')) ? logoUrlOriginal : null,
                 social_media: socials,
                 schedule: schedule,
                 updated_at: new Date().toISOString()
@@ -449,10 +500,19 @@
 
             const { error } = await sb.from('menutech_restaurants').upsert(payload);
 
-            if (error) showToast("Error saving info: " + error.message, "error");
-            else showToast("Restaurant information saved!");
+            if (error) {
+                showToast("Error saving info: " + error.message, "error");
+            } else {
+                try {
+                    await syncToOtherModules(payload);
+                    showToast("Restaurant information saved!");
+                } catch (syncErr) {
+                    console.error("Sync error:", syncErr);
+                    showToast("Saved with sync warnings.");
+                }
+            }
 
-            btn.textContent = "Save Restaurant Info";
+            btn.textContent = "Save";
             btn.disabled = false;
         }
 
@@ -503,7 +563,7 @@
             } catch (e) {
                 showToast("Error uploading logo", "error");
             } finally {
-                placeholder.innerHTML = '<p>Upload Logo</p><span style="font-size:0.7rem; color:var(--text-dim)">Click or drag image (Resized to 500x500)</span>';
+                placeholder.innerHTML = '<p>click or drag image</p>';
             }
         }
 
