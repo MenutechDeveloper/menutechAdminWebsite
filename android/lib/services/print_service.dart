@@ -153,9 +153,9 @@ class PrintService {
     // Logo
     if (showLogo) {
       if (logoUrl != null && logoUrl.isNotEmpty) {
-        sb.writeln("[I]$logoUrl");
+        sb.writeln("[C]<img>$logoUrl</img>");
       } else {
-        sb.writeln("[I]https://menutech.services/assets/img/logomt.png");
+        sb.writeln("[C]<img>https://menutech.services/assets/img/logomt.png</img>");
       }
     }
 
@@ -184,7 +184,9 @@ class PrintService {
     // Items
     sb.writeln("[L]ITEMS:");
     for (var item in order.items) {
-      sb.writeln("[L]${item.quantity}x ${item.name}");
+      final itemTotal = (item.total ?? (item.price * item.quantity)).toStringAsFixed(2);
+      sb.writeln("[L]${item.quantity}x ${item.name}[R]\$ $itemTotal");
+
       if (item.size != null) sb.writeln("[L]  Size: ${item.size}");
       if (item.toppings != null && item.toppings!.isNotEmpty) {
         sb.writeln("[L]  Toppings: ${item.toppings!.join(', ')}");
@@ -192,14 +194,12 @@ class PrintService {
       if (item.instructions != null) {
         sb.writeln("[L]  Note: ${item.instructions}");
       }
-      final itemTotal = (item.total ?? (item.price * item.quantity)).toStringAsFixed(2);
-      sb.writeln("[R]\$ $itemTotal");
     }
 
     sb.writeln("[C]--------------------------------");
 
     // Footer
-    sb.writeln("[R]<b>TOTAL: \$${order.totalAmount.toStringAsFixed(2)}</b>");
+    sb.writeln("[L]<b>TOTAL</b>[R]<b>\$${order.totalAmount.toStringAsFixed(2)}</b>");
 
     if (order.customerNotes != null) {
       sb.writeln("[C]--------------------------------");
