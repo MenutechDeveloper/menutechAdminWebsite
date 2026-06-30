@@ -246,22 +246,22 @@
                     <div class="form-grid">
                         <div class="group">
                             <label>Restaurant Name</label>
-                            <input type="text" id="res-name" placeholder="La Salsita Pinchi">
+                            <input type="text" id="res-name" placeholder="Restaurant Name">
                         </div>
                         <div class="group">
                             <label>Owner Name</label>
-                            <input type="text" id="res-owner" placeholder="John Doe">
+                            <input type="text" id="res-owner" placeholder="Owner Name">
                         </div>
                     </div>
 
                     <div class="form-grid">
                         <div class="group">
                             <label>Phone Number</label>
-                            <input type="text" id="res-phone" placeholder="+52 123 456 7890">
+                            <input type="text" id="res-phone" placeholder="Phone Number">
                         </div>
                         <div class="group">
                             <label>Address</label>
-                            <input type="text" id="res-address" placeholder="123 Main St, City, Country">
+                            <input type="text" id="res-address" placeholder="Address">
                         </div>
                     </div>
 
@@ -426,31 +426,43 @@
 
         async function syncToOtherModules(payload) {
             const { user_id, name, logo_url, phone, address, schedule } = payload;
-            const openingHours = schedule.map(s => `${s.day}: ${s.hours}`).join(', ');
+            const openingHours = schedule && Array.isArray(schedule) ? schedule.map(s => `${s.day}: ${s.hours}`).join(', ') : '';
             const defaultLogo = 'https://menutech.services/assets/img/logomt.png';
 
-            // 1. Sync to Tickets (only if unconfigured)
-            const { data: ticketData } = await sb.from('menutech_tickets').select('*').eq('user_id', user_id).maybeSingle();
+            console.log("Syncing to other modules for user:", user_id);
+
+            // 1. Sync to Tickets
+            const { data: ticketData, error: ticketFetchErr } = await sb.from('menutech_tickets').select('*').eq('user_id', user_id).maybeSingle();
+            if (ticketFetchErr) console.error("Error fetching ticket data:", ticketFetchErr);
+
             const isTicketUnconfigured = !ticketData ||
-                (!ticketData.config?.logo_url && (!ticketData.config?.header_text || ticketData.config?.header_text === 'MENUTECH'));
+                (!ticketData.config?.logo_url && (!ticketData.config?.header_text || ticketData.config?.header_text.trim().toUpperCase() === 'MENUTECH'));
+
+            console.log("Is Ticket unconfigured?", isTicketUnconfigured);
 
             if (isTicketUnconfigured) {
                 const ticketConfig = ticketData?.config || { show_logo: true, footer_text: "" };
                 if (name) ticketConfig.header_text = name;
                 if (logo_url) ticketConfig.logo_url = logo_url;
 
-                await sb.from('menutech_tickets').upsert({
+                const { error: ticketUpsertErr } = await sb.from('menutech_tickets').upsert({
                     user_id,
                     domain: activeDomain || null,
                     config: ticketConfig,
                     updated_at: new Date().toISOString()
                 });
+                if (ticketUpsertErr) console.error("Error upserting ticket data:", ticketUpsertErr);
+                else console.log("Ticket data synced successfully.");
             }
 
-            // 2. Sync to Web Templates (only if unconfigured)
-            const { data: webData } = await sb.from('menutech_web_templates').select('*').eq('user_id', user_id).maybeSingle();
+            // 2. Sync to Web Templates
+            const { data: webData, error: webFetchErr } = await sb.from('menutech_web_templates').select('*').eq('user_id', user_id).maybeSingle();
+            if (webFetchErr) console.error("Error fetching web template data:", webFetchErr);
+
             const isWebUnconfigured = !webData ||
                 (!webData.config?.logoImg || webData.config?.logoImg === defaultLogo);
+
+            console.log("Is Web unconfigured?", isWebUnconfigured);
 
             if (isWebUnconfigured) {
                 let webConfig = webData?.config || {};
@@ -461,11 +473,13 @@
                 if (address) webConfig.contact.address = address;
                 if (openingHours) webConfig.contact.hours = openingHours;
 
-                await sb.from('menutech_web_templates').upsert({
+                const { error: webUpsertErr } = await sb.from('menutech_web_templates').upsert({
                     user_id,
                     config: webConfig,
                     updated_at: new Date().toISOString()
                 });
+                if (webUpsertErr) console.error("Error upserting web template data:", webUpsertErr);
+                else console.log("Web template data synced successfully.");
             }
         }
 
