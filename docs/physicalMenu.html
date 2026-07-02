@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physical Menu | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #059669;
+            --error: #dc2626;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
+
+        .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 80px 24px; animation: fadeIn 1s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        header { text-align: center; margin-bottom: 40px; }
+        .logo-main { width: 100%; max-width: 200px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
+
+        .editor-layout { display: flex; gap: 30px; align-items: flex-start; }
+
+        /* Sidebar Container */
+        .sidebar-container {
+            position: fixed; left: 0; top: 120px; z-index: 6000; pointer-events: none; display: flex; align-items: flex-start;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sidebar-container > * { pointer-events: auto; }
+        .sidebar-container.collapsed { transform: translateX(-340px) !important; }
+
+        .sidebar { width: 340px; height: 600px; display: flex; flex-direction: column; gap: 20px; }
+        .main-editor { flex: 1; display: flex; flex-direction: column; align-items: center; }
+
+        .search-box { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 24px; position: relative; cursor: default; transition: opacity 0.3s; user-select: none; z-index: 100; box-shadow: 0 20px 50px rgba(0,0,0,0.15); height: 100%; display: flex; flex-direction: column; }
+        .search-box label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--orange); text-transform: uppercase; margin-bottom: 15px; margin-left: 5px; pointer-events: none; }
+        .search-box input { width: 100%; margin-bottom: 15px; border-radius: 16px; padding: 14px; background: var(--input); border: 1px solid var(--border); color: var(--text); }
+
+        .client-list { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
+        .client-list::-webkit-scrollbar { width: 4px; }
+        .client-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .client-item { padding: 14px 18px; border-radius: 16px; background: var(--input); border: 1px solid var(--border); cursor: pointer; transition: 0.3s; }
+        .client-item:hover { border-color: var(--orange); }
+        .client-item.active { border-color: var(--orange); background: rgba(255,149,51,0.08); }
+        .client-item .name { font-weight: 700; font-size: 0.85rem; display: block; }
+
+        .sidebar-tab {
+            width: 45px; height: 160px; background: var(--orange); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 0 16px 16px 0; cursor: pointer; writing-mode: vertical-lr; text-orientation: mixed; font-weight: 800; font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; box-shadow: 10px 0 30px rgba(255, 149, 51, 0.2); transition: 0.4s; margin-top: 40px; position: relative;
+        }
+        .sidebar-tab:hover { width: 55px; padding-left: 10px; }
+
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
+        #top-nav > * { pointer-events: auto; }
+
+        /* Premium User Pill */
+        #user-display-pill {
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; min-width: 220px; justify-content: flex-start;
+        }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
+        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .pill-menu {
+            position: absolute; top: calc(100% + 12px); right: 0; background: var(--card) !important; border: 1px solid var(--border);
+            border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
+        }
+        #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .pill-menu-item { padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none; }
+        .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
+
+        .theme-switch {
+            width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); pointer-events: auto; }
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
+
+        /* Editor Specific Styles */
+        .template-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); cursor: pointer; font-weight: 700; transition: 0.3s; }
+        .tab-btn.active { background: var(--orange); color: white; border-color: var(--orange); }
+
+        .canvas-area {
+            width: 800px; /* Scaling down slightly for display, but maintaining aspect ratio */
+            background: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #ccc;
+        }
+        /* Letter: 8.5 x 11. 11/8.5 = 1.294 */
+        .letter-portrait { aspect-ratio: 8.5 / 11; width: 600px; }
+        .letter-landscape { aspect-ratio: 11 / 8.5; width: 800px; }
+        .a4-portrait { aspect-ratio: 210 / 297; width: 600px; }
+        .a4-landscape { aspect-ratio: 297 / 210; width: 800px; }
+
+        .toolbox {
+            width: 250px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        .toolbox h3 { font-size: 0.9rem; text-transform: uppercase; color: var(--orange); }
+        .draggable-item {
+            padding: 10px;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: grab;
+            font-size: 0.8rem;
+            font-weight: 600;
+            user-select: none;
+        }
+        .draggable-item:active { cursor: grabbing; }
+
+        #floating-controls {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px);
+            padding: 16px 32px; border-radius: 30px; border: 1.5px solid var(--border);
+            display: flex; gap: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            z-index: 7000;
+        }
+        body.dark-mode #floating-controls { background: rgba(28, 31, 38, 0.8); }
+
+        .btn-action { padding: 14px 28px; border-radius: 18px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; }
+        .btn-save { background: var(--orange); color: white; }
+        .btn-download { background: var(--success); color: white; }
+        .btn-download:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .hidden { display: none !important; }
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; }
+        .toast { padding: 18px 24px; border-radius: 20px; background: #1c1f26; color: white; font-size: 0.9rem; animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        /* Drag and drop element styling on canvas */
+        .canvas-element {
+            position: absolute;
+            cursor: move;
+            touch-action: none;
+            user-select: none;
+            padding: 5px;
+        }
+        .canvas-element:hover { outline: 2px dashed var(--orange); }
+        .canvas-element img { max-width: 100%; height: auto; pointer-events: none; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #menu-canvas, #menu-canvas * { visibility: visible; }
+            #menu-canvas { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: none; }
+            .bg-mesh, #top-nav, .toolbox, .template-tabs, #floating-controls, .sidebar-container, .delete-btn { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
+
+    <div id="top-nav">
+        <div><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="theme-switch" id="theme-toggle">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+            <div id="user-display-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div class="pill-info">
+                    <div id="user-name">Loading...</div>
+                    <div id="user-role-label">...</div>
+                </div>
+                <div class="pill-menu">
+                    <a href="index.html" class="pill-menu-item">Dashboard</a>
+                    <div class="pill-menu-item" onclick="logout()" style="color: var(--error)">Logout</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech">
+            <h1 style="font-family: 'Outfit'; font-size: 2rem;">Physical Menu Designer</h1>
+        </header>
+
+        <div class="editor-layout">
+            <div class="sidebar-container collapsed" id="sidebar-container">
+                <div class="sidebar">
+                    <div class="search-box">
+                        <label>Select Restaurant</label>
+                        <input type="text" id="client-search" placeholder="Search...">
+                        <div class="client-list" id="client-list"></div>
+                    </div>
+                </div>
+                <div class="sidebar-tab" id="sidebar-tab">PROJECTS</div>
+            </div>
+
+            <div class="toolbox" id="toolbox">
+                <h3>Elements</h3>
+                <div class="draggable-item" onclick="addElement('logo')">Restaurant Logo</div>
+                <div class="draggable-item" onclick="addElement('name')">Restaurant Name</div>
+                <div class="draggable-item" onclick="addElement('info')">Address & Phone</div>
+                <hr style="border: 0.5px solid var(--border)">
+                <div id="categories-toolbox">
+                    <!-- Dynamic categories -->
+                </div>
+                <hr style="border: 0.5px solid var(--border)">
+                <div id="images-toolbox">
+                    <!-- Dynamic images from digital menu -->
+                </div>
+            </div>
+
+            <div class="main-editor">
+                <div class="template-tabs">
+                    <button class="tab-btn active" onclick="switchTemplate('template1')">Modern Dark</button>
+                    <button class="tab-btn" onclick="switchTemplate('template2')">Elegant White</button>
+                    <button class="tab-btn" onclick="switchTemplate('template3')">Minimalist</button>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <select id="page-size" onchange="updatePageSize()">
+                        <option value="letter">Letter (8.5" x 11")</option>
+                        <option value="a4">A4 (210mm x 297mm)</option>
+                    </select>
+                    <select id="orientation" onchange="updateOrientation()">
+                        <option value="portrait">Portrait</option>
+                        <option value="landscape">Landscape</option>
+                    </select>
+                </div>
+
+                <div id="menu-canvas" class="canvas-area letter-portrait">
+                    <!-- Design goes here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="floating-controls">
+        <button class="btn-action btn-save" onclick="saveLayout()">Save Changes</button>
+        <button class="btn-action btn-download" id="download-pdf" onclick="generatePDF()">Download PDF</button>
+    </div>
+
+    <script type="module">
+        import { MT_CONFIG } from './config.js';
+        import { supabase as sb } from './supabase.js';
+
+        let user = null, userRole = null, activeOwnerId = null;
+        let menuData = null, restaurantInfo = null;
+
+        window.showToast = (msg, type='success') => {
+            const container = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = `toast ${type}`;
+            t.textContent = msg;
+            container.appendChild(t);
+            setTimeout(() => t.remove(), 4000);
+        };
+
+        // Shared Logic for UI
+        document.addEventListener('DOMContentLoaded', async () => {
+            initUI();
+            await checkSession();
+        });
+
+        function initUI() {
+            document.getElementById('theme-toggle').onclick = () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            };
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+
+            const pill = document.getElementById('user-display-pill');
+            pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
+            document.addEventListener('click', () => pill.classList.remove('active'));
+
+            document.getElementById('sidebar-tab').onclick = () => document.getElementById('sidebar-container').classList.toggle('collapsed');
+        }
+
+        async function checkSession() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { location.href = "index.html"; return; }
+            user = session.user;
+
+            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            if (!profile) { userRole = 'OWNER'; activeOwnerId = user.id; }
+            else {
+                userRole = (profile.role || 'OWNER').toUpperCase();
+                activeOwnerId = user.id;
+            }
+
+            document.getElementById('user-name').textContent = profile?.username || user.email.split('@')[0];
+            document.getElementById('user-role-label').textContent = userRole;
+
+            if (['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'].includes(userRole)) {
+                document.getElementById('sidebar-container').classList.remove('hidden');
+                await setupContextSwitcher();
+            } else {
+                document.getElementById('sidebar-container').classList.add('hidden');
+                // Hide download button for owners as requested
+                document.getElementById('download-pdf').classList.add('hidden');
+            }
+
+            await loadData();
+        }
+
+        async function setupContextSwitcher() {
+            const { data } = await sb.from('profiles').select('*');
+            const list = document.getElementById('client-list');
+            const render = (owners) => {
+                list.innerHTML = owners.map(o => `
+                    <div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')">
+                        <span class="name">${o.username || o.email}</span>
+                    </div>
+                `).join('');
+            };
+            render(data || []);
+            document.getElementById('client-search').oninput = (e) => {
+                const term = e.target.value.toLowerCase();
+                render(data.filter(o => (o.username||'').toLowerCase().includes(term) || (o.email||'').toLowerCase().includes(term)));
+            };
+            window.switchContext = (id) => { activeOwnerId = id; render(data); loadData(); };
+        }
+
+        let currentLayout = {
+            template_id: 'template1',
+            layout_config: { elements: [], settings: { pageSize: 'letter', orientation: 'portrait' } }
+        };
+
+        async function loadData() {
+            if (!activeOwnerId) return;
+            console.log("MT: Loading data for", activeOwnerId);
+
+            // Load Restaurant Info
+            const { data: res } = await sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle();
+            restaurantInfo = res;
+
+            // Load Menu Data
+            const { data: menu } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
+            menuData = menu;
+
+            renderToolbox();
+            await loadSavedLayout();
+        }
+
+        async function loadSavedLayout() {
+            const { data, error } = await sb.from('menutech_physical_menus')
+                .select('*')
+                .eq('user_id', activeOwnerId)
+                .eq('template_id', currentLayout.template_id)
+                .maybeSingle();
+
+            const canvas = document.getElementById('menu-canvas');
+            canvas.innerHTML = ''; // Clear canvas
+
+            if (data) {
+                currentLayout = data;
+                applyLayout(data.layout_config);
+            } else {
+                // Default layout or empty
+                currentLayout.layout_config = { elements: [], settings: { pageSize: 'letter', orientation: 'portrait' } };
+                updatePageSize();
+                updateOrientation();
+            }
+        }
+
+        function renderToolbox() {
+            const catsDiv = document.getElementById('categories-toolbox');
+            const imgsDiv = document.getElementById('images-toolbox');
+
+            catsDiv.innerHTML = '<h3>Categories</h3>';
+            imgsDiv.innerHTML = '<h3>Images</h3>';
+
+            if (menuData && menuData.config && menuData.config.categories) {
+                menuData.config.categories.forEach(c => {
+                    const el = document.createElement('div');
+                    el.className = 'draggable-item';
+                    el.textContent = c.name;
+                    el.onclick = () => addElement('category', { name: c.name });
+                    catsDiv.appendChild(el);
+                });
+
+                const images = [];
+                if (menuData.cover_url) images.push(menuData.cover_url);
+                menuData.config.categories.forEach(c => {
+                    if (c.image) images.push(c.image);
+                    if (c.dishes) c.dishes.forEach(d => { if(d.image) images.push(d.image); });
+                });
+
+                [...new Set(images)].forEach(img => {
+                    const el = document.createElement('div');
+                    el.className = 'draggable-item';
+                    el.innerHTML = `<img src="${img}" style="width: 30px; height: 30px; object-fit: cover; border-radius: 4px; pointer-events:none;">`;
+                    el.onclick = () => addElement('image', { url: img });
+                    imgsDiv.appendChild(el);
+                });
+            } else {
+                catsDiv.innerHTML += '<p style="font-size:0.7rem; color:var(--text-dim)">No menu data found</p>';
+            }
+        }
+
+        window.addElement = (type, data) => {
+            const canvas = document.getElementById('menu-canvas');
+            const el = document.createElement('div');
+            el.className = 'canvas-element';
+            el.dataset.type = type;
+            el.style.left = '50px';
+            el.style.top = '50px';
+
+            let content = '';
+            if (type === 'logo') content = `<img src="${restaurantInfo?.logo_url || 'https://menutech.services/assets/img/logomt.png'}" style="width:100px">`;
+            else if (type === 'name') content = `<h2 style="font-family:Outfit">${restaurantInfo?.name || 'Restaurant Name'}</h2>`;
+            else if (type === 'info') content = `<p style="font-size:12px">${restaurantInfo?.address || 'Address'}<br>${restaurantInfo?.phone || 'Phone'}</p>`;
+            else if (type === 'category') {
+                const cat = menuData?.config.categories.find(c => c.name === data.name);
+                content = `<div style="padding:10px; border-bottom:1px solid #eee; width:200px">
+                    <h3 style="margin:0">${data.name}</h3>
+                    ${(cat?.dishes || []).map(d => `<div style="display:flex; justify-content:space-between; font-size:12px; margin-top:5px;"><span>${d.name}</span><span>$${d.price}</span></div>`).join('')}
+                </div>`;
+            }
+            else if (type === 'image') content = `<img src="${data.url}" style="width:150px">`;
+
+            el.innerHTML = content + `<button class="delete-btn" style="position:absolute; top:-10px; right:-10px; background:red; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; display:none;">×</button>`;
+
+            el.onmouseenter = () => el.querySelector('.delete-btn').style.display = 'block';
+            el.onmouseleave = () => el.querySelector('.delete-btn').style.display = 'none';
+            el.querySelector('.delete-btn').onclick = (e) => { e.stopPropagation(); el.remove(); };
+
+            if (data) el.dataset.extra = JSON.stringify(data);
+
+            canvas.appendChild(el);
+            makeResizableAndDraggable(el);
+        };
+
+        function makeResizableAndDraggable(selector) {
+            interact(selector)
+                .draggable({
+                    inertia: true,
+                    modifiers: [
+                        interact.modifiers.restrictRect({
+                            restriction: 'parent',
+                            endOnly: true
+                        })
+                    ],
+                    autoScroll: true,
+                    listeners: {
+                        move(event) {
+                            const target = event.target;
+                            const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                            const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+                            target.style.transform = `translate(${x}px, ${y}px)`;
+                            target.setAttribute('data-x', x);
+                            target.setAttribute('data-y', y);
+                        }
+                    }
+                })
+                .resizable({
+                    edges: { left: true, right: true, bottom: true, top: true },
+                    listeners: {
+                        move(event) {
+                            let target = event.target;
+                            let x = (parseFloat(target.getAttribute('data-x')) || 0);
+                            let y = (parseFloat(target.getAttribute('data-y')) || 0);
+
+                            target.style.width = event.rect.width + 'px';
+                            target.style.height = event.rect.height + 'px';
+
+                            x += event.deltaRect.left;
+                            y += event.deltaRect.top;
+
+                            target.style.transform = `translate(${x}px, ${y}px)`;
+                            target.setAttribute('data-x', x);
+                            target.setAttribute('data-y', y);
+                        }
+                    },
+                    modifiers: [
+                        interact.modifiers.restrictEdges({
+                            restriction: 'parent'
+                        }),
+                        interact.modifiers.restrictSize({
+                            min: { width: 50, height: 50 }
+                        })
+                    ],
+                    inertia: true
+                });
+        }
+
+        window.updatePageSize = () => {
+            const canvas = document.getElementById('menu-canvas');
+            const size = document.getElementById('page-size').value;
+            canvas.className = 'canvas-area ' + size + '-' + document.getElementById('orientation').value;
+        };
+
+        window.updateOrientation = () => {
+            const canvas = document.getElementById('menu-canvas');
+            const size = document.getElementById('page-size').value;
+            canvas.className = 'canvas-area ' + size + '-' + document.getElementById('orientation').value;
+        };
+
+        window.generatePDF = () => {
+            const element = document.getElementById('menu-canvas');
+            const pageSize = document.getElementById('page-size').value;
+            const orientation = document.getElementById('orientation').value;
+
+            // Temporarily hide delete buttons for PDF
+            const deleteBtns = element.querySelectorAll('.delete-btn');
+            deleteBtns.forEach(btn => btn.style.visibility = 'hidden');
+
+            const opt = {
+                margin: 0,
+                filename: `physical_menu_${activeOwnerId}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'in', format: pageSize === 'letter' ? 'letter' : 'a4', orientation: orientation }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                deleteBtns.forEach(btn => btn.style.visibility = '');
+            });
+        };
+
+        window.switchTemplate = (id) => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            if (event.target) event.target.classList.add('active');
+            currentLayout.template_id = id;
+            loadSavedLayout();
+        };
+
+        window.saveLayout = async () => {
+            const canvas = document.getElementById('menu-canvas');
+            const elements = Array.from(canvas.querySelectorAll('.canvas-element')).map(el => ({
+                type: el.dataset.type,
+                extra: el.dataset.extra ? JSON.parse(el.dataset.extra) : null,
+                x: parseFloat(el.getAttribute('data-x')) || 0,
+                y: parseFloat(el.getAttribute('data-y')) || 0,
+                width: el.style.width,
+                height: el.style.height
+            }));
+
+            const layout_config = {
+                elements,
+                settings: {
+                    pageSize: document.getElementById('page-size').value,
+                    orientation: document.getElementById('orientation').value
+                }
+            };
+
+            const { error } = await sb.from('menutech_physical_menus').upsert({
+                user_id: activeOwnerId,
+                template_id: currentLayout.template_id,
+                layout_config
+            }, { onConflict: 'user_id, template_id' });
+
+            if (error) showToast("Error saving: " + error.message, "error");
+            else showToast("Layout saved!");
+        };
+
+        function applyLayout(config) {
+            if (!config || !config.elements) return;
+            document.getElementById('page-size').value = config.settings.pageSize;
+            document.getElementById('orientation').value = config.settings.orientation;
+            updatePageSize();
+
+            config.elements.forEach(elData => {
+                const canvas = document.getElementById('menu-canvas');
+                const el = document.createElement('div');
+                el.className = 'canvas-element';
+                el.dataset.type = elData.type;
+                if (elData.extra) el.dataset.extra = JSON.stringify(elData.extra);
+
+                el.setAttribute('data-x', elData.x);
+                el.setAttribute('data-y', elData.y);
+                el.style.transform = `translate(${elData.x}px, ${elData.y}px)`;
+                if (elData.width) el.style.width = elData.width;
+                if (elData.height) el.style.height = elData.height;
+
+                let content = '';
+                if (elData.type === 'logo') content = `<img src="${restaurantInfo?.logo_url || 'https://menutech.services/assets/img/logomt.png'}" style="width:100%">`;
+                else if (elData.type === 'name') content = `<h2 style="font-family:Outfit; margin:0">${restaurantInfo?.name || 'Restaurant Name'}</h2>`;
+                else if (elData.type === 'info') content = `<p style="font-size:12px; margin:0">${restaurantInfo?.address || 'Address'}<br>${restaurantInfo?.phone || 'Phone'}</p>`;
+                else if (elData.type === 'category') {
+                    const cat = menuData?.config.categories.find(c => c.name === elData.extra.name);
+                    content = `<div style="padding:10px; border-bottom:1px solid #eee; width:100%">
+                        <h3 style="margin:0">${elData.extra.name}</h3>
+                        ${(cat?.dishes || []).map(d => `<div style="display:flex; justify-content:space-between; font-size:12px; margin-top:5px;"><span>${d.name}</span><span>$${d.price}</span></div>`).join('')}
+                    </div>`;
+                }
+                else if (elData.type === 'image') content = `<img src="${elData.extra.url}" style="width:100%">`;
+
+                el.innerHTML = content + `<button class="delete-btn" style="position:absolute; top:-10px; right:-10px; background:red; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; display:none;">×</button>`;
+
+                el.onmouseenter = () => el.querySelector('.delete-btn').style.display = 'block';
+                el.onmouseleave = () => el.querySelector('.delete-btn').style.display = 'none';
+                el.querySelector('.delete-btn').onclick = (e) => { e.stopPropagation(); el.remove(); };
+
+                canvas.appendChild(el);
+                makeResizableAndDraggable(el);
+            });
+        }
+
+        window.logout = async () => { await sb.auth.signOut(); location.href="index.html"; };
+    </script>
+</body>
+</html>
