@@ -235,6 +235,7 @@
                 <div class="draggable-item" onclick="addElement('logo')">Restaurant Logo</div>
                 <div class="draggable-item" onclick="addElement('name')">Restaurant Name</div>
                 <div class="draggable-item" onclick="addElement('info')">Address & Phone</div>
+                <div class="draggable-item" onclick="addElement('text', { content: 'Custom Text' })">Add Text</div>
                 <hr style="border: 0.5px solid var(--border)">
                 <div id="categories-toolbox">
                     <!-- Dynamic categories -->
@@ -247,16 +248,22 @@
 
             <div class="main-editor">
                 <div class="template-tabs">
-                    <button class="tab-btn active" onclick="switchTemplate('template1')">Modern Dark</button>
-                    <button class="tab-btn" onclick="switchTemplate('template2')">Elegant White</button>
-                    <button class="tab-btn" onclick="switchTemplate('template3')">Minimalist</button>
+                    <button class="tab-btn active" onclick="switchTemplate('diseno1')">Design 1</button>
+                    <button class="tab-btn" onclick="switchTemplate('diseno2')">Design 2</button>
+                    <button class="tab-btn" onclick="switchTemplate('diseno3')">Design 3</button>
                 </div>
 
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <div style="display:flex; gap:10px; margin-bottom:10px; align-items: center;">
                     <select id="page-size" onchange="updatePageSize()">
                         <option value="letter">Letter (8.5" x 11")</option>
                         <option value="a4">A4 (210mm x 297mm)</option>
+                        <option value="custom">Custom Size</option>
                     </select>
+                    <div id="custom-size-inputs" class="hidden" style="display:flex; gap:5px; align-items: center;">
+                        <input type="number" id="custom-w" placeholder="W (in)" style="width:60px; padding:5px; border-radius:5px; border:1px solid var(--border);" onchange="updatePageSize()">
+                        <span>×</span>
+                        <input type="number" id="custom-h" placeholder="H (in)" style="width:60px; padding:5px; border-radius:5px; border:1px solid var(--border);" onchange="updatePageSize()">
+                    </div>
                     <select id="orientation" onchange="updateOrientation()">
                         <option value="portrait">Portrait</option>
                         <option value="landscape">Landscape</option>
@@ -279,8 +286,10 @@
         import { MT_CONFIG } from './config.js';
         import { supabase as sb } from './supabase.js';
 
+        window.sb = sb; // Expose for debugging/testing
         let user = null, userRole = null, activeOwnerId = null;
-        let menuData = null, restaurantInfo = null;
+        window.menuData = window.menuData || null;
+        window.restaurantInfo = window.restaurantInfo || null;
 
         window.showToast = (msg, type='success') => {
             const container = document.getElementById('toast-container');
@@ -313,14 +322,25 @@
 
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
-            if (!session) { location.href = "index.html"; return; }
-            user = session.user;
+            if (!session && !localStorage.getItem('mt_test_mode')) {
+                location.href = "index.html"; return;
+            }
+            user = session?.user || { id: 'test-user', email: 'test@example.com' };
 
-            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-            if (!profile) { userRole = 'OWNER'; activeOwnerId = user.id; }
-            else {
-                userRole = (profile.role || 'OWNER').toUpperCase();
-                activeOwnerId = user.id;
+            let profile = null;
+            if (localStorage.getItem('mt_test_mode')) {
+                userRole = (localStorage.getItem('mt_user_role') || 'OWNER').toUpperCase();
+                activeOwnerId = 'test-owner-id';
+            } else {
+                const { data } = await sb.from('profiles').select('*').eq('id', user.id).single();
+                profile = data;
+                if (!profile) {
+                    userRole = 'OWNER';
+                    activeOwnerId = user.id;
+                } else {
+                    userRole = (profile.role || 'OWNER').toUpperCase();
+                    activeOwnerId = user.id;
+                }
             }
 
             document.getElementById('user-name').textContent = profile?.username || user.email.split('@')[0];
@@ -357,21 +377,27 @@
         }
 
         let currentLayout = {
-            template_id: 'template1',
+            template_id: 'diseno1',
             layout_config: { elements: [], settings: { pageSize: 'letter', orientation: 'portrait' } }
         };
 
         async function loadData() {
-            if (!activeOwnerId) return;
+            if (!activeOwnerId || localStorage.getItem('mt_test_mode')) {
+                if (localStorage.getItem('mt_test_mode')) {
+                    renderToolbox();
+                    await loadSavedLayout();
+                }
+                return;
+            }
             console.log("MT: Loading data for", activeOwnerId);
 
             // Load Restaurant Info
             const { data: res } = await sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle();
-            restaurantInfo = res;
+            window.restaurantInfo = res;
 
             // Load Menu Data
             const { data: menu } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
-            menuData = menu;
+            window.menuData = menu;
 
             renderToolbox();
             await loadSavedLayout();
@@ -391,11 +417,127 @@
                 currentLayout = data;
                 applyLayout(data.layout_config);
             } else {
-                // Default layout or empty
-                currentLayout.layout_config = { elements: [], settings: { pageSize: 'letter', orientation: 'portrait' } };
-                updatePageSize();
-                updateOrientation();
+                generateTemplateLayout(currentLayout.template_id);
             }
+        }
+
+        window.generateTemplateLayout = (templateId) => {
+            const canvas = document.getElementById('menu-canvas');
+            canvas.innerHTML = '';
+
+            // Default settings
+            document.getElementById('page-size').value = 'letter';
+            document.getElementById('orientation').value = 'portrait';
+            updatePageSize();
+
+            const elements = [];
+            const canvasWidth = canvas.clientWidth;
+            const canvasHeight = canvas.clientHeight;
+
+            if (templateId === 'diseno1') {
+                // Design 1: Classic Header + 2 Columns
+                elements.push({ type: 'logo', x: canvasWidth/2 - 50, y: 40, width: '100px' });
+                elements.push({ type: 'name', x: 0, y: 150, width: '100%' });
+                elements.push({ type: 'info', x: 0, y: 190, width: '100%' });
+
+                if (menuData?.cover_url) {
+                    elements.push({ type: 'image', extra: { url: menuData.cover_url }, x: canvasWidth - 190, y: 40, width: '150px' });
+                }
+
+                if (menuData?.config?.categories) {
+                    menuData.config.categories.forEach((cat, i) => {
+                        const col = i % 2;
+                        const row = Math.floor(i / 2);
+                        elements.push({
+                            type: 'category',
+                            extra: { name: cat.name },
+                            x: col === 0 ? 40 : canvasWidth/2 + 20,
+                            y: 250 + (row * 220),
+                            width: (canvasWidth/2 - 60) + 'px'
+                        });
+                    });
+                }
+            } else if (templateId === 'diseno2') {
+                // Design 2: Centered Elegant
+                elements.push({ type: 'logo', x: canvasWidth/2 - 75, y: 60, width: '150px' });
+                elements.push({ type: 'name', x: 0, y: 220, width: '100%' });
+
+                if (menuData?.config?.categories) {
+                    menuData.config.categories.forEach((cat, i) => {
+                        elements.push({
+                            type: 'category',
+                            extra: { name: cat.name },
+                            x: canvasWidth * 0.1,
+                            y: 300 + (i * 180),
+                            width: (canvasWidth * 0.8) + 'px'
+                        });
+                    });
+                }
+                elements.push({ type: 'info', x: 0, y: canvasHeight - 60, width: '100%' });
+            } else {
+                // Design 3: Minimalist
+                elements.push({ type: 'logo', x: 40, y: 40, width: '60px' });
+                elements.push({ type: 'name', x: 120, y: 50, width: 'auto' });
+
+                if (menuData?.config?.categories) {
+                    menuData.config.categories.forEach((cat, i) => {
+                        elements.push({
+                            type: 'category',
+                            extra: { name: cat.name },
+                            x: 40,
+                            y: 120 + (i * 150),
+                            width: (canvasWidth - 80) + 'px'
+                        });
+                    });
+                }
+            }
+
+            elements.forEach(el => renderElementToCanvas(el));
+        };
+
+        function renderElementToCanvas(elData) {
+            const canvas = document.getElementById('menu-canvas');
+            const el = document.createElement('div');
+            el.className = 'canvas-element';
+            el.dataset.type = elData.type;
+            if (elData.extra) el.dataset.extra = JSON.stringify(elData.extra);
+
+            el.setAttribute('data-x', elData.x);
+            el.setAttribute('data-y', elData.y);
+            el.style.transform = `translate(${elData.x}px, ${elData.y}px)`;
+            if (elData.width) el.style.width = elData.width;
+            if (elData.height) el.style.height = elData.height;
+
+            let content = '';
+            const textAlign = (elData.width === '100%') ? 'center' : 'left';
+
+            if (elData.type === 'logo') content = `<img src="${restaurantInfo?.logo_url || 'https://menutech.services/assets/img/logomt.png'}" style="width:100%">`;
+            else if (elData.type === 'name') content = `<h2 style="font-family:Outfit; margin:0; text-align:${textAlign}">${restaurantInfo?.name || 'Restaurant Name'}</h2>`;
+            else if (elData.type === 'info') content = `<p style="font-size:12px; margin:0; text-align:${textAlign}">${restaurantInfo?.address || 'Address'}<br>${restaurantInfo?.phone || 'Phone'}</p>`;
+            else if (elData.type === 'text') content = `<div contenteditable="true" style="font-size:16px; outline:none; text-align:${textAlign}">${elData.extra?.content || 'Edit this text'}</div>`;
+            else if (elData.type === 'category') {
+                const cat = menuData?.config.categories.find(c => c.name === elData.extra.name);
+                content = `<div style="padding:10px; border-bottom:1px solid #eee; width:100%">
+                    <h3 style="margin:0; border-bottom: 2px solid var(--orange); display: inline-block;">${elData.extra.name}</h3>
+                    ${(cat?.dishes || []).map(d => `<div style="display:flex; justify-content:space-between; font-size:12px; margin-top:8px;">
+                        <div style="flex:1">
+                            <div style="font-weight:700">${d.name}</div>
+                            ${d.description ? `<div style="font-size:10px; color:#666">${d.description}</div>` : ''}
+                        </div>
+                        <span style="font-weight:700">$${d.price}</span>
+                    </div>`).join('')}
+                </div>`;
+            }
+            else if (elData.type === 'image') content = `<img src="${elData.extra.url}" style="width:100%">`;
+
+            el.innerHTML = content + `<button class="delete-btn" style="position:absolute; top:-10px; right:-10px; background:red; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; display:none;">×</button>`;
+
+            el.onmouseenter = () => el.querySelector('.delete-btn').style.display = 'block';
+            el.onmouseleave = () => el.querySelector('.delete-btn').style.display = 'none';
+            el.querySelector('.delete-btn').onclick = (e) => { e.stopPropagation(); el.remove(); };
+
+            canvas.appendChild(el);
+            makeResizableAndDraggable(el);
         }
 
         function renderToolbox() {
@@ -434,36 +576,14 @@
         }
 
         window.addElement = (type, data) => {
-            const canvas = document.getElementById('menu-canvas');
-            const el = document.createElement('div');
-            el.className = 'canvas-element';
-            el.dataset.type = type;
-            el.style.left = '50px';
-            el.style.top = '50px';
-
-            let content = '';
-            if (type === 'logo') content = `<img src="${restaurantInfo?.logo_url || 'https://menutech.services/assets/img/logomt.png'}" style="width:100px">`;
-            else if (type === 'name') content = `<h2 style="font-family:Outfit">${restaurantInfo?.name || 'Restaurant Name'}</h2>`;
-            else if (type === 'info') content = `<p style="font-size:12px">${restaurantInfo?.address || 'Address'}<br>${restaurantInfo?.phone || 'Phone'}</p>`;
-            else if (type === 'category') {
-                const cat = menuData?.config.categories.find(c => c.name === data.name);
-                content = `<div style="padding:10px; border-bottom:1px solid #eee; width:200px">
-                    <h3 style="margin:0">${data.name}</h3>
-                    ${(cat?.dishes || []).map(d => `<div style="display:flex; justify-content:space-between; font-size:12px; margin-top:5px;"><span>${d.name}</span><span>$${d.price}</span></div>`).join('')}
-                </div>`;
-            }
-            else if (type === 'image') content = `<img src="${data.url}" style="width:150px">`;
-
-            el.innerHTML = content + `<button class="delete-btn" style="position:absolute; top:-10px; right:-10px; background:red; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; display:none;">×</button>`;
-
-            el.onmouseenter = () => el.querySelector('.delete-btn').style.display = 'block';
-            el.onmouseleave = () => el.querySelector('.delete-btn').style.display = 'none';
-            el.querySelector('.delete-btn').onclick = (e) => { e.stopPropagation(); el.remove(); };
-
-            if (data) el.dataset.extra = JSON.stringify(data);
-
-            canvas.appendChild(el);
-            makeResizableAndDraggable(el);
+            const elData = {
+                type,
+                extra: data,
+                x: 50,
+                y: 50,
+                width: type === 'category' ? '200px' : (type === 'image' ? '150px' : (type === 'logo' ? '100px' : 'auto'))
+            };
+            renderElementToCanvas(elData);
         };
 
         function makeResizableAndDraggable(selector) {
@@ -523,7 +643,21 @@
         window.updatePageSize = () => {
             const canvas = document.getElementById('menu-canvas');
             const size = document.getElementById('page-size').value;
-            canvas.className = 'canvas-area ' + size + '-' + document.getElementById('orientation').value;
+            const customInputs = document.getElementById('custom-size-inputs');
+
+            if (size === 'custom') {
+                customInputs.classList.remove('hidden');
+                const w = document.getElementById('custom-w').value || 8.5;
+                const h = document.getElementById('custom-h').value || 11;
+                canvas.style.aspectRatio = `${w} / ${h}`;
+                canvas.style.width = '600px';
+                canvas.className = 'canvas-area';
+            } else {
+                customInputs.classList.add('hidden');
+                canvas.style.aspectRatio = '';
+                canvas.style.width = '';
+                canvas.className = 'canvas-area ' + size + '-' + document.getElementById('orientation').value;
+            }
         };
 
         window.updateOrientation = () => {
@@ -541,12 +675,14 @@
             const deleteBtns = element.querySelectorAll('.delete-btn');
             deleteBtns.forEach(btn => btn.style.visibility = 'hidden');
 
+            let format = pageSize === 'letter' ? 'letter' : (pageSize === 'a4' ? 'a4' : [parseFloat(document.getElementById('custom-w').value || 8.5), parseFloat(document.getElementById('custom-h').value || 11)]);
+
             const opt = {
                 margin: 0,
                 filename: `physical_menu_${activeOwnerId}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'in', format: pageSize === 'letter' ? 'letter' : 'a4', orientation: orientation }
+                jsPDF: { unit: 'in', format: format, orientation: orientation }
             };
 
             html2pdf().set(opt).from(element).save().then(() => {
@@ -554,29 +690,38 @@
             });
         };
 
-        window.switchTemplate = (id) => {
+        window.switchTemplate = (id, btn) => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            if (event.target) event.target.classList.add('active');
+            if (btn) btn.classList.add('active');
+            else if (event && event.target) event.target.classList.add('active');
             currentLayout.template_id = id;
             loadSavedLayout();
         };
 
         window.saveLayout = async () => {
             const canvas = document.getElementById('menu-canvas');
-            const elements = Array.from(canvas.querySelectorAll('.canvas-element')).map(el => ({
-                type: el.dataset.type,
-                extra: el.dataset.extra ? JSON.parse(el.dataset.extra) : null,
-                x: parseFloat(el.getAttribute('data-x')) || 0,
-                y: parseFloat(el.getAttribute('data-y')) || 0,
-                width: el.style.width,
-                height: el.style.height
-            }));
+            const elements = Array.from(canvas.querySelectorAll('.canvas-element')).map(el => {
+                let extra = el.dataset.extra ? JSON.parse(el.dataset.extra) : {};
+                if (el.dataset.type === 'text') {
+                    extra.content = el.querySelector('div[contenteditable]').innerText;
+                }
+                return {
+                    type: el.dataset.type,
+                    extra: extra,
+                    x: parseFloat(el.getAttribute('data-x')) || 0,
+                    y: parseFloat(el.getAttribute('data-y')) || 0,
+                    width: el.style.width,
+                    height: el.style.height
+                };
+            });
 
             const layout_config = {
                 elements,
                 settings: {
                     pageSize: document.getElementById('page-size').value,
-                    orientation: document.getElementById('orientation').value
+                    orientation: document.getElementById('orientation').value,
+                    customW: document.getElementById('custom-w').value,
+                    customH: document.getElementById('custom-h').value
                 }
             };
 
@@ -592,45 +737,14 @@
 
         function applyLayout(config) {
             if (!config || !config.elements) return;
-            document.getElementById('page-size').value = config.settings.pageSize;
-            document.getElementById('orientation').value = config.settings.orientation;
+            document.getElementById('page-size').value = config.settings.pageSize || 'letter';
+            document.getElementById('orientation').value = config.settings.orientation || 'portrait';
+            if (config.settings.customW) document.getElementById('custom-w').value = config.settings.customW;
+            if (config.settings.customH) document.getElementById('custom-h').value = config.settings.customH;
+
             updatePageSize();
 
-            config.elements.forEach(elData => {
-                const canvas = document.getElementById('menu-canvas');
-                const el = document.createElement('div');
-                el.className = 'canvas-element';
-                el.dataset.type = elData.type;
-                if (elData.extra) el.dataset.extra = JSON.stringify(elData.extra);
-
-                el.setAttribute('data-x', elData.x);
-                el.setAttribute('data-y', elData.y);
-                el.style.transform = `translate(${elData.x}px, ${elData.y}px)`;
-                if (elData.width) el.style.width = elData.width;
-                if (elData.height) el.style.height = elData.height;
-
-                let content = '';
-                if (elData.type === 'logo') content = `<img src="${restaurantInfo?.logo_url || 'https://menutech.services/assets/img/logomt.png'}" style="width:100%">`;
-                else if (elData.type === 'name') content = `<h2 style="font-family:Outfit; margin:0">${restaurantInfo?.name || 'Restaurant Name'}</h2>`;
-                else if (elData.type === 'info') content = `<p style="font-size:12px; margin:0">${restaurantInfo?.address || 'Address'}<br>${restaurantInfo?.phone || 'Phone'}</p>`;
-                else if (elData.type === 'category') {
-                    const cat = menuData?.config.categories.find(c => c.name === elData.extra.name);
-                    content = `<div style="padding:10px; border-bottom:1px solid #eee; width:100%">
-                        <h3 style="margin:0">${elData.extra.name}</h3>
-                        ${(cat?.dishes || []).map(d => `<div style="display:flex; justify-content:space-between; font-size:12px; margin-top:5px;"><span>${d.name}</span><span>$${d.price}</span></div>`).join('')}
-                    </div>`;
-                }
-                else if (elData.type === 'image') content = `<img src="${elData.extra.url}" style="width:100%">`;
-
-                el.innerHTML = content + `<button class="delete-btn" style="position:absolute; top:-10px; right:-10px; background:red; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; display:none;">×</button>`;
-
-                el.onmouseenter = () => el.querySelector('.delete-btn').style.display = 'block';
-                el.onmouseleave = () => el.querySelector('.delete-btn').style.display = 'none';
-                el.querySelector('.delete-btn').onclick = (e) => { e.stopPropagation(); el.remove(); };
-
-                canvas.appendChild(el);
-                makeResizableAndDraggable(el);
-            });
+            config.elements.forEach(elData => renderElementToCanvas(elData));
         }
 
         window.logout = async () => { await sb.auth.signOut(); location.href="index.html"; };
