@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../services/print_service.dart';
 
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+class PrinterSettingsScreen extends StatefulWidget {
+  const PrinterSettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  State<PrinterSettingsScreen> createState() => _PrinterSettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   final PrintService _printService = PrintService();
   final _ipController = TextEditingController();
   List<String> _printerIps = [];
@@ -161,16 +160,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: 30),
-            ListTile(
-              leading: const Icon(Icons.privacy_tip_outlined, color: Colors.grey),
-              title: const Text("Privacy Policy"),
-              onTap: () async {
-                final url = Uri.parse('https://menutech.xyz/privacy-policy');
-                if (await canLaunchUrl(url)) {
-                  await launchUrl(url, mode: LaunchMode.externalApplication);
-                }
-              },
-            ),
             const Divider(),
             const SizedBox(height: 10),
             Expanded(

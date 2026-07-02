@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../services/supabase_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text,
       );
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/dashboard');
+        Navigator.of(context).pushReplacementNamed('/main');
       }
     } catch (e) {
       if (mounted) {
@@ -100,19 +99,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.black)
                         : const Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextButton(
-                  onPressed: () async {
-                    final url = Uri.parse('https://menutech.xyz/privacy-policy');
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url, mode: LaunchMode.externalApplication);
-                    }
-                  },
-                  child: const Text(
-                    'Privacy Policy',
-                    style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline),
                   ),
                 ),
               ],

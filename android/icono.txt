@@ -1,0 +1,18 @@
+Para que el icono se genere correctamente, sigue estos pasos:
+
+1. Asegúrate de que el archivo mtech.png esté en la carpeta:
+   C:\Users\Nuevo Usuario\Downloads\veiler\menutechAdminWebsite-main\android\assets\icon\mtech.png
+
+2. Abre una terminal (CMD o PowerShell) en la carpeta del proyecto:
+   C:\Users\Nuevo Usuario\Downloads\veiler\menutechAdminWebsite-main\android
+
+3. Ejecuta los siguientes comandos en orden:
+
+   C:\flutter\flutter\bin\flutter.bat pub get
+
+   C:\flutter\flutter\bin\flutter.bat pub run flutter_launcher_icons
+
+4. Una vez que termine sin errores, ya puedes generar tu APK o AAB:
+   C:\flutter\flutter\bin\flutter.bat build apk
+
+Nota: El archivo pubspec.yaml ya ha sido configurado con la ruta y la dependencia necesaria.

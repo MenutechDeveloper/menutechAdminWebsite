@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config.dart';
 import 'screens/login_screen.dart';
-import 'screens/dashboard_screen.dart';
+import 'screens/main_screen.dart';
 import 'screens/orders_screen.dart';
 import 'screens/order_detail_screen.dart';
-import 'screens/settings_screen.dart';
+import 'screens/printer_settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,13 +40,13 @@ class MenutechAdminApp extends StatelessWidget {
           scrolledUnderElevation: 0,
         ),
       ),
-      initialRoute: Supabase.instance.client.auth.currentSession == null ? '/login' : '/dashboard',
+      initialRoute: Supabase.instance.client.auth.currentSession == null ? '/login' : '/main',
       routes: {
         '/login': (context) => const LoginScreen(),
-        '/dashboard': (context) => const DashboardScreen(),
+        '/main': (context) => const MainScreen(),
         '/orders': (context) => const OrdersScreen(),
         '/order-detail': (context) => const OrderDetailScreen(),
-        '/settings': (context) => const SettingsScreen(),
+        '/printer-settings': (context) => const PrinterSettingsScreen(),
       },
     );
   }

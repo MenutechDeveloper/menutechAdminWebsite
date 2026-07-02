@@ -121,7 +121,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           title: 'Printer Settings',
                           description: 'Configure and manage your Epson printers.',
                           icon: Icons.print_outlined,
-                          route: '/settings',
+                          route: '/printer-settings',
                         ),
                       ],
                     ),
