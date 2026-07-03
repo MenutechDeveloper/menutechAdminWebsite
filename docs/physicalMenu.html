@@ -136,9 +136,9 @@
         .texture-leather { background-color: #3d1f1f; background-image: url('https://www.transparenttextures.com/patterns/black-leather.png'); color: #d4af37; }
 
         .border-red-ornate {
-            box-shadow: inset 0 0 0 15px #fffcf0, inset 0 0 0 20px var(--red-ornate), inset 0 0 0 22px #fffcf0;
-            border: 20px solid var(--red-ornate);
-            border-image: url('https://www.transparenttextures.com/patterns/shattered-island.png') 30 stretch;
+            border-left: 40px solid #b31b1b;
+            border-image: url('https://www.transparenttextures.com/patterns/pinstripe.png') 30 stretch;
+            box-shadow: inset 10px 0 20px rgba(0,0,0,0.2);
         }
 
         /* Ornate corner SVG placeholders or styles */
@@ -152,25 +152,41 @@
         /* Brush Header */
         .brush-header {
             display: inline-block;
-            padding: 10px 60px;
-            background: #b31b1b;
+            padding: 8px 50px;
             color: white;
             font-family: 'Bebas Neue', cursive;
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             text-transform: uppercase;
             position: relative;
-            clip-path: polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%);
-            margin-bottom: 20px;
+            z-index: 1;
+            margin-bottom: 15px;
+            background: none;
         }
-        .brush-header.green { background: #1e3a34; }
+        .brush-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--brush-color, #b31b1b);
+            z-index: -1;
+            clip-path: polygon(
+                2% 15%, 5% 5%, 15% 8%, 25% 2%, 45% 7%, 65% 3%, 85% 8%, 95% 5%, 98% 15%,
+                100% 45%, 97% 85%, 95% 95%, 85% 92%, 65% 97%, 45% 93%, 25% 98%, 15% 92%, 5% 95%, 2% 85%, 0% 45%
+            );
+            transform: scale(1.2, 1);
+        }
 
         /* Canvas Elements */
-        .canvas-element { position: absolute; cursor: move; touch-action: none; user-select: none; transition: outline 0.2s; }
-        .canvas-element:hover::after { content: ''; position: absolute; inset: -5px; border: 2px dashed var(--orange); border-radius: 4px; pointer-events: none; }
-        .delete-btn { position: absolute; top: -15px; right: -15px; background: var(--error); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: none; z-index: 10; font-weight: bold; }
-        .canvas-element:hover .delete-btn { display: block; }
+        .canvas-element { position: absolute; cursor: move; touch-action: none; user-select: none; transition: outline 0.2s; min-width: 20px; min-height: 20px; }
+        .canvas-element:hover::after { content: ''; position: absolute; inset: -5px; border: 2px dashed var(--orange); border-radius: 4px; pointer-events: none; z-index: -1; }
+        .delete-btn { position: absolute; top: -10px; right: -10px; background: var(--error); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; display: none; z-index: 20; font-weight: bold; font-size: 12px; align-items: center; justify-content: center; }
+        .canvas-element:hover .delete-btn { display: flex; }
 
-        .circle-crop { border-radius: 50%; overflow: hidden; object-fit: cover; }
+        .canvas-element [contenteditable]:focus {
+            outline: 2px solid var(--orange);
+            background: rgba(255,149,51,0.05);
+        }
+
+        .circle-crop { border-radius: 50%; overflow: hidden; object-fit: cover; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .border-ornate { border: 20px solid transparent; border-image: url('https://www.transparenttextures.com/patterns/pinstripe.png') 30 stretch; }
 
         /* Right Properties Panel */
@@ -421,10 +437,16 @@
             window.initSidebar();
             await window.checkSession();
 
-            setTimeout(() => {
+            const hideOverlay = () => {
                 $('#loading-overlay').css('opacity', '0');
                 setTimeout(() => $('#loading-overlay').addClass('hidden'), 500);
-            }, 3000);
+            };
+
+            if (window.location.search.includes('quick')) {
+                hideOverlay();
+            } else {
+                setTimeout(hideOverlay, 3000);
+            }
         });
 
         window.initSidebar = () => {
@@ -734,11 +756,24 @@
             if (!autoPos) $('#menu-book').turn('page', 1);
         };
 
-        window.addImageToPage = (url, isStain = false) => {
-            const pageNum = isPreviewMode ? $('#menu-book').turn('page') : 1;
+        window.addImageToPage = (url, isStain = false, targetPageNum) => {
+            const pageNum = targetPageNum || (isPreviewMode ? $('#menu-book').turn('page') : 1);
             const page = getPageContent(pageNum);
-            const content = `<img src="${url}" style="width: ${isStain ? '150px' : '200px'}; opacity: ${isStain ? 0.4 : 1};">`;
+            const imgClass = isStain ? '' : 'circle-crop';
+            const content = `<img src="${url}" class="${imgClass}" style="width: ${isStain ? '150px' : '120px'}; opacity: ${isStain ? 0.4 : 1};">`;
             const el = createElement('image', content);
+
+            const x = isStain ? 50 : 400;
+            const y = getPageContentHeight(pageNum) - 100;
+
+            el.css({
+                left: '0px',
+                top: '0px',
+                transform: `translate(${x}px, ${y}px)`
+            });
+            el.attr('data-x', x);
+            el.attr('data-y', y);
+
             page.append(el);
             makeInteract(el);
         };
@@ -749,66 +784,112 @@
             }
         };
 
-        async function autoFlowCategories() {
+        window.autoFlowCategories = async () => {
             if (!menuData?.config?.categories) return;
 
-            let currentPage = 2; // Start from page 2 (Page 1 is cover)
-            const dimensions = getPaperDimensions();
-            const maxPageHeight = (dimensions.height / 0.7) * 0.7 - 120;
+            let flowState = {
+                currentPage: 2,
+                maxPageHeight: (window.getPaperDimensions().height / 0.7) * 0.7 - 80
+            };
 
-            // Clear existing categories from workspace
-            $('#designer-workspace .page .page-content:not([data-page-type="cover"]) .canvas-element[data-type="category"]').remove();
+            // Clear existing menu content from workspace
+            $('#designer-workspace .page .page-content:not([data-page-type="cover"]) .canvas-element').filter(function() {
+                return ['cat-header', 'dish-row', 'dish-desc'].includes($(this).data('type'));
+            }).remove();
 
             for (const cat of menuData.config.categories) {
-                // Ensure target page exists in workspace
-                while ($('#designer-workspace .page').length < currentPage) {
-                    addPage();
-                }
-
-                let el = addCategoryToPage(cat.name, currentPage);
-                let currentHeight = getPageContentHeight(currentPage);
-
-                if (currentHeight > maxPageHeight) {
-                    // Move the element that overflowed to the next page
-                    el.remove();
-                    currentPage++;
-                    while ($('#designer-workspace .page').length < currentPage) {
-                        addPage();
-                    }
-                    addCategoryToPage(cat.name, currentPage);
-                }
+                flowState = window.addCategoryToPage(cat.name, flowState.currentPage);
             }
-            $('#menu-book').turn('page', 2);
+
+            if ($('#menu-book').turn('is')) {
+                $('#menu-book').turn('page', 2);
+            }
             showToast("Categories auto-flowed!");
-        }
+        };
 
-        window.addCategoryToPage = (catName, targetPageNum) => {
-            const pageNum = targetPageNum || (isPreviewMode ? $('#menu-book').turn('page') : 1);
-            const page = getPageContent(pageNum);
+        window.addCategoryToPage = (catName, startPageNum) => {
+            let currentPage = startPageNum;
             const cat = menuData.config.categories.find(c => c.name === catName);
+            if (!cat) return { currentPage };
 
-            const content = `
-                <div class="category-block" style="width: 100%; padding: 15px; pointer-events: none; text-align: center;">
-                    <div class="brush-header">${cat.name}</div>
-                    <div class="dishes-container" style="text-align: left; margin-top: 20px;">
-                    ${cat.dishes.map(d => `
-                        <div class="dish-item" style="display:flex; gap: 15px; margin-bottom:20px; align-items: flex-start; font-family: 'Stint Ultra Condensed', sans-serif;">
-                            <div style="flex: 1;">
-                                <div style="display:flex; justify-content:space-between; align-items: baseline;">
-                                    <span style="font-size: 1.6rem; font-weight: bold; color: #1a1c1e; text-transform: uppercase;">${d.name}</span>
-                                    <span style="font-size: 1.6rem; color: #b31b1b; font-weight: bold;">$${d.price}</span>
-                                </div>
-                                <p style="font-size: 1.1rem; color: #4a5568; line-height: 1.2;">${d.description || ''}</p>
-                            </div>
-                            ${d.image ? `<img src="${d.image}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #b31b1b;">` : ''}
+            const dimensions = getPaperDimensions();
+            const maxH = (dimensions.height / 0.7) * 0.7 - 80;
+
+            const checkAndNextPage = () => {
+                if (getPageContentHeight(currentPage) > maxH) {
+                    currentPage++;
+                    while ($('#designer-workspace .page').length < currentPage) addPage();
+                }
+            };
+
+            while ($('#designer-workspace .page').length < currentPage) addPage();
+            checkAndNextPage();
+
+            // Place Header
+            addTextElement({
+                type: 'cat-header',
+                content: `<div class="brush-header" contenteditable="true" style="--brush-color:${['diseno2','diseno3'].includes(currentTemplateId)?'#1e3a34':'#b31b1b'}">${cat.name}</div>`,
+                pageNum: currentPage,
+                style: { width: '100%', textAlign: 'center' },
+                isFullWidth: true
+            });
+
+            // Place Dishes
+            cat.dishes.forEach(d => {
+                checkAndNextPage();
+
+                addTextElement({
+                    type: 'dish-row',
+                    content: `
+                        <div style="display:flex; justify-content:space-between; align-items: baseline; font-family:'Bebas Neue';">
+                            <span contenteditable="true" style="font-size: 1.8rem; font-weight: bold; color: #1a1c1e; text-transform: uppercase;">${d.name}</span>
+                            <span contenteditable="true" style="font-size: 1.8rem; color: #b31b1b; font-weight: bold;">$${d.price}</span>
                         </div>
-                    `).join('')}
-                    </div>
-                </div>
-            `;
-            const el = createElement('category', content);
-            el.css({ width: '100%', left: '0', position: 'relative', transform: 'none' });
-            el.removeAttr('data-x data-y');
+                    `,
+                    pageNum: currentPage,
+                    style: { width: '100%' },
+                    isFullWidth: true
+                });
+
+                if (d.description) {
+                    addTextElement({
+                        type: 'dish-desc',
+                        content: `<div contenteditable="true" style="font-family:'Outfit'; font-size: 1.1rem; color: #4a5568; line-height: 1.2;">${d.description}</div>`,
+                        pageNum: currentPage,
+                        style: { width: '100%', marginTop: '-5px' },
+                        isFullWidth: true
+                    });
+                }
+
+                if (d.image) {
+                    // Small chance to place dish image
+                    if (Math.random() > 0.5) {
+                        addImageToPage(d.image, false, currentPage);
+                    }
+                }
+            });
+
+            return { currentPage };
+        };
+
+        window.addTextElement = ({ type, content, pageNum, style = {}, isFullWidth = false }) => {
+            const page = getPageContent(pageNum);
+            const el = createElement(type, content);
+
+            const currentHeight = getPageContentHeight(pageNum);
+            const x = isFullWidth ? 0 : 50;
+            const y = currentHeight + 10;
+
+            el.css({
+                width: isFullWidth ? '100%' : 'auto',
+                left: '0px',
+                top: '0px',
+                transform: `translate(${x}px, ${y}px)`,
+                ...style
+            });
+            el.attr('data-x', x);
+            el.attr('data-y', y);
+
             page.append(el);
             makeInteract(el);
             return el;
@@ -816,16 +897,21 @@
 
         window.getPageContentHeight = (pageNum) => {
             const page = getPageContent(pageNum);
-            let totalHeight = 0;
+            let maxHeight = 0;
             page.children('.canvas-element').each(function() {
-                totalHeight += $(this).outerHeight(true);
+                const y = parseFloat($(this).attr('data-y')) || 0;
+                const h = $(this).outerHeight();
+                if (y + h > maxHeight) maxHeight = y + h;
             });
-            return totalHeight;
+            return maxHeight;
         }
 
         window.createElement = (type, content) => {
-            const el = $(`<div class="canvas-element" data-type="${type}" style="left:50px; top:50px;"></div>`);
+            const el = $(`<div class="canvas-element" data-type="${type}" style="left:0; top:0;"></div>`);
             el.html(content + `<button class="delete-btn" onclick="$(this).parent().remove()">×</button>`);
+            el.find('[contenteditable]').on('click', function(e) {
+                e.stopPropagation();
+            });
             return el;
         }
 
@@ -951,6 +1037,11 @@
                 const elements = [];
                 pageEl.children('.canvas-element').each(function() {
                     const el = $(this);
+                    // Update HTML from contenteditable before saving
+                    el.find('[contenteditable]').each(function() {
+                        $(this).attr('contenteditable', 'true'); // Ensure it stays editable
+                    });
+
                     elements.push({
                         type: el.data('type'),
                         html: el.html(),
