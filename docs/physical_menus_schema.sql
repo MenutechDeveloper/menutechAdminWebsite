@@ -1,3 +1,6 @@
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Table to store physical menu designs
 CREATE TABLE IF NOT EXISTS public.menutech_physical_menus (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
