@@ -87,10 +87,16 @@
         .book-container {
             flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
             background: rgba(0,0,0,0.02); border-radius: 30px; padding: 40px; position: relative;
+            min-height: 800px;
         }
         #menu-book { margin: 0 auto; transition: width 0.3s, height 0.3s; }
-        .page { background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
+        .page { background-color: white; box-shadow: 0 0 20px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
         .page-content { width: 100%; height: 100%; position: relative; padding: 40px; }
+        .page-content[data-page-type="cover"]::after {
+            content: 'PORTADA / COVER'; position: absolute; top: 10px; right: 10px;
+            font-size: 0.6rem; font-weight: 800; color: var(--orange); opacity: 0.5;
+            letter-spacing: 1px; border: 1px solid var(--orange); padding: 2px 6px; border-radius: 4px;
+        }
 
         /* Textures */
         .texture-chalkboard { background-color: #1a1a1a; background-image: url('https://www.transparenttextures.com/patterns/dark-matter.png'); color: white; }
@@ -133,6 +139,23 @@
         #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; }
         .toast { padding: 18px 24px; border-radius: 20px; background: #1c1f26; color: white; font-size: 0.9rem; animation: slideIn 0.3s ease-out; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        /* Custom Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px);
+            z-index: 21000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: var(--card); border: 1.5px solid var(--border); border-radius: 32px;
+            padding: 40px; width: 100%; max-width: 450px; text-align: center;
+            box-shadow: 0 30px 70px rgba(0,0,0,0.3); transform: scale(0.9); transition: 0.3s;
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .modal-title { font-family: 'Outfit'; font-size: 1.5rem; font-weight: 800; margin-bottom: 15px; }
+        .modal-text { color: var(--text-dim); margin-bottom: 30px; line-height: 1.6; }
+        .modal-actions { display: flex; gap: 15px; justify-content: center; }
 
         .hidden { display: none !important; }
     </style>
@@ -239,6 +262,17 @@
         <button class="btn-action btn-download" id="download-pdf" onclick="generatePDF()">Download PDF</button>
     </div>
 
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Wait a second!</h2>
+            <p class="modal-text" id="confirm-modal-text">Switching templates will load its saved layout. Save current work first?</p>
+            <div class="modal-actions">
+                <button class="btn-action" style="background: var(--input); border: 1.5px solid var(--border);" onclick="closeConfirmModal(false)">NO, JUST SWITCH</button>
+                <button class="btn-action btn-save" onclick="closeConfirmModal(true)">YES, SAVE FIRST</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { supabase as sb } from './supabase.js';
 
@@ -254,6 +288,19 @@
             t.textContent = msg;
             container.appendChild(t);
             setTimeout(() => t.remove(), 4000);
+        };
+
+        let confirmCallback = null;
+        window.showConfirmModal = (msg, callback) => {
+            $('#confirm-modal-text').text(msg);
+            $('#confirm-modal').addClass('active');
+            confirmCallback = callback;
+        };
+
+        window.closeConfirmModal = (shouldSave) => {
+            $('#confirm-modal').removeClass('active');
+            if (confirmCallback) confirmCallback(shouldSave);
+            confirmCallback = null;
         };
 
         $(document).ready(async () => {
@@ -320,6 +367,7 @@
             const size = getPaperDimensions();
 
             // Adjust CSS for pages
+            $('#dynamic-page-size').remove();
             $('<style id="dynamic-page-size">')
                 .prop('type', 'text/css')
                 .html(`.page { width: ${size.pageWidth}px; height: ${size.height}px; }`)
@@ -333,10 +381,25 @@
                 acceleration: true,
                 elevation: 50,
                 gradients: true,
+                duration: 1000,
                 when: {
-                    turned: function(e, page) { currentPageIndex = page; }
+                    turning: function(e, page, view) {
+                        // Optional: logic when turning
+                    },
+                    turned: function(e, page) {
+                        currentPageIndex = page;
+                        $(this).turn('center');
+                    }
                 }
             });
+
+            // Ensure we start at page 1 (Cover)
+            setTimeout(() => {
+                if (book.turn('pages') > 0) {
+                    book.turn('page', 1);
+                    book.turn('center');
+                }
+            }, 100);
         }
 
         function getPaperDimensions() {
@@ -368,8 +431,10 @@
 
         window.addPage = () => {
             const book = $('#menu-book');
-            const element = $('<div />', { 'class': 'page' }).append($('<div />', { 'class': 'page-content' }));
+            const element = $('<div class="page"><div class="page-content"></div></div>');
             book.turn('addPage', element);
+            updatePageStyle(); // Apply current texture to new page
+            showToast("New page added");
         };
 
         window.nextPage = () => $('#menu-book').turn('next');
@@ -378,8 +443,12 @@
         window.removeCurrentPage = () => {
             const book = $('#menu-book');
             const page = book.turn('page');
+            if (page === 1) {
+                showToast("Cannot remove the Cover page", "error");
+                return;
+            }
             if (book.turn('pages') <= 2) {
-                showToast("Cannot remove basic pages", "error");
+                showToast("Minimum 2 pages required", "error");
                 return;
             }
             book.turn('removePage', page);
@@ -432,12 +501,15 @@
             const page = $('#menu-book .page').first().find('.page-content');
             let content = '';
             if (type === 'logo') content = `<img src="${restaurantInfo?.logo_url || ''}" style="width: 200px;">`;
-            if (type === 'name') content = `<h1 style="font-family:'Outfit'; font-size: 3rem; text-align:center;">${restaurantInfo?.name || 'Restaurant Name'}</h1>`;
-            if (type === 'tagline') content = `<p style="font-family:'Permanent Marker'; font-size: 1.5rem; text-align:center;">Authentic Flavors</p>`;
+            if (type === 'name') content = `<h1 style="font-family:'Outfit'; font-size: 3rem; text-align:center; padding: 10px;">${restaurantInfo?.name || 'Restaurant Name'}</h1>`;
+            if (type === 'tagline') content = `<p style="font-family:'Permanent Marker'; font-size: 1.5rem; text-align:center; padding: 10px;">Authentic Flavors</p>`;
 
             const el = createElement(type, content);
             page.append(el);
             makeInteract(el);
+
+            // Go to page 1 to see it
+            $('#menu-book').turn('page', 1);
         };
 
         window.addImageToPage = (url, isStain = false) => {
@@ -460,17 +532,19 @@
 
             let currentPage = 2; // Start from page 2 (Page 1 is cover)
             const dimensions = getPaperDimensions();
-            const maxPageHeight = dimensions.height - 80; // height minus padding
-
-            // Ensure we have at least 2 pages
-            while ($('#menu-book').turn('pages') < 2) {
-                addPage();
-            }
+            // maxPageHeight should be based on scaled display height
+            const maxPageHeight = (dimensions.height / 0.7) * 0.7 - 120; // 0.7 scale, minus padding
 
             // Clear existing categories to avoid duplicates before flowing
-            $('.page:not(:first-child) .page-content .canvas-element[data-type="category"]').remove();
+            // Only clear from non-cover pages
+            $('.page .page-content:not([data-page-type="cover"]) .canvas-element[data-type="category"]').remove();
 
             for (const cat of menuData.config.categories) {
+                // Ensure target page exists
+                while ($('#menu-book').turn('pages') < currentPage) {
+                    addPage();
+                }
+
                 let el = addCategoryToPage(cat.name, currentPage);
                 let currentHeight = getPageContentHeight(currentPage);
 
@@ -478,12 +552,13 @@
                     // Move the element that overflowed to the next page
                     el.remove();
                     currentPage++;
-                    if ($('#menu-book').turn('pages') < currentPage) {
+                    while ($('#menu-book').turn('pages') < currentPage) {
                         addPage();
                     }
                     addCategoryToPage(cat.name, currentPage);
                 }
             }
+            $('#menu-book').turn('page', 2);
             showToast("Categories auto-flowed!");
         }
 
@@ -575,18 +650,18 @@
             $('.page').removeClass('texture-chalkboard texture-paper texture-dark-wood texture-green-slate texture-leather').addClass(texture);
         };
 
-        window.switchTemplate = async (templateId) => {
+        window.switchTemplate = (templateId) => {
             if (templateId === currentTemplateId) return;
 
-            if (confirm("Switching templates will load its saved layout. Save current work first?")) {
-                await saveLayout();
-            }
-
-            currentTemplateId = templateId;
-            $('.tab-btn').removeClass('active');
-            $(`button[data-tid="${templateId}"]`).addClass('active');
-
-            await loadSavedLayout();
+            showConfirmModal("Switching templates will load its saved layout. Save current work first?", async (shouldSave) => {
+                if (shouldSave) {
+                    await saveLayout();
+                }
+                currentTemplateId = templateId;
+                $('.tab-btn').removeClass('active');
+                $(`button[data-tid="${templateId}"]`).addClass('active');
+                await loadSavedLayout();
+            });
         };
 
         window.applyImageStyle = (style) => {
@@ -733,6 +808,7 @@
                 config.pages.forEach((pageData, index) => {
                     const pageEl = $('<div class="page"><div class="page-content"></div></div>');
                     const content = pageEl.find('.page-content');
+                    if (index === 0) content.attr('data-page-type', 'cover');
 
                     pageData.elements.forEach(elData => {
                         const el = $(`<div class="canvas-element" data-type="${elData.type}"></div>`);
@@ -748,11 +824,14 @@
                 });
             } else {
                 // Default setup if no save exists for this template
-            if (currentTemplateId === 'diseno1') $('#bg-texture-select').val('texture-chalkboard');
-            else if (currentTemplateId === 'diseno2') $('#bg-texture-select').val('texture-paper');
+                if (currentTemplateId === 'diseno1') $('#bg-texture-select').val('texture-chalkboard');
+                else if (currentTemplateId === 'diseno2') $('#bg-texture-select').val('texture-paper');
                 else $('#bg-texture-select').val('white');
 
-                book.html('<div class="page"><div class="page-content"></div></div><div class="page"><div class="page-content"></div></div>');
+                // Always start with a Cover and at least one internal page
+                book.append('<div class="page"><div class="page-content" data-page-type="cover"></div></div>');
+                book.append('<div class="page"><div class="page-content"></div></div>');
+                book.append('<div class="page"><div class="page-content"></div></div>');
             }
 
             initBook();
