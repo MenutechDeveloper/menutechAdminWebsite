@@ -1,4 +1,4 @@
--- Enable admins to update the 'role' column in public.profiless
+-- Enable admins to update the 'role' column in public.profiles
 -- This ensures that the RLS policy allows admins to modify other users' roles.
 
 CREATE POLICY "Admins can update roles" ON public.profiles
