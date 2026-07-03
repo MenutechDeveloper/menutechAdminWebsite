@@ -83,17 +83,43 @@
         }
         .draggable-item:hover { border-color: var(--orange); transform: translateY(-2px); }
 
-        /* Main Book Area */
+        /* Main Designer Area */
         .book-container {
-            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 40px;
             background: rgba(0,0,0,0.02); border-radius: 30px; padding: 40px; position: relative;
             min-height: 800px;
         }
-        #menu-book { margin: 0 auto; transition: width 0.3s, height 0.3s; }
-        .page { background-color: white; box-shadow: 0 0 20px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
+
+        /* Workspace Grid */
+        #designer-workspace {
+            display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; width: 100%;
+        }
+
+        /* Preview Container */
+        #preview-container {
+            display: none; width: 100%; flex-direction: column; align-items: center; justify-content: center;
+        }
+        #preview-container.active { display: flex; }
+
+        #menu-book { margin: 0 auto; }
+        .page {
+            background-color: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+            width: 571px; /* Default Letter 0.7x scale approx */
+            height: 739px;
+            flex-shrink: 0;
+        }
         .page-content { width: 100%; height: 100%; position: relative; padding: 40px; }
+
         .page-content[data-page-type="cover"]::after {
             content: 'PORTADA / COVER'; position: absolute; top: 10px; right: 10px;
+            font-size: 0.6rem; font-weight: 800; color: var(--orange); opacity: 0.5;
+            letter-spacing: 1px; border: 1px solid var(--orange); padding: 2px 6px; border-radius: 4px;
+        }
+        .page-content[data-page-type="back"]::after {
+            content: 'CONTRA PORTADA / BACK'; position: absolute; top: 10px; right: 10px;
             font-size: 0.6rem; font-weight: 800; color: var(--orange); opacity: 0.5;
             letter-spacing: 1px; border: 1px solid var(--orange); padding: 2px 6px; border-radius: 4px;
         }
@@ -215,10 +241,12 @@
 
             <div class="toolbox">
                 <div class="tool-section">
-                    <h3>Cover Elements</h3>
+                    <h3>Cover & Info</h3>
                     <div class="draggable-item" onclick="addCoverElement('logo')">Restaurant Logo</div>
                     <div class="draggable-item" onclick="addCoverElement('name')">Restaurant Name</div>
                     <div class="draggable-item" onclick="addCoverElement('tagline')">Add Tagline</div>
+                    <div class="draggable-item" onclick="addCoverElement('address')">Address (Back)</div>
+                    <div class="draggable-item" onclick="addCoverElement('phone')">Phone (Back)</div>
                 </div>
                 <div class="tool-section">
                     <h3>Menu Content</h3>
@@ -233,14 +261,23 @@
             </div>
 
             <div class="book-container">
-                <div id="menu-book">
-                    <!-- Pages will be dynamically generated here -->
+                <div id="designer-workspace">
+                    <!-- Workspace cards (flat design) -->
                 </div>
+
+                <div id="preview-container">
+                    <div id="menu-book">
+                        <!-- turn.js book -->
+                    </div>
+                </div>
+
                 <div style="margin-top: 20px; display: flex; gap: 10px;">
-                    <button class="tab-btn" onclick="addPage()">+ Add Page</button>
-                    <button class="tab-btn" style="color:var(--error)" onclick="removeCurrentPage()">- Remove Page</button>
-                    <button class="tab-btn" onclick="prevPage()">Previous</button>
-                    <button class="tab-btn" onclick="nextPage()">Next</button>
+                    <button class="tab-btn" id="btn-add-page" onclick="addPage()">+ Add Page</button>
+                    <button class="tab-btn" id="btn-remove-page" style="color:var(--error)" onclick="removeCurrentPage()">- Remove Page</button>
+                    <div id="preview-controls" class="hidden" style="display: flex; gap: 10px;">
+                        <button class="tab-btn" onclick="prevPage()">Previous</button>
+                        <button class="tab-btn" onclick="nextPage()">Next</button>
+                    </div>
                 </div>
             </div>
 
@@ -248,10 +285,21 @@
                 <h3>Style & Page</h3>
                 <div class="tool-section">
                     <label style="font-size: 0.7rem; font-weight: 700;">Paper Size</label>
-                    <select id="paper-size-select" onchange="updatePaperSize()" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
+                    <select id="paper-size-select" onchange="window.updatePaperSize()" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
                         <option value="letter">Letter (8.5 x 11")</option>
                         <option value="a4">A4 (210 x 297mm)</option>
+                        <option value="custom">Custom Size</option>
                     </select>
+                </div>
+                <div id="custom-size-inputs" class="hidden" style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.6rem;">Width (in)</label>
+                        <input type="number" id="custom-w" value="8.5" step="0.1" onchange="window.updatePaperSize()" style="width: 100%; padding: 5px; border-radius: 5px; border: 1px solid var(--border);">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.6rem;">Height (in)</label>
+                        <input type="number" id="custom-h" value="11" step="0.1" onchange="window.updatePaperSize()" style="width: 100%; padding: 5px; border-radius: 5px; border: 1px solid var(--border);">
+                    </div>
                 </div>
                 <div class="tool-section">
                     <label style="font-size: 0.7rem; font-weight: 700;">Page Background</label>
@@ -276,6 +324,7 @@
     </div>
 
     <div id="floating-controls">
+        <button class="btn-action" id="btn-toggle-mode" onclick="toggleMode()" style="background: var(--text); color: white;">PREVIEW MODE</button>
         <button class="btn-action btn-save" onclick="saveLayout()">Save Menu</button>
         <button class="btn-action btn-download" id="download-pdf" onclick="generatePDF()">Download PDF</button>
     </div>
@@ -298,6 +347,7 @@
         let menuData = null, restaurantInfo = null;
         let currentPageIndex = 1;
         let currentTemplateId = 'diseno1';
+        let isPreviewMode = false;
 
         window.showToast = (msg, type='success') => {
             const container = document.getElementById('toast-container');
@@ -322,22 +372,20 @@
         };
 
         $(document).ready(async () => {
-            initSidebar();
-            await checkSession();
-            // initBook is called inside loadSavedLayout
+            window.initSidebar();
+            await window.checkSession();
 
-            // Allow more time for initial population
             setTimeout(() => {
                 $('#loading-overlay').css('opacity', '0');
                 setTimeout(() => $('#loading-overlay').addClass('hidden'), 500);
             }, 3000);
         });
 
-        function initSidebar() {
+        window.initSidebar = () => {
             $('#sidebar-tab').on('click', () => $('#sidebar-container').toggleClass('collapsed'));
-        }
+        };
 
-        async function checkSession() {
+        window.checkSession = async () => {
             const { data: { session } } = await sb.auth.getSession();
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
@@ -351,15 +399,15 @@
 
             if (['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'].includes(userRole)) {
                 $('#sidebar-container').removeClass('hidden');
-                setupContextSwitcher();
+                window.setupContextSwitcher();
             } else {
                 $('#download-pdf').addClass('hidden');
             }
 
-            await loadRestaurantData();
-        }
+            await window.loadRestaurantData();
+        };
 
-        async function setupContextSwitcher() {
+        window.setupContextSwitcher = async () => {
             const { data } = await sb.from('profiles').select('*');
             const render = (owners) => {
                 $('#client-list').html(owners.map(o => `
@@ -376,19 +424,20 @@
             window.switchContext = (id) => { activeOwnerId = id; setupContextSwitcher(); loadRestaurantData(); };
         }
 
-        async function loadRestaurantData() {
+        window.loadRestaurantData = async () => {
             const { data: res } = await sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle();
             restaurantInfo = res;
             const { data: menu } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
             menuData = menu;
 
-            updateToolbox();
-            loadSavedLayout();
-        }
+            window.updateToolbox();
+            window.loadSavedLayout();
+        };
 
-        function initBook() {
+        window.initBook = () => {
             const book = $('#menu-book');
             if (book.turn('is')) book.turn('destroy');
+            book.empty();
 
             const size = getPaperDimensions();
 
@@ -402,6 +451,14 @@
                     .page-content { width: 100%; height: 100%; position: relative; padding: 40px; background-color: inherit; }
                 `)
                 .appendTo('head');
+
+            // Clone pages from workspace to book for preview
+            $('#designer-workspace .page').each(function() {
+                const clone = $(this).clone();
+                clone.find('.delete-btn').remove();
+                clone.find('.canvas-element').css('outline', 'none');
+                book.append(clone);
+            });
 
             book.turn({
                 width: size.totalWidth,
@@ -430,20 +487,28 @@
             }, 500);
         }
 
-        function getPaperDimensions() {
+        window.getPaperDimensions = () => {
             const size = $('#paper-size-select').val() || 'letter';
-            // Scale down for screen display (e.g., 0.7x)
             const scale = 0.7;
             if (size === 'a4') {
                 return { pageWidth: 794 * scale, height: 1123 * scale, totalWidth: 794 * 2 * scale };
             }
+            if (size === 'custom') {
+                const w = parseFloat($('#custom-w').val()) * 96; // 96 DPI
+                const h = parseFloat($('#custom-h').val()) * 96;
+                return { pageWidth: w * scale, height: h * scale, totalWidth: w * 2 * scale };
+            }
             // Letter default
             return { pageWidth: 816 * scale, height: 1056 * scale, totalWidth: 816 * 2 * scale };
-        }
+        };
 
         window.updatePaperSize = () => {
+            const sizeVal = $('#paper-size-select').val();
+            if (sizeVal === 'custom') $('#custom-size-inputs').removeClass('hidden').css('display', 'flex');
+            else $('#custom-size-inputs').addClass('hidden').hide();
+
             const book = $('#menu-book');
-            const size = getPaperDimensions();
+            const size = window.getPaperDimensions();
 
             $('#dynamic-page-size').remove();
             $('<style id="dynamic-page-size">')
@@ -458,11 +523,11 @@
         };
 
         window.addPage = () => {
-            const book = $('#menu-book');
-            const pageNum = book.turn('pages') + 1;
+            const workspace = $('#designer-workspace');
+            const pageNum = workspace.children('.page').length + 1;
             const element = $(`<div class="page p${pageNum}"><div class="page-content"></div></div>`);
-            book.turn('addPage', element);
-            updatePageStyle(); // Apply current texture to new page
+            workspace.append(element);
+            updatePageStyle();
             showToast("New page added");
             return element;
         };
@@ -471,21 +536,17 @@
         window.prevPage = () => $('#menu-book').turn('previous');
 
         window.removeCurrentPage = () => {
-            const book = $('#menu-book');
-            const page = book.turn('page');
-            if (page === 1) {
-                showToast("Cannot remove the Cover page", "error");
-                return;
-            }
-            if (book.turn('pages') <= 2) {
+            const workspace = $('#designer-workspace');
+            const pages = workspace.children('.page');
+            if (pages.length <= 2) {
                 showToast("Minimum 2 pages required", "error");
                 return;
             }
-            book.turn('removePage', page);
-            showToast("Page removed");
+            pages.last().remove();
+            showToast("Last page removed");
         };
 
-        function updateToolbox() {
+        window.updateToolbox = () => {
             // Fill categories
             const catList = $('#cat-list-toolbox');
             catList.empty();
@@ -527,9 +588,11 @@
             });
         }
 
-        function getPageContent(n) {
+        window.getPageContent = (n) => {
+            if (!isPreviewMode) {
+                return $('#designer-workspace .page').eq(n - 1).find('.page-content');
+            }
             const book = $('#menu-book');
-            // turn.js adds class 'p'+n to the wrapper or the page itself
             let p = book.find('.p' + n);
             if (p.length === 0) {
                 p = book.find('.page').eq(n - 1);
@@ -568,6 +631,12 @@
                     initialY = 600;
                 }
             }
+            if (type === 'address') {
+                content = `<p style="font-family:'Outfit'; font-size: 1.2rem; text-align:center; width: 100%;">${restaurantInfo?.address || 'Street Name, City'}</p>`;
+            }
+            if (type === 'phone') {
+                content = `<p style="font-family:'Outfit'; font-size: 1.2rem; text-align:center; width: 100%;">${restaurantInfo?.phone || '555-0123'}</p>`;
+            }
 
             const el = createElement(type, content);
             el.css({
@@ -586,7 +655,7 @@
         };
 
         window.addImageToPage = (url, isStain = false) => {
-            const pageNum = $('#menu-book').turn('page');
+            const pageNum = isPreviewMode ? $('#menu-book').turn('page') : 1;
             const page = getPageContent(pageNum);
             const content = `<img src="${url}" style="width: ${isStain ? '150px' : '200px'}; opacity: ${isStain ? 0.4 : 1};">`;
             const el = createElement('image', content);
@@ -605,16 +674,14 @@
 
             let currentPage = 2; // Start from page 2 (Page 1 is cover)
             const dimensions = getPaperDimensions();
-            // maxPageHeight should be based on scaled display height
-            const maxPageHeight = (dimensions.height / 0.7) * 0.7 - 120; // 0.7 scale, minus padding
+            const maxPageHeight = (dimensions.height / 0.7) * 0.7 - 120;
 
-            // Clear existing categories to avoid duplicates before flowing
-            // Only clear from non-cover pages
-            $('.page .page-content:not([data-page-type="cover"]) .canvas-element[data-type="category"]').remove();
+            // Clear existing categories from workspace
+            $('#designer-workspace .page .page-content:not([data-page-type="cover"]) .canvas-element[data-type="category"]').remove();
 
             for (const cat of menuData.config.categories) {
-                // Ensure target page exists
-                while ($('#menu-book').turn('pages') < currentPage) {
+                // Ensure target page exists in workspace
+                while ($('#designer-workspace .page').length < currentPage) {
                     addPage();
                 }
 
@@ -636,8 +703,7 @@
         }
 
         window.addCategoryToPage = (catName, targetPageNum) => {
-            const book = $('#menu-book');
-            const pageNum = targetPageNum || book.turn('page');
+            const pageNum = targetPageNum || (isPreviewMode ? $('#menu-book').turn('page') : 1);
             const page = getPageContent(pageNum);
             const cat = menuData.config.categories.find(c => c.name === catName);
 
@@ -668,7 +734,7 @@
             return el;
         };
 
-        function getPageContentHeight(pageNum) {
+        window.getPageContentHeight = (pageNum) => {
             const page = getPageContent(pageNum);
             let totalHeight = 0;
             page.children('.canvas-element').each(function() {
@@ -677,7 +743,7 @@
             return totalHeight;
         }
 
-        function createElement(type, content) {
+        window.createElement = (type, content) => {
             const el = $(`<div class="canvas-element" data-type="${type}" style="left:50px; top:50px;"></div>`);
             el.html(content + `<button class="delete-btn" onclick="$(this).parent().remove()">×</button>`);
             return el;
@@ -685,7 +751,7 @@
 
         let selectedElement = null;
 
-        function makeInteract(el) {
+        window.makeInteract = (el) => {
             el.on('mousedown', function(e) {
                 e.stopPropagation();
                 $('.canvas-element').css('outline', 'none');
@@ -771,13 +837,34 @@
             }
         };
 
+        window.toggleMode = () => {
+            if (isPreviewMode) {
+                // Exit preview, go back to designer
+                $('#preview-container').removeClass('active');
+                $('#designer-workspace').show();
+                $('#preview-controls').addClass('hidden');
+                $('#btn-add-page, #btn-remove-page, .toolbox, .properties-panel').show();
+                $('#btn-toggle-mode').text('PREVIEW MODE');
+                isPreviewMode = false;
+            } else {
+                // Save first? Maybe not mandatory but recommended
+                // Enter preview
+                $('#designer-workspace').hide();
+                $('#preview-container').addClass('active');
+                $('#preview-controls').removeClass('hidden');
+                $('#btn-add-page, #btn-remove-page, .toolbox, .properties-panel').hide();
+                $('#btn-toggle-mode').text('DESIGN MODE');
+                isPreviewMode = true;
+                initBook();
+            }
+        };
+
         window.saveLayout = async () => {
             const pages = [];
-            const book = $('#menu-book');
-            const totalPages = book.turn('pages');
+            const workspace = $('#designer-workspace');
 
-            for (let i = 1; i <= totalPages; i++) {
-                const pageEl = $(`.page:nth-child(${i}) .page-content`);
+            workspace.children('.page').each(function(i) {
+                const pageEl = $(this).find('.page-content');
                 const elements = [];
                 pageEl.children('.canvas-element').each(function() {
                     const el = $(this);
@@ -798,15 +885,18 @@
                         imgStyle: el.find('img').attr('style') || ''
                     });
                 });
-                pages.push({ elements });
-            }
+                pages.push({
+                    elements,
+                    type: pageEl.attr('data-page-type') || 'content'
+                });
+            });
 
             const layout_config = {
                 pages,
                 settings: {
                     texture: $('#bg-texture-select').val(),
                     paperSize: $('#paper-size-select').val(),
-                    totalPages
+                    totalPages: pages.length
                 }
             };
 
@@ -822,13 +912,23 @@
 
         window.generatePDF = async () => {
             const paperSize = $('#paper-size-select').val();
-            const book = $('#menu-book');
-            const totalPages = book.turn('pages');
+            const workspace = $('#designer-workspace');
+            const totalPages = workspace.children('.page').length;
 
-            const pdfConfig = {
+            let pdfConfig = {
                 letter: { width: 8.5, height: 11, format: 'letter' },
                 a4: { width: 8.27, height: 11.69, format: 'a4' }
-            }[paperSize] || { width: 8.5, height: 11, format: 'letter' };
+            }[paperSize];
+
+            if (paperSize === 'custom') {
+                pdfConfig = {
+                    width: parseFloat($('#custom-w').val()),
+                    height: parseFloat($('#custom-h').val()),
+                    format: [parseFloat($('#custom-w').val()), parseFloat($('#custom-h').val())]
+                };
+            }
+
+            if (!pdfConfig) pdfConfig = { width: 8.5, height: 11, format: 'letter' };
 
             const worker = html2pdf().set({
                 margin: 0,
@@ -843,44 +943,46 @@
             $('.canvas-element').css('outline', 'none');
 
             let pdfContainer = $('<div id="pdf-container"></div>');
-            for (let i = 1; i <= totalPages; i++) {
-                const pageClone = getPageContent(i).parent().clone();
+            workspace.children('.page').each(function() {
+                const pageClone = $(this).clone();
+                pageClone.find('.delete-btn').remove();
                 pageClone.css({
                     'width': `${pdfConfig.width}in`,
                     'height': `${pdfConfig.height}in`,
                     'display': 'block',
                     'position': 'relative',
                     'page-break-after': 'always',
-                    'overflow': 'hidden'
+                    'overflow': 'hidden',
+                    'transform': 'none'
                 });
-                // Remove scaling transforms from the clone for 1:1 PDF output
                 pageClone.find('.page-content').css({
                     'width': '100%',
                     'height': '100%',
                     'padding': '40px'
                 });
                 pdfContainer.append(pageClone);
-            }
+            });
 
             worker.from(pdfContainer[0]).save().then(() => {
                 $('.delete-btn').show();
             });
         };
 
-        async function loadSavedLayout() {
-            const { data, error } = await sb.from('menutech_physical_menus')
-                .select('*')
-                .eq('user_id', activeOwnerId)
-                .eq('template_id', currentTemplateId)
-                .maybeSingle();
+        window.loadSavedLayout = async () => {
+            const workspace = $('#designer-workspace');
+            workspace.empty();
 
-            const book = $('#menu-book');
+            let data = null;
+            try {
+                const response = await sb.from('menutech_physical_menus')
+                    .select('*')
+                    .eq('user_id', activeOwnerId)
+                    .eq('template_id', currentTemplateId)
+                    .maybeSingle();
+                data = response.data;
+            } catch (e) { console.error("Supabase load error:", e); }
+
             let isNew = false;
-
-            // Re-initialize turn.js to avoid ghost pages/broken state
-            if (book.turn('is')) book.turn('destroy');
-            book.html('');
-
             if (data && data.layout_config) {
                 const config = data.layout_config;
                 $('#bg-texture-select').val(config.settings.texture || 'white');
@@ -888,9 +990,14 @@
 
                 config.pages.forEach((pageData, index) => {
                     const pageNum = index + 1;
-                    const pageEl = $(`<div class="page p${pageNum}"><div class="page-content"></div></div>`);
+                    const pageEl = $(`
+                        <div class="page p${pageNum}">
+                            <div class="page-content"></div>
+                            <div class="page-number">PAGE ${pageNum}</div>
+                        </div>
+                    `);
                     const content = pageEl.find('.page-content');
-                    if (index === 0) content.attr('data-page-type', 'cover');
+                    if (pageData.type) content.attr('data-page-type', pageData.type);
 
                     pageData.elements.forEach(elData => {
                         const el = $(`<div class="canvas-element" data-type="${elData.type}"></div>`);
@@ -900,32 +1007,33 @@
                         el.attr('data-y', elData.y);
                         if (elData.imgStyle) el.find('img').attr('style', elData.imgStyle);
                         content.append(el);
-                        makeInteract(el);
+                        window.makeInteract(el);
                     });
-                    book.append(pageEl);
+                    workspace.append(pageEl);
                 });
             } else {
                 isNew = true;
-                // Default setup if no save exists for this template
                 if (currentTemplateId === 'diseno1') $('#bg-texture-select').val('texture-chalkboard');
                 else if (currentTemplateId === 'diseno2') $('#bg-texture-select').val('texture-paper');
                 else $('#bg-texture-select').val('white');
 
-                // Always start with a Cover and at least one internal page
-                book.append('<div class="page p1"><div class="page-content" data-page-type="cover"></div></div>');
-                book.append('<div class="page p2"><div class="page-content"></div></div>');
-                book.append('<div class="page p3"><div class="page-content"></div></div>');
+                workspace.append(`
+                    <div class="page p1"><div class="page-content" data-page-type="cover"></div><div class="page-number">PAGE 1</div></div>
+                    <div class="page p2"><div class="page-content"></div><div class="page-number">PAGE 2</div></div>
+                    <div class="page p3"><div class="page-content"></div><div class="page-number">PAGE 3</div></div>
+                    <div class="page p4"><div class="page-content" data-page-type="back"></div><div class="page-number">PAGE 4</div></div>
+                `);
             }
 
-            initBook();
-            updatePageStyle();
+            window.updatePaperSize();
+            window.updatePageStyle();
 
             if (isNew) {
                 // Auto-populate for first time
                 setTimeout(() => {
-                    addCoverElement('logo', true);
-                    addCoverElement('name', true);
-                    autoFlowCategories();
+                    window.addCoverElement('logo', true);
+                    window.addCoverElement('name', true);
+                    window.autoFlowCategories();
                 }, 1000);
             }
 
