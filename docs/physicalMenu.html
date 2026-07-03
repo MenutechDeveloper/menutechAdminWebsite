@@ -158,9 +158,27 @@
         .modal-actions { display: flex; gap: 15px; justify-content: center; }
 
         .hidden { display: none !important; }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed; inset: 0; background: var(--bg); z-index: 30000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s;
+        }
+        .loader {
+            width: 48px; height: 48px; border: 5px solid var(--orange);
+            border-bottom-color: transparent; border-radius: 50%;
+            display: inline-block; animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+    <div id="loading-overlay">
+        <div class="loader"></div>
+        <p style="margin-top: 20px; font-weight: 800; color: var(--orange); letter-spacing: 2px;">PREPARING MENU...</p>
+    </div>
+
     <div class="bg-mesh"></div>
     <div id="toast-container"></div>
 
@@ -306,7 +324,13 @@
         $(document).ready(async () => {
             initSidebar();
             await checkSession();
-            initBook();
+            // initBook is called inside loadSavedLayout
+
+            // Allow more time for initial population
+            setTimeout(() => {
+                $('#loading-overlay').css('opacity', '0');
+                setTimeout(() => $('#loading-overlay').addClass('hidden'), 500);
+            }, 3000);
         });
 
         function initSidebar() {
@@ -364,13 +388,19 @@
 
         function initBook() {
             const book = $('#menu-book');
+            if (book.turn('is')) book.turn('destroy');
+
             const size = getPaperDimensions();
 
-            // Adjust CSS for pages
+            // Adjust CSS for pages and ensure book visibility
             $('#dynamic-page-size').remove();
             $('<style id="dynamic-page-size">')
                 .prop('type', 'text/css')
-                .html(`.page { width: ${size.pageWidth}px; height: ${size.height}px; }`)
+                .html(`
+                    #menu-book { width: ${size.totalWidth}px; height: ${size.height}px; visibility: visible !important; opacity: 1 !important; }
+                    .page { width: ${size.pageWidth}px; height: ${size.height}px; background-color: white; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+                    .page-content { width: 100%; height: 100%; position: relative; padding: 40px; background-color: inherit; }
+                `)
                 .appendTo('head');
 
             book.turn({
@@ -381,11 +411,8 @@
                 acceleration: true,
                 elevation: 50,
                 gradients: true,
-                duration: 1000,
+                duration: 800,
                 when: {
-                    turning: function(e, page, view) {
-                        // Optional: logic when turning
-                    },
                     turned: function(e, page) {
                         currentPageIndex = page;
                         $(this).turn('center');
@@ -393,13 +420,14 @@
                 }
             });
 
-            // Ensure we start at page 1 (Cover)
+            // Force center and page 1
             setTimeout(() => {
                 if (book.turn('pages') > 0) {
                     book.turn('page', 1);
                     book.turn('center');
+                    setTimeout(() => book.turn('center'), 300);
                 }
-            }, 100);
+            }, 500);
         }
 
         function getPaperDimensions() {
@@ -431,10 +459,12 @@
 
         window.addPage = () => {
             const book = $('#menu-book');
-            const element = $('<div class="page"><div class="page-content"></div></div>');
+            const pageNum = book.turn('pages') + 1;
+            const element = $(`<div class="page p${pageNum}"><div class="page-content"></div></div>`);
             book.turn('addPage', element);
             updatePageStyle(); // Apply current texture to new page
             showToast("New page added");
+            return element;
         };
 
         window.nextPage = () => $('#menu-book').turn('next');
@@ -497,24 +527,67 @@
             });
         }
 
-        window.addCoverElement = (type) => {
-            const page = $('#menu-book .page').first().find('.page-content');
+        function getPageContent(n) {
+            const book = $('#menu-book');
+            // turn.js adds class 'p'+n to the wrapper or the page itself
+            let p = book.find('.p' + n);
+            if (p.length === 0) {
+                p = book.find('.page').eq(n - 1);
+            }
+            return p.find('.page-content');
+        }
+
+        window.addCoverElement = (type, autoPos = false) => {
+            const page = getPageContent(1);
             let content = '';
-            if (type === 'logo') content = `<img src="${restaurantInfo?.logo_url || ''}" style="width: 200px;">`;
-            if (type === 'name') content = `<h1 style="font-family:'Outfit'; font-size: 3rem; text-align:center; padding: 10px;">${restaurantInfo?.name || 'Restaurant Name'}</h1>`;
-            if (type === 'tagline') content = `<p style="font-family:'Permanent Marker'; font-size: 1.5rem; text-align:center; padding: 10px;">Authentic Flavors</p>`;
+            const dim = getPaperDimensions();
+
+            let initialX = 50, initialY = 50, initialWidth = 'auto';
+
+            if (type === 'logo') {
+                content = `<img src="${restaurantInfo?.logo_url || ''}" style="width: 100%; display: block;">`;
+                if (autoPos) {
+                    initialWidth = 240;
+                    initialX = (dim.pageWidth - initialWidth) / 2;
+                    initialY = 150;
+                }
+            }
+            if (type === 'name') {
+                content = `<h1 style="font-family:'Outfit'; font-size: 3.5rem; text-align:center; width: 100%;">${restaurantInfo?.name || 'Restaurant Name'}</h1>`;
+                if (autoPos) {
+                    initialWidth = dim.pageWidth - 80;
+                    initialX = 40;
+                    initialY = 450;
+                }
+            }
+            if (type === 'tagline') {
+                content = `<p style="font-family:'Permanent Marker'; font-size: 1.8rem; text-align:center; width: 100%;">Authentic Flavors</p>`;
+                if (autoPos) {
+                    initialWidth = dim.pageWidth - 80;
+                    initialX = 40;
+                    initialY = 600;
+                }
+            }
 
             const el = createElement(type, content);
+            el.css({
+                left: '0px',
+                top: '0px',
+                width: initialWidth === 'auto' ? 'auto' : initialWidth + 'px',
+                transform: `translate(${initialX}px, ${initialY}px)`
+            });
+            el.attr('data-x', initialX);
+            el.attr('data-y', initialY);
+
             page.append(el);
             makeInteract(el);
 
-            // Go to page 1 to see it
-            $('#menu-book').turn('page', 1);
+            if (!autoPos) $('#menu-book').turn('page', 1);
         };
 
         window.addImageToPage = (url, isStain = false) => {
             const pageNum = $('#menu-book').turn('page');
-            const page = $(`#menu-book .page:nth-child(${pageNum}) .page-content`);
+            const page = getPageContent(pageNum);
             const content = `<img src="${url}" style="width: ${isStain ? '150px' : '200px'}; opacity: ${isStain ? 0.4 : 1};">`;
             const el = createElement('image', content);
             page.append(el);
@@ -563,8 +636,9 @@
         }
 
         window.addCategoryToPage = (catName, targetPageNum) => {
-            const pageNum = targetPageNum || $('#menu-book').turn('page');
-            const page = $(`#menu-book .page:nth-child(${pageNum}) .page-content`);
+            const book = $('#menu-book');
+            const pageNum = targetPageNum || book.turn('page');
+            const page = getPageContent(pageNum);
             const cat = menuData.config.categories.find(c => c.name === catName);
 
             const content = `
@@ -572,11 +646,16 @@
                     <h3 style="font-family:'Playfair Display'; font-size: 1.8rem; margin-bottom:10px;">${cat.name}</h3>
                     <div class="dishes-container">
                     ${cat.dishes.map(d => `
-                        <div class="dish-item" style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                            <span><b>${d.name}</b></span>
-                            <span>$${d.price}</span>
+                        <div class="dish-item" style="display:flex; gap: 15px; margin-bottom:15px; align-items: flex-start;">
+                            ${d.image ? `<img src="${d.image}" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">` : ''}
+                            <div style="flex: 1;">
+                                <div style="display:flex; justify-content:space-between;">
+                                    <span><b>${d.name}</b></span>
+                                    <span>$${d.price}</span>
+                                </div>
+                                <p style="font-size: 0.75rem; opacity:0.8;">${d.description || ''}</p>
+                            </div>
                         </div>
-                        <p style="font-size: 0.75rem; margin-bottom:10px; opacity:0.8;">${d.description || ''}</p>
                     `).join('')}
                     </div>
                 </div>
@@ -590,7 +669,7 @@
         };
 
         function getPageContentHeight(pageNum) {
-            const page = $(`#menu-book .page:nth-child(${pageNum}) .page-content`);
+            const page = getPageContent(pageNum);
             let totalHeight = 0;
             page.children('.canvas-element').each(function() {
                 totalHeight += $(this).outerHeight(true);
@@ -607,7 +686,8 @@
         let selectedElement = null;
 
         function makeInteract(el) {
-            el.on('mousedown', function() {
+            el.on('mousedown', function(e) {
+                e.stopPropagation();
                 $('.canvas-element').css('outline', 'none');
                 $(this).css('outline', '2px solid var(--orange)');
                 selectedElement = $(this);
@@ -764,7 +844,7 @@
 
             let pdfContainer = $('<div id="pdf-container"></div>');
             for (let i = 1; i <= totalPages; i++) {
-                const pageClone = $(`.page:nth-child(${i})`).clone();
+                const pageClone = getPageContent(i).parent().clone();
                 pageClone.css({
                     'width': `${pdfConfig.width}in`,
                     'height': `${pdfConfig.height}in`,
@@ -795,6 +875,7 @@
                 .maybeSingle();
 
             const book = $('#menu-book');
+            let isNew = false;
 
             // Re-initialize turn.js to avoid ghost pages/broken state
             if (book.turn('is')) book.turn('destroy');
@@ -806,7 +887,8 @@
                 $('#paper-size-select').val(config.settings.paperSize || 'letter');
 
                 config.pages.forEach((pageData, index) => {
-                    const pageEl = $('<div class="page"><div class="page-content"></div></div>');
+                    const pageNum = index + 1;
+                    const pageEl = $(`<div class="page p${pageNum}"><div class="page-content"></div></div>`);
                     const content = pageEl.find('.page-content');
                     if (index === 0) content.attr('data-page-type', 'cover');
 
@@ -823,19 +905,30 @@
                     book.append(pageEl);
                 });
             } else {
+                isNew = true;
                 // Default setup if no save exists for this template
                 if (currentTemplateId === 'diseno1') $('#bg-texture-select').val('texture-chalkboard');
                 else if (currentTemplateId === 'diseno2') $('#bg-texture-select').val('texture-paper');
                 else $('#bg-texture-select').val('white');
 
                 // Always start with a Cover and at least one internal page
-                book.append('<div class="page"><div class="page-content" data-page-type="cover"></div></div>');
-                book.append('<div class="page"><div class="page-content"></div></div>');
-                book.append('<div class="page"><div class="page-content"></div></div>');
+                book.append('<div class="page p1"><div class="page-content" data-page-type="cover"></div></div>');
+                book.append('<div class="page p2"><div class="page-content"></div></div>');
+                book.append('<div class="page p3"><div class="page-content"></div></div>');
             }
 
             initBook();
             updatePageStyle();
+
+            if (isNew) {
+                // Auto-populate for first time
+                setTimeout(() => {
+                    addCoverElement('logo', true);
+                    addCoverElement('name', true);
+                    autoFlowCategories();
+                }, 1000);
+            }
+
             showToast(`Template ${currentTemplateId} loaded!`);
         }
 
