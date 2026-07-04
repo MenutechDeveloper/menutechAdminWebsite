@@ -88,33 +88,41 @@
             display: flex; flex-direction: column;
             align-items: center;
             overflow: hidden;
-            padding: 40px;
+            padding: 20px;
         }
 
-        /* Designer Canvas */
-        #designer-canvas {
+        /* Designer Canvas Wrapper */
+        #canvas-wrapper {
             flex: 1;
             width: 100%;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            overflow-y: auto;
-            padding-bottom: 100px;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Designer Canvas */
+        #designer-canvas {
+            position: relative;
+            transform-origin: center center;
+            transition: transform 0.2s ease-out;
+            background: white;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            flex-shrink: 0;
         }
 
         /* Page Styles */
         .page {
-            width: 8.5in; height: 11in;
-            background: white;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            width: 100%; height: 100%;
             position: relative;
             overflow: hidden;
-            flex-shrink: 0;
-            margin-bottom: 40px;
             background-size: cover;
             background-position: center;
             padding: 0.5in; /* Professional Margin */
+            display: none; /* Controlled by JS */
         }
+        .page.active { display: block; }
 
         /* Template Backgrounds */
         .tmpl-hoja {
@@ -123,11 +131,12 @@
         }
         .tmpl-minimal { background-color: #ffffff; }
         .tmpl-dark { background-color: #1a1a1a; color: #fff; }
+        .tmpl-parchment { background-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/parchment_texture.jpg'); background-color: #f4ecd8; }
 
         /* Canvas Elements */
         .canvas-element {
             position: absolute; cursor: move; touch-action: none;
-            user-select: none; z-index: 10; padding: 10px;
+            user-select: none; z-index: 10; padding: 5px;
             border: 1px solid transparent;
         }
         .canvas-element:hover { border: 1px dashed var(--orange); }
@@ -144,28 +153,7 @@
         /* Content Editable Tweak */
         .el-content { outline: none; }
 
-        /* Two-Column Grid for Categories */
-        .category-container {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .category-grid {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px 40px;
-            margin-top: 25px;
-        }
-
         /* Brush Header Component */
-        .brush-header-wrap {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            margin-bottom: 10px;
-        }
         .brush-header {
             font-family: 'Bebas Neue', sans-serif;
             font-size: 2.8rem;
@@ -190,26 +178,31 @@
             clip-path: polygon(5% 0%, 95% 2%, 100% 50%, 95% 98%, 5% 100%, 0% 50%);
         }
 
-        /* Dish Row Styles */
-        .dish-row {
-            font-family: 'Lora', serif;
-            margin-bottom: 5px;
+        /* Pagination Bar */
+        .pagination-bar {
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
+            padding: 10px 20px; border-radius: 50px; border: 1px solid var(--border);
+            display: flex; gap: 15px; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 20px; z-index: 4000;
         }
-        .dish-header {
-            display: flex; justify-content: space-between; align-items: baseline;
-            font-weight: 900; font-size: 1.25rem; gap: 8px;
-            color: inherit;
+        .page-dot {
+            width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 800; cursor: pointer; transition: 0.3s;
         }
-        .dish-dots { flex: 1; border-bottom: 1px dotted rgba(0,0,0,0.3); margin-bottom: 4px; }
-        .dish-price { color: var(--brush-color, #8b1d1d); font-weight: 800; }
-        .tmpl-dark .dish-price { color: var(--orange); }
-        .dish-desc {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 0.85rem; color: #444;
-            font-weight: 500; margin-top: 3px;
-            line-height: 1.3;
+        .page-dot.active { background: var(--orange); color: white; transform: scale(1.1); }
+        .page-add { background: #f1f5f9; color: var(--text); }
+        .page-add:hover { background: var(--success); color: white; }
+
+        /* Template Grid */
+        .template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .template-card {
+            border: 2px solid var(--border); border-radius: 12px; padding: 10px; cursor: pointer;
+            text-align: center; transition: 0.2s; background: #f8fafc;
         }
-        .tmpl-dark .dish-desc { color: #ccc; }
+        .template-card:hover { border-color: var(--orange); transform: translateY(-2px); }
+        .template-card.active { border-color: var(--orange); background: #fffcf9; }
+        .template-preview { width: 100%; aspect-ratio: 8.5/11; background: #eee; border-radius: 6px; margin-bottom: 5px; overflow: hidden; position: relative; }
 
         /* Modal Overlay */
         .modal-overlay {
@@ -220,8 +213,9 @@
         .modal-overlay.active { display: flex; }
         .modal-content {
             background: transparent;
-            max-width: 90vw; max-height: 90vh;
+            max-width: 95vw; max-height: 95vh;
             position: relative;
+            display: flex; flex-direction: column; align-items: center;
         }
         .modal-close {
             position: absolute; top: -50px; right: 0;
@@ -229,12 +223,6 @@
             border-radius: 50%; font-size: 1.5rem; font-weight: bold;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        /* Turn.js Preview Container */
-        #preview-book-container {
-            width: 8.5in; height: 11in;
-            transform-origin: center center;
         }
 
         /* Properties Sidebar */
@@ -246,7 +234,7 @@
             font-family: inherit; font-size: 0.85rem; background: #f8fafc;
         }
 
-        /* Controls */
+        /* Mode Switcher */
         .mode-switcher {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
@@ -348,6 +336,26 @@
                     </div>
                 </div>
 
+                <span class="section-title">Templates</span>
+                <div class="template-grid">
+                    <div class="template-card active" data-tmpl="tmpl-hoja" onclick="selectTemplate('tmpl-hoja')">
+                        <div class="template-preview tmpl-hoja"></div>
+                        <div style="font-size:0.65rem; font-weight:800;">CLÁSICO</div>
+                    </div>
+                    <div class="template-card" data-tmpl="tmpl-minimal" onclick="selectTemplate('tmpl-minimal')">
+                        <div class="template-preview tmpl-minimal"></div>
+                        <div style="font-size:0.65rem; font-weight:800;">MINIMAL</div>
+                    </div>
+                    <div class="template-card" data-tmpl="tmpl-dark" onclick="selectTemplate('tmpl-dark')">
+                        <div class="template-preview tmpl-dark"></div>
+                        <div style="font-size:0.65rem; font-weight:800;">OSCURO</div>
+                    </div>
+                    <div class="template-card" data-tmpl="tmpl-parchment" onclick="selectTemplate('tmpl-parchment')">
+                        <div class="template-preview tmpl-parchment"></div>
+                        <div style="font-size:0.65rem; font-weight:800;">PERGAMINO</div>
+                    </div>
+                </div>
+
                 <span class="section-title">Identity</span>
                 <div class="tool-item" onclick="addElement('logo')"><span>🖼️</span> Logo</div>
                 <div class="tool-item" onclick="addElement('name')"><span>🏷️</span> Restaurant Name</div>
@@ -358,15 +366,24 @@
                     <div style="font-size:0.75rem; color:var(--text-dim); text-align:center; padding:20px;">Loading categories...</div>
                 </div>
 
-                <span class="section-title">Media Library</span>
+                <span class="section-title">Accents & Media</span>
+                <div class="tool-item" onclick="addElement('brush')"><span>🎨</span> Brush Stroke</div>
+                <div class="tool-item" onclick="addElement('stain')"><span>☕</span> Coffee Stain</div>
                 <div class="gallery-grid" id="gallery"></div>
             </div>
         </aside>
 
         <!-- Workspace -->
         <main class="workspace">
-            <div id="designer-canvas">
-                <!-- Pages -->
+            <div id="canvas-wrapper">
+                <div id="designer-canvas">
+                    <!-- Pages -->
+                </div>
+            </div>
+
+            <!-- Pagination Bar -->
+            <div class="pagination-bar" id="pagination-controls">
+                <!-- Dots added by JS -->
             </div>
         </main>
 
@@ -375,18 +392,11 @@
             <div class="sidebar-content">
                 <span class="section-title">Canvas Settings</span>
                 <div class="prop-group">
-                    <label>Design Style</label>
-                    <select id="template-select" class="prop-input" onchange="updateTemplate()">
-                        <option value="tmpl-hoja">Clásico (Papel Madera)</option>
-                        <option value="tmpl-minimal">Minimalista Limpio</option>
-                        <option value="tmpl-dark">Elegante Oscuro</option>
-                    </select>
-                </div>
-                <div class="prop-group">
                     <label>Page Size</label>
                     <select id="size-select" class="prop-input" onchange="updateSize()">
                         <option value="letter">Letter (8.5 x 11 in)</option>
                         <option value="a4">A4 (21 x 29.7 cm)</option>
+                        <option value="custom">Custom (A5 size)</option>
                     </select>
                 </div>
 
@@ -396,9 +406,6 @@
                 </div>
 
                 <div style="margin-top: auto; padding-top: 30px;">
-                    <button class="tool-item" style="width: 100%; justify-content: center; background: white;" onclick="addBlankPage()">
-                        <span>➕</span> Add Page
-                    </button>
                     <button class="tool-item" style="width: 100%; justify-content: center; background: #fee2e2; border-color: #fca5a5; color: #b91c1c;" onclick="clearCanvas()">
                         <span>🗑️</span> Reset Designer
                     </button>
@@ -440,6 +447,8 @@
         let restaurantData = null, menuData = null;
         let selectedEl = null;
         let allUsers = [];
+        let currentPageIndex = 0;
+        let currentTemplate = 'tmpl-hoja';
 
         $(document).ready(async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -457,9 +466,10 @@
                 loadContextSwitcher();
             } else {
                 $('#context-sidebar').hide();
-                $('#btn-pdf').addClass('hidden');
+                if (role === 'OWNER') $('#btn-pdf').addClass('hidden');
             }
 
+            window.addEventListener('resize', updateScale);
             await loadData();
         });
 
@@ -511,7 +521,7 @@
             menuData = men.data;
 
             renderToolbox();
-            loadSavedDesign();
+            await loadSavedDesign();
         }
 
         function renderToolbox() {
@@ -537,13 +547,78 @@
             });
         }
 
+        window.selectTemplate = (tmpl) => {
+            currentTemplate = tmpl;
+            $('.template-card').removeClass('active');
+            $(`.template-card[data-tmpl="${tmpl}"]`).addClass('active');
+            updateTemplate();
+        };
+
         window.addBlankPage = () => {
-            const tmpl = $('#template-select').val();
-            const page = $(`<div class="page ${tmpl}"></div>`);
+            const page = $(`<div class="page ${currentTemplate}"></div>`);
             $('#designer-canvas').append(page);
             updateSize();
+            const newIndex = $('.page').length - 1;
+            switchPage(newIndex);
             return page;
         };
+
+        window.switchPage = (index) => {
+            const pages = $('.page');
+            if (index < 0 || index >= pages.length) return;
+
+            currentPageIndex = index;
+            pages.removeClass('active').eq(index).addClass('active');
+            renderPagination();
+            updateScale();
+
+            $('.canvas-element').removeClass('selected');
+            selectedEl = null;
+            $('#element-properties').addClass('hidden');
+        };
+
+        function renderPagination() {
+            const container = $('#pagination-controls').empty();
+            const pages = $('.page');
+
+            pages.each((i) => {
+                const dot = $(`<div class="page-dot ${i === currentPageIndex ? 'active' : ''}">${i + 1}</div>`);
+                dot.click(() => switchPage(i));
+                container.append(dot);
+            });
+
+            container.append(`<button class="page-dot page-add" onclick="addBlankPage()" title="Add Page">+</button>`);
+
+            if (pages.length > 1) {
+                const del = $(`<button class="page-dot" style="background:var(--error); color:white;" title="Delete Current Page">×</button>`);
+                del.click(() => deleteCurrentPage());
+                container.append(del);
+            }
+        }
+
+        window.deleteCurrentPage = () => {
+            const pages = $('.page');
+            if (pages.length <= 1) return;
+            if (!confirm("Delete current page and all its contents?")) return;
+
+            pages.eq(currentPageIndex).remove();
+            const newIndex = Math.max(0, currentPageIndex - 1);
+            switchPage(newIndex);
+        };
+
+        function updateScale() {
+            const wrapper = $('#canvas-wrapper');
+            const canvas = $('#designer-canvas');
+            if (!canvas.length) return;
+
+            const wrapW = wrapper.width() - 40;
+            const wrapH = wrapper.height() - 40;
+            const canW = canvas.outerWidth();
+            const canH = canvas.outerHeight();
+
+            const scale = Math.min(wrapW / canW, wrapH / canH, 1);
+            canvas.css('transform', `scale(${scale})`);
+        }
 
         window.clearCanvas = () => {
             if (confirm("Reset current design? Unsaved changes will be lost.")) {
@@ -553,7 +628,7 @@
         };
 
         window.addElement = (type, content = null) => {
-            let targetPage = $('.page').last();
+            let targetPage = $('.page').eq(currentPageIndex);
             if (targetPage.length === 0) targetPage = addBlankPage();
 
             let html = '';
@@ -561,22 +636,28 @@
 
             if (type === 'logo') {
                 html = `<img src="${restaurantData?.logo_url || ''}" style="width:100%; height:auto;">`;
-                style = { width: '150px', left: '50', top: '50' };
+                style = { width: '150px', left: '332', top: '50' };
             } else if (type === 'name') {
                 html = `<h1 style="font-family:'Bebas Neue'; font-size:4rem; color:inherit; line-height:0.9; text-align:center;">${restaurantData?.name || 'RESTAURANT NAME'}</h1>`;
-                style = { left: '50', top: '200', width: '700px' };
+                style = { left: '57', top: '200', width: '700px' };
             } else if (type === 'contact') {
                 html = `<div style="font-family:'Outfit'; font-size:1rem; color:inherit; text-align:center;">${restaurantData?.phone || ''} | ${restaurantData?.address || ''}</div>`;
-                style = { left: '50', top: '300', width: '700px' };
+                style = { left: '57', top: '300', width: '700px' };
             } else if (type === 'image') {
                 html = `<img src="${content}" style="width:100%; border-radius:15px; box-shadow:0 10px 25px rgba(0,0,0,0.15);">`;
                 style = { width: '250px', left: '100', top: '100' };
+            } else if (type === 'brush') {
+                html = `<div class="brush-header" style="width:100%; height:80px; display:flex; align-items:center; justify-content:center;">DECORATION</div>`;
+                style = { width: '400px', left: '200', top: '200' };
+            } else if (type === 'stain') {
+                html = `<img src="https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/coffee_stain.png" style="width:100%; opacity:0.3;">`;
+                style = { width: '200px', left: '300', top: '400' };
             }
 
-            createCanvasElement(targetPage, type, html, style);
+            return createCanvasElement(targetPage, type, html, style);
         };
 
-        function createCanvasElement(page, type, html, style = {}) {
+        window.createCanvasElement = (page, type, html, style = {}) => {
             const x = parseInt(style.left) || 50;
             const y = parseInt(style.top) || 50;
 
@@ -589,7 +670,8 @@
 
             el.find('.delete-btn').click((e) => { e.stopPropagation(); el.remove(); });
 
-            el.on('mousedown', function() {
+            el.on('mousedown', function(e) {
+                e.stopPropagation();
                 $('.canvas-element').removeClass('selected');
                 $(this).addClass('selected');
                 selectedEl = $(this);
@@ -632,83 +714,87 @@
             return el;
         }
 
+        $('.workspace').on('mousedown', function(e) {
+            if (e.target === this || e.target.id === 'canvas-wrapper' || e.target.id === 'designer-canvas' || $(e.target).hasClass('page')) {
+                $('.canvas-element').removeClass('selected');
+                selectedEl = null;
+                $('#element-properties').addClass('hidden');
+            }
+        });
+
         window.addCategoryUI = (catName) => {
-            let page = $('.page').last();
-            if (page.length === 0) page = addBlankPage();
             const cat = menuData?.config?.categories?.find(c => c.name === catName);
             if (!cat) return;
 
-            const html = renderCategoryHTML(cat);
-            createCanvasElement(page, 'category-group', html, { left: 50, top: 100, width: '700px' });
-        };
+            let y = 100;
+            createCanvasElement($('.page').eq(currentPageIndex), 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: 57, top: y, width: '700px' });
+            y += 100;
 
-        function renderCategoryHTML(cat) {
-            let dishesHtml = '';
             cat.dishes?.forEach(d => {
-                dishesHtml += `
-                    <div class="dish-row">
-                        <div class="dish-header">
-                            <span>${d.name}</span>
-                            <div class="dish-dots"></div>
-                            <span class="dish-price">$${d.price}</span>
-                        </div>
-                        <div class="dish-desc">${d.description || ''}</div>
-                    </div>
-                `;
+                createCanvasElement($('.page').eq(currentPageIndex), 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1.25rem;">${d.name}</div>`, { left: 57, top: y, width: '500px' });
+                createCanvasElement($('.page').eq(currentPageIndex), 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:1.25rem; color:var(--brush-color, #8b1d1d); text-align:right;">$${d.price}</div>`, { left: 557, top: y, width: '200px' });
+                y += 28;
+                if (d.description) {
+                    createCanvasElement($('.page').eq(currentPageIndex), 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.85rem; color:#444; font-weight:500;">${d.description}</div>`, { left: 57, top: y, width: '700px' });
+                    y += 45;
+                } else {
+                    y += 15;
+                }
             });
-
-            return `
-                <div class="category-container">
-                    <div class="brush-header-wrap">
-                        <div class="brush-header" style="--brush-color: #8b1d1d;">${cat.name.toUpperCase()}</div>
-                    </div>
-                    <div class="category-grid">
-                        ${dishesHtml}
-                    </div>
-                </div>
-            `;
-        }
+        };
 
         window.generateDesign = () => {
             $('#designer-canvas').empty();
+            currentPageIndex = 0;
             let page = addBlankPage();
 
-            // Cover/Header Page 1
-            if (restaurantData?.logo_url) {
-                createCanvasElement(page, 'logo', `<img src="${restaurantData.logo_url}" style="width:100%">`, { left: 300, top: 150, width: '200px' });
-            }
-            createCanvasElement(page, 'name', `<h1 style="font-family:'Bebas Neue'; font-size:6rem; text-align:center;">${restaurantData?.name || 'MENÚ'}</h1>`, { left: 50, top: 400, width: '700px' });
-            createCanvasElement(page, 'contact', `<div style="font-family:'Outfit'; font-size:1.2rem; text-align:center;">${restaurantData?.address || ''} <br> ${restaurantData?.phone || ''}</div>`, { left: 50, top: 850, width: '700px' });
-
-            // Content Pages
-            page = addBlankPage();
             let currentY = 50;
 
             menuData?.config?.categories?.forEach(cat => {
-                const heightEstimate = 100 + (Math.ceil((cat.dishes?.length || 0) / 2) * 60);
-                if (currentY + heightEstimate > 950) {
+                const heightEstimate = 100 + ((cat.dishes?.length || 0) * 65);
+
+                if (currentY + heightEstimate > 950 && currentY > 50) {
                     page = addBlankPage();
                     currentY = 50;
                 }
 
-                const html = renderCategoryHTML(cat);
-                createCanvasElement(page, 'category-group', html, { left: 50, top: currentY, width: '700px' });
-                currentY += heightEstimate + 50;
+                createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: 57, top: currentY, width: '700px' });
+                currentY += 100;
+
+                cat.dishes?.forEach(d => {
+                    createCanvasElement(page, 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1.25rem;">${d.name}</div>`, { left: 57, top: currentY, width: '500px' });
+                    createCanvasElement(page, 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:1.25rem; color:var(--brush-color, #8b1d1d); text-align:right;">$${d.price}</div>`, { left: 557, top: currentY, width: '200px' });
+                    currentY += 28;
+                    if (d.description) {
+                        createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.85rem; color:#444; font-weight:500;">${d.description}</div>`, { left: 57, top: currentY, width: '700px' });
+                        currentY += 45;
+                    } else {
+                        currentY += 15;
+                    }
+                });
+
+                currentY += 40;
             });
 
-            showToast("Professional layout generated!");
+            switchPage(0);
+            showToast("Design generated!");
         };
 
         window.updateTemplate = () => {
-            const tmpl = $('#template-select').val();
-            $('.page').removeClass('tmpl-hoja tmpl-dark tmpl-minimal').addClass(tmpl);
+            $('.page').removeClass('tmpl-hoja tmpl-dark tmpl-minimal tmpl-parchment').addClass(currentTemplate);
         };
 
         window.updateSize = () => {
             const size = $('#size-select').val();
-            const w = size === 'letter' ? '8.5in' : '210mm';
-            const h = size === 'letter' ? '11in' : '297mm';
-            $('.page').css({ width: w, height: h });
+            let pW, pH;
+
+            if (size === 'letter') { pW = 816; pH = 1056; }
+            else if (size === 'a4') { pW = 794; pH = 1123; }
+            else { pW = 560; pH = 794; } // Custom A5
+
+            $('#designer-canvas').css({ width: pW, height: pH });
+            $('.page').css({ width: '100%', height: '100%' });
+            updateScale();
         };
 
         function showElementProperties() {
@@ -723,6 +809,44 @@
                 </div>
             `);
 
+            // Font Selector
+            controls.append(`
+                <div class="prop-group">
+                    <label>Font Family</label>
+                    <select class="prop-input" onchange="selectedEl.find('.el-content *').css('font-family', this.value)">
+                        <option value="'Plus Jakarta Sans'">Sans Serif</option>
+                        <option value="'Lora'">Serif (Lora)</option>
+                        <option value="'Bebas Neue'">Bebas Neue</option>
+                        <option value="'Playfair Display'">Playfair</option>
+                        <option value="'Outfit'">Outfit</option>
+                    </select>
+                </div>
+            `);
+
+            controls.append(`
+                <div class="prop-group">
+                    <label>Text Color</label>
+                    <input type="color" class="prop-input" value="${rgbToHex(selectedEl.find('.el-content').css('color'))}" oninput="selectedEl.find('.el-content *').css('color', this.value)">
+                </div>
+            `);
+
+            const currentSize = parseInt(selectedEl.find('.el-content *').first().css('font-size')) || 16;
+            controls.append(`
+                <div class="prop-group">
+                    <label>Font Size (px)</label>
+                    <input type="number" class="prop-input" value="${currentSize}" oninput="selectedEl.find('.el-content *').css('font-size', this.value + 'px')">
+                </div>
+            `);
+
+            // Opacity for stains/accents
+            const currentOpacity = selectedEl.css('opacity') || 1;
+            controls.append(`
+                <div class="prop-group">
+                    <label>Opacity (${currentOpacity})</label>
+                    <input type="range" min="0" max="1" step="0.1" class="prop-input" value="${currentOpacity}" oninput="selectedEl.css('opacity', this.value)">
+                </div>
+            `);
+
             if (selectedEl.find('.brush-header').length > 0) {
                 controls.append(`
                     <div class="prop-group">
@@ -733,28 +857,41 @@
             }
         }
 
+        function rgbToHex(rgb) {
+            if (!rgb) return '#000000';
+            if (rgb.startsWith('#')) return rgb;
+            const res = rgb.match(/\d+/g);
+            if (!res) return '#000000';
+            return "#" + res.slice(0,3).map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+        }
+
         window.openPreviewModal = () => {
             $('#preview-modal').addClass('active');
             const book = $('#flipbook').empty();
+
+            const size = $('#size-select').val();
+            let w = 800, h = 1035;
+            if (size === 'a4') { w = 780; h = 1100; }
+            else if (size === 'custom') { w = 600; h = 850; }
 
             $('#designer-canvas .page').each(function() {
                 const clone = $(this).clone();
                 clone.find('.delete-btn').remove();
                 clone.find('.canvas-element').css('border', 'none').removeClass('selected');
                 clone.find('.el-content').attr('contenteditable', 'false');
-                clone.css({ margin: 0, boxShadow: 'none' });
+                clone.css({ display: 'block', width: w/2, height: h });
                 book.append(clone);
             });
 
             setTimeout(() => {
                 book.turn({
-                    width: 800,
-                    height: 1035,
+                    width: w,
+                    height: h,
                     autoCenter: true,
                     elevation: 50,
                     gradients: true
                 });
-            }, 200);
+            }, 300);
         };
 
         window.closePreviewModal = () => {
@@ -774,13 +911,14 @@
                         y: e.attr('data-y'),
                         w: e.css('width'),
                         content: e.find('.el-content').html(),
-                        zIndex: e.css('z-index')
+                        zIndex: e.css('z-index'),
+                        opacity: e.css('opacity')
                     });
                 });
                 pages.push(els);
             });
 
-            const config = { pages, tmpl: $('#template-select').val(), size: $('#size-select').val() };
+            const config = { pages, tmpl: currentTemplate, size: $('#size-select').val(), lastPage: currentPageIndex };
             const { error } = await supabase.from('menutech_physical_menus').upsert({
                 user_id: activeId, template_id: 'v2_pro', layout_config: config, updated_at: new Date()
             }, { onConflict: 'user_id, template_id' });
@@ -795,20 +933,27 @@
 
             if (data?.layout_config) {
                 const cfg = data.layout_config;
-                $('#template-select').val(cfg.tmpl || 'tmpl-hoja');
+                currentTemplate = cfg.tmpl || 'tmpl-hoja';
+                $(`.template-card`).removeClass('active');
+                $(`.template-card[data-tmpl="${currentTemplate}"]`).addClass('active');
+
                 $('#size-select').val(cfg.size || 'letter');
-                cfg.pages.forEach(pEls => {
+                updateSize();
+
+                cfg.pages.forEach((pEls) => {
                     const page = addBlankPage();
                     pEls.forEach(e => {
                         const el = createCanvasElement(page, e.type, e.content, { left: e.x, top: e.y, width: e.w });
                         el.css('z-index', e.zIndex || 10);
+                        el.css('opacity', e.opacity || 1);
                     });
                 });
+                currentPageIndex = cfg.lastPage || 0;
             } else {
                 addBlankPage();
             }
             updateTemplate();
-            updateSize();
+            switchPage(currentPageIndex);
         }
 
         window.exportPDF = () => {
@@ -817,16 +962,17 @@
                 const clone = $(this).clone();
                 clone.find('.delete-btn').remove();
                 clone.find('.canvas-element').css('border', 'none');
-                clone.css({ margin: '0', boxShadow: 'none' });
+                clone.css({ display: 'block', margin: '0', boxShadow: 'none', position: 'relative' });
                 element.appendChild(clone[0]);
             });
 
             const size = $('#size-select').val();
+            const format = size === 'custom' ? [5.8, 8.3] : size;
             const opt = {
                 margin: 0, filename: 'PhysicalMenu.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'in', format: size === 'letter' ? 'letter' : 'a4', orientation: 'portrait' }
+                jsPDF: { unit: 'in', format: format, orientation: 'portrait' }
             };
 
             showToast("Generating PDF...");
