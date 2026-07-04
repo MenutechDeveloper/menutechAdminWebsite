@@ -76,7 +76,7 @@
             display: flex; flex-direction: column; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
             max-height: 85vh; overflow-y: auto;
         }
-        .toolbox h3 { font-size: 0.8rem; text-transform: uppercase; color: var(--orange); letter-spacing: 1px; }
+        .toolbox h3 { font-size: 0.8rem; text-transform: uppercase; color: var(--orange); letter-spacing: 1px; margin-top: 10px; }
         .tool-section { display: flex; flex-direction: column; gap: 10px; }
         .draggable-item {
             padding: 12px; background: var(--input); border: 1.5px solid var(--border); border-radius: 12px;
@@ -110,57 +110,46 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
             overflow: hidden;
             position: relative;
-            width: 571px; /* Default Letter 0.7x scale approx */
-            height: 739px;
+            width: 595px; /* approx scale for screen */
+            height: 842px;
             flex-shrink: 0;
         }
-        .page-content { width: 100%; height: 100%; position: relative; padding: 60px; }
-
-        .page-content[data-page-type="cover"]::after {
-            content: 'PORTADA / COVER'; position: absolute; top: 20px; right: 20px;
-            font-size: 0.6rem; font-weight: 800; color: var(--orange); opacity: 0.5;
-            letter-spacing: 1px; border: 1px solid var(--orange); padding: 2px 6px; border-radius: 4px; z-index: 100;
-        }
-        .page-content[data-page-type="back"]::after {
-            content: 'CONTRA PORTADA / BACK'; position: absolute; top: 20px; right: 20px;
-            font-size: 0.6rem; font-weight: 800; color: var(--orange); opacity: 0.5;
-            letter-spacing: 1px; border: 1px solid var(--orange); padding: 2px 6px; border-radius: 4px; z-index: 100;
-        }
+        .page-content { width: 100%; height: 100%; position: relative; padding: 40px 60px; z-index: 5; }
 
         /* Textures & Borders */
-        .texture-chalkboard { background-color: #1a1a1a; background-image: url('https://www.transparenttextures.com/patterns/dark-matter.png'); color: white; }
+        .texture-wood-light {
+            background-color: #e8dcc4;
+            background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+            color: #332211;
+        }
         .texture-paper { background-color: #f4f1ea; background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png'); }
-        .texture-dark-wood { background-color: #2c1e14; background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png'); color: #e0c9a6; }
-        .texture-wood-light { background-color: #e8dcc4; background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png'); color: #332211; }
-        .texture-green-slate { background-color: #1e3a34; background-image: url('https://www.transparenttextures.com/patterns/dark-matter.png'); color: #f0f0f0; }
-        .texture-leather { background-color: #3d1f1f; background-image: url('https://www.transparenttextures.com/patterns/black-leather.png'); color: #d4af37; }
+        .texture-chalkboard { background-color: #1a1a1a; background-image: url('https://www.transparenttextures.com/patterns/dark-matter.png'); color: white; }
 
-        .border-red-ornate {
-            border-left: 40px solid #b31b1b;
-            border-image: url('https://www.transparenttextures.com/patterns/pinstripe.png') 30 stretch;
-            box-shadow: inset 10px 0 20px rgba(0,0,0,0.2);
+        .border-red-ornate::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 35px;
+            background: #b31b1b url('https://www.transparenttextures.com/patterns/pinstripe.png');
+            box-shadow: inset -5px 0 10px rgba(0,0,0,0.3); z-index: 10;
         }
-
-        /* Ornate corner SVG placeholders or styles */
-        .ornate-frame {
-            position: absolute; inset: 20px; border: 2px solid #b31b1b; pointer-events: none;
-        }
-        .ornate-frame::before, .ornate-frame::after {
-            content: ''; position: absolute; width: 40px; height: 40px; border: 4px solid #b31b1b;
+        .border-red-ornate::after {
+            content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 35px;
+            background: #b31b1b url('https://www.transparenttextures.com/patterns/pinstripe.png');
+            box-shadow: inset 5px 0 10px rgba(0,0,0,0.3); z-index: 10;
         }
 
         /* Brush Header */
         .brush-header {
             display: inline-block;
-            padding: 8px 50px;
+            padding: 10px 60px;
             color: white;
             font-family: 'Bebas Neue', cursive;
-            font-size: 2.8rem;
+            font-size: 3rem;
             text-transform: uppercase;
             position: relative;
             z-index: 1;
             margin-bottom: 15px;
             background: none;
+            min-width: 250px;
+            text-align: center;
         }
         .brush-header::before {
             content: '';
@@ -169,16 +158,16 @@
             background: var(--brush-color, #b31b1b);
             z-index: -1;
             clip-path: polygon(
-                2% 15%, 5% 5%, 15% 8%, 25% 2%, 45% 7%, 65% 3%, 85% 8%, 95% 5%, 98% 15%,
-                100% 45%, 97% 85%, 95% 95%, 85% 92%, 65% 97%, 45% 93%, 25% 98%, 15% 92%, 5% 95%, 2% 85%, 0% 45%
+                2% 18%, 8% 5%, 18% 10%, 28% 4%, 48% 9%, 68% 5%, 88% 10%, 96% 7%, 98% 18%,
+                100% 48%, 98% 82%, 96% 93%, 88% 90%, 68% 95%, 48% 91%, 28% 96%, 18% 90%, 8% 93%, 2% 82%, 0% 48%
             );
-            transform: scale(1.2, 1);
+            transform: scale(1.1, 1.3);
         }
 
         /* Canvas Elements */
-        .canvas-element { position: absolute; cursor: move; touch-action: none; user-select: none; transition: outline 0.2s; min-width: 20px; min-height: 20px; }
+        .canvas-element { position: absolute; cursor: move; touch-action: none; user-select: none; transition: outline 0.2s; min-width: 20px; min-height: 20px; z-index: 20; }
         .canvas-element:hover::after { content: ''; position: absolute; inset: -5px; border: 2px dashed var(--orange); border-radius: 4px; pointer-events: none; z-index: -1; }
-        .delete-btn { position: absolute; top: -10px; right: -10px; background: var(--error); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; display: none; z-index: 20; font-weight: bold; font-size: 12px; align-items: center; justify-content: center; }
+        .delete-btn { position: absolute; top: -10px; right: -10px; background: var(--error); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; display: none; z-index: 50; font-weight: bold; font-size: 12px; align-items: center; justify-content: center; }
         .canvas-element:hover .delete-btn { display: flex; }
 
         .canvas-element [contenteditable]:focus {
@@ -186,10 +175,9 @@
             background: rgba(255,149,51,0.05);
         }
 
-        .circle-crop { border-radius: 50%; overflow: hidden; object-fit: cover; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .border-ornate { border: 20px solid transparent; border-image: url('https://www.transparenttextures.com/patterns/pinstripe.png') 30 stretch; }
+        .circle-crop { border-radius: 50%; overflow: hidden; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
 
-        /* Right Properties Panel */
+        /* Properties Panel */
         .properties-panel {
             width: 280px; background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px;
             display: flex; flex-direction: column; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
@@ -205,36 +193,14 @@
         .btn-action { padding: 14px 28px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 1px; }
         .btn-save { background: var(--orange); color: white; }
         .btn-download { background: var(--success); color: white; }
-
-        /* Template Selection Tabs */
-        .template-tabs { display: flex; gap: 10px; margin-bottom: 30px; width: 100%; justify-content: center; }
-        .tab-btn { padding: 12px 24px; border-radius: 16px; border: 1.5px solid var(--border); background: var(--card); cursor: pointer; font-weight: 800; font-size: 0.8rem; transition: 0.3s; text-transform: uppercase; }
-        .tab-btn.active { background: var(--orange); color: white; border-color: var(--orange); transform: translateY(-2px); }
+        .btn-download:disabled { background: #cbd5e1; cursor: not-allowed; }
 
         #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; }
         .toast { padding: 18px 24px; border-radius: 20px; background: #1c1f26; color: white; font-size: 0.9rem; animation: slideIn 0.3s ease-out; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
-        /* Custom Modal */
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px);
-            z-index: 21000; display: flex; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: 0.3s;
-        }
-        .modal-overlay.active { opacity: 1; pointer-events: auto; }
-        .modal-content {
-            background: var(--card); border: 1.5px solid var(--border); border-radius: 32px;
-            padding: 40px; width: 100%; max-width: 450px; text-align: center;
-            box-shadow: 0 30px 70px rgba(0,0,0,0.3); transform: scale(0.9); transition: 0.3s;
-        }
-        .modal-overlay.active .modal-content { transform: scale(1); }
-        .modal-title { font-family: 'Outfit'; font-size: 1.5rem; font-weight: 800; margin-bottom: 15px; }
-        .modal-text { color: var(--text-dim); margin-bottom: 30px; line-height: 1.6; }
-        .modal-actions { display: flex; gap: 15px; justify-content: center; }
-
         .hidden { display: none !important; }
 
-        /* Loading Overlay */
         #loading-overlay {
             position: fixed; inset: 0; background: var(--bg); z-index: 30000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -251,7 +217,7 @@
 <body>
     <div id="loading-overlay">
         <div class="loader"></div>
-        <p style="margin-top: 20px; font-weight: 800; color: var(--orange); letter-spacing: 2px;">PREPARING MENU...</p>
+        <p style="margin-top: 20px; font-weight: 800; color: var(--orange); letter-spacing: 2px;">LOADING DESIGNER...</p>
     </div>
 
     <div class="bg-mesh"></div>
@@ -270,12 +236,6 @@
     </div>
 
     <div class="container">
-        <div class="template-tabs">
-            <button class="tab-btn active" data-tid="diseno1" onclick="switchTemplate('diseno1')">Diseno 1</button>
-            <button class="tab-btn" data-tid="diseno2" onclick="switchTemplate('diseno2')">Diseno 2</button>
-            <button class="tab-btn" data-tid="diseno3" onclick="switchTemplate('diseno3')">Diseno 3</button>
-        </div>
-
         <div class="editor-layout">
             <div class="sidebar-container collapsed hidden" id="sidebar-container">
                 <div class="sidebar">
@@ -290,37 +250,35 @@
 
             <div class="toolbox">
                 <div class="tool-section">
-                    <h3>Cover & Info</h3>
-                    <div class="draggable-item" onclick="addCoverElement('logo')">Restaurant Logo</div>
-                    <div class="draggable-item" onclick="addCoverElement('name')">Restaurant Name</div>
-                    <div class="draggable-item" onclick="addCoverElement('tagline')">Add Tagline</div>
-                    <div class="draggable-item" onclick="addCoverElement('address')">Address (Back)</div>
-                    <div class="draggable-item" onclick="addCoverElement('phone')">Phone (Back)</div>
+                    <h3>Restaurant Info</h3>
+                    <div class="draggable-item" onclick="addInfoElement('logo')">Logo</div>
+                    <div class="draggable-item" onclick="addInfoElement('name')">Restaurant Name</div>
+                    <div class="draggable-item" onclick="addInfoElement('contact')">Phone & Address</div>
                 </div>
                 <div class="tool-section">
-                    <h3>Menu Content</h3>
-                    <div class="draggable-item" onclick="addMenuElement('categories')">All Categories (Auto)</div>
+                    <h3>Menu Items</h3>
+                    <div class="draggable-item" onclick="autoFlowMenu()">Auto-Flow All Menu</div>
                     <div id="cat-list-toolbox" style="display: flex; flex-direction: column; gap: 5px;"></div>
                 </div>
                 <div class="tool-section">
-                    <h3>Images & Stains</h3>
+                    <h3>Food Images</h3>
                     <div id="image-list-toolbox" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
+                </div>
+                <div class="tool-section">
+                    <h3>Decorations & Stains</h3>
                     <div id="stains-toolbox" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
                 </div>
             </div>
 
             <div class="book-container">
                 <div id="workspace-nav" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center;">
-                    <!-- Page tabs will be here -->
                 </div>
 
                 <div id="designer-workspace">
-                    <!-- Workspace cards (flat design) -->
                 </div>
 
                 <div id="preview-container">
                     <div id="menu-book">
-                        <!-- turn.js book -->
                     </div>
                 </div>
 
@@ -335,46 +293,37 @@
             </div>
 
             <div class="properties-panel">
-                <h3>Style & Page</h3>
+                <h3>Page Settings</h3>
                 <div class="tool-section">
-                    <label style="font-size: 0.7rem; font-weight: 700;">Paper Size</label>
+                    <label style="font-size: 0.7rem; font-weight: 700;">Format</label>
                     <select id="paper-size-select" onchange="window.updatePaperSize()" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
                         <option value="letter">Letter (8.5 x 11")</option>
                         <option value="a4">A4 (210 x 297mm)</option>
-                        <option value="custom">Custom Size</option>
+                        <option value="custom">Custom</option>
                     </select>
                 </div>
                 <div id="custom-size-inputs" class="hidden" style="display: flex; gap: 10px;">
-                    <div style="flex: 1;">
-                        <label style="font-size: 0.6rem;">Width (in)</label>
-                        <input type="number" id="custom-w" value="8.5" step="0.1" onchange="window.updatePaperSize()" style="width: 100%; padding: 5px; border-radius: 5px; border: 1px solid var(--border);">
-                    </div>
-                    <div style="flex: 1;">
-                        <label style="font-size: 0.6rem;">Height (in)</label>
-                        <input type="number" id="custom-h" value="11" step="0.1" onchange="window.updatePaperSize()" style="width: 100%; padding: 5px; border-radius: 5px; border: 1px solid var(--border);">
-                    </div>
+                    <input type="number" id="custom-w" placeholder="W (in)" step="0.1" style="width: 50%; padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
+                    <input type="number" id="custom-h" placeholder="H (in)" step="0.1" style="width: 50%; padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
                 </div>
                 <div class="tool-section">
-                    <label style="font-size: 0.7rem; font-weight: 700;">Page Background</label>
+                    <label style="font-size: 0.7rem; font-weight: 700;">Background</label>
                     <select id="bg-texture-select" onchange="updatePageStyle()" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
-                        <option value="white">White Paper</option>
-                        <option value="texture-wood-light">Light Wood (Menu 1)</option>
-                        <option value="texture-chalkboard">Chalkboard</option>
+                        <option value="texture-wood-light">Light Wood</option>
                         <option value="texture-paper">Vintage Paper</option>
-                        <option value="texture-dark-wood">Dark Wood</option>
-                        <option value="texture-green-slate">Green Slate</option>
-                        <option value="texture-leather">Burgundy Leather</option>
+                        <option value="texture-chalkboard">Chalkboard</option>
+                        <option value="white">Plain White</option>
                     </select>
                 </div>
                 <div class="tool-section">
-                    <label style="font-size: 0.7rem; font-weight: 700;">Border Style</label>
+                    <label style="font-size: 0.7rem; font-weight: 700;">Side Borders</label>
                     <select id="border-style-select" onchange="updatePageStyle()" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
-                        <option value="none">None</option>
                         <option value="border-red-ornate">Red Ornate</option>
+                        <option value="none">None</option>
                     </select>
                 </div>
                 <div class="tool-section">
-                    <label style="font-size: 0.7rem; font-weight: 700;">Image Style</label>
+                    <label style="font-size: 0.7rem; font-weight: 700;">Selected Image Style</label>
                     <div style="display: flex; gap: 10px;">
                         <button class="draggable-item" style="flex: 1;" onclick="applyImageStyle('square')">Square</button>
                         <button class="draggable-item" style="flex: 1;" onclick="applyImageStyle('circle')">Circle</button>
@@ -385,20 +334,9 @@
     </div>
 
     <div id="floating-controls">
-        <button class="btn-action" id="btn-toggle-mode" onclick="toggleMode()" style="background: var(--text); color: white;">PREVIEW MODE</button>
-        <button class="btn-action btn-save" onclick="saveLayout()">Save Menu</button>
-        <button class="btn-action btn-download" id="download-pdf" onclick="generatePDF()">Download PDF</button>
-    </div>
-
-    <div class="modal-overlay" id="confirm-modal">
-        <div class="modal-content">
-            <h2 class="modal-title">Wait a second!</h2>
-            <p class="modal-text" id="confirm-modal-text">Switching templates will load its saved layout. Save current work first?</p>
-            <div class="modal-actions">
-                <button class="btn-action" style="background: var(--input); border: 1.5px solid var(--border);" onclick="closeConfirmModal(false)">NO, JUST SWITCH</button>
-                <button class="btn-action btn-save" onclick="closeConfirmModal(true)">YES, SAVE FIRST</button>
-            </div>
-        </div>
+        <button class="btn-action" id="btn-toggle-mode" onclick="toggleMode()" style="background: var(--text); color: white;">PREVIEW</button>
+        <button class="btn-action btn-save" onclick="saveLayout()">SAVE DESIGN</button>
+        <button class="btn-action btn-download" id="btn-download-pdf" onclick="generatePDF()">DOWNLOAD PDF</button>
     </div>
 
     <script type="module">
@@ -408,8 +346,8 @@
         let user = null, userRole = null, activeOwnerId = null;
         let menuData = null, restaurantInfo = null;
         let currentPageIndex = 1;
-        let currentTemplateId = 'diseno1';
         let isPreviewMode = false;
+        let selectedElement = null;
 
         window.showToast = (msg, type='success') => {
             const container = document.getElementById('toast-container');
@@ -420,38 +358,12 @@
             setTimeout(() => t.remove(), 4000);
         };
 
-        let confirmCallback = null;
-        window.showConfirmModal = (msg, callback) => {
-            $('#confirm-modal-text').text(msg);
-            $('#confirm-modal').addClass('active');
-            confirmCallback = callback;
-        };
-
-        window.closeConfirmModal = (shouldSave) => {
-            $('#confirm-modal').removeClass('active');
-            if (confirmCallback) confirmCallback(shouldSave);
-            confirmCallback = null;
-        };
-
         $(document).ready(async () => {
-            window.initSidebar();
-            await window.checkSession();
-
-            const hideOverlay = () => {
-                $('#loading-overlay').css('opacity', '0');
-                setTimeout(() => $('#loading-overlay').addClass('hidden'), 500);
-            };
-
-            if (window.location.search.includes('quick')) {
-                hideOverlay();
-            } else {
-                setTimeout(hideOverlay, 3000);
-            }
-        });
-
-        window.initSidebar = () => {
             $('#sidebar-tab').on('click', () => $('#sidebar-container').toggleClass('collapsed'));
-        };
+            await window.checkSession();
+            $('#loading-overlay').css('opacity', '0');
+            setTimeout(() => $('#loading-overlay').addClass('hidden'), 500);
+        });
 
         window.checkSession = async () => {
             const { data: { session } } = await sb.auth.getSession();
@@ -469,7 +381,7 @@
                 $('#sidebar-container').removeClass('hidden');
                 window.setupContextSwitcher();
             } else {
-                $('#download-pdf').addClass('hidden');
+                $('#btn-download-pdf').prop('disabled', true).attr('title', 'Admin only feature');
             }
 
             await window.loadRestaurantData();
@@ -502,93 +414,42 @@
             window.loadSavedLayout();
         };
 
-        window.initBook = () => {
-            const book = $('#menu-book');
-            if (book.turn('is')) book.turn('destroy');
-            book.empty();
+        window.updateToolbox = () => {
+            const catList = $('#cat-list-toolbox');
+            catList.empty();
+            if (menuData?.config?.categories) {
+                menuData.config.categories.forEach(c => {
+                    catList.append(`<div class="draggable-item" onclick="addCategoryToPage('${c.name}')">${c.name}</div>`);
+                });
+            }
 
-            const size = getPaperDimensions();
-
-            // Adjust CSS for pages and ensure book visibility
-            $('#dynamic-page-size').remove();
-            $('<style id="dynamic-page-size">')
-                .prop('type', 'text/css')
-                .html(`
-                    #menu-book { width: ${size.totalWidth}px; height: ${size.height}px; visibility: visible !important; opacity: 1 !important; }
-                    .page { width: ${size.pageWidth}px; height: ${size.height}px; background-color: white; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-                    .page-content { width: 100%; height: 100%; position: relative; padding: 40px; background-color: inherit; }
-                `)
-                .appendTo('head');
-
-            // Clone pages from workspace to book for preview
-            $('#designer-workspace .page').each(function() {
-                const clone = $(this).clone();
-                clone.find('.delete-btn').remove();
-                clone.find('.canvas-element').css('outline', 'none');
-                book.append(clone);
+            const imgList = $('#image-list-toolbox');
+            imgList.empty();
+            let images = [];
+            if (restaurantInfo?.logo_url) images.push(restaurantInfo.logo_url);
+            if (menuData?.config?.categories) {
+                menuData.config.categories.forEach(c => {
+                    if (c.image) images.push(c.image);
+                    c.dishes?.forEach(d => { if(d.image) images.push(d.image); });
+                });
+            }
+            [...new Set(images)].filter(Boolean).forEach(url => {
+                imgList.append(`<img src="${url}" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="addImageToPage('${url}')">`);
             });
 
-            book.turn({
-                width: size.totalWidth,
-                height: size.height,
-                autoCenter: true,
-                display: 'double',
-                acceleration: true,
-                elevation: 50,
-                gradients: true,
-                duration: 800,
-                when: {
-                    turned: function(e, page) {
-                        currentPageIndex = page;
-                        $(this).turn('center');
-                    }
-                }
+            const stainsList = $('#stains-toolbox');
+            stainsList.empty();
+            const stains = [
+                'https://cdn-icons-png.flaticon.com/512/3233/3233514.png',
+                'https://cdn-icons-png.flaticon.com/512/5900/5900543.png',
+                'https://cdn-icons-png.flaticon.com/512/1063/1063251.png',
+                'https://cdn-icons-png.flaticon.com/512/3159/3159066.png',
+                'https://cdn-icons-png.flaticon.com/512/751/751505.png'
+            ];
+            stains.forEach(url => {
+                stainsList.append(`<img src="${url}" style="width:100%; opacity:0.5; cursor:pointer; filter: grayscale(1);" onclick="addImageToPage('${url}', true)">`);
             });
-
-            // Force center and page 1
-            setTimeout(() => {
-                if (book.turn('pages') > 0) {
-                    book.turn('page', 1);
-                    book.turn('center');
-                    setTimeout(() => book.turn('center'), 300);
-                }
-            }, 500);
         }
-
-        window.getPaperDimensions = () => {
-            const size = $('#paper-size-select').val() || 'letter';
-            const scale = 0.7;
-            if (size === 'a4') {
-                return { pageWidth: 794 * scale, height: 1123 * scale, totalWidth: 794 * 2 * scale };
-            }
-            if (size === 'custom') {
-                const w = parseFloat($('#custom-w').val()) * 96; // 96 DPI
-                const h = parseFloat($('#custom-h').val()) * 96;
-                return { pageWidth: w * scale, height: h * scale, totalWidth: w * 2 * scale };
-            }
-            // Letter default
-            return { pageWidth: 816 * scale, height: 1056 * scale, totalWidth: 816 * 2 * scale };
-        };
-
-        window.updatePaperSize = () => {
-            const sizeVal = $('#paper-size-select').val();
-            if (sizeVal === 'custom') $('#custom-size-inputs').removeClass('hidden').css('display', 'flex');
-            else $('#custom-size-inputs').addClass('hidden').hide();
-
-            const book = $('#menu-book');
-            const size = window.getPaperDimensions();
-
-            $('#dynamic-page-size').remove();
-            $('<style id="dynamic-page-size">')
-                .prop('type', 'text/css')
-                .html(`.page { width: ${size.pageWidth}px; height: ${size.height}px; }`)
-                .appendTo('head');
-
-            if (book.turn('is')) {
-                book.turn('size', size.totalWidth, size.height);
-            }
-            showToast(`Paper size updated to ${$('#paper-size-select option:selected').text()}`);
-        };
 
         window.addPage = () => {
             const workspace = $('#designer-workspace');
@@ -598,7 +459,6 @@
             updatePageStyle();
             window.updateWorkspaceNav();
             window.goToWorkspacePage(pageNum);
-            showToast("New page added");
             return element;
         };
 
@@ -621,303 +481,12 @@
             currentPageIndex = n;
         };
 
-        window.nextPage = () => $('#menu-book').turn('next');
-        window.prevPage = () => $('#menu-book').turn('previous');
-
-        window.removeCurrentPage = () => {
-            const workspace = $('#designer-workspace');
-            const pages = workspace.children('.page');
-            if (pages.length <= 2) {
-                showToast("Minimum 2 pages required", "error");
-                return;
-            }
-            pages.last().remove();
-            window.updateWorkspaceNav();
-            window.goToWorkspacePage(Math.min(currentPageIndex, pages.length - 1));
-            showToast("Last page removed");
-        };
-
-        window.updateToolbox = () => {
-            // Fill categories
-            const catList = $('#cat-list-toolbox');
-            catList.empty();
-            if (menuData?.config?.categories) {
-                menuData.config.categories.forEach(c => {
-                    catList.append(`<div class="draggable-item" onclick="addCategoryToPage('${c.name}')">${c.name}</div>`);
-                });
-            }
-
-            // Fill images
-            const imgList = $('#image-list-toolbox');
-            imgList.empty();
-            let images = [];
-            if (restaurantInfo?.logo_url) images.push(restaurantInfo.logo_url);
-            if (menuData?.cover_url) images.push(menuData.cover_url);
-            if (menuData?.config?.categories) {
-                menuData.config.categories.forEach(c => {
-                    if (c.image) images.push(c.image);
-                    c.dishes?.forEach(d => { if(d.image) images.push(d.image); });
-                });
-            }
-            [...new Set(images)].forEach(url => {
-                imgList.append(`<img src="${url}" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="addImageToPage('${url}')">`);
-            });
-
-            // Fill stains (Sample placeholders)
-            const stainsList = $('#stains-toolbox');
-            stainsList.empty();
-            const stains = [
-                { url: 'https://cdn-icons-png.flaticon.com/512/3233/3233514.png', name: 'Coffee' },
-                { url: 'https://cdn-icons-png.flaticon.com/512/5900/5900543.png', name: 'Splatter' },
-                { url: 'https://cdn-icons-png.flaticon.com/512/1063/1063251.png', name: 'Wine' },
-                { url: 'https://cdn-icons-png.flaticon.com/512/3159/3159066.png', name: 'Ink' },
-                { url: 'https://cdn-icons-png.flaticon.com/512/2550/2550302.png', name: 'Flour' },
-                { url: 'https://cdn-icons-png.flaticon.com/512/751/751505.png', name: 'Ornament' }
-            ];
-            stains.forEach(s => {
-                stainsList.append(`<img src="${s.url}" title="${s.name}" style="width:100%; opacity:0.5; cursor:pointer; filter: grayscale(1);" onclick="addImageToPage('${s.url}', true)">`);
-            });
-        }
-
-        window.getPageContent = (n) => {
-            if (!isPreviewMode) {
-                return $('#designer-workspace .page').eq(n - 1).find('.page-content');
-            }
-            const book = $('#menu-book');
-            let p = book.find('.p' + n);
-            if (p.length === 0) {
-                p = book.find('.page').eq(n - 1);
-            }
-            return p.find('.page-content');
-        }
-
-        window.addCoverElement = (type, autoPos = false) => {
-            const page = getPageContent(1);
-            let content = '';
-            const dim = getPaperDimensions();
-
-            let initialX = 50, initialY = 50, initialWidth = 'auto';
-
-            if (type === 'logo') {
-                content = `<img src="${restaurantInfo?.logo_url || ''}" style="width: 100%; display: block;">`;
-                if (autoPos) {
-                    initialWidth = 240;
-                    initialX = (dim.pageWidth - initialWidth) / 2;
-                    initialY = 150;
-                }
-            }
-            if (type === 'name') {
-                content = `
-                    <div style="text-align:center; width:100%;">
-                        <div style="font-family:'Great Vibes'; font-size: 2.5rem; color: #1a1c1e;">Delicious</div>
-                        <div style="font-family:'Bebas Neue'; font-size: 6rem; color: #b31b1b; line-height: 0.8; letter-spacing: 2px;">MENU</div>
-                    </div>
-                `;
-                if (autoPos) {
-                    initialWidth = dim.pageWidth - 80;
-                    initialX = 40;
-                    initialY = 350;
-                }
-            }
-            if (type === 'tagline') {
-                content = `
-                    <div style="text-align:center; width:100%; font-family:'Stint Ultra Condensed'; font-size: 1.5rem; color: #332211;">
-                        <div style="border-top: 1px solid #b31b1b; border-bottom: 1px solid #b31b1b; padding: 5px 0; display: inline-block; width: 80%;">
-                            MONDAY TO SUNDAY<br>OPEN 11AM CLOSES 9PM
-                        </div>
-                    </div>
-                `;
-                if (autoPos) {
-                    initialWidth = dim.pageWidth - 80;
-                    initialX = 40;
-                    initialY = 550;
-                }
-            }
-            if (type === 'address') {
-                content = `<p style="font-family:'Outfit'; font-size: 1.2rem; text-align:center; width: 100%;">${restaurantInfo?.address || 'Street Name, City'}</p>`;
-            }
-            if (type === 'phone') {
-                content = `<p style="font-family:'Outfit'; font-size: 1.2rem; text-align:center; width: 100%;">${restaurantInfo?.phone || '555-0123'}</p>`;
-            }
-
-            const el = createElement(type, content);
-            el.css({
-                left: '0px',
-                top: '0px',
-                width: initialWidth === 'auto' ? 'auto' : initialWidth + 'px',
-                transform: `translate(${initialX}px, ${initialY}px)`
-            });
-            el.attr('data-x', initialX);
-            el.attr('data-y', initialY);
-
-            page.append(el);
-            makeInteract(el);
-
-            if (!autoPos) $('#menu-book').turn('page', 1);
-        };
-
-        window.addImageToPage = (url, isStain = false, targetPageNum) => {
-            const pageNum = targetPageNum || (isPreviewMode ? $('#menu-book').turn('page') : 1);
-            const page = getPageContent(pageNum);
-            const imgClass = isStain ? '' : 'circle-crop';
-            const content = `<img src="${url}" class="${imgClass}" style="width: ${isStain ? '150px' : '120px'}; opacity: ${isStain ? 0.4 : 1};">`;
-            const el = createElement('image', content);
-
-            const x = isStain ? 50 : 400;
-            const y = getPageContentHeight(pageNum) - 100;
-
-            el.css({
-                left: '0px',
-                top: '0px',
-                transform: `translate(${x}px, ${y}px)`
-            });
-            el.attr('data-x', x);
-            el.attr('data-y', y);
-
-            page.append(el);
-            makeInteract(el);
-        };
-
-        window.addMenuElement = (type) => {
-            if (type === 'categories') {
-                autoFlowCategories();
-            }
-        };
-
-        window.autoFlowCategories = async () => {
-            if (!menuData?.config?.categories) return;
-
-            let flowState = {
-                currentPage: 2,
-                maxPageHeight: (window.getPaperDimensions().height / 0.7) * 0.7 - 80
-            };
-
-            // Clear existing menu content from workspace
-            $('#designer-workspace .page .page-content:not([data-page-type="cover"]) .canvas-element').filter(function() {
-                return ['cat-header', 'dish-row', 'dish-desc'].includes($(this).data('type'));
-            }).remove();
-
-            for (const cat of menuData.config.categories) {
-                flowState = window.addCategoryToPage(cat.name, flowState.currentPage);
-            }
-
-            if ($('#menu-book').turn('is')) {
-                $('#menu-book').turn('page', 2);
-            }
-            showToast("Categories auto-flowed!");
-        };
-
-        window.addCategoryToPage = (catName, startPageNum) => {
-            let currentPage = startPageNum;
-            const cat = menuData.config.categories.find(c => c.name === catName);
-            if (!cat) return { currentPage };
-
-            const dimensions = getPaperDimensions();
-            const maxH = (dimensions.height / 0.7) * 0.7 - 80;
-
-            const checkAndNextPage = () => {
-                if (getPageContentHeight(currentPage) > maxH) {
-                    currentPage++;
-                    while ($('#designer-workspace .page').length < currentPage) addPage();
-                }
-            };
-
-            while ($('#designer-workspace .page').length < currentPage) addPage();
-            checkAndNextPage();
-
-            // Place Header
-            addTextElement({
-                type: 'cat-header',
-                content: `<div class="brush-header" contenteditable="true" style="--brush-color:${['diseno2','diseno3'].includes(currentTemplateId)?'#1e3a34':'#b31b1b'}">${cat.name}</div>`,
-                pageNum: currentPage,
-                style: { width: '100%', textAlign: 'center' },
-                isFullWidth: true
-            });
-
-            // Place Dishes
-            cat.dishes.forEach(d => {
-                checkAndNextPage();
-
-                addTextElement({
-                    type: 'dish-row',
-                    content: `
-                        <div style="display:flex; justify-content:space-between; align-items: baseline; font-family:'Bebas Neue';">
-                            <span contenteditable="true" style="font-size: 1.8rem; font-weight: bold; color: #1a1c1e; text-transform: uppercase;">${d.name}</span>
-                            <span contenteditable="true" style="font-size: 1.8rem; color: #b31b1b; font-weight: bold;">$${d.price}</span>
-                        </div>
-                    `,
-                    pageNum: currentPage,
-                    style: { width: '100%' },
-                    isFullWidth: true
-                });
-
-                if (d.description) {
-                    addTextElement({
-                        type: 'dish-desc',
-                        content: `<div contenteditable="true" style="font-family:'Outfit'; font-size: 1.1rem; color: #4a5568; line-height: 1.2;">${d.description}</div>`,
-                        pageNum: currentPage,
-                        style: { width: '100%', marginTop: '-5px' },
-                        isFullWidth: true
-                    });
-                }
-
-                if (d.image) {
-                    // Small chance to place dish image
-                    if (Math.random() > 0.5) {
-                        addImageToPage(d.image, false, currentPage);
-                    }
-                }
-            });
-
-            return { currentPage };
-        };
-
-        window.addTextElement = ({ type, content, pageNum, style = {}, isFullWidth = false }) => {
-            const page = getPageContent(pageNum);
-            const el = createElement(type, content);
-
-            const currentHeight = getPageContentHeight(pageNum);
-            const x = isFullWidth ? 0 : 50;
-            const y = currentHeight + 10;
-
-            el.css({
-                width: isFullWidth ? '100%' : 'auto',
-                left: '0px',
-                top: '0px',
-                transform: `translate(${x}px, ${y}px)`,
-                ...style
-            });
-            el.attr('data-x', x);
-            el.attr('data-y', y);
-
-            page.append(el);
-            makeInteract(el);
-            return el;
-        };
-
-        window.getPageContentHeight = (pageNum) => {
-            const page = getPageContent(pageNum);
-            let maxHeight = 0;
-            page.children('.canvas-element').each(function() {
-                const y = parseFloat($(this).attr('data-y')) || 0;
-                const h = $(this).outerHeight();
-                if (y + h > maxHeight) maxHeight = y + h;
-            });
-            return maxHeight;
-        }
+        window.getCurrentPageContent = () => $('#designer-workspace .page').eq(currentPageIndex - 1).find('.page-content');
 
         window.createElement = (type, content) => {
-            const el = $(`<div class="canvas-element" data-type="${type}" style="left:0; top:0;"></div>`);
+            const el = $(`<div class="canvas-element" data-type="${type}"></div>`);
             el.html(content + `<button class="delete-btn" onclick="$(this).parent().remove()">×</button>`);
-            el.find('[contenteditable]').on('click', function(e) {
-                e.stopPropagation();
-            });
-            return el;
-        }
 
-        let selectedElement = null;
-
-        window.makeInteract = (el) => {
             el.on('mousedown', function(e) {
                 e.stopPropagation();
                 $('.canvas-element').css('outline', 'none');
@@ -925,6 +494,11 @@
                 selectedElement = $(this);
             });
 
+            makeInteract(el);
+            return el;
+        }
+
+        window.makeInteract = (el) => {
             interact(el[0])
                 .draggable({
                     listeners: {
@@ -957,91 +531,137 @@
                 });
         }
 
-        window.updatePageStyle = () => {
-            const texture = $('#bg-texture-select').val();
-            const border = $('#border-style-select').val();
-            $('.page').removeClass('texture-chalkboard texture-paper texture-dark-wood texture-wood-light texture-green-slate texture-leather border-red-ornate')
-                      .addClass(texture)
-                      .addClass(border === 'none' ? '' : border);
+        window.addInfoElement = (type) => {
+            const page = getCurrentPageContent();
+            let content = '';
+            if (type === 'logo') content = `<img src="${restaurantInfo?.logo_url || ''}" style="width: 150px;">`;
+            if (type === 'name') content = `<h1 contenteditable="true" style="font-family:'Bebas Neue'; font-size: 4rem; color: #b31b1b;">${restaurantInfo?.name || 'Restaurant Name'}</h1>`;
+            if (type === 'contact') content = `<p contenteditable="true" style="font-family:'Outfit'; font-size: 1.1rem; text-align:center;">${restaurantInfo?.phone || ''} | ${restaurantInfo?.address || ''}</p>`;
+
+            const el = createElement(type, content);
+            page.append(el);
         };
 
-        window.switchTemplate = (templateId) => {
-            if (templateId === currentTemplateId) return;
+        window.addImageToPage = (url, isStain = false) => {
+            const page = getCurrentPageContent();
+            const imgClass = isStain ? '' : 'circle-crop';
+            const style = isStain ? 'width: 100px; opacity: 0.3; filter: grayscale(1);' : 'width: 150px;';
+            const el = createElement('image', `<img src="${url}" class="${imgClass}" style="${style}">`);
+            page.append(el);
+        };
 
-            showConfirmModal("Switching templates will load its saved layout. Save current work first?", async (shouldSave) => {
-                if (shouldSave) {
-                    await saveLayout();
+        window.addCategoryToPage = (catName, targetPage) => {
+            const page = targetPage || getCurrentPageContent();
+            const cat = menuData?.config?.categories?.find(c => c.name === catName);
+            if (!cat) return;
+
+            // Add Header
+            const header = createElement('cat-header', `<div class="brush-header" contenteditable="true">${cat.name}</div>`);
+            page.append(header);
+
+            // Add Dishes as separate elements
+            cat.dishes?.forEach(d => {
+                const dishRow = createElement('dish-row', `
+                    <div style="display:flex; justify-content:space-between; width: 450px; font-family:'Bebas Neue'; border-bottom: 1px dashed rgba(0,0,0,0.1);">
+                        <span contenteditable="true" style="font-size: 1.8rem;">${d.name}</span>
+                        <span contenteditable="true" style="font-size: 1.8rem; color: #b31b1b;">$${d.price}</span>
+                    </div>
+                `);
+                page.append(dishRow);
+
+                if (d.description) {
+                    const desc = createElement('dish-desc', `
+                        <div contenteditable="true" style="font-family:'Outfit'; font-size: 1rem; color: #4a5568; width: 400px; margin-top: -5px;">${d.description}</div>
+                    `);
+                    page.append(desc);
                 }
-                currentTemplateId = templateId;
-                $('.tab-btn').removeClass('active');
-                $(`button[data-tid="${templateId}"]`).addClass('active');
-                await loadSavedLayout();
             });
         };
 
-        window.applyImageStyle = (style) => {
-            if (!selectedElement || selectedElement.data('type') !== 'image') {
-                showToast("Please select an image first", "error");
-                return;
-            }
-            const img = selectedElement.find('img');
-            if (style === 'circle') {
-                img.css({
-                    'border-radius': '50%',
-                    'aspect-ratio': '1/1',
-                    'object-fit': 'cover'
+        window.autoFlowMenu = () => {
+            if (!menuData?.config?.categories) return;
+            $('#designer-workspace').empty();
+            let currentPage = addPage();
+            let yOffset = 60;
+
+            menuData.config.categories.forEach(cat => {
+                if (yOffset > 600) {
+                    currentPage = addPage();
+                    yOffset = 60;
+                }
+
+                const h = createElement('cat-header', `<div class="brush-header" contenteditable="true">${cat.name}</div>`);
+                h.css('transform', `translate(60px, ${yOffset}px)`).attr('data-x', 60).attr('data-y', yOffset);
+                currentPage.find('.page-content').append(h);
+                yOffset += 80;
+
+                cat.dishes?.forEach(d => {
+                    if (yOffset > 750) {
+                        currentPage = addPage();
+                        yOffset = 60;
+                    }
+                    const row = createElement('dish-row', `
+                        <div style="display:flex; justify-content:space-between; width: 470px; font-family:'Bebas Neue';">
+                            <span contenteditable="true" style="font-size: 1.6rem;">${d.name}</span>
+                            <span contenteditable="true" style="font-size: 1.6rem; color: #b31b1b;">$${d.price}</span>
+                        </div>
+                    `);
+                    row.css('transform', `translate(60px, ${yOffset}px)`).attr('data-x', 60).attr('data-y', yOffset);
+                    currentPage.find('.page-content').append(row);
+                    yOffset += 30;
+
+                    if (d.description) {
+                        const desc = createElement('dish-desc', `<div contenteditable="true" style="font-family:'Outfit'; font-size: 0.9rem; color: #4a5568; width: 400px;">${d.description}</div>`);
+                        desc.css('transform', `translate(60px, ${yOffset}px)`).attr('data-x', 60).attr('data-y', yOffset);
+                        currentPage.find('.page-content').append(desc);
+                        yOffset += 40;
+                    }
                 });
-            } else if (style === 'square') {
-                img.css({
-                    'border-radius': '0',
-                    'aspect-ratio': 'initial',
-                    'object-fit': 'initial'
-                });
-            } else if (style === 'rounded') {
-                img.css({
-                    'border-radius': '20px',
-                    'aspect-ratio': 'initial',
-                    'object-fit': 'cover'
-                });
-            }
+                yOffset += 20;
+            });
+            window.updateWorkspaceNav();
+            window.goToWorkspacePage(1);
+        };
+
+        window.updatePageStyle = () => {
+            const tex = $('#bg-texture-select').val();
+            const bor = $('#border-style-select').val();
+            $('.page').removeClass('texture-wood-light texture-paper texture-chalkboard border-red-ornate')
+                      .addClass(tex).addClass(bor === 'none' ? '' : bor);
         };
 
         window.toggleMode = () => {
             if (isPreviewMode) {
-                // Exit preview, go back to designer
                 $('#preview-container').removeClass('active');
                 $('#designer-workspace').show();
                 $('#preview-controls').addClass('hidden');
-                $('#btn-add-page, #btn-remove-page, .toolbox, .properties-panel').show();
-                $('#btn-toggle-mode').text('PREVIEW MODE');
+                $('#btn-toggle-mode').text('PREVIEW');
                 isPreviewMode = false;
             } else {
-                // Save first? Maybe not mandatory but recommended
-                // Enter preview
                 $('#designer-workspace').hide();
-                $('#preview-container').addClass('active');
+                $('#preview-container').addClass('active').empty().append('<div id="menu-book"></div>');
                 $('#preview-controls').removeClass('hidden');
-                $('#btn-add-page, #btn-remove-page, .toolbox, .properties-panel').hide();
-                $('#btn-toggle-mode').text('DESIGN MODE');
+                $('#btn-toggle-mode').text('EDIT');
                 isPreviewMode = true;
-                initBook();
+
+                const book = $('#menu-book');
+                $('#designer-workspace .page').each(function() {
+                    const clone = $(this).clone().addClass('active').css('display', 'block');
+                    clone.find('.delete-btn').remove();
+                    clone.find('.canvas-element').css('outline', 'none');
+                    book.append(clone);
+                });
+
+                book.turn({ width: 1190, height: 842, autoCenter: true });
             }
         };
 
         window.saveLayout = async () => {
             const pages = [];
-            const workspace = $('#designer-workspace');
-
-            workspace.children('.page').each(function(i) {
-                const pageEl = $(this).find('.page-content');
+            $('#designer-workspace .page').each(function() {
                 const elements = [];
-                pageEl.children('.canvas-element').each(function() {
+                $(this).find('.canvas-element').each(function() {
                     const el = $(this);
-                    // Update HTML from contenteditable before saving
-                    el.find('[contenteditable]').each(function() {
-                        $(this).attr('contenteditable', 'true'); // Ensure it stays editable
-                    });
-
                     elements.push({
                         type: el.data('type'),
                         html: el.html(),
@@ -1050,19 +670,11 @@
                         style: {
                             width: el.css('width'),
                             height: el.css('height'),
-                            transform: el.css('transform'),
-                            position: el.css('position'),
-                            left: el.css('left'),
-                            top: el.css('top'),
-                            outline: 'none'
-                        },
-                        imgStyle: el.find('img').attr('style') || ''
+                            transform: el.css('transform')
+                        }
                     });
                 });
-                pages.push({
-                    elements,
-                    type: pageEl.attr('data-page-type') || 'content'
-                });
+                pages.push({ elements });
             });
 
             const layout_config = {
@@ -1070,159 +682,68 @@
                 settings: {
                     texture: $('#bg-texture-select').val(),
                     border: $('#border-style-select').val(),
-                    paperSize: $('#paper-size-select').val(),
-                    totalPages: pages.length
+                    paperSize: $('#paper-size-select').val()
                 }
             };
 
             const { error } = await sb.from('menutech_physical_menus').upsert({
                 user_id: activeOwnerId,
-                template_id: currentTemplateId,
+                template_id: 'standard',
                 layout_config
             }, { onConflict: 'user_id, template_id' });
 
-            if (error) showToast("Error saving: " + error.message, "error");
-            else showToast("Layout saved!");
-        };
-
-        window.generatePDF = async () => {
-            const paperSize = $('#paper-size-select').val();
-            const workspace = $('#designer-workspace');
-            const totalPages = workspace.children('.page').length;
-
-            let pdfConfig = {
-                letter: { width: 8.5, height: 11, format: 'letter' },
-                a4: { width: 8.27, height: 11.69, format: 'a4' }
-            }[paperSize];
-
-            if (paperSize === 'custom') {
-                pdfConfig = {
-                    width: parseFloat($('#custom-w').val()),
-                    height: parseFloat($('#custom-h').val()),
-                    format: [parseFloat($('#custom-w').val()), parseFloat($('#custom-h').val())]
-                };
-            }
-
-            if (!pdfConfig) pdfConfig = { width: 8.5, height: 11, format: 'letter' };
-
-            const worker = html2pdf().set({
-                margin: 0,
-                filename: `menu_${activeOwnerId}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'in', format: pdfConfig.format, orientation: 'portrait' }
-            });
-
-            // Hide UI elements during capture
-            $('.delete-btn').hide();
-            $('.canvas-element').css('outline', 'none');
-
-            let pdfContainer = $('<div id="pdf-container"></div>');
-            workspace.children('.page').each(function() {
-                const pageClone = $(this).clone();
-                pageClone.find('.delete-btn').remove();
-                pageClone.css({
-                    'width': `${pdfConfig.width}in`,
-                    'height': `${pdfConfig.height}in`,
-                    'display': 'block',
-                    'position': 'relative',
-                    'page-break-after': 'always',
-                    'overflow': 'hidden',
-                    'transform': 'none'
-                });
-                pageClone.find('.page-content').css({
-                    'width': '100%',
-                    'height': '100%',
-                    'padding': '40px'
-                });
-                pdfContainer.append(pageClone);
-            });
-
-            worker.from(pdfContainer[0]).save().then(() => {
-                $('.delete-btn').show();
-            });
+            if (error) showToast("Error: " + error.message, "error");
+            else showToast("Design Saved!");
         };
 
         window.loadSavedLayout = async () => {
-            const workspace = $('#designer-workspace');
-            workspace.empty();
-            $('#workspace-nav').empty();
-
-            let data = null;
-            try {
-                const response = await sb.from('menutech_physical_menus')
-                    .select('*')
-                    .eq('user_id', activeOwnerId)
-                    .eq('template_id', currentTemplateId)
-                    .maybeSingle();
-                data = response.data;
-            } catch (e) { console.error("Supabase load error:", e); }
-
-            let isNew = false;
-            if (data && data.layout_config) {
+            const { data } = await sb.from('menutech_physical_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
+            if (data?.layout_config) {
                 const config = data.layout_config;
-                $('#bg-texture-select').val(config.settings.texture || 'white');
-                $('#border-style-select').val(config.settings.border || 'none');
-                $('#paper-size-select').val(config.settings.paperSize || 'letter');
+                $('#bg-texture-select').val(config.settings.texture);
+                $('#border-style-select').val(config.settings.border);
+                $('#paper-size-select').val(config.settings.paperSize);
 
-                config.pages.forEach((pageData, index) => {
-                    const pageNum = index + 1;
-                    const pageEl = $(`
-                        <div class="page p${pageNum}">
-                            <div class="page-content"></div>
-                            <div class="page-number">PAGE ${pageNum}</div>
-                        </div>
-                    `);
-                    const content = pageEl.find('.page-content');
-                    if (pageData.type) content.attr('data-page-type', pageData.type);
-
-                    pageData.elements.forEach(elData => {
-                        const el = $(`<div class="canvas-element" data-type="${elData.type}"></div>`);
-                        el.html(elData.html);
-                        el.css(elData.style);
-                        el.attr('data-x', elData.x);
-                        el.attr('data-y', elData.y);
-                        if (elData.imgStyle) el.find('img').attr('style', elData.imgStyle);
+                $('#designer-workspace').empty();
+                config.pages.forEach((pData, i) => {
+                    const page = addPage();
+                    const content = page.find('.page-content');
+                    pData.elements.forEach(elData => {
+                        const el = createElement(elData.type, elData.html);
+                        el.css(elData.style).attr('data-x', elData.x).attr('data-y', elData.y);
                         content.append(el);
-                        window.makeInteract(el);
                     });
-                    workspace.append(pageEl);
                 });
             } else {
-                isNew = true;
-                if (currentTemplateId === 'diseno1') $('#bg-texture-select').val('texture-chalkboard');
-                else if (currentTemplateId === 'diseno2') $('#bg-texture-select').val('texture-paper');
-                else $('#bg-texture-select').val('white');
-
-                workspace.append(`
-                    <div class="page p1"><div class="page-content" data-page-type="cover"></div><div class="page-number">PAGE 1</div></div>
-                    <div class="page p2"><div class="page-content"></div><div class="page-number">PAGE 2</div></div>
-                    <div class="page p3"><div class="page-content"></div><div class="page-number">PAGE 3</div></div>
-                    <div class="page p4"><div class="page-content" data-page-type="back"></div><div class="page-number">PAGE 4</div></div>
-                `);
+                addPage();
             }
-
-            window.updatePaperSize();
             window.updatePageStyle();
             window.updateWorkspaceNav();
-            window.goToWorkspacePage(1);
+        };
 
-            if (isNew) {
-                // Auto-populate for first time
-                setTimeout(() => {
-                    $('#bg-texture-select').val('texture-wood-light');
-                    $('#border-style-select').val('border-red-ornate');
-                    window.updatePageStyle();
+        window.generatePDF = async () => {
+            const element = document.createElement('div');
+            $('#designer-workspace .page').each(function() {
+                const clone = $(this).clone().addClass('active').css({ 'display': 'block', 'margin': '0', 'box-shadow': 'none' });
+                clone.find('.delete-btn').remove();
+                element.appendChild(clone[0]);
+            });
 
-                    window.addCoverElement('logo', true);
-                    window.addCoverElement('name', true);
-                    window.addCoverElement('tagline', true);
-                    window.autoFlowCategories();
-                }, 1000);
+            const opt = {
+                margin: 0,
+                filename: 'menu.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        };
+
+        window.applyImageStyle = (s) => {
+            if (selectedElement?.data('type') === 'image') {
+                selectedElement.find('img').toggleClass('circle-crop', s === 'circle');
             }
-
-            showToast(`Template ${currentTemplateId} loaded!`);
-        }
+        };
 
     </script>
 </body>
