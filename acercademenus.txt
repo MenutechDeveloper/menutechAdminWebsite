@@ -1,0 +1,10 @@
+Explicación del diseño de Menús Físicos:
+
+1. Estructura simplificada: Se eliminó la lógica forzada de "Portada" y "Contraportada" que generaba páginas extra innecesarias. Ahora el usuario decide qué poner en cada página.
+2. Fiel al diseño: El nuevo estilo base utiliza el fondo de madera clara, bordes laterales rojos ornamentados y encabezados estilo "brochazo" (brush-stroke) como se muestra en la imagen de referencia (hojamenu2.jpg).
+3. Control total de elementos: Cada nombre de platillo, precio y descripción es un elemento independiente que se puede arrastrar y editar. Se agregaron "stains" (manchas) y decoraciones que también son arrastrables para dar ese toque artesanal.
+4. Restricciones por Rol:
+   - Los usuarios OWNER pueden diseñar su menú y guardar cambios, pero el botón de "Descargar PDF" está deshabilitado para ellos.
+   - Los usuarios ADMIN, CS y DEVELOPER tienen acceso total, incluyendo la descarga y el selector de proyectos para gestionar menús de cualquier cliente.
+5. Guardado de coordenadas: Se guardan las posiciones exactas (X, Y) y estilos de todos los elementos, incluyendo texturas de fondo y decoraciones, para que el menú se vea exactamente igual al volver a cargarlo.
+6. Exportación Flexible: Soporte para tamaños Carta (Letter), A4 y tamaños personalizados, manteniendo la fidelidad del diseño en el PDF resultante.
