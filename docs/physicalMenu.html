@@ -10,15 +10,17 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Lora:ital,wght@0,400;0,700;1,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Lora:ital,wght@0,400;0,700;1,400&display=swap');
 
         :root {
             --orange: #ff9533;
-            --bg: #f4f4f7;
+            --bg: #f8fafc;
             --card: #ffffff;
-            --text: #1a1c1e;
+            --text: #1e293b;
+            --text-dim: #64748b;
             --border: #e2e8f0;
             --success: #10b981;
             --error: #ef4444;
@@ -29,7 +31,8 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: var(--bg);
             color: var(--text);
-            overflow-x: hidden;
+            overflow: hidden;
+            height: 100vh;
         }
 
         /* Top Nav */
@@ -37,223 +40,351 @@
             position: fixed; top: 0; left: 0; right: 0; height: 70px;
             background: white; border-bottom: 1px solid var(--border);
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 24px; z-index: 1000;
+            padding: 0 24px; z-index: 5000;
         }
 
         .btn-panel-top {
             background: var(--orange); color: #fff; border: none;
-            padding: 10px 20px; border-radius: 12px; font-weight: 700;
-            cursor: pointer; text-transform: uppercase; font-size: 0.8rem;
+            padding: 10px 20px; border-radius: 12px; font-weight: 800;
+            cursor: pointer; text-transform: uppercase; font-size: 0.75rem;
+            letter-spacing: 1px; transition: 0.3s;
         }
+        .btn-panel-top:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,149,51,0.3); }
 
-        /* Main Layout */
+        /* App Layout */
         .app-container {
-            display: grid;
-            grid-template-columns: 320px 1fr 300px;
+            display: flex;
             height: calc(100vh - 70px);
             margin-top: 70px;
         }
 
-        /* Sidebars */
+        /* Sidebar Unified Style */
         .sidebar {
-            background: white; border-right: 1px solid var(--border);
-            padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px;
+            width: 320px; background: white; border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; z-index: 1000;
         }
-        .sidebar-right { border-left: 1px solid var(--border); border-right: none; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
+        .sidebar-content { flex: 1; overflow-y: auto; padding: 20px; }
 
-        h3 { font-size: 0.75rem; text-transform: uppercase; color: #64748b; letter-spacing: 1px; margin-bottom: 12px; }
+        .section-title { font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px; margin-top: 25px; display: block; }
+        .section-title:first-child { margin-top: 0; }
 
         .tool-item {
-            background: #f8fafc; border: 1px solid var(--border);
-            padding: 12px; border-radius: 10px; cursor: pointer;
-            font-size: 0.85rem; font-weight: 600; transition: 0.2s;
-            margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
+            background: #f8fafc; border: 1.5px solid var(--border);
+            padding: 14px; border-radius: 14px; cursor: pointer;
+            font-size: 0.85rem; font-weight: 700; transition: 0.2s;
+            margin-bottom: 10px; display: flex; align-items: center; gap: 12px;
         }
-        .tool-item:hover { border-color: var(--orange); background: #fffcf9; }
+        .tool-item:hover { border-color: var(--orange); background: #fffcf9; transform: translateX(5px); }
+        .tool-item span { font-size: 1.2rem; }
 
-        /* Canvas Area */
-        .canvas-area {
-            padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center;
-            background: #e2e8f0;
+        /* Workspace */
+        .workspace {
+            flex: 1; background: #e2e8f0; position: relative;
+            display: flex; align-items: center; justify-content: center;
+            overflow: auto; padding: 50px;
         }
 
-        .page-wrapper {
-            position: relative; margin-bottom: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        /* Turn.js Preview Container */
+        #preview-container {
+            width: 8.5in; height: 11in;
+            display: none;
         }
+        #preview-container.active { display: block; }
+
+        /* Designer Canvas (Edit Mode) */
+        #designer-canvas {
+            display: block;
+        }
+        #designer-canvas.hidden { display: none; }
+
+        /* Page Styles */
         .page {
-            background: white; position: relative; overflow: hidden;
-            width: 8.5in; height: 11in; /* Default Letter */
-            transition: background 0.3s;
+            width: 8.5in; height: 11in;
+            background: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
         }
 
-        /* Element Styles */
+        /* Default Template Background (Hoja Menu 2 Style) */
+        .tmpl-hoja {
+            background-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1/assets/menu_wood_bg.jpg'); /* Placeholder for wood texture */
+            background-color: #f5e6d3;
+        }
+
+        /* Canvas Elements */
         .canvas-element {
             position: absolute; cursor: move; touch-action: none;
-            user-select: none; z-index: 10;
+            user-select: none; z-index: 10; padding: 5px;
         }
         .canvas-element:hover { outline: 2px dashed var(--orange); }
-        .canvas-element.selected { outline: 2px solid var(--orange); }
+        .canvas-element.selected { outline: 2px solid var(--orange); z-index: 100; }
 
         .delete-btn {
             position: absolute; top: -10px; right: -10px; background: var(--error);
             color: white; border: none; border-radius: 50%; width: 22px; height: 22px;
-            cursor: pointer; display: none; font-weight: bold; z-index: 100;
+            cursor: pointer; display: none; font-weight: bold; z-index: 200; align-items: center; justify-content: center;
         }
-        .canvas-element:hover .delete-btn { display: block; }
+        .canvas-element:hover .delete-btn { display: flex; }
 
-        /* Template Specifics */
-        .tmpl-dark { background: #121212; color: white; }
-        .tmpl-light { background: #fff; color: #333; }
-        .tmpl-rustic { background: #fdf6e3; color: #5a3e2b; }
+        /* Content Editable Tweak */
+        .el-content { outline: none; }
 
-        /* Brush Headers */
+        /* Brush Header Component */
         .brush-header {
-            font-family: 'Bebas Neue', sans-serif; font-size: 3rem;
-            padding: 10px 40px; display: inline-block; position: relative;
-            z-index: 1; text-align: center; min-width: 200px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: white;
+            padding: 10px 60px;
+            display: inline-block;
+            position: relative;
+            text-align: center;
+            white-space: nowrap;
         }
-        .brush-header::after {
-            content: ''; position: absolute; inset: 0; z-index: -1;
-            mask-image: url('https://menutech.services/assets/img/brush_stroke.png'); /* Placeholder or CSS polygon */
+        .brush-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: var(--brush-color, #8b1d1d);
+            mask-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1/assets/brush_stroke_mask.png');
             mask-size: 100% 100%;
-            background: var(--brush-color, var(--orange));
-            clip-path: polygon(5% 0%, 95% 2%, 100% 50%, 95% 98%, 5% 100%, 0% 50%);
+            mask-repeat: no-repeat;
+            /* Fallback for mask if image not found */
+            clip-path: polygon(5% 0%, 95% 5%, 100% 50%, 95% 95%, 5% 100%, 0% 50%);
         }
 
-        /* Item Rows */
-        .item-row { display: flex; justify-content: space-between; gap: 20px; font-family: 'Lora', serif; font-weight: 700; width: 100%; }
-        .item-dots { flex: 1; border-bottom: 2px dotted rgba(0,0,0,0.1); margin-bottom: 5px; }
-        .tmpl-dark .item-dots { border-color: rgba(255,255,255,0.2); }
+        /* Dish Row */
+        .dish-row {
+            width: 100%;
+            margin-bottom: 8px;
+            font-family: 'Lora', serif;
+        }
+        .dish-header {
+            display: flex; justify-content: space-between; align-items: baseline;
+            font-weight: 900; font-size: 1.2rem; gap: 10px;
+        }
+        .dish-dots { flex: 1; border-bottom: 2px dotted rgba(0,0,0,0.2); margin-bottom: 5px; }
+        .dish-desc { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.85rem; color: #444; font-weight: 500; margin-top: 2px; }
+
+        /* Right Sidebar: Properties */
+        .sidebar-right { border-right: none; border-left: 1px solid var(--border); }
+
+        .prop-group { margin-bottom: 20px; }
+        .prop-group label { display: block; font-size: 0.65rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
+        .prop-input {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
+            font-family: inherit; font-size: 0.85rem; background: #f8fafc;
+        }
+
+        /* Mode Switcher */
+        .mode-switcher {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
+            padding: 8px; border-radius: 50px; border: 1px solid var(--border);
+            display: flex; gap: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 6000;
+        }
+        .mode-btn {
+            padding: 10px 24px; border-radius: 40px; border: none; font-weight: 800;
+            font-size: 0.75rem; text-transform: uppercase; cursor: pointer; transition: 0.3s;
+            background: transparent; color: var(--text-dim);
+        }
+        .mode-btn.active { background: var(--orange); color: white; }
 
         /* Floating Actions */
-        .floating-footer {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: white; padding: 12px 24px; border-radius: 50px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: flex; gap: 15px; z-index: 2000;
+        .floating-actions {
+            position: fixed; top: 90px; right: 24px; display: flex; flex-direction: column; gap: 12px; z-index: 4000;
         }
-        .btn-action {
-            padding: 12px 24px; border-radius: 25px; border: none; font-weight: 700;
-            cursor: pointer; transition: 0.2s; font-size: 0.85rem;
+        .btn-circle {
+            width: 50px; height: 50px; border-radius: 25px; border: none; background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s; color: var(--text);
         }
-        .btn-save { background: var(--orange); color: white; }
-        .btn-pdf { background: var(--success); color: white; }
+        .btn-circle:hover { transform: scale(1.1); color: var(--orange); }
+        .btn-circle.success { background: var(--success); color: white; }
+        .btn-circle.success:hover { color: white; filter: brightness(1.1); }
 
-        /* Context Switcher */
-        .context-pill {
-            background: #f1f5f9; padding: 8px 16px; border-radius: 20px;
-            font-size: 0.8rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+        /* Project Switcher Sidebar (Like adminMenus) */
+        .context-sidebar {
+            position: fixed; left: 0; top: 70px; bottom: 0; width: 340px; background: white;
+            z-index: 5500; border-right: 1px solid var(--border); transform: translateX(-100%);
+            transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); padding: 24px;
+        }
+        .context-sidebar.open { transform: translateX(0); }
+        .context-tab {
+            position: absolute; right: -40px; top: 20px; width: 40px; height: 120px;
+            background: var(--orange); color: white; display: flex; align-items: center;
+            justify-content: center; writing-mode: vertical-lr; font-weight: 800;
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px;
+            border-radius: 0 12px 12px 0; cursor: pointer;
         }
 
-        /* Image List */
-        .image-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .image-thumb { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
-        .image-thumb:hover { border-color: var(--orange); }
+        .client-list { max-height: 80vh; overflow-y: auto; margin-top: 20px; }
+        .client-item {
+            padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border);
+            margin-bottom: 8px; cursor: pointer; transition: 0.2s;
+        }
+        .client-item:hover { border-color: var(--orange); background: #fffcf9; }
+        .client-item.active { border-color: var(--orange); background: rgba(255,149,51,0.1); }
+        .client-item .name { font-weight: 800; font-size: 0.85rem; display: block; }
+        .client-item .domain { font-size: 0.7rem; color: var(--text-dim); }
 
-        .hidden { display: none !important; }
+        /* Gallery Grid */
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .gallery-item { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+        .gallery-item:hover { border-color: var(--orange); }
 
         /* Toast */
         #toast {
-            position: fixed; top: 90px; right: 24px; padding: 16px 24px;
-            border-radius: 12px; background: #1e293b; color: white;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1); z-index: 10000;
-            transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: fixed; top: 90px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: #1e293b; color: white; padding: 12px 24px; border-radius: 40px;
+            font-weight: 700; font-size: 0.85rem; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 10000;
+        }
+        #toast.active { transform: translateX(-50%) translateY(0); }
+
+        .hidden { display: none !important; }
+
+        /* Responsive Overlay for small screens */
+        @media (max-width: 1200px) {
+            .app-container { flex-direction: column; overflow-y: auto; height: auto; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); height: auto; }
+            .workspace { padding: 20px; min-height: 100vh; }
         }
     </style>
 </head>
 <body>
 
-    <div id="toast">Message here</div>
+    <div id="toast">Message</div>
 
     <nav id="top-nav">
-        <div style="display: flex; align-items: center; gap: 20px;">
-            <button class="btn-panel-top" onclick="location.href='index.html'">Panel</button>
-            <div id="project-switcher" class="hidden">
-                <select id="context-select" onchange="window.switchContext(this.value)" style="padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
-                    <option value="">Loading users...</option>
-                </select>
-            </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button class="btn-panel-top" onclick="location.href='index.html'">Dashboard</button>
+            <h2 id="viewing-label" style="font-size: 0.9rem; font-weight: 800; color: var(--text-dim);"></h2>
         </div>
-        <div id="user-pill" style="font-weight: 700; font-size: 0.9rem;">Loading...</div>
+        <div id="user-pill" style="font-weight: 800; font-size: 0.8rem; background: #f1f5f9; padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border);">Loading...</div>
     </nav>
 
+    <!-- Project Switcher Sidebar -->
+    <div id="context-sidebar" class="context-sidebar">
+        <div class="context-tab" onclick="$('#context-sidebar').toggleClass('open')">PROJECTS</div>
+        <div class="sidebar-header" style="padding:0 0 15px 0">
+            <h3 style="font-size: 1rem; font-weight: 800;">Switch Project</h3>
+            <input type="text" id="client-search" placeholder="Search restaurant..." class="prop-input" style="margin-top:10px">
+        </div>
+        <div class="client-list" id="client-list">
+            <!-- Loaded via JS -->
+        </div>
+    </div>
+
     <div class="app-container">
-        <!-- Sidebar Left: Elements -->
-        <aside class="sidebar">
-            <div>
-                <h3>Restaurant Assets</h3>
-                <div class="tool-item" onclick="addElement('logo')"><span>🖼️</span> Restaurant Logo</div>
-                <div class="tool-item" onclick="addElement('name')"><span>🏷️</span> Restaurant Name</div>
-                <div class="tool-item" onclick="addElement('contact')"><span>📞</span> Contact Details</div>
-            </div>
-
-            <div>
-                <h3>Menu Structure</h3>
-                <div class="tool-item" style="background: #fff1e6;" onclick="autoFlow()"><span>⚡</span> Auto-Flow All Menu</div>
-                <div id="categories-list">
-                    <!-- Categories will load here -->
+        <!-- Elements Sidebar -->
+        <aside class="sidebar" id="sidebar-left">
+            <div class="sidebar-content">
+                <span class="section-title">Quick Actions</span>
+                <div class="tool-item" style="background: #fff1e6; border-color: #ffd8b0;" onclick="autoFlow()">
+                    <span>⚡</span>
+                    <div>
+                        <div style="font-weight: 900;">Auto-Flow Menu</div>
+                        <div style="font-size: 0.65rem; color: #a16207; opacity: 0.8;">Populate designer with menu data</div>
+                    </div>
                 </div>
-            </div>
 
-            <div>
-                <h3>Gallery</h3>
-                <div class="image-grid" id="gallery">
-                    <!-- Images will load here -->
+                <span class="section-title">Restaurant Info</span>
+                <div class="tool-item" onclick="addElement('logo')"><span>🖼️</span> Logo</div>
+                <div class="tool-item" onclick="addElement('name')"><span>🏷️</span> Name</div>
+                <div class="tool-item" onclick="addElement('contact')"><span>📞</span> Contact</div>
+
+                <span class="section-title">Menu Categories</span>
+                <div id="category-list">
+                    <!-- Loaded via JS -->
+                    <div style="font-size:0.75rem; color:var(--text-dim); text-align:center; padding:20px;">No categories found</div>
+                </div>
+
+                <span class="section-title">Gallery</span>
+                <div class="gallery-grid" id="gallery">
+                    <!-- Images -->
                 </div>
             </div>
         </aside>
 
         <!-- Main Workspace -->
-        <main class="canvas-area">
+        <main class="workspace" id="workspace">
+            <!-- Edit Mode -->
             <div id="designer-canvas">
-                <!-- Pages will be rendered here -->
+                <!-- Pages go here -->
             </div>
-            <button class="btn-action" style="background: white; border: 1px solid var(--border); margin-top: 20px;" onclick="addPage()">+ Add Page</button>
+
+            <!-- Preview Mode -->
+            <div id="preview-container">
+                <div id="flipbook">
+                    <!-- Pages go here for turn.js -->
+                </div>
+            </div>
         </main>
 
-        <!-- Sidebar Right: Properties -->
-        <aside class="sidebar sidebar-right">
-            <div>
-                <h3>Menu Settings</h3>
-                <label style="font-size: 0.7rem; font-weight: 700;">Template</label>
-                <select id="tmpl-select" onchange="updateTemplate()" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border);">
-                    <option value="tmpl-light">Clean Light</option>
-                    <option value="tmpl-dark">Modern Dark</option>
-                    <option value="tmpl-rustic">Rustic Vintage</option>
-                </select>
+        <!-- Properties Sidebar -->
+        <aside class="sidebar sidebar-right" id="sidebar-right">
+            <div class="sidebar-content">
+                <span class="section-title">Menu Settings</span>
+                <div class="prop-group">
+                    <label>Design Template</label>
+                    <select id="template-select" class="prop-input" onchange="updateTemplate()">
+                        <option value="tmpl-hoja">Classic Paper (Hoja Menu)</option>
+                        <option value="tmpl-dark">Modern Dark</option>
+                        <option value="tmpl-minimal">Minimal Clean</option>
+                    </select>
+                </div>
+                <div class="prop-group">
+                    <label>Paper Size</label>
+                    <select id="size-select" class="prop-input" onchange="updateSize()">
+                        <option value="letter">Letter (8.5 x 11 in)</option>
+                        <option value="a4">A4 (210 x 297 mm)</option>
+                    </select>
+                </div>
 
-                <label style="font-size: 0.7rem; font-weight: 700;">Paper Size</label>
-                <select id="size-select" onchange="updateSize()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
-                    <option value="letter">Letter (8.5 x 11")</option>
-                    <option value="a4">A4 (210 x 297mm)</option>
-                </select>
-            </div>
+                <div id="element-properties" class="hidden">
+                    <span class="section-title">Element Details</span>
+                    <div id="prop-controls">
+                        <!-- Dynamic controls -->
+                    </div>
+                </div>
 
-            <div id="element-props" class="hidden">
-                <h3>Element Properties</h3>
-                <div id="prop-controls">
-                    <!-- Dynamic controls for selected element -->
+                <div style="margin-top: auto; padding-top: 40px;">
+                    <button class="tool-item" style="width: 100%; justify-content: center; background: white;" onclick="addBlankPage()">
+                        <span>➕</span> Add Blank Page
+                    </button>
                 </div>
             </div>
         </aside>
     </div>
 
-    <div class="floating-footer">
-        <button class="btn-action btn-save" onclick="saveLayout()">Save Changes</button>
-        <button class="btn-action btn-pdf" id="btn-download" onclick="exportPDF()">Export PDF</button>
+    <!-- Mode Switcher -->
+    <div class="mode-switcher">
+        <button id="btn-mode-edit" class="mode-btn active" onclick="switchMode('edit')">Editor</button>
+        <button id="btn-mode-preview" class="mode-btn" onclick="switchMode('preview')">Preview</button>
+    </div>
+
+    <!-- Floating Actions -->
+    <div class="floating-actions">
+        <button class="btn-circle success" title="Save Progress" onclick="saveDesign()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:24px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        </button>
+        <button class="btn-circle" id="btn-pdf" title="Export PDF" onclick="exportPDF()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:24px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
     </div>
 
     <script type="module">
         import { supabase } from './supabase.js';
 
         let user = null, role = null, activeId = null;
-        let restaurant = null, menu = null;
+        let restaurantData = null, menuData = null;
         let selectedEl = null;
-
-        const TOAST = $('#toast');
-        window.showToast = (msg) => {
-            TOAST.text(msg).css('transform', 'translateX(0)');
-            setTimeout(() => TOAST.css('transform', 'translateX(120%)'), 3000);
-        };
+        let allUsers = [];
 
         $(document).ready(async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -267,25 +398,54 @@
             $('#user-pill').text(`${profile?.username || user.email} (${role})`);
 
             if (['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'].includes(role)) {
-                $('#project-switcher').removeClass('hidden');
-                loadAllUsers();
+                $('#context-sidebar').show();
+                loadContextSwitcher();
             } else {
-                $('#btn-download').addClass('hidden'); // Owner can't download per request
+                $('#context-sidebar').hide();
+                $('#btn-pdf').addClass('hidden'); // Owners restricted from PDF per request
             }
 
-            loadData();
+            await loadData();
         });
 
-        async function loadAllUsers() {
-            const { data } = await supabase.from('profiles').select('id, username, email').order('username');
-            const select = $('#context-select');
-            select.empty();
-            data.forEach(p => select.append(`<option value="${p.id}" ${p.id === activeId ? 'selected' : ''}>${p.username || p.email}</option>`));
+        async function loadContextSwitcher() {
+            const { data } = await supabase.from('profiles').select('id, username, email, domain').order('username');
+            allUsers = data || [];
+            renderContextList(allUsers);
+
+            $('#client-search').on('input', function() {
+                const term = $(this).val().toLowerCase();
+                const filtered = allUsers.filter(u =>
+                    (u.username || '').toLowerCase().includes(term) ||
+                    (u.email || '').toLowerCase().includes(term) ||
+                    (u.domain || '').toLowerCase().includes(term)
+                );
+                renderContextList(filtered);
+            });
         }
 
-        window.switchContext = (id) => {
+        function renderContextList(users) {
+            const list = $('#client-list').empty();
+            users.forEach(u => {
+                const item = $(`
+                    <div class="client-item ${u.id === activeId ? 'active' : ''}">
+                        <span class="name">${u.username || u.email.split('@')[0]}</span>
+                        <span class="domain">${u.domain || 'No domain'}</span>
+                    </div>
+                `);
+                item.click(() => switchContext(u.id, u.username || u.domain));
+                list.append(item);
+            });
+        }
+
+        window.switchContext = async (id, name) => {
             activeId = id;
-            loadData();
+            $('.client-item').removeClass('active');
+            $(`.client-item`).each(function() { if($(this).find('.name').text() === name) $(this).addClass('active'); });
+            $('#viewing-label').text(`Viewing: ${name}`);
+            $('#context-sidebar').removeClass('open');
+            await loadData();
+            showToast(`Switched to ${name}`);
         };
 
         async function loadData() {
@@ -293,71 +453,91 @@
                 supabase.from('menutech_restaurants').select('*').eq('user_id', activeId).maybeSingle(),
                 supabase.from('menutech_menus').select('*').eq('user_id', activeId).maybeSingle()
             ]);
-            restaurant = res.data;
-            menu = men.data;
+            restaurantData = res.data;
+            menuData = men.data;
 
             renderToolbox();
-            loadSavedLayout();
+            loadSavedDesign();
         }
 
         function renderToolbox() {
-            const catList = $('#categories-list').empty();
-            menu?.config?.categories?.forEach(c => {
-                catList.append(`<div class="tool-item" onclick="addCategory('${c.name}')"><span>📂</span> ${c.name}</div>`);
+            // Categories
+            const catList = $('#category-list').empty();
+            if (menuData?.config?.categories?.length > 0) {
+                menuData.config.categories.forEach(c => {
+                    catList.append(`<div class="tool-item" onclick="addCategory('${c.name.replace(/'/g, "\\'")}')"><span>📂</span> ${c.name}</div>`);
+                });
+            } else {
+                catList.append(`<div style="font-size:0.75rem; color:var(--text-dim); text-align:center; padding:20px;">No categories found</div>`);
+            }
+
+            // Gallery
+            const gallery = $('#gallery').empty();
+            const images = new Set();
+            if (restaurantData?.logo_url) images.add(restaurantData.logo_url);
+            menuData?.config?.categories?.forEach(c => {
+                if (c.image) images.add(c.image);
+                c.dishes?.forEach(d => { if (d.image) images.add(d.image); });
             });
 
-            const gallery = $('#gallery').empty();
-            let images = [];
-            if (restaurant?.logo_url) images.push(restaurant.logo_url);
-            menu?.config?.categories?.forEach(c => {
-                if (c.image) images.push(c.image);
-                c.dishes?.forEach(d => { if(d.image) images.push(d.image); });
-            });
-            [...new Set(images)].filter(Boolean).forEach(url => {
-                gallery.append(`<img src="${url}" class="image-thumb" onclick="addElement('image', '${url}')">`);
+            Array.from(images).filter(Boolean).forEach(url => {
+                gallery.append(`<img src="${url}" class="gallery-item" onclick="addElement('image', '${url}')">`);
             });
         }
 
-        window.addPage = () => {
-            const page = $(`
-                <div class="page-wrapper">
-                    <div class="page ${$('#tmpl-select').val()}"></div>
-                    <button class="btn-action" style="position:absolute; right:-120px; top:0; background:white; color:var(--error); border:1px solid var(--border);" onclick="$(this).parent().remove()">Remove</button>
-                </div>
-            `);
+        window.addBlankPage = () => {
+            const tmpl = $('#template-select').val();
+            const page = $(`<div class="page ${tmpl}"></div>`);
             $('#designer-canvas').append(page);
             updateSize();
-            return page.find('.page');
+            return page;
         };
 
         window.addElement = (type, content = null) => {
-            const page = $('#designer-canvas .page').last();
-            if (page.length === 0) return showToast("Add a page first!");
+            let targetPage = $('.page').last();
+            if (targetPage.length === 0) targetPage = addBlankPage();
 
             let html = '';
-            if (type === 'logo') html = `<img src="${restaurant?.logo_url || ''}" style="width:120px;">`;
-            if (type === 'name') html = `<h1 style="font-family:'Bebas Neue'; font-size:4rem; line-height:1;">${restaurant?.name || 'NAME'}</h1>`;
-            if (type === 'contact') html = `<p style="font-family:'Outfit'; font-size:1rem;">${restaurant?.phone || ''} • ${restaurant?.address || ''}</p>`;
-            if (type === 'image') html = `<img src="${content}" style="width:150px; border-radius:10px; box-shadow:0 10px 20px rgba(0,0,0,0.1);">`;
+            let style = {};
 
-            createCanvasElement(page, type, html);
+            if (type === 'logo') {
+                html = `<img src="${restaurantData?.logo_url || ''}" style="width:100%; height:auto;">`;
+                style = { width: '150px', left: '50px', top: '50px' };
+            } else if (type === 'name') {
+                html = `<h1 style="font-family:'Bebas Neue'; font-size:4rem; color:#333; line-height:0.9;">${restaurantData?.name || 'RESTAURANT NAME'}</h1>`;
+                style = { left: '50px', top: '220px', width: '400px' };
+            } else if (type === 'contact') {
+                html = `<p style="font-family:'Outfit'; font-size:1.1rem; color:#666;">${restaurantData?.phone || ''}<br>${restaurantData?.address || ''}</p>`;
+                style = { left: '50px', top: '300px', width: '300px' };
+            } else if (type === 'image') {
+                html = `<img src="${content}" style="width:100%; border-radius:15px; box-shadow:0 10px 20px rgba(0,0,0,0.1);">`;
+                style = { width: '250px', left: '100px', top: '100px' };
+            }
+
+            createCanvasElement(targetPage, type, html, style);
         };
 
-        function createCanvasElement(page, type, html, x = 50, y = 50) {
+        function createCanvasElement(page, type, html, style = {}) {
+            const x = parseInt(style.left) || 50;
+            const y = parseInt(style.top) || 50;
+
             const el = $(`
-                <div class="canvas-element" data-type="${type}" style="transform: translate(${x}px, ${y}px);" data-x="${x}" data-y="${y}">
+                <div class="canvas-element" data-type="${type}" style="transform: translate(${x}px, ${y}px); width: ${style.width || 'auto'};" data-x="${x}" data-y="${y}">
                     <div class="el-content" contenteditable="true">${html}</div>
-                    <button class="delete-btn" onclick="$(this).parent().remove()">×</button>
+                    <button class="delete-btn">×</button>
                 </div>
             `);
+
+            el.find('.delete-btn').click((e) => { e.stopPropagation(); el.remove(); });
 
             el.on('mousedown', function() {
                 $('.canvas-element').removeClass('selected');
                 $(this).addClass('selected');
                 selectedEl = $(this);
-                $('#element-props').removeClass('hidden');
+                showElementProperties();
             });
 
+            // Initialize Interact.js
             interact(el[0]).draggable({
                 listeners: {
                     move(event) {
@@ -368,7 +548,14 @@
                         target.setAttribute('data-x', x);
                         target.setAttribute('data-y', y);
                     }
-                }
+                },
+                modifiers: [
+                    interact.modifiers.snap({
+                        targets: [ interact.snappers.grid({ x: 10, y: 10 }) ],
+                        range: Infinity, relativePoints: [ { x: 0, y: 0 } ]
+                    }),
+                    interact.modifiers.restrictRect({ restriction: 'parent' })
+                ]
             }).resizable({
                 edges: { left: true, right: true, bottom: true, top: true },
                 listeners: {
@@ -376,10 +563,13 @@
                         const target = event.target;
                         let x = (parseFloat(target.getAttribute('data-x')) || 0);
                         let y = (parseFloat(target.getAttribute('data-y')) || 0);
+
                         target.style.width = event.rect.width + 'px';
                         target.style.height = event.rect.height + 'px';
+
                         x += event.deltaRect.left;
                         y += event.deltaRect.top;
+
                         target.style.transform = `translate(${x}px, ${y}px)`;
                         target.setAttribute('data-x', x);
                         target.setAttribute('data-y', y);
@@ -392,62 +582,73 @@
         }
 
         window.addCategory = (catName) => {
-            const page = $('#designer-canvas .page').last();
-            const cat = menu?.config?.categories?.find(c => c.name === catName);
-            if (!cat || page.length === 0) return;
+            let page = $('.page').last();
+            if (page.length === 0) page = addBlankPage();
 
-            const header = createCanvasElement(page, 'cat-header', `<div class="brush-header">${cat.name}</div>`);
+            const cat = menuData?.config?.categories?.find(c => c.name === catName);
+            if (!cat) return;
 
-            let currentY = 150;
+            // Brush Header
+            const headerHtml = `<div class="brush-header" style="--brush-color: #8b1d1d;">${cat.name.toUpperCase()}</div>`;
+            createCanvasElement(page, 'cat-header', headerHtml, { left: 50, top: 100 });
+
+            // Dishes (Vertical stack)
+            let currentY = 180;
             cat.dishes?.forEach(d => {
                 const dishHtml = `
-                    <div style="width:500px; margin-bottom:10px;">
-                        <div class="item-row">
+                    <div class="dish-row">
+                        <div class="dish-header">
                             <span>${d.name}</span>
-                            <div class="item-dots"></div>
+                            <div class="dish-dots"></div>
                             <span>$${d.price}</span>
                         </div>
-                        <div style="font-family:'Outfit'; font-size:0.8rem; font-weight:300; opacity:0.8;">${d.description || ''}</div>
+                        <div class="dish-desc">${d.description || ''}</div>
                     </div>
                 `;
-                createCanvasElement(page, 'dish', dishHtml, 50, currentY);
-                currentY += 60;
+                createCanvasElement(page, 'dish', dishHtml, { left: 60, top: currentY, width: '500px' });
+                currentY += (d.description ? 70 : 45);
             });
         };
 
         window.autoFlow = () => {
             $('#designer-canvas').empty();
-            let page = addPage();
-            let y = 100;
+            let page = addBlankPage();
+            let y = 80;
 
-            // Header
-            createCanvasElement(page, 'logo', `<img src="${restaurant?.logo_url}" style="width:100px;">`, 300, 40);
-            y = 150;
+            // Cover Elements
+            if (restaurantData?.logo_url) {
+                createCanvasElement(page, 'logo', `<img src="${restaurantData.logo_url}" style="width:100%">`, { left: 300, top: 60, width: '150px' });
+                y = 250;
+            }
+            createCanvasElement(page, 'name', `<h1 style="font-family:'Bebas Neue'; font-size:5rem; text-align:center;">${restaurantData?.name || 'MENU'}</h1>`, { left: 100, top: y, width: '600px' });
+            y += 120;
 
-            menu?.config?.categories?.forEach(cat => {
-                if (y > 800) { page = addPage(); y = 80; }
+            menuData?.config?.categories?.forEach(cat => {
+                if (y > 750) { page = addBlankPage(); y = 80; }
 
-                createCanvasElement(page, 'cat-header', `<div class="brush-header">${cat.name}</div>`, 50, y);
-                y += 80;
+                createCanvasElement(page, 'cat-header', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: 50, top: y });
+                y += 100;
 
                 cat.dishes?.forEach(d => {
-                    if (y > 950) { page = addPage(); y = 80; }
-                    const html = `
-                        <div style="width:700px;">
-                            <div class="item-row"><span>${d.name}</span><div class="item-dots"></div><span>$${d.price}</span></div>
-                            <div style="font-family:'Outfit'; font-size:0.9rem; font-weight:300; opacity:0.8;">${d.description || ''}</div>
+                    if (y > 950) { page = addBlankPage(); y = 80; }
+                    const dishHtml = `
+                        <div class="dish-row">
+                            <div class="dish-header"><span>${d.name}</span><div class="dish-dots"></div><span>$${d.price}</span></div>
+                            <div class="dish-desc">${d.description || ''}</div>
                         </div>
                     `;
-                    createCanvasElement(page, 'dish', html, 50, y);
-                    y += d.description ? 70 : 40;
+                    createCanvasElement(page, 'dish', dishHtml, { left: 70, top: y, width: '650px' });
+                    y += (d.description ? 75 : 50);
                 });
-                y += 40;
+                y += 50;
             });
+
+            showToast("Menu auto-populated!");
         };
 
         window.updateTemplate = () => {
-            const tmpl = $('#tmpl-select').val();
-            $('.page').removeClass('tmpl-light tmpl-dark tmpl-rustic').addClass(tmpl);
+            const tmpl = $('#template-select').val();
+            $('.page').removeClass('tmpl-hoja tmpl-dark tmpl-minimal').addClass(tmpl);
         };
 
         window.updateSize = () => {
@@ -457,7 +658,79 @@
             $('.page').css({ width: w, height: h });
         };
 
-        window.saveLayout = async () => {
+        function showElementProperties() {
+            if (!selectedEl) return;
+            $('#element-properties').removeClass('hidden');
+            const type = selectedEl.data('type');
+            const controls = $('#prop-controls').empty();
+
+            if (type === 'cat-header') {
+                controls.append(`
+                    <div class="prop-group">
+                        <label>Brush Color</label>
+                        <input type="color" class="prop-input" value="#8b1d1d" oninput="updateElementStyle('brush-color', this.value)">
+                    </div>
+                `);
+            }
+
+            controls.append(`
+                <div class="prop-group">
+                    <label>Z-Index</label>
+                    <input type="number" class="prop-input" value="${selectedEl.css('z-index')}" oninput="selectedEl.css('z-index', this.value)">
+                </div>
+                <div class="prop-group">
+                    <label>Width (px)</label>
+                    <input type="number" class="prop-input" value="${parseInt(selectedEl.css('width'))}" oninput="selectedEl.css('width', this.value + 'px')">
+                </div>
+            `);
+        }
+
+        window.updateElementStyle = (prop, val) => {
+            if (!selectedEl) return;
+            if (prop === 'brush-color') {
+                selectedEl.find('.brush-header').css('--brush-color', val);
+            }
+        };
+
+        window.switchMode = (mode) => {
+            $('.mode-btn').removeClass('active');
+            $(`#btn-mode-${mode}`).addClass('active');
+
+            if (mode === 'preview') {
+                $('#designer-canvas').addClass('hidden');
+                $('#preview-container').addClass('active');
+                renderPreview();
+            } else {
+                $('#designer-canvas').removeClass('hidden');
+                $('#preview-container').removeClass('active');
+                // Destroy turn.js to prevent conflicts
+                try { $('#flipbook').turn('destroy').empty(); } catch(e){}
+            }
+        };
+
+        function renderPreview() {
+            const book = $('#flipbook').empty();
+            $('#designer-canvas .page').each(function() {
+                const clone = $(this).clone();
+                clone.find('.delete-btn').remove();
+                clone.find('.canvas-element').css('outline', 'none').removeClass('selected');
+                clone.find('.el-content').attr('contenteditable', 'false');
+                clone.css({ margin: 0, boxShadow: 'none' });
+                book.append(clone);
+            });
+
+            setTimeout(() => {
+                book.turn({
+                    width: $('#workspace').width() * 0.9,
+                    height: ($('#workspace').width() * 0.9) * 1.29,
+                    autoCenter: true,
+                    elevation: 50,
+                    gradients: true
+                });
+            }, 100);
+        }
+
+        window.saveDesign = async () => {
             const pages = [];
             $('#designer-canvas .page').each(function() {
                 const els = [];
@@ -469,7 +742,8 @@
                         y: e.attr('data-y'),
                         w: e.css('width'),
                         h: e.css('height'),
-                        content: e.find('.el-content').html()
+                        content: e.find('.el-content').html(),
+                        zIndex: e.css('z-index')
                     });
                 });
                 pages.push(els);
@@ -477,38 +751,39 @@
 
             const config = {
                 pages,
-                tmpl: $('#tmpl-select').val(),
+                tmpl: $('#template-select').val(),
                 size: $('#size-select').val()
             };
 
             const { error } = await supabase.from('menutech_physical_menus').upsert({
                 user_id: activeId,
                 template_id: 'v2',
-                layout_config: config
+                layout_config: config,
+                updated_at: new Date()
             }, { onConflict: 'user_id, template_id' });
 
-            if (error) showToast("Error saving: " + error.message);
-            else showToast("Layout saved successfully!");
+            if (error) showToast("Error saving: " + error.message, true);
+            else showToast("Design saved successfully!");
         };
 
-        async function loadSavedLayout() {
+        async function loadSavedDesign() {
             const { data } = await supabase.from('menutech_physical_menus').select('*').eq('user_id', activeId).eq('template_id', 'v2').maybeSingle();
             $('#designer-canvas').empty();
 
             if (data?.layout_config) {
                 const cfg = data.layout_config;
-                $('#tmpl-select').val(cfg.tmpl);
-                $('#size-select').val(cfg.size);
+                $('#template-select').val(cfg.tmpl || 'tmpl-hoja');
+                $('#size-select').val(cfg.size || 'letter');
 
                 cfg.pages.forEach(pEls => {
-                    const page = addPage();
+                    const page = addBlankPage();
                     pEls.forEach(e => {
-                        const el = createCanvasElement(page, e.type, e.content, parseFloat(e.x), parseFloat(e.y));
-                        el.css({ width: e.w, height: e.h });
+                        const el = createCanvasElement(page, e.type, e.content, { left: e.x, top: e.y, width: e.w });
+                        el.css('z-index', e.zIndex || 10);
                     });
                 });
             } else {
-                addPage();
+                addBlankPage();
             }
             updateTemplate();
             updateSize();
@@ -527,13 +802,21 @@
             const size = $('#size-select').val();
             const opt = {
                 margin: 0,
-                filename: 'menu-menutech.pdf',
+                filename: 'Menu-Physical-MT.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
+                html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: 'in', format: size === 'letter' ? 'letter' : 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().set(opt).from(element).save();
+            showToast("Generating PDF...");
+            html2pdf().set(opt).from(element).save().then(() => showToast("PDF Downloaded!"));
+        };
+
+        window.showToast = (msg, isError = false) => {
+            const t = $('#toast').text(msg).addClass('active');
+            if (isError) t.css('background', 'var(--error)');
+            else t.css('background', '#1e293b');
+            setTimeout(() => t.removeClass('active'), 3000);
         };
 
     </script>
