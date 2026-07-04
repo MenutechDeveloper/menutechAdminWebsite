@@ -8,808 +8,533 @@
 
     <!-- Dependencies -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/blasten/turn.js@4.0.0/turn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&family=Permanent+Marker&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Stint+Ultra+Condensed&family=Bebas+Neue&family=Great+Vibes&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Lora:ital,wght@0,400;0,700;1,400&display=swap');
 
         :root {
             --orange: #ff9533;
-            --bg: #fffcf0;
+            --bg: #f4f4f7;
             --card: #ffffff;
-            --input: #fffef5;
             --text: #1a1c1e;
-            --text-dim: #4a5568;
-            --border: #f8e8d8;
-            --success: #059669;
-            --error: #dc2626;
-            --red-ornate: #b31b1b;
-        }
-
-        body.dark-mode {
-            --bg: #121418;
-            --card: #1c1f26;
-            --input: #242933;
-            --text: #f8fafc;
-            --text-dim: #94a3b8;
-            --border: #2d333f;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --error: #ef4444;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
-
-        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
-
-        .container { width: 100%; max-width: 1600px; margin: 0 auto; padding: 100px 24px; animation: fadeIn 1s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
 
         /* Top Nav */
-        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
-        #top-nav > * { pointer-events: auto; }
-        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; }
-
-        /* Sidebar Container */
-        .sidebar-container {
-            position: fixed; left: 0; top: 120px; z-index: 6000; pointer-events: none; display: flex; align-items: flex-start;
-            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .sidebar-container > * { pointer-events: auto; }
-        .sidebar-container.collapsed { transform: translateX(-340px) !important; }
-        .sidebar { width: 340px; height: 600px; display: flex; flex-direction: column; gap: 20px; }
-        .search-box { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 24px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.15); height: 100%; display: flex; flex-direction: column; }
-        .client-list { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
-        .client-item { padding: 14px 18px; border-radius: 16px; background: var(--input); border: 1px solid var(--border); cursor: pointer; transition: 0.3s; }
-        .client-item:hover { border-color: var(--orange); }
-        .client-item.active { border-color: var(--orange); background: rgba(255,149,51,0.08); }
-        .sidebar-tab {
-            width: 45px; height: 160px; background: var(--orange); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 0 16px 16px 0; cursor: pointer; writing-mode: vertical-lr; text-orientation: mixed; font-weight: 800; font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; box-shadow: 10px 0 30px rgba(255, 149, 51, 0.2); transition: 0.4s; margin-top: 40px; position: relative;
+        #top-nav {
+            position: fixed; top: 0; left: 0; right: 0; height: 70px;
+            background: white; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 24px; z-index: 1000;
         }
 
-        /* Editor Layout */
-        .editor-layout { display: flex; gap: 30px; min-height: 800px; position: relative; }
-
-        /* Left Toolbox */
-        .toolbox {
-            width: 300px; background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px;
-            display: flex; flex-direction: column; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            max-height: 85vh; overflow-y: auto;
-        }
-        .toolbox h3 { font-size: 0.8rem; text-transform: uppercase; color: var(--orange); letter-spacing: 1px; margin-top: 10px; }
-        .tool-section { display: flex; flex-direction: column; gap: 10px; }
-        .draggable-item {
-            padding: 12px; background: var(--input); border: 1.5px solid var(--border); border-radius: 12px;
-            cursor: pointer; font-size: 0.8rem; font-weight: 700; transition: 0.3s;
-        }
-        .draggable-item:hover { border-color: var(--orange); transform: translateY(-2px); }
-
-        /* Main Designer Area */
-        .book-container {
-            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 40px;
-            background: rgba(0,0,0,0.02); border-radius: 30px; padding: 40px; position: relative;
-            min-height: 800px;
+        .btn-panel-top {
+            background: var(--orange); color: #fff; border: none;
+            padding: 10px 20px; border-radius: 12px; font-weight: 700;
+            cursor: pointer; text-transform: uppercase; font-size: 0.8rem;
         }
 
-        /* Workspace Grid */
-        #designer-workspace {
-            display: flex; flex-direction: column; align-items: center; width: 100%;
+        /* Main Layout */
+        .app-container {
+            display: grid;
+            grid-template-columns: 320px 1fr 300px;
+            height: calc(100vh - 70px);
+            margin-top: 70px;
         }
-        #designer-workspace .page { display: none; margin: 0 auto; }
-        #designer-workspace .page.active { display: block; }
 
-        /* Preview Container */
-        #preview-container {
-            display: none; width: 100%; flex-direction: column; align-items: center; justify-content: center;
+        /* Sidebars */
+        .sidebar {
+            background: white; border-right: 1px solid var(--border);
+            padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px;
         }
-        #preview-container.active { display: flex; }
+        .sidebar-right { border-left: 1px solid var(--border); border-right: none; }
 
-        #menu-book { margin: 0 auto; }
+        h3 { font-size: 0.75rem; text-transform: uppercase; color: #64748b; letter-spacing: 1px; margin-bottom: 12px; }
+
+        .tool-item {
+            background: #f8fafc; border: 1px solid var(--border);
+            padding: 12px; border-radius: 10px; cursor: pointer;
+            font-size: 0.85rem; font-weight: 600; transition: 0.2s;
+            margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
+        }
+        .tool-item:hover { border-color: var(--orange); background: #fffcf9; }
+
+        /* Canvas Area */
+        .canvas-area {
+            padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center;
+            background: #e2e8f0;
+        }
+
+        .page-wrapper {
+            position: relative; margin-bottom: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
         .page {
-            background-color: white;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            overflow: hidden;
-            position: relative;
-            width: 595px; /* approx scale for screen */
-            height: 842px;
-            flex-shrink: 0;
-        }
-        .page-content { width: 100%; height: 100%; position: relative; padding: 40px 60px; z-index: 5; }
-
-        /* Textures & Borders */
-        .texture-wood-light {
-            background-color: #e8dcc4;
-            background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
-            color: #332211;
-        }
-        .texture-paper { background-color: #f4f1ea; background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png'); }
-        .texture-chalkboard { background-color: #1a1a1a; background-image: url('https://www.transparenttextures.com/patterns/dark-matter.png'); color: white; }
-
-        .border-red-ornate::before {
-            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 40px;
-            background: #b31b1b url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-            box-shadow: inset -10px 0 20px rgba(0,0,0,0.5), 5px 0 15px rgba(0,0,0,0.3); z-index: 10;
-            border-right: 2px solid rgba(255,255,255,0.1);
-        }
-        .border-red-ornate::after {
-            content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 40px;
-            background: #b31b1b url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-            box-shadow: inset 10px 0 20px rgba(0,0,0,0.5), -5px 0 15px rgba(0,0,0,0.3); z-index: 10;
-            border-left: 2px solid rgba(255,255,255,0.1);
+            background: white; position: relative; overflow: hidden;
+            width: 8.5in; height: 11in; /* Default Letter */
+            transition: background 0.3s;
         }
 
-        /* Brush Header */
+        /* Element Styles */
+        .canvas-element {
+            position: absolute; cursor: move; touch-action: none;
+            user-select: none; z-index: 10;
+        }
+        .canvas-element:hover { outline: 2px dashed var(--orange); }
+        .canvas-element.selected { outline: 2px solid var(--orange); }
+
+        .delete-btn {
+            position: absolute; top: -10px; right: -10px; background: var(--error);
+            color: white; border: none; border-radius: 50%; width: 22px; height: 22px;
+            cursor: pointer; display: none; font-weight: bold; z-index: 100;
+        }
+        .canvas-element:hover .delete-btn { display: block; }
+
+        /* Template Specifics */
+        .tmpl-dark { background: #121212; color: white; }
+        .tmpl-light { background: #fff; color: #333; }
+        .tmpl-rustic { background: #fdf6e3; color: #5a3e2b; }
+
+        /* Brush Headers */
         .brush-header {
-            display: inline-block;
-            padding: 12px 70px;
-            color: white;
-            font-family: 'Bebas Neue', cursive;
-            font-size: 3.5rem;
-            text-transform: uppercase;
-            position: relative;
-            z-index: 1;
-            margin-bottom: 20px;
-            background: none;
-            min-width: 280px;
-            text-align: center;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-family: 'Bebas Neue', sans-serif; font-size: 3rem;
+            padding: 10px 40px; display: inline-block; position: relative;
+            z-index: 1; text-align: center; min-width: 200px;
         }
-        .brush-header::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: var(--brush-color, #b31b1b);
-            z-index: -1;
-            clip-path: polygon(
-                0% 15%, 5% 5%, 15% 12%, 25% 3%, 45% 8%, 65% 2%, 85% 12%, 95% 5%, 100% 15%,
-                100% 45%, 98% 85%, 95% 95%, 85% 88%, 65% 98%, 45% 92%, 25% 97%, 15% 88%, 5% 95%, 0% 85%, 2% 45%
-            );
-            transform: scale(1.2, 1.4);
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+        .brush-header::after {
+            content: ''; position: absolute; inset: 0; z-index: -1;
+            mask-image: url('https://menutech.services/assets/img/brush_stroke.png'); /* Placeholder or CSS polygon */
+            mask-size: 100% 100%;
+            background: var(--brush-color, var(--orange));
+            clip-path: polygon(5% 0%, 95% 2%, 100% 50%, 95% 98%, 5% 100%, 0% 50%);
         }
 
-        /* Canvas Elements */
-        .canvas-element { position: absolute; cursor: move; touch-action: none; user-select: none; transition: outline 0.2s; min-width: 20px; min-height: 20px; z-index: 20; }
-        .canvas-element:hover::after { content: ''; position: absolute; inset: -5px; border: 2px dashed var(--orange); border-radius: 4px; pointer-events: none; z-index: -1; }
-        .delete-btn { position: absolute; top: -10px; right: -10px; background: var(--error); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; display: none; z-index: 50; font-weight: bold; font-size: 12px; align-items: center; justify-content: center; }
-        .canvas-element:hover .delete-btn { display: flex; }
+        /* Item Rows */
+        .item-row { display: flex; justify-content: space-between; gap: 20px; font-family: 'Lora', serif; font-weight: 700; width: 100%; }
+        .item-dots { flex: 1; border-bottom: 2px dotted rgba(0,0,0,0.1); margin-bottom: 5px; }
+        .tmpl-dark .item-dots { border-color: rgba(255,255,255,0.2); }
 
-        .canvas-element [contenteditable]:focus {
-            outline: 2px solid var(--orange);
-            background: rgba(255,149,51,0.05);
-        }
-
-        .circle-crop { border-radius: 50%; overflow: hidden; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-
-        /* Properties Panel */
-        .properties-panel {
-            width: 280px; background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px;
-            display: flex; flex-direction: column; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        }
-
-        /* Floating Controls */
-        #floating-controls {
+        /* Floating Actions */
+        .floating-footer {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px);
-            padding: 16px 32px; border-radius: 40px; border: 1.5px solid var(--border);
-            display: flex; gap: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); z-index: 7000;
+            background: white; padding: 12px 24px; border-radius: 50px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: flex; gap: 15px; z-index: 2000;
         }
-        .btn-action { padding: 14px 28px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 1px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-        .btn-save { background: var(--orange); color: white; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); }
-        .btn-download { background: var(--success); color: white; box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3); }
-
-        .tab-btn {
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: 800;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: 0.4s;
-            border: 1.5px solid var(--border);
-            background: var(--card);
-            color: var(--text);
-            letter-spacing: 1px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .btn-action {
+            padding: 12px 24px; border-radius: 25px; border: none; font-weight: 700;
+            cursor: pointer; transition: 0.2s; font-size: 0.85rem;
         }
-        .tab-btn:hover { border-color: var(--orange); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        .tab-btn.active { background: var(--orange); color: white !important; border-color: var(--orange); box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); }
-        .btn-download:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .btn-save { background: var(--orange); color: white; }
+        .btn-pdf { background: var(--success); color: white; }
 
-        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; }
-        .toast { padding: 18px 24px; border-radius: 20px; background: #1c1f26; color: white; font-size: 0.9rem; animation: slideIn 0.3s ease-out; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        /* Context Switcher */
+        .context-pill {
+            background: #f1f5f9; padding: 8px 16px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+        }
+
+        /* Image List */
+        .image-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .image-thumb { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+        .image-thumb:hover { border-color: var(--orange); }
 
         .hidden { display: none !important; }
 
-        #loading-overlay {
-            position: fixed; inset: 0; background: var(--bg); z-index: 30000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s;
+        /* Toast */
+        #toast {
+            position: fixed; top: 90px; right: 24px; padding: 16px 24px;
+            border-radius: 12px; background: #1e293b; color: white;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); z-index: 10000;
+            transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .loader {
-            width: 48px; height: 48px; border: 5px solid var(--orange);
-            border-bottom-color: transparent; border-radius: 50%;
-            display: inline-block; animation: rotation 1s linear infinite;
-        }
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div id="loading-overlay">
-        <div class="loader"></div>
-        <p style="margin-top: 20px; font-weight: 800; color: var(--orange); letter-spacing: 2px;">PREPARING MENU...</p>
-    </div>
 
-    <div class="bg-mesh"></div>
-    <div id="toast-container"></div>
+    <div id="toast">Message here</div>
 
-    <div id="top-nav">
-        <div><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <div id="user-display-pill" style="background: var(--card); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border); display: flex; align-items: center; gap: 15px; cursor: pointer; pointer-events: auto;">
-                <div style="display: flex; flex-direction: column; line-height: 1.2;">
-                    <span id="user-name" style="font-weight: 800; font-size: 0.85rem;">Loading...</span>
-                    <span id="user-role-label" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase;">...</span>
-                </div>
+    <nav id="top-nav">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <button class="btn-panel-top" onclick="location.href='index.html'">Panel</button>
+            <div id="project-switcher" class="hidden">
+                <select id="context-select" onchange="window.switchContext(this.value)" style="padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
+                    <option value="">Loading users...</option>
+                </select>
             </div>
         </div>
+        <div id="user-pill" style="font-weight: 700; font-size: 0.9rem;">Loading...</div>
+    </nav>
+
+    <div class="app-container">
+        <!-- Sidebar Left: Elements -->
+        <aside class="sidebar">
+            <div>
+                <h3>Restaurant Assets</h3>
+                <div class="tool-item" onclick="addElement('logo')"><span>🖼️</span> Restaurant Logo</div>
+                <div class="tool-item" onclick="addElement('name')"><span>🏷️</span> Restaurant Name</div>
+                <div class="tool-item" onclick="addElement('contact')"><span>📞</span> Contact Details</div>
+            </div>
+
+            <div>
+                <h3>Menu Structure</h3>
+                <div class="tool-item" style="background: #fff1e6;" onclick="autoFlow()"><span>⚡</span> Auto-Flow All Menu</div>
+                <div id="categories-list">
+                    <!-- Categories will load here -->
+                </div>
+            </div>
+
+            <div>
+                <h3>Gallery</h3>
+                <div class="image-grid" id="gallery">
+                    <!-- Images will load here -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="canvas-area">
+            <div id="designer-canvas">
+                <!-- Pages will be rendered here -->
+            </div>
+            <button class="btn-action" style="background: white; border: 1px solid var(--border); margin-top: 20px;" onclick="addPage()">+ Add Page</button>
+        </main>
+
+        <!-- Sidebar Right: Properties -->
+        <aside class="sidebar sidebar-right">
+            <div>
+                <h3>Menu Settings</h3>
+                <label style="font-size: 0.7rem; font-weight: 700;">Template</label>
+                <select id="tmpl-select" onchange="updateTemplate()" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border);">
+                    <option value="tmpl-light">Clean Light</option>
+                    <option value="tmpl-dark">Modern Dark</option>
+                    <option value="tmpl-rustic">Rustic Vintage</option>
+                </select>
+
+                <label style="font-size: 0.7rem; font-weight: 700;">Paper Size</label>
+                <select id="size-select" onchange="updateSize()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+                    <option value="letter">Letter (8.5 x 11")</option>
+                    <option value="a4">A4 (210 x 297mm)</option>
+                </select>
+            </div>
+
+            <div id="element-props" class="hidden">
+                <h3>Element Properties</h3>
+                <div id="prop-controls">
+                    <!-- Dynamic controls for selected element -->
+                </div>
+            </div>
+        </aside>
     </div>
 
-    <div class="container">
-        <div class="editor-layout">
-            <div class="sidebar-container collapsed hidden" id="sidebar-container">
-                <div class="sidebar">
-                    <div class="search-box">
-                        <h3 style="margin-bottom: 15px;">PROJECTS</h3>
-                        <input type="text" id="client-search" placeholder="Search restaurant..." style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px;">
-                        <div class="client-list" id="client-list"></div>
-                    </div>
-                </div>
-                <div class="sidebar-tab" id="sidebar-tab">PROJECTS</div>
-            </div>
-
-            <div class="toolbox">
-                <div class="tool-section">
-                    <h3>Restaurant Info</h3>
-                    <div class="draggable-item" onclick="addInfoElement('logo')">Logo</div>
-                    <div class="draggable-item" onclick="addInfoElement('name')">Restaurant Name</div>
-                    <div class="draggable-item" onclick="addInfoElement('contact')">Phone & Address</div>
-                </div>
-                <div class="tool-section">
-                    <h3>Menu Items</h3>
-                    <div class="draggable-item" onclick="autoFlowMenu()">Auto-Flow All Menu</div>
-                    <div id="cat-list-toolbox" style="display: flex; flex-direction: column; gap: 5px;"></div>
-                </div>
-                <div class="tool-section">
-                    <h3>Food Images</h3>
-                    <div id="image-list-toolbox" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
-                </div>
-                <div class="tool-section">
-                    <h3>Decorations & Stains</h3>
-                    <div id="stains-toolbox" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
-                </div>
-            </div>
-
-            <div class="book-container">
-                <div id="workspace-nav" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center;">
-                </div>
-
-                <div id="designer-workspace">
-                </div>
-
-                <div id="preview-container">
-                    <div id="menu-book">
-                    </div>
-                </div>
-
-                <div style="margin-top: 20px; display: flex; gap: 10px;">
-                    <button class="tab-btn" id="btn-add-page" onclick="addPage()">+ Add Page</button>
-                    <button class="tab-btn" id="btn-remove-page" style="color:var(--error)" onclick="removeCurrentPage()">- Remove Page</button>
-                    <div id="preview-controls" class="hidden" style="display: flex; gap: 10px;">
-                        <button class="tab-btn" onclick="prevPage()">Previous</button>
-                        <button class="tab-btn" onclick="nextPage()">Next</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="properties-panel">
-                <h3>Page Settings</h3>
-                <div class="tool-section">
-                    <label style="font-size: 0.7rem; font-weight: 700;">Format</label>
-                    <select id="paper-size-select" onchange="window.updatePaperSize()" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
-                        <option value="letter">Letter (8.5 x 11")</option>
-                        <option value="a4">A4 (210 x 297mm)</option>
-                        <option value="custom">Custom</option>
-                    </select>
-                </div>
-                <div id="custom-size-inputs" class="hidden" style="display: flex; gap: 10px;">
-                    <input type="number" id="custom-w" placeholder="W (in)" step="0.1" style="width: 50%; padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
-                    <input type="number" id="custom-h" placeholder="H (in)" step="0.1" style="width: 50%; padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
-                </div>
-                <div class="tool-section">
-                    <label style="font-size: 0.7rem; font-weight: 700;">Background</label>
-                    <select id="bg-texture-select" onchange="updatePageStyle()" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
-                        <option value="texture-wood-light">Light Wood</option>
-                        <option value="texture-paper">Vintage Paper</option>
-                        <option value="texture-chalkboard">Chalkboard</option>
-                        <option value="white">Plain White</option>
-                    </select>
-                </div>
-                <div class="tool-section">
-                    <label style="font-size: 0.7rem; font-weight: 700;">Side Borders</label>
-                    <select id="border-style-select" onchange="updatePageStyle()" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
-                        <option value="border-red-ornate">Red Ornate</option>
-                        <option value="none">None</option>
-                    </select>
-                </div>
-                <div class="tool-section">
-                    <label style="font-size: 0.7rem; font-weight: 700;">Selected Image Style</label>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="draggable-item" style="flex: 1;" onclick="applyImageStyle('square')">Square</button>
-                        <button class="draggable-item" style="flex: 1;" onclick="applyImageStyle('circle')">Circle</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="floating-controls">
-        <button class="btn-action" id="btn-toggle-mode" onclick="toggleMode()" style="background: var(--text); color: white;">PREVIEW</button>
-        <button class="btn-action btn-save" onclick="saveLayout()">SAVE DESIGN</button>
-        <button class="btn-action btn-download" id="btn-download-pdf" onclick="generatePDF()">DOWNLOAD PDF</button>
+    <div class="floating-footer">
+        <button class="btn-action btn-save" onclick="saveLayout()">Save Changes</button>
+        <button class="btn-action btn-pdf" id="btn-download" onclick="exportPDF()">Export PDF</button>
     </div>
 
     <script type="module">
-        import { supabase as realSb } from './supabase.js';
-        const sb = window.mockSupabase || realSb;
+        import { supabase } from './supabase.js';
 
-        let user = null, userRole = null, activeOwnerId = null;
-        let menuData = null, restaurantInfo = null;
-        let currentPageIndex = 1;
-        let isPreviewMode = false;
-        let selectedElement = null;
+        let user = null, role = null, activeId = null;
+        let restaurant = null, menu = null;
+        let selectedEl = null;
 
-        window.showToast = (msg, type='success') => {
-            const container = document.getElementById('toast-container');
-            const t = document.createElement('div');
-            t.className = `toast ${type}`;
-            t.textContent = msg;
-            container.appendChild(t);
-            setTimeout(() => t.remove(), 4000);
+        const TOAST = $('#toast');
+        window.showToast = (msg) => {
+            TOAST.text(msg).css('transform', 'translateX(0)');
+            setTimeout(() => TOAST.css('transform', 'translateX(120%)'), 3000);
         };
 
         $(document).ready(async () => {
-            $('#sidebar-tab').on('click', () => $('#sidebar-container').toggleClass('collapsed'));
-            await window.checkSession();
-            $('#loading-overlay').css('opacity', '0');
-            setTimeout(() => $('#loading-overlay').addClass('hidden'), 500);
-        });
-
-        window.checkSession = async () => {
-            const { data: { session } } = await sb.auth.getSession();
-            if (!session) { location.href = "index.html"; return; }
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { location.href = 'index.html'; return; }
             user = session.user;
 
-            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-            userRole = (profile?.role || 'OWNER').toUpperCase();
-            activeOwnerId = user.id;
+            const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+            role = (profile?.role || 'OWNER').toUpperCase();
+            activeId = user.id;
 
-            $('#user-name').text(profile?.username || user.email.split('@')[0]);
-            $('#user-role-label').text(userRole);
+            $('#user-pill').text(`${profile?.username || user.email} (${role})`);
 
-            if (['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'].includes(userRole)) {
-                $('#sidebar-container').removeClass('hidden');
-                window.setupContextSwitcher();
+            if (['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'].includes(role)) {
+                $('#project-switcher').removeClass('hidden');
+                loadAllUsers();
             } else {
-                $('#btn-download-pdf').prop('disabled', true).attr('title', 'Admin only feature');
+                $('#btn-download').addClass('hidden'); // Owner can't download per request
             }
 
-            await window.loadRestaurantData();
-        };
+            loadData();
+        });
 
-        window.setupContextSwitcher = async () => {
-            const { data } = await sb.from('profiles').select('*');
-            const render = (owners) => {
-                $('#client-list').html(owners.map(o => `
-                    <div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="window.switchContext('${o.id}')">
-                        <span style="font-weight: 700; font-size: 0.85rem;">${o.username || o.email}</span>
-                    </div>
-                `).join(''));
-            };
-            render(data || []);
-            $('#client-search').on('input', function() {
-                const term = $(this).val().toLowerCase();
-                render(data.filter(o => (o.username||'').toLowerCase().includes(term) || (o.email||'').toLowerCase().includes(term)));
-            });
-            window.switchContext = (id) => {
-                activeOwnerId = id;
-                currentPageIndex = 1;
-                $('#designer-workspace').empty();
-                window.setupContextSwitcher();
-                window.loadRestaurantData();
-            };
+        async function loadAllUsers() {
+            const { data } = await supabase.from('profiles').select('id, username, email').order('username');
+            const select = $('#context-select');
+            select.empty();
+            data.forEach(p => select.append(`<option value="${p.id}" ${p.id === activeId ? 'selected' : ''}>${p.username || p.email}</option>`));
         }
 
-        window.loadRestaurantData = async () => {
-            const { data: res } = await sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle();
-            restaurantInfo = res;
-            const { data: menu } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
-            menuData = menu;
-
-            window.updateToolbox();
-            await window.loadSavedLayout();
+        window.switchContext = (id) => {
+            activeId = id;
+            loadData();
         };
 
-        window.updateToolbox = () => {
-            const catList = $('#cat-list-toolbox');
-            catList.empty();
-            if (menuData?.config?.categories) {
-                menuData.config.categories.forEach(c => {
-                    catList.append(`<div class="draggable-item" onclick="addCategoryToPage('${c.name}')">${c.name}</div>`);
-                });
-            }
+        async function loadData() {
+            const [res, men] = await Promise.all([
+                supabase.from('menutech_restaurants').select('*').eq('user_id', activeId).maybeSingle(),
+                supabase.from('menutech_menus').select('*').eq('user_id', activeId).maybeSingle()
+            ]);
+            restaurant = res.data;
+            menu = men.data;
 
-            const imgList = $('#image-list-toolbox');
-            imgList.empty();
-            let images = [];
-            if (restaurantInfo?.logo_url) images.push(restaurantInfo.logo_url);
-            if (menuData?.config?.categories) {
-                menuData.config.categories.forEach(c => {
-                    if (c.image) images.push(c.image);
-                    c.dishes?.forEach(d => { if(d.image) images.push(d.image); });
-                });
-            }
-            [...new Set(images)].filter(Boolean).forEach(url => {
-                imgList.append(`<img src="${url}" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="addImageToPage('${url}')">`);
+            renderToolbox();
+            loadSavedLayout();
+        }
+
+        function renderToolbox() {
+            const catList = $('#categories-list').empty();
+            menu?.config?.categories?.forEach(c => {
+                catList.append(`<div class="tool-item" onclick="addCategory('${c.name}')"><span>📂</span> ${c.name}</div>`);
             });
 
-            const stainsList = $('#stains-toolbox');
-            stainsList.empty();
-            const stains = [
-                'https://cdn-icons-png.flaticon.com/512/3233/3233514.png',
-                'https://cdn-icons-png.flaticon.com/512/5900/5900543.png',
-                'https://cdn-icons-png.flaticon.com/512/1063/1063251.png',
-                'https://cdn-icons-png.flaticon.com/512/3159/3159066.png',
-                'https://cdn-icons-png.flaticon.com/512/751/751505.png'
-            ];
-            stains.forEach(url => {
-                stainsList.append(`<img src="${url}" style="width:100%; opacity:0.5; cursor:pointer; filter: grayscale(1);" onclick="addImageToPage('${url}', true)">`);
+            const gallery = $('#gallery').empty();
+            let images = [];
+            if (restaurant?.logo_url) images.push(restaurant.logo_url);
+            menu?.config?.categories?.forEach(c => {
+                if (c.image) images.push(c.image);
+                c.dishes?.forEach(d => { if(d.image) images.push(d.image); });
+            });
+            [...new Set(images)].filter(Boolean).forEach(url => {
+                gallery.append(`<img src="${url}" class="image-thumb" onclick="addElement('image', '${url}')">`);
             });
         }
 
         window.addPage = () => {
-            const workspace = $('#designer-workspace');
-            const pageNum = workspace.children('.page').length + 1;
-            const element = $(`<div class="page p${pageNum}"><div class="page-content"></div></div>`);
-            workspace.append(element);
-            updatePageStyle();
-            window.updateWorkspaceNav();
-            window.goToWorkspacePage(pageNum);
-            return element;
+            const page = $(`
+                <div class="page-wrapper">
+                    <div class="page ${$('#tmpl-select').val()}"></div>
+                    <button class="btn-action" style="position:absolute; right:-120px; top:0; background:white; color:var(--error); border:1px solid var(--border);" onclick="$(this).parent().remove()">Remove</button>
+                </div>
+            `);
+            $('#designer-canvas').append(page);
+            updateSize();
+            return page.find('.page');
         };
 
-        window.updateWorkspaceNav = () => {
-            const nav = $('#workspace-nav');
-            nav.empty();
-            $('#designer-workspace .page').each(function(i) {
-                const pageNum = i + 1;
-                const isActive = $(this).hasClass('active');
-                const btn = $(`<button class="tab-btn ${isActive ? 'active' : ''}" onclick="window.goToWorkspacePage(${pageNum})">P${pageNum}</button>`);
-                nav.append(btn);
-            });
+        window.addElement = (type, content = null) => {
+            const page = $('#designer-canvas .page').last();
+            if (page.length === 0) return showToast("Add a page first!");
+
+            let html = '';
+            if (type === 'logo') html = `<img src="${restaurant?.logo_url || ''}" style="width:120px;">`;
+            if (type === 'name') html = `<h1 style="font-family:'Bebas Neue'; font-size:4rem; line-height:1;">${restaurant?.name || 'NAME'}</h1>`;
+            if (type === 'contact') html = `<p style="font-family:'Outfit'; font-size:1rem;">${restaurant?.phone || ''} • ${restaurant?.address || ''}</p>`;
+            if (type === 'image') html = `<img src="${content}" style="width:150px; border-radius:10px; box-shadow:0 10px 20px rgba(0,0,0,0.1);">`;
+
+            createCanvasElement(page, type, html);
         };
 
-        window.goToWorkspacePage = (n) => {
-            const pages = $('#designer-workspace .page');
-            pages.removeClass('active');
-            pages.eq(n - 1).addClass('active');
-            $('#workspace-nav .tab-btn').removeClass('active').eq(n - 1).addClass('active');
-            currentPageIndex = n;
-        };
+        function createCanvasElement(page, type, html, x = 50, y = 50) {
+            const el = $(`
+                <div class="canvas-element" data-type="${type}" style="transform: translate(${x}px, ${y}px);" data-x="${x}" data-y="${y}">
+                    <div class="el-content" contenteditable="true">${html}</div>
+                    <button class="delete-btn" onclick="$(this).parent().remove()">×</button>
+                </div>
+            `);
 
-        window.getCurrentPageContent = () => $('#designer-workspace .page').eq(currentPageIndex - 1).find('.page-content');
-
-        window.createElement = (type, content) => {
-            const el = $(`<div class="canvas-element" data-type="${type}"></div>`);
-            el.html(content + `<button class="delete-btn" onclick="$(this).parent().remove()">×</button>`);
-
-            el.on('mousedown', function(e) {
-                e.stopPropagation();
-                $('.canvas-element').css('outline', 'none');
-                $(this).css('outline', '2px solid var(--orange)');
-                selectedElement = $(this);
+            el.on('mousedown', function() {
+                $('.canvas-element').removeClass('selected');
+                $(this).addClass('selected');
+                selectedEl = $(this);
+                $('#element-props').removeClass('hidden');
             });
 
-            makeInteract(el);
+            interact(el[0]).draggable({
+                listeners: {
+                    move(event) {
+                        const target = event.target;
+                        const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                        const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+                        target.style.transform = `translate(${x}px, ${y}px)`;
+                        target.setAttribute('data-x', x);
+                        target.setAttribute('data-y', y);
+                    }
+                }
+            }).resizable({
+                edges: { left: true, right: true, bottom: true, top: true },
+                listeners: {
+                    move(event) {
+                        const target = event.target;
+                        let x = (parseFloat(target.getAttribute('data-x')) || 0);
+                        let y = (parseFloat(target.getAttribute('data-y')) || 0);
+                        target.style.width = event.rect.width + 'px';
+                        target.style.height = event.rect.height + 'px';
+                        x += event.deltaRect.left;
+                        y += event.deltaRect.top;
+                        target.style.transform = `translate(${x}px, ${y}px)`;
+                        target.setAttribute('data-x', x);
+                        target.setAttribute('data-y', y);
+                    }
+                }
+            });
+
+            page.append(el);
             return el;
         }
 
-        window.makeInteract = (el) => {
-            interact(el[0])
-                .draggable({
-                    listeners: {
-                        move (event) {
-                            var target = event.target
-                            var x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx
-                            var y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy
-                            target.style.transform = 'translate(' + x + 'px, ' + y + 'px)'
-                            target.setAttribute('data-x', x)
-                            target.setAttribute('data-y', y)
-                        }
-                    }
-                })
-                .resizable({
-                    edges: { left: true, right: true, bottom: true, top: true },
-                    listeners: {
-                        move (event) {
-                            var target = event.target
-                            var x = (parseFloat(target.getAttribute('data-x')) || 0)
-                            var y = (parseFloat(target.getAttribute('data-y')) || 0)
-                            target.style.width = event.rect.width + 'px'
-                            target.style.height = event.rect.height + 'px'
-                            x += event.deltaRect.left
-                            y += event.deltaRect.top
-                            target.style.transform = 'translate(' + x + 'px, ' + y + 'px)'
-                            target.setAttribute('data-x', x)
-                            target.setAttribute('data-y', y)
-                        }
-                    }
-                });
-        }
+        window.addCategory = (catName) => {
+            const page = $('#designer-canvas .page').last();
+            const cat = menu?.config?.categories?.find(c => c.name === catName);
+            if (!cat || page.length === 0) return;
 
-        window.addInfoElement = (type) => {
-            const page = getCurrentPageContent();
-            let content = '';
-            if (type === 'logo') content = `<img src="${restaurantInfo?.logo_url || ''}" style="width: 150px;">`;
-            if (type === 'name') content = `<h1 contenteditable="true" style="font-family:'Bebas Neue'; font-size: 4rem; color: #b31b1b;">${restaurantInfo?.name || 'Restaurant Name'}</h1>`;
-            if (type === 'contact') content = `<p contenteditable="true" style="font-family:'Outfit'; font-size: 1.1rem; text-align:center;">${restaurantInfo?.phone || ''} | ${restaurantInfo?.address || ''}</p>`;
+            const header = createCanvasElement(page, 'cat-header', `<div class="brush-header">${cat.name}</div>`);
 
-            const el = createElement(type, content);
-            page.append(el);
-        };
-
-        window.addImageToPage = (url, isStain = false) => {
-            const page = getCurrentPageContent();
-            const imgClass = isStain ? '' : 'circle-crop';
-            const style = isStain ? 'width: 100px; opacity: 0.3; filter: grayscale(1);' : 'width: 150px;';
-            const el = createElement('image', `<img src="${url}" class="${imgClass}" style="${style}">`);
-            page.append(el);
-        };
-
-        window.addCategoryToPage = (catName, targetPage) => {
-            const page = targetPage || getCurrentPageContent();
-            const cat = menuData?.config?.categories?.find(c => c.name === catName);
-            if (!cat) return;
-
-            // Add Header
-            const header = createElement('cat-header', `<div class="brush-header" contenteditable="true">${cat.name}</div>`);
-            page.append(header);
-
-            // Add Dishes as separate elements
+            let currentY = 150;
             cat.dishes?.forEach(d => {
-                const dishRow = createElement('dish-row', `
-                    <div style="display:flex; justify-content:space-between; width: 450px; font-family:'Bebas Neue'; border-bottom: 1px dashed rgba(0,0,0,0.1);">
-                        <span contenteditable="true" style="font-size: 1.8rem;">${d.name}</span>
-                        <span contenteditable="true" style="font-size: 1.8rem; color: #b31b1b;">$${d.price}</span>
+                const dishHtml = `
+                    <div style="width:500px; margin-bottom:10px;">
+                        <div class="item-row">
+                            <span>${d.name}</span>
+                            <div class="item-dots"></div>
+                            <span>$${d.price}</span>
+                        </div>
+                        <div style="font-family:'Outfit'; font-size:0.8rem; font-weight:300; opacity:0.8;">${d.description || ''}</div>
                     </div>
-                `);
-                page.append(dishRow);
-
-                if (d.description) {
-                    const desc = createElement('dish-desc', `
-                        <div contenteditable="true" style="font-family:'Outfit'; font-size: 1rem; color: #4a5568; width: 400px; margin-top: -5px;">${d.description}</div>
-                    `);
-                    page.append(desc);
-                }
+                `;
+                createCanvasElement(page, 'dish', dishHtml, 50, currentY);
+                currentY += 60;
             });
         };
 
-        window.autoFlowMenu = () => {
-            if (!menuData?.config?.categories) return;
-            $('#designer-workspace').empty();
-            let currentPage = addPage();
-            let yOffset = 60;
+        window.autoFlow = () => {
+            $('#designer-canvas').empty();
+            let page = addPage();
+            let y = 100;
 
-            menuData.config.categories.forEach(cat => {
-                if (yOffset > 600) {
-                    currentPage = addPage();
-                    yOffset = 60;
-                }
+            // Header
+            createCanvasElement(page, 'logo', `<img src="${restaurant?.logo_url}" style="width:100px;">`, 300, 40);
+            y = 150;
 
-                const h = createElement('cat-header', `<div class="brush-header" contenteditable="true">${cat.name}</div>`);
-                h.css('transform', `translate(60px, ${yOffset}px)`).attr('data-x', 60).attr('data-y', yOffset);
-                currentPage.find('.page-content').append(h);
-                yOffset += 80;
+            menu?.config?.categories?.forEach(cat => {
+                if (y > 800) { page = addPage(); y = 80; }
+
+                createCanvasElement(page, 'cat-header', `<div class="brush-header">${cat.name}</div>`, 50, y);
+                y += 80;
 
                 cat.dishes?.forEach(d => {
-                    if (yOffset > 750) {
-                        currentPage = addPage();
-                        yOffset = 60;
-                    }
-                    const row = createElement('dish-row', `
-                        <div style="display:flex; justify-content:space-between; width: 470px; font-family:'Bebas Neue';">
-                            <span contenteditable="true" style="font-size: 1.6rem;">${d.name}</span>
-                            <span contenteditable="true" style="font-size: 1.6rem; color: #b31b1b;">$${d.price}</span>
+                    if (y > 950) { page = addPage(); y = 80; }
+                    const html = `
+                        <div style="width:700px;">
+                            <div class="item-row"><span>${d.name}</span><div class="item-dots"></div><span>$${d.price}</span></div>
+                            <div style="font-family:'Outfit'; font-size:0.9rem; font-weight:300; opacity:0.8;">${d.description || ''}</div>
                         </div>
-                    `);
-                    row.css('transform', `translate(60px, ${yOffset}px)`).attr('data-x', 60).attr('data-y', yOffset);
-                    currentPage.find('.page-content').append(row);
-                    yOffset += 30;
-
-                    if (d.description) {
-                        const desc = createElement('dish-desc', `<div contenteditable="true" style="font-family:'Outfit'; font-size: 0.9rem; color: #4a5568; width: 400px;">${d.description}</div>`);
-                        desc.css('transform', `translate(60px, ${yOffset}px)`).attr('data-x', 60).attr('data-y', yOffset);
-                        currentPage.find('.page-content').append(desc);
-                        yOffset += 40;
-                    }
+                    `;
+                    createCanvasElement(page, 'dish', html, 50, y);
+                    y += d.description ? 70 : 40;
                 });
-                yOffset += 20;
+                y += 40;
             });
-            window.updateWorkspaceNav();
-            window.goToWorkspacePage(1);
         };
 
-        window.updatePageStyle = () => {
-            const tex = $('#bg-texture-select').val();
-            const bor = $('#border-style-select').val();
-            $('.page').removeClass('texture-wood-light texture-paper texture-chalkboard border-red-ornate')
-                      .addClass(tex).addClass(bor === 'none' ? '' : bor);
+        window.updateTemplate = () => {
+            const tmpl = $('#tmpl-select').val();
+            $('.page').removeClass('tmpl-light tmpl-dark tmpl-rustic').addClass(tmpl);
         };
 
-        window.toggleMode = () => {
-            if (isPreviewMode) {
-                $('#preview-container').removeClass('active');
-                $('#designer-workspace').show();
-                $('#preview-controls').addClass('hidden');
-                $('#btn-toggle-mode').text('PREVIEW');
-                isPreviewMode = false;
-            } else {
-                $('#designer-workspace').hide();
-                $('#preview-container').addClass('active').empty().append('<div id="menu-book"></div>');
-                $('#preview-controls').removeClass('hidden');
-                $('#btn-toggle-mode').text('EDIT');
-                isPreviewMode = true;
-
-                const book = $('#menu-book');
-                $('#designer-workspace .page').each(function() {
-                    const clone = $(this).clone().addClass('active').css('display', 'block');
-                    clone.find('.delete-btn').remove();
-                    clone.find('.canvas-element').css('outline', 'none');
-                    book.append(clone);
-                });
-
-                book.turn({ width: 1190, height: 842, autoCenter: true });
-            }
+        window.updateSize = () => {
+            const size = $('#size-select').val();
+            const w = size === 'letter' ? '8.5in' : '210mm';
+            const h = size === 'letter' ? '11in' : '297mm';
+            $('.page').css({ width: w, height: h });
         };
 
         window.saveLayout = async () => {
             const pages = [];
-            $('#designer-workspace .page').each(function() {
-                const elements = [];
+            $('#designer-canvas .page').each(function() {
+                const els = [];
                 $(this).find('.canvas-element').each(function() {
-                    const el = $(this);
-                    elements.push({
-                        type: el.data('type'),
-                        html: el.html(),
-                        x: el.attr('data-x') || 0,
-                        y: el.attr('data-y') || 0,
-                        style: {
-                            width: el.css('width'),
-                            height: el.css('height'),
-                            transform: el.css('transform')
-                        }
+                    const e = $(this);
+                    els.push({
+                        type: e.data('type'),
+                        x: e.attr('data-x'),
+                        y: e.attr('data-y'),
+                        w: e.css('width'),
+                        h: e.css('height'),
+                        content: e.find('.el-content').html()
                     });
                 });
-                pages.push({ elements });
+                pages.push(els);
             });
 
-            const layout_config = {
+            const config = {
                 pages,
-                settings: {
-                    texture: $('#bg-texture-select').val(),
-                    border: $('#border-style-select').val(),
-                    paperSize: $('#paper-size-select').val()
-                }
+                tmpl: $('#tmpl-select').val(),
+                size: $('#size-select').val()
             };
 
-            const { error } = await sb.from('menutech_physical_menus').upsert({
-                user_id: activeOwnerId,
-                template_id: 'standard',
-                layout_config
+            const { error } = await supabase.from('menutech_physical_menus').upsert({
+                user_id: activeId,
+                template_id: 'v2',
+                layout_config: config
             }, { onConflict: 'user_id, template_id' });
 
-            if (error) showToast("Error: " + error.message, "error");
-            else showToast("Design Saved!");
+            if (error) showToast("Error saving: " + error.message);
+            else showToast("Layout saved successfully!");
         };
 
-        window.loadSavedLayout = async () => {
-            const { data } = await sb.from('menutech_physical_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
-            if (data?.layout_config) {
-                const config = data.layout_config;
-                $('#bg-texture-select').val(config.settings.texture);
-                $('#border-style-select').val(config.settings.border);
-                $('#paper-size-select').val(config.settings.paperSize);
+        async function loadSavedLayout() {
+            const { data } = await supabase.from('menutech_physical_menus').select('*').eq('user_id', activeId).eq('template_id', 'v2').maybeSingle();
+            $('#designer-canvas').empty();
 
-                $('#designer-workspace').empty();
-                config.pages.forEach((pData, i) => {
+            if (data?.layout_config) {
+                const cfg = data.layout_config;
+                $('#tmpl-select').val(cfg.tmpl);
+                $('#size-select').val(cfg.size);
+
+                cfg.pages.forEach(pEls => {
                     const page = addPage();
-                    const content = page.find('.page-content');
-                    pData.elements.forEach(elData => {
-                        const el = createElement(elData.type, elData.html);
-                        el.css(elData.style).attr('data-x', elData.x).attr('data-y', elData.y);
-                        content.append(el);
+                    pEls.forEach(e => {
+                        const el = createCanvasElement(page, e.type, e.content, parseFloat(e.x), parseFloat(e.y));
+                        el.css({ width: e.w, height: e.h });
                     });
                 });
             } else {
                 addPage();
             }
-            window.updatePageStyle();
-            window.updateWorkspaceNav();
-        };
+            updateTemplate();
+            updateSize();
+        }
 
-        window.generatePDF = async () => {
+        window.exportPDF = () => {
             const element = document.createElement('div');
-            $('#designer-workspace .page').each(function() {
-                const clone = $(this).clone().addClass('active').css({ 'display': 'block', 'margin': '0', 'box-shadow': 'none' });
+            $('#designer-canvas .page').each(function() {
+                const clone = $(this).clone();
                 clone.find('.delete-btn').remove();
+                clone.find('.canvas-element').css('outline', 'none');
+                clone.css({ margin: '0', boxShadow: 'none' });
                 element.appendChild(clone[0]);
             });
 
-            const size = $('#paper-size-select').val();
-            let format = 'letter';
-            if (size === 'a4') format = 'a4';
-            if (size === 'custom') {
-                format = [
-                    parseFloat($('#custom-w').val()) || 8.5,
-                    parseFloat($('#custom-h').val()) || 11
-                ];
-            }
-
+            const size = $('#size-select').val();
             const opt = {
                 margin: 0,
-                filename: 'menu.pdf',
+                filename: 'menu-menutech.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
-                jsPDF: { unit: 'in', format: format, orientation: 'portrait' }
+                jsPDF: { unit: 'in', format: size === 'letter' ? 'letter' : 'a4', orientation: 'portrait' }
             };
+
             html2pdf().set(opt).from(element).save();
         };
-
-        window.updatePaperSize = () => {
-            const size = $('#paper-size-select').val();
-            const customInputs = $('#custom-size-inputs');
-            let w, h;
-
-            if (size === 'custom') {
-                customInputs.removeClass('hidden');
-                w = parseFloat($('#custom-w').val()) || 8.5;
-                h = parseFloat($('#custom-h').val()) || 11;
-            } else {
-                customInputs.addClass('hidden');
-                w = size === 'letter' ? 8.5 : 8.27; // A4 is 8.27 x 11.69
-                h = size === 'letter' ? 11 : 11.69;
-            }
-
-            // Apply to workspace pages (px approx)
-            const scale = 72; // DPI
-            $('.page').css({
-                width: (w * scale) + 'px',
-                height: (h * scale) + 'px'
-            });
-        };
-
-        window.applyImageStyle = (s) => {
-            if (selectedElement?.data('type') === 'image') {
-                selectedElement.find('img').toggleClass('circle-crop', s === 'circle');
-            }
-        };
-
-        // Initialize custom size listeners
-        $('#custom-w, #custom-h').on('input', window.updatePaperSize);
 
     </script>
 </body>
