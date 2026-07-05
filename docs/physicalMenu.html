@@ -13,7 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Lora:ital,wght@0,400;0,700;1,400&family=Stint+Ultra+Condensed&family=Great+Vibes&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Lora:ital,wght@0,400;0,700;1,400&family=Stint+Ultra+Condensed&family=Great+Vibes&family=Montserrat:wght@300;400;700&family=Oswald:wght@300;400;700&family=Lato:wght@300;400;700&family=Open+Sans:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&family=Dancing+Script:wght@400;700&family=Pacifico&family=Cinzel:wght@400;700&display=swap');
 
         :root {
             --orange: #ff9533;
@@ -122,6 +122,7 @@
             padding: 0.6in; /* High Fidelity Margin */
             display: none;
             background-color: #fff;
+            user-select: none;
         }
         .page.active { display: block; }
 
@@ -131,6 +132,7 @@
             user-select: none; z-index: 10; padding: 4px;
             border: 1px solid transparent;
             box-sizing: border-box;
+            transition: none !important;
         }
         .canvas-element:hover { border: 1.5px dashed var(--orange); }
         .canvas-element.selected { border: 2px solid var(--orange); z-index: 100; }
@@ -155,8 +157,19 @@
         }
         .canvas-element.selected .delete-btn { display: flex; }
 
-        .el-content { outline: none; pointer-events: auto; }
+        .el-content { outline: none; pointer-events: auto; user-select: none; }
+        .el-content[contenteditable="true"] { user-select: text; cursor: text; }
         .el-content img { pointer-events: none; -webkit-user-drag: none; user-select: none; max-width: 100%; display: block; }
+
+        /* Marquee Selection */
+        #selection-marquee {
+            position: absolute;
+            border: 1px dashed var(--orange);
+            background: rgba(255, 149, 51, 0.1);
+            pointer-events: none;
+            z-index: 9000;
+            display: none;
+        }
 
         /* Brush Header Component */
         .brush-header {
@@ -470,6 +483,8 @@
         </button>
     </div>
 
+    <div id="selection-marquee"></div>
+
     <!-- Preview Modal -->
     <div id="preview-modal" class="modal-overlay">
         <div class="modal-content">
@@ -731,7 +746,7 @@
 
             const el = $(`
                 <div class="canvas-element" data-type="${type}" style="transform: translate(${x}px, ${y}px); width: ${style.width || 'auto'};" data-x="${x}" data-y="${y}">
-                    <div class="el-content" contenteditable="true">${html}</div>
+                    <div class="el-content" contenteditable="false">${html}</div>
                     <button class="delete-btn">×</button>
                     <div class="resize-handle handle-nw"></div>
                     <div class="resize-handle handle-ne"></div>
@@ -743,11 +758,26 @@
             el.find('.delete-btn').click((e) => { e.stopPropagation(); el.remove(); selectedEl = null; $('#element-properties').addClass('hidden'); });
 
             el.on('mousedown', function(e) {
+                if (e.target.closest('.el-content') && $(e.target.closest('.el-content')).attr('contenteditable') === 'true') return;
+
                 e.stopPropagation();
-                $('.canvas-element').removeClass('selected');
+                if (!e.shiftKey && !$(this).hasClass('selected')) {
+                    $('.canvas-element').not(this).removeClass('selected');
+                }
                 $(this).addClass('selected');
                 selectedEl = $(this);
                 showElementProperties();
+            });
+
+            // Double click to edit
+            el.on('dblclick', function(e) {
+                const content = $(this).find('.el-content');
+                content.attr('contenteditable', 'true').focus();
+            });
+
+            // Blur to disable edit
+            el.find('.el-content').on('blur', function() {
+                $(this).attr('contenteditable', 'false');
             });
 
             interact(el[0]).draggable({
@@ -758,15 +788,22 @@
                         const dx = event.dx;
                         const dy = event.dy;
 
-                        const groupMove = $('#group-move-toggle').is(':checked');
-                        const groupId = target.getAttribute('data-group');
-
-                        if (groupMove && groupId) {
-                            $(`[data-group="${groupId}"]`).each(function() {
+                        const selectedEls = $('.canvas-element.selected');
+                        if (selectedEls.length > 1 && $(target).hasClass('selected')) {
+                            selectedEls.each(function() {
                                 moveEl(this, dx, dy);
                             });
                         } else {
-                            moveEl(target, dx, dy);
+                            const groupMove = $('#group-move-toggle').is(':checked');
+                            const groupId = target.getAttribute('data-group');
+
+                            if (groupMove && groupId) {
+                                $(`[data-group="${groupId}"]`).each(function() {
+                                    moveEl(this, dx, dy);
+                                });
+                            } else {
+                                moveEl(target, dx, dy);
+                            }
                         }
                     }
                 },
@@ -809,23 +846,26 @@
             if (!cat) return;
 
             let page = $('.page').eq(currentPageIndex);
+            const canvasW = $('#designer-canvas').width();
             let y = 100;
 
             // Category Header
-            createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: 183, top: y, width: '450px' });
+            const headerW = 450;
+            createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: (canvasW - headerW) / 2, top: y, width: headerW + 'px' });
             y += 120;
 
             // 2-Column Logic
             const dishes = cat.dishes || [];
             const colWidth = 320;
-            const colGap = 60;
-            const startX = 58;
+            const colGap = 80; // Increased gap
+            const totalGridW = (colWidth * 2) + colGap;
+            const startX = (canvasW - totalGridW) / 2; // Dynamic centering
 
             dishes.forEach((d, i) => {
                 const col = i % 2;
                 const row = Math.floor(i / 2);
                 const x = startX + (col * (colWidth + colGap));
-                const rowY = y + (row * 85);
+                const rowY = y + (row * 100); // Increased row height
 
                 addDishElements(page, d, x, rowY, colWidth);
             });
@@ -834,14 +874,17 @@
         function addDishElements(page, dish, x, y, width) {
             const groupId = 'dish-' + Math.random().toString(36).substr(2, 9);
 
-            const nameEl = createCanvasElement(page, 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1.05rem; color:#1a1a1a; text-transform: uppercase; border-bottom: 1.5px dotted rgba(0,0,0,0.1);">${dish.name}</div>`, { left: x, top: y, width: (width - 60) + 'px' });
+            // Name El with better alignment and dot border
+            const nameEl = createCanvasElement(page, 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1.05rem; color:#1a1a1a; text-transform: uppercase; border-bottom: 1.5px dotted rgba(0,0,0,0.1); margin-bottom: 5px;">${dish.name}</div>`, { left: x, top: y, width: (width - 60) + 'px' });
             nameEl.attr('data-group', groupId);
 
+            // Price El
             const priceEl = createCanvasElement(page, 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:1.05rem; color:#8b1d1d; text-align: right;">$${dish.price}</div>`, { left: x + (width - 60), top: y, width: '60px' });
             priceEl.attr('data-group', groupId);
 
+            // Description El - increased offset to y+40 to avoid overlap with name/price
             if (dish.description) {
-                const descEl = createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.75rem; color:#555; font-weight:500; font-style:italic; line-height: 1.2;">${dish.description}</div>`, { left: x, top: y + 24, width: width + 'px' });
+                const descEl = createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.75rem; color:#555; font-weight:500; font-style:italic; line-height: 1.3; padding-top: 5px;">${dish.description}</div>`, { left: x, top: y + 38, width: width + 'px' });
                 descEl.attr('data-group', groupId);
             }
         }
@@ -861,17 +904,20 @@
             $('#designer-canvas').empty();
             currentPageIndex = 0;
             let page = addBlankPage();
+            const canvasW = $('#designer-canvas').width();
 
             let currentY = 60;
             const colWidth = currentTemplate === 'classic' ? 320 : 700;
-            const colGap = 60;
-            const startX = currentTemplate === 'classic' ? 58 : 58;
+            const colGap = currentTemplate === 'classic' ? 80 : 0;
+            const numCols = currentTemplate === 'classic' ? 2 : 1;
+            const totalGridW = (colWidth * numCols) + ((numCols - 1) * colGap);
+            const startX = (canvasW - totalGridW) / 2;
 
             menuData?.config?.categories?.forEach(cat => {
                 const dishes = cat.dishes || [];
-                const numCols = currentTemplate === 'classic' ? 2 : 1;
                 const rows = Math.ceil(dishes.length / numCols);
-                const heightEstimate = 100 + (rows * 85);
+                const rowH = 100;
+                const heightEstimate = 120 + (rows * rowH);
 
                 if (currentY + heightEstimate > 980) {
                     page = addBlankPage();
@@ -879,19 +925,20 @@
                 }
 
                 // Category Title
-                createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: 183, top: currentY, width: '450px' });
+                const headerW = 450;
+                createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: (canvasW - headerW) / 2, top: currentY, width: headerW + 'px' });
                 currentY += 110;
 
                 dishes.forEach((d, i) => {
                     const col = i % numCols;
                     const row = Math.floor(i / numCols);
                     const x = startX + (col * (colWidth + colGap));
-                    const rowY = currentY + (row * 85);
+                    const rowY = currentY + (row * rowH);
 
                     addDishElements(page, d, x, rowY, colWidth);
                 });
 
-                currentY += (rows * 85) + 40;
+                currentY += (rows * rowH) + 60;
             });
 
             switchPage(0);
@@ -919,6 +966,14 @@
                         <option value="'Stint Ultra Condensed'">Stint (Vintage)</option>
                         <option value="'Great Vibes'">Great Vibes (Cursive)</option>
                         <option value="'Outfit'">Outfit (Bold)</option>
+                        <option value="'Montserrat'">Montserrat</option>
+                        <option value="'Oswald'">Oswald</option>
+                        <option value="'Lato'">Lato</option>
+                        <option value="'Open Sans'">Open Sans</option>
+                        <option value="'Roboto Condensed'">Roboto Condensed</option>
+                        <option value="'Dancing Script'">Dancing Script</option>
+                        <option value="'Pacifico'">Pacifico</option>
+                        <option value="'Cinzel'">Cinzel</option>
                     </select>
                 </div>
                 <div class="prop-group">
@@ -1113,13 +1168,79 @@
             setTimeout(() => t.removeClass('active'), 3000);
         };
 
-        $('.workspace').on('mousedown', function(e) {
-            if (e.target === this || e.target.id === 'canvas-wrapper' || e.target.id === 'designer-canvas' || $(e.target).hasClass('page')) {
+        let isMarquee = false, marqueeStart = { x: 0, y: 0 };
+
+        $('#designer-canvas').on('mousedown', function(e) {
+            if (e.target === this || $(e.target).hasClass('page')) {
                 $('.canvas-element').removeClass('selected');
                 selectedEl = null;
                 $('#element-properties').addClass('hidden');
+
+                isMarquee = true;
+                const offset = $(this).offset();
+                const scale = getCanvasScale();
+                marqueeStart = {
+                    x: (e.pageX - offset.left) / scale,
+                    y: (e.pageY - offset.top) / scale
+                };
+
+                $('#selection-marquee').css({
+                    left: marqueeStart.x, top: marqueeStart.y,
+                    width: 0, height: 0, display: 'block'
+                });
             }
         });
+
+        $(document).on('mousemove', function(e) {
+            if (!isMarquee) return;
+            const offset = $('#designer-canvas').offset();
+            const scale = getCanvasScale();
+            const currentX = (e.pageX - offset.left) / scale;
+            const currentY = (e.pageY - offset.top) / scale;
+
+            const left = Math.min(marqueeStart.x, currentX);
+            const top = Math.min(marqueeStart.y, currentY);
+            const width = Math.abs(marqueeStart.x - currentX);
+            const height = Math.abs(marqueeStart.y - currentY);
+
+            $('#selection-marquee').css({ left, top, width, height });
+
+            // Select elements in marquee
+            $('.page.active .canvas-element').each(function() {
+                const el = $(this);
+                const ex = parseFloat(el.attr('data-x'));
+                const ey = parseFloat(el.attr('data-y'));
+                const ew = el.outerWidth();
+                const eh = el.outerHeight();
+
+                if (ex < left + width && ex + ew > left && ey < top + height && ey + eh > top) {
+                    el.addClass('selected');
+                } else if (!e.shiftKey) {
+                    el.removeClass('selected');
+                }
+            });
+        });
+
+        $(document).on('mouseup', function() {
+            if (isMarquee) {
+                isMarquee = false;
+                $('#selection-marquee').hide();
+                const selected = $('.canvas-element.selected');
+                if (selected.length === 1) {
+                    selectedEl = selected;
+                    showElementProperties();
+                }
+            }
+        });
+
+        function getCanvasScale() {
+            const matrix = $('#designer-canvas').css('transform');
+            if (matrix && matrix !== 'none') {
+                const values = matrix.split('(')[1].split(')')[0].split(',');
+                return parseFloat(values[0]);
+            }
+            return 1;
+        }
 
     </script>
 </body>
