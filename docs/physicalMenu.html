@@ -13,7 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Lora:ital,wght@0,400;0,700;1,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Lora:ital,wght@0,400;0,700;1,400&family=Stint+Ultra+Condensed&family=Great+Vibes&display=swap');
 
         :root {
             --orange: #ff9533;
@@ -97,7 +97,7 @@
             width: 100%;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             overflow: hidden;
             position: relative;
         }
@@ -105,7 +105,7 @@
         /* Designer Canvas */
         #designer-canvas {
             position: relative;
-            transform-origin: center center;
+            transform-origin: center top;
             transition: transform 0.2s ease-out;
             background: white;
             box-shadow: 0 15px 50px rgba(0,0,0,0.2);
@@ -119,8 +119,8 @@
             overflow: hidden;
             background-size: cover;
             background-position: center;
-            padding: 0.5in; /* Professional Margin */
-            display: none; /* Controlled by JS */
+            padding: 0.6in; /* High Fidelity Margin */
+            display: none;
         }
         .page.active { display: block; }
 
@@ -137,9 +137,9 @@
         .canvas-element {
             position: absolute; cursor: move; touch-action: none;
             user-select: none; z-index: 10; padding: 5px;
-            border: 1px solid transparent;
+            border: 1.5px solid transparent;
         }
-        .canvas-element:hover { border: 1px dashed var(--orange); }
+        .canvas-element:hover { border: 1.5px dashed var(--orange); }
         .canvas-element.selected { border: 2px solid var(--orange); z-index: 100; }
 
         .delete-btn {
@@ -150,7 +150,6 @@
         }
         .canvas-element:hover .delete-btn { display: flex; }
 
-        /* Content Editable Tweak */
         .el-content { outline: none; }
 
         /* Brush Header Component */
@@ -158,7 +157,7 @@
             font-family: 'Bebas Neue', sans-serif;
             font-size: 2.8rem;
             color: white;
-            padding: 12px 70px;
+            padding: 15px 80px;
             display: inline-block;
             position: relative;
             text-align: center;
@@ -174,25 +173,38 @@
             mask-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/brush_stroke_mask.png');
             mask-size: 100% 100%;
             mask-repeat: no-repeat;
-            /* Fallback */
-            clip-path: polygon(5% 0%, 95% 2%, 100% 50%, 95% 98%, 5% 100%, 0% 50%);
+            /* Fallback mask */
+            clip-path: polygon(5% 0%, 95% 5%, 100% 50%, 95% 95%, 5% 100%, 0% 50%);
         }
+
+        /* Ornate Border Overlay */
+        .page::after {
+            content: '';
+            position: absolute;
+            inset: 20px;
+            pointer-events: none;
+            border: 2px solid rgba(139, 29, 29, 0.1);
+            border-left: 12px solid #8b1d1d;
+            border-right: 12px solid #8b1d1d;
+            mask-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/ornate_edge_mask.png');
+            opacity: 0.8;
+        }
+        .tmpl-minimal::after, .tmpl-dark::after { border: none !important; }
 
         /* Pagination Bar */
         .pagination-bar {
             background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
-            padding: 10px 20px; border-radius: 50px; border: 1px solid var(--border);
-            display: flex; gap: 15px; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 10px 24px; border-radius: 50px; border: 1px solid var(--border);
+            display: flex; gap: 12px; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             margin-top: 20px; z-index: 4000;
         }
-        .page-dot {
-            width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0;
-            display: flex; align-items: center; justify-content: center;
+        .page-tab {
+            padding: 8px 16px; border-radius: 20px; background: #e2e8f0;
             font-size: 0.75rem; font-weight: 800; cursor: pointer; transition: 0.3s;
+            color: var(--text-dim); border: none;
         }
-        .page-dot.active { background: var(--orange); color: white; transform: scale(1.1); }
-        .page-add { background: #f1f5f9; color: var(--text); }
-        .page-add:hover { background: var(--success); color: white; }
+        .page-tab.active { background: var(--orange); color: white; transform: scale(1.05); }
+        .page-tab:hover:not(.active) { background: #cbd5e1; }
 
         /* Template Grid */
         .template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -213,40 +225,17 @@
         .modal-overlay.active { display: flex; }
         .modal-content {
             background: transparent;
-            max-width: 95vw; max-height: 95vh;
+            width: 90vw; height: 90vh;
             position: relative;
-            display: flex; flex-direction: column; align-items: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .modal-close {
-            position: absolute; top: -50px; right: 0;
-            background: white; border: none; width: 40px; height: 40px;
+            position: absolute; top: 20px; right: 20px;
+            background: white; border: none; width: 44px; height: 44px;
             border-radius: 50%; font-size: 1.5rem; font-weight: bold;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 10001;
         }
-
-        /* Properties Sidebar */
-        .sidebar-right { border-right: none; border-left: 1px solid var(--border); }
-        .prop-group { margin-bottom: 20px; }
-        .prop-group label { display: block; font-size: 0.65rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
-        .prop-input {
-            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
-            font-family: inherit; font-size: 0.85rem; background: #f8fafc;
-        }
-
-        /* Mode Switcher */
-        .mode-switcher {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
-            padding: 6px; border-radius: 50px; border: 1px solid var(--border);
-            display: flex; gap: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 6000;
-        }
-        .mode-btn {
-            padding: 10px 24px; border-radius: 40px; border: none; font-weight: 800;
-            font-size: 0.75rem; text-transform: uppercase; cursor: pointer; transition: 0.3s;
-            background: transparent; color: var(--text-dim);
-        }
-        .mode-btn.active { background: var(--orange); color: white; }
 
         /* Floating Actions */
         .floating-actions {
@@ -283,7 +272,6 @@
         .client-item:hover { border-color: var(--orange); background: #fffcf9; }
         .client-item.active { border-color: var(--orange); background: rgba(255,149,51,0.1); }
 
-        /* Toast */
         #toast {
             position: fixed; top: 90px; left: 50%; transform: translateX(-50%) translateY(-100px);
             background: #1e293b; color: white; padding: 12px 28px; border-radius: 40px;
@@ -298,6 +286,17 @@
         .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .gallery-item { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
         .gallery-item:hover { border-color: var(--orange); transform: scale(1.05); }
+
+        .prop-input {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
+            font-family: inherit; font-size: 0.85rem; background: #f8fafc;
+        }
+        .prop-group { margin-bottom: 15px; }
+        .prop-group label { display: block; font-size: 0.65rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px; }
+
+        .layer-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn-small { padding: 8px; font-size: 0.65rem; font-weight: 800; cursor: pointer; border-radius: 8px; border: 1px solid var(--border); background: white; text-transform: uppercase; }
+        .btn-small:hover { background: #f1f5f9; border-color: var(--orange); }
 
     </style>
 </head>
@@ -340,23 +339,23 @@
                 <div class="template-grid">
                     <div class="template-card active" data-tmpl="tmpl-hoja" onclick="selectTemplate('tmpl-hoja')">
                         <div class="template-preview tmpl-hoja"></div>
-                        <div style="font-size:0.65rem; font-weight:800;">CLÁSICO</div>
+                        <div style="font-size:0.6rem; font-weight:900;">CLASSIC WOOD</div>
                     </div>
                     <div class="template-card" data-tmpl="tmpl-minimal" onclick="selectTemplate('tmpl-minimal')">
                         <div class="template-preview tmpl-minimal"></div>
-                        <div style="font-size:0.65rem; font-weight:800;">MINIMAL</div>
+                        <div style="font-size:0.6rem; font-weight:900;">MINIMAL</div>
                     </div>
                     <div class="template-card" data-tmpl="tmpl-dark" onclick="selectTemplate('tmpl-dark')">
                         <div class="template-preview tmpl-dark"></div>
-                        <div style="font-size:0.65rem; font-weight:800;">OSCURO</div>
+                        <div style="font-size:0.6rem; font-weight:900;">DARK MODE</div>
                     </div>
                     <div class="template-card" data-tmpl="tmpl-parchment" onclick="selectTemplate('tmpl-parchment')">
                         <div class="template-preview tmpl-parchment"></div>
-                        <div style="font-size:0.65rem; font-weight:800;">PERGAMINO</div>
+                        <div style="font-size:0.6rem; font-weight:900;">PARCHMENT</div>
                     </div>
                 </div>
 
-                <span class="section-title">Identity</span>
+                <span class="section-title">Identity Elements</span>
                 <div class="tool-item" onclick="addElement('logo')"><span>🖼️</span> Logo</div>
                 <div class="tool-item" onclick="addElement('name')"><span>🏷️</span> Restaurant Name</div>
                 <div class="tool-item" onclick="addElement('contact')"><span>📞</span> Contact Info</div>
@@ -366,8 +365,8 @@
                     <div style="font-size:0.75rem; color:var(--text-dim); text-align:center; padding:20px;">Loading categories...</div>
                 </div>
 
-                <span class="section-title">Accents & Media</span>
-                <div class="tool-item" onclick="addElement('brush')"><span>🎨</span> Brush Stroke</div>
+                <span class="section-title">Decorative Assets</span>
+                <div class="tool-item" onclick="addElement('brush')"><span>🎨</span> Brush Header</div>
                 <div class="tool-item" onclick="addElement('stain')"><span>☕</span> Coffee Stain</div>
                 <div class="gallery-grid" id="gallery"></div>
             </div>
@@ -382,9 +381,7 @@
             </div>
 
             <!-- Pagination Bar -->
-            <div class="pagination-bar" id="pagination-controls">
-                <!-- Dots added by JS -->
-            </div>
+            <div class="pagination-bar" id="pagination-controls"></div>
         </main>
 
         <!-- Properties Sidebar -->
@@ -396,13 +393,29 @@
                     <select id="size-select" class="prop-input" onchange="updateSize()">
                         <option value="letter">Letter (8.5 x 11 in)</option>
                         <option value="a4">A4 (21 x 29.7 cm)</option>
-                        <option value="custom">Custom (A5 size)</option>
+                        <option value="custom">Custom Dimensions</option>
                     </select>
+                </div>
+                <div id="custom-size-inputs" class="hidden" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom: 20px;">
+                    <div class="prop-group">
+                        <label>Width (in)</label>
+                        <input type="number" id="custom-w" step="0.1" value="8.5" class="prop-input" oninput="updateSize()">
+                    </div>
+                    <div class="prop-group">
+                        <label>Height (in)</label>
+                        <input type="number" id="custom-h" step="0.1" value="11" class="prop-input" oninput="updateSize()">
+                    </div>
                 </div>
 
                 <div id="element-properties" class="hidden">
                     <span class="section-title">Element Styling</span>
                     <div id="prop-controls"></div>
+
+                    <span class="section-title">Layering</span>
+                    <div class="layer-btns">
+                        <button class="btn-small" onclick="changeLayer(1)">Bring Front</button>
+                        <button class="btn-small" onclick="changeLayer(-1)">Send Back</button>
+                    </div>
                 </div>
 
                 <div style="margin-top: auto; padding-top: 30px;">
@@ -416,8 +429,8 @@
 
     <!-- Mode Switcher -->
     <div class="mode-switcher">
-        <button id="btn-mode-edit" class="mode-btn active">Editor</button>
-        <button id="btn-mode-preview" class="mode-btn" onclick="openPreviewModal()">Vista Previa</button>
+        <button id="btn-mode-edit" class="mode-btn active">Editor Mode</button>
+        <button id="btn-mode-preview" class="mode-btn" onclick="openPreviewModal()">Flip-Book Preview</button>
     </div>
 
     <!-- Floating Actions -->
@@ -434,9 +447,7 @@
     <div id="preview-modal" class="modal-overlay">
         <div class="modal-content">
             <button class="modal-close" onclick="closePreviewModal()">×</button>
-            <div id="preview-book-container">
-                <div id="flipbook"></div>
-            </div>
+            <div id="flipbook"></div>
         </div>
     </div>
 
@@ -505,6 +516,8 @@
 
         window.switchContext = async (id, name) => {
             activeId = id;
+            currentPageIndex = 0;
+            $('#designer-canvas').empty();
             $('.client-item').removeClass('active');
             $('#viewing-label').text(`Viewing: ${name}`);
             $('#context-sidebar').removeClass('open');
@@ -551,7 +564,7 @@
             currentTemplate = tmpl;
             $('.template-card').removeClass('active');
             $(`.template-card[data-tmpl="${tmpl}"]`).addClass('active');
-            updateTemplate();
+            $('.page').removeClass('tmpl-hoja tmpl-dark tmpl-minimal tmpl-parchment').addClass(tmpl);
         };
 
         window.addBlankPage = () => {
@@ -582,15 +595,17 @@
             const pages = $('.page');
 
             pages.each((i) => {
-                const dot = $(`<div class="page-dot ${i === currentPageIndex ? 'active' : ''}">${i + 1}</div>`);
+                const dot = $(`<button class="page-tab ${i === currentPageIndex ? 'active' : ''}">P${i + 1}</button>`);
                 dot.click(() => switchPage(i));
                 container.append(dot);
             });
 
-            container.append(`<button class="page-dot page-add" onclick="addBlankPage()" title="Add Page">+</button>`);
+            const add = $(`<button class="page-tab" style="background:#f1f5f9; color:var(--text);" title="Add Page">+</button>`);
+            add.click(() => addBlankPage());
+            container.append(add);
 
             if (pages.length > 1) {
-                const del = $(`<button class="page-dot" style="background:var(--error); color:white;" title="Delete Current Page">×</button>`);
+                const del = $(`<button class="page-tab" style="background:var(--error); color:white;" title="Delete Current Page">×</button>`);
                 del.click(() => deleteCurrentPage());
                 container.append(del);
             }
@@ -620,11 +635,25 @@
             canvas.css('transform', `scale(${scale})`);
         }
 
-        window.clearCanvas = () => {
-            if (confirm("Reset current design? Unsaved changes will be lost.")) {
-                $('#designer-canvas').empty();
-                addBlankPage();
+        window.updateSize = () => {
+            const size = $('#size-select').val();
+            let pW, pH;
+
+            if (size === 'letter') {
+                pW = 816; pH = 1056;
+                $('#custom-size-inputs').addClass('hidden');
+            } else if (size === 'a4') {
+                pW = 794; pH = 1123;
+                $('#custom-size-inputs').addClass('hidden');
+            } else {
+                $('#custom-size-inputs').removeClass('hidden');
+                pW = parseFloat($('#custom-w').val()) * 96;
+                pH = parseFloat($('#custom-h').val()) * 96;
             }
+
+            $('#designer-canvas').css({ width: pW, height: pH });
+            $('.page').css({ width: '100%', height: '100%' });
+            updateScale();
         };
 
         window.addElement = (type, content = null) => {
@@ -635,23 +664,23 @@
             let style = { width: '300px', left: '50', top: '100' };
 
             if (type === 'logo') {
-                html = `<img src="${restaurantData?.logo_url || ''}" style="width:100%; height:auto;">`;
-                style = { width: '150px', left: '332', top: '50' };
+                html = `<img src="${restaurantData?.logo_url || ''}" style="width:100%; border-radius:50%; border:3px solid #8b1d1d;">`;
+                style = { width: '160px', left: '328', top: '40' };
             } else if (type === 'name') {
-                html = `<h1 style="font-family:'Bebas Neue'; font-size:4rem; color:inherit; line-height:0.9; text-align:center;">${restaurantData?.name || 'RESTAURANT NAME'}</h1>`;
-                style = { left: '57', top: '200', width: '700px' };
+                html = `<h1 style="font-family:'Bebas Neue'; font-size:4.5rem; color:inherit; line-height:0.85; text-align:center;">${restaurantData?.name || 'NAME'}</h1>`;
+                style = { left: '58', top: '220', width: '700px' };
             } else if (type === 'contact') {
-                html = `<div style="font-family:'Outfit'; font-size:1rem; color:inherit; text-align:center;">${restaurantData?.phone || ''} | ${restaurantData?.address || ''}</div>`;
-                style = { left: '57', top: '300', width: '700px' };
+                html = `<div style="font-family:'Outfit'; font-size:1.1rem; color:inherit; text-align:center;">${restaurantData?.phone || ''} • ${restaurantData?.address || ''}</div>`;
+                style = { left: '58', top: '320', width: '700px' };
             } else if (type === 'image') {
-                html = `<img src="${content}" style="width:100%; border-radius:15px; box-shadow:0 10px 25px rgba(0,0,0,0.15);">`;
-                style = { width: '250px', left: '100', top: '100' };
+                html = `<img src="${content}" style="width:100%; border-radius:15px; box-shadow:0 15px 35px rgba(0,0,0,0.15);">`;
+                style = { width: '280px', left: '100', top: '100' };
             } else if (type === 'brush') {
-                html = `<div class="brush-header" style="width:100%; height:80px; display:flex; align-items:center; justify-content:center;">DECORATION</div>`;
-                style = { width: '400px', left: '200', top: '200' };
+                html = `<div class="brush-header">TITULO</div>`;
+                style = { width: '450px', left: '183', top: '100' };
             } else if (type === 'stain') {
-                html = `<img src="https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/coffee_stain.png" style="width:100%; opacity:0.3;">`;
-                style = { width: '200px', left: '300', top: '400' };
+                html = `<img src="https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/coffee_stain.png" style="width:100%; opacity:0.25;">`;
+                style = { width: '250px', left: '268', top: '400' };
             }
 
             return createCanvasElement(targetPage, type, html, style);
@@ -690,7 +719,7 @@
                     }
                 },
                 modifiers: [
-                    interact.modifiers.snap({ targets: [ interact.snappers.grid({ x: 5, y: 5 }) ], range: Infinity }),
+                    interact.modifiers.snap({ targets: [ interact.snappers.grid({ x: 4, y: 4 }) ], range: Infinity }),
                     interact.modifiers.restrictRect({ restriction: 'parent' })
                 ]
             }).resizable({
@@ -714,31 +743,23 @@
             return el;
         }
 
-        $('.workspace').on('mousedown', function(e) {
-            if (e.target === this || e.target.id === 'canvas-wrapper' || e.target.id === 'designer-canvas' || $(e.target).hasClass('page')) {
-                $('.canvas-element').removeClass('selected');
-                selectedEl = null;
-                $('#element-properties').addClass('hidden');
-            }
-        });
-
         window.addCategoryUI = (catName) => {
             const cat = menuData?.config?.categories?.find(c => c.name === catName);
             if (!cat) return;
 
             let y = 100;
-            createCanvasElement($('.page').eq(currentPageIndex), 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: 57, top: y, width: '700px' });
-            y += 100;
+            createCanvasElement($('.page').eq(currentPageIndex), 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: 183, top: y, width: '450px' });
+            y += 120;
 
             cat.dishes?.forEach(d => {
-                createCanvasElement($('.page').eq(currentPageIndex), 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1.25rem;">${d.name}</div>`, { left: 57, top: y, width: '500px' });
-                createCanvasElement($('.page').eq(currentPageIndex), 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:1.25rem; color:var(--brush-color, #8b1d1d); text-align:right;">$${d.price}</div>`, { left: 557, top: y, width: '200px' });
+                createCanvasElement($('.page').eq(currentPageIndex), 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1.35rem; color:#1a1a1a;">${d.name}</div>`, { left: 80, top: y, width: '450px' });
+                createCanvasElement($('.page').eq(currentPageIndex), 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:1.35rem; color:#8b1d1d; text-align:right;">$${d.price}</div>`, { left: 540, top: y, width: '180px' });
                 y += 28;
                 if (d.description) {
-                    createCanvasElement($('.page').eq(currentPageIndex), 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.85rem; color:#444; font-weight:500;">${d.description}</div>`, { left: 57, top: y, width: '700px' });
-                    y += 45;
+                    createCanvasElement($('.page').eq(currentPageIndex), 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.85rem; color:#555; font-weight:500; font-style:italic;">${d.description}</div>`, { left: 80, top: y, width: '640px' });
+                    y += 48;
                 } else {
-                    y += 15;
+                    y += 18;
                 }
             });
         };
@@ -747,54 +768,34 @@
             $('#designer-canvas').empty();
             currentPageIndex = 0;
             let page = addBlankPage();
-
             let currentY = 50;
 
             menuData?.config?.categories?.forEach(cat => {
-                const heightEstimate = 100 + ((cat.dishes?.length || 0) * 65);
-
+                const heightEstimate = 120 + ((cat.dishes?.length || 0) * 70);
                 if (currentY + heightEstimate > 950 && currentY > 50) {
                     page = addBlankPage();
                     currentY = 50;
                 }
 
-                createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: 57, top: currentY, width: '700px' });
-                currentY += 100;
+                createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: 183, top: currentY, width: '450px' });
+                currentY += 120;
 
                 cat.dishes?.forEach(d => {
-                    createCanvasElement(page, 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1.25rem;">${d.name}</div>`, { left: 57, top: currentY, width: '500px' });
-                    createCanvasElement(page, 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:1.25rem; color:var(--brush-color, #8b1d1d); text-align:right;">$${d.price}</div>`, { left: 557, top: currentY, width: '200px' });
+                    createCanvasElement(page, 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1.35rem; color:#1a1a1a;">${d.name}</div>`, { left: 80, top: currentY, width: '450px' });
+                    createCanvasElement(page, 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:1.35rem; color:#8b1d1d; text-align:right;">$${d.price}</div>`, { left: 540, top: currentY, width: '180px' });
                     currentY += 28;
                     if (d.description) {
-                        createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.85rem; color:#444; font-weight:500;">${d.description}</div>`, { left: 57, top: currentY, width: '700px' });
-                        currentY += 45;
+                        createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.85rem; color:#555; font-weight:500; font-style:italic;">${d.description}</div>`, { left: 80, top: currentY, width: '640px' });
+                        currentY += 48;
                     } else {
-                        currentY += 15;
+                        currentY += 18;
                     }
                 });
-
                 currentY += 40;
             });
 
             switchPage(0);
-            showToast("Design generated!");
-        };
-
-        window.updateTemplate = () => {
-            $('.page').removeClass('tmpl-hoja tmpl-dark tmpl-minimal tmpl-parchment').addClass(currentTemplate);
-        };
-
-        window.updateSize = () => {
-            const size = $('#size-select').val();
-            let pW, pH;
-
-            if (size === 'letter') { pW = 816; pH = 1056; }
-            else if (size === 'a4') { pW = 794; pH = 1123; }
-            else { pW = 560; pH = 794; } // Custom A5
-
-            $('#designer-canvas').css({ width: pW, height: pH });
-            $('.page').css({ width: '100%', height: '100%' });
-            updateScale();
+            showToast("High fidelity layout generated!");
         };
 
         function showElementProperties() {
@@ -807,43 +808,28 @@
                     <label>Z-Index</label>
                     <input type="number" class="prop-input" value="${selectedEl.css('z-index')}" oninput="selectedEl.css('z-index', this.value)">
                 </div>
-            `);
-
-            // Font Selector
-            controls.append(`
                 <div class="prop-group">
-                    <label>Font Family</label>
+                    <label>Typography</label>
                     <select class="prop-input" onchange="selectedEl.find('.el-content *').css('font-family', this.value)">
-                        <option value="'Plus Jakarta Sans'">Sans Serif</option>
-                        <option value="'Lora'">Serif (Lora)</option>
-                        <option value="'Bebas Neue'">Bebas Neue</option>
-                        <option value="'Playfair Display'">Playfair</option>
-                        <option value="'Outfit'">Outfit</option>
+                        <option value="'Plus Jakarta Sans'">Plus Jakarta (Modern)</option>
+                        <option value="'Lora'">Lora (Serif)</option>
+                        <option value="'Bebas Neue'">Bebas Neue (Display)</option>
+                        <option value="'Stint Ultra Condensed'">Stint (Vintage)</option>
+                        <option value="'Great Vibes'">Great Vibes (Cursive)</option>
+                        <option value="'Outfit'">Outfit (Bold)</option>
                     </select>
                 </div>
-            `);
-
-            controls.append(`
                 <div class="prop-group">
                     <label>Text Color</label>
                     <input type="color" class="prop-input" value="${rgbToHex(selectedEl.find('.el-content').css('color'))}" oninput="selectedEl.find('.el-content *').css('color', this.value)">
                 </div>
-            `);
-
-            const currentSize = parseInt(selectedEl.find('.el-content *').first().css('font-size')) || 16;
-            controls.append(`
                 <div class="prop-group">
                     <label>Font Size (px)</label>
-                    <input type="number" class="prop-input" value="${currentSize}" oninput="selectedEl.find('.el-content *').css('font-size', this.value + 'px')">
+                    <input type="number" class="prop-input" value="${parseInt(selectedEl.find('.el-content *').first().css('font-size')) || 16}" oninput="selectedEl.find('.el-content *').css('font-size', this.value + 'px')">
                 </div>
-            `);
-
-            // Opacity for stains/accents
-            const currentOpacity = selectedEl.css('opacity') || 1;
-            controls.append(`
                 <div class="prop-group">
-                    <label>Opacity (${currentOpacity})</label>
-                    <input type="range" min="0" max="1" step="0.1" class="prop-input" value="${currentOpacity}" oninput="selectedEl.css('opacity', this.value)">
+                    <label>Element Opacity</label>
+                    <input type="range" min="0" max="1" step="0.05" class="prop-input" value="${selectedEl.css('opacity')}" oninput="selectedEl.css('opacity', this.value)">
                 </div>
             `);
 
@@ -857,11 +843,16 @@
             }
         }
 
+        window.changeLayer = (dir) => {
+            if (!selectedEl) return;
+            const current = parseInt(selectedEl.css('z-index')) || 10;
+            selectedEl.css('z-index', current + dir);
+        };
+
         function rgbToHex(rgb) {
             if (!rgb) return '#000000';
-            if (rgb.startsWith('#')) return rgb;
             const res = rgb.match(/\d+/g);
-            if (!res) return '#000000';
+            if (!res) return rgb.startsWith('#') ? rgb : '#000000';
             return "#" + res.slice(0,3).map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
         }
 
@@ -870,28 +861,22 @@
             const book = $('#flipbook').empty();
 
             const size = $('#size-select').val();
-            let w = 800, h = 1035;
-            if (size === 'a4') { w = 780; h = 1100; }
-            else if (size === 'custom') { w = 600; h = 850; }
+            let w = 840, h = 1085;
+            if (size === 'a4') { w = 820; h = 1150; }
+            else if (size === 'custom') { w = parseFloat($('#custom-w').val()) * 100; h = parseFloat($('#custom-h').val()) * 100; }
 
             $('#designer-canvas .page').each(function() {
                 const clone = $(this).clone();
                 clone.find('.delete-btn').remove();
                 clone.find('.canvas-element').css('border', 'none').removeClass('selected');
                 clone.find('.el-content').attr('contenteditable', 'false');
-                clone.css({ display: 'block', width: w/2, height: h });
+                clone.css({ display: 'block', width: w/2, height: h, boxShadow: 'none' });
                 book.append(clone);
             });
 
             setTimeout(() => {
-                book.turn({
-                    width: w,
-                    height: h,
-                    autoCenter: true,
-                    elevation: 50,
-                    gradients: true
-                });
-            }, 300);
+                book.turn({ width: w, height: h, autoCenter: true, elevation: 50, gradients: true, display: 'double' });
+            }, 400);
         };
 
         window.closePreviewModal = () => {
@@ -918,17 +903,17 @@
                 pages.push(els);
             });
 
-            const config = { pages, tmpl: currentTemplate, size: $('#size-select').val(), lastPage: currentPageIndex };
+            const config = { pages, tmpl: currentTemplate, size: $('#size-select').val(), lastPage: currentPageIndex, customW: $('#custom-w').val(), customH: $('#custom-h').val() };
             const { error } = await supabase.from('menutech_physical_menus').upsert({
-                user_id: activeId, template_id: 'v2_pro', layout_config: config, updated_at: new Date()
+                user_id: activeId, template_id: 'v4_hq', layout_config: config, updated_at: new Date()
             }, { onConflict: 'user_id, template_id' });
 
             if (error) showToast("Error: " + error.message, true);
-            else showToast("Design Saved Successfully!");
+            else showToast("Layout Persisted Successfully!");
         };
 
         async function loadSavedDesign() {
-            const { data } = await supabase.from('menutech_physical_menus').select('*').eq('user_id', activeId).eq('template_id', 'v2_pro').maybeSingle();
+            const { data } = await supabase.from('menutech_physical_menus').select('*').eq('user_id', activeId).eq('template_id', 'v4_hq').maybeSingle();
             $('#designer-canvas').empty();
 
             if (data?.layout_config) {
@@ -938,6 +923,8 @@
                 $(`.template-card[data-tmpl="${currentTemplate}"]`).addClass('active');
 
                 $('#size-select').val(cfg.size || 'letter');
+                $('#custom-w').val(cfg.customW || '8.5');
+                $('#custom-h').val(cfg.customH || '11');
                 updateSize();
 
                 cfg.pages.forEach((pEls) => {
@@ -952,7 +939,7 @@
             } else {
                 addBlankPage();
             }
-            updateTemplate();
+            selectTemplate(currentTemplate);
             switchPage(currentPageIndex);
         }
 
@@ -967,16 +954,16 @@
             });
 
             const size = $('#size-select').val();
-            const format = size === 'custom' ? [5.8, 8.3] : size;
+            const format = size === 'custom' ? [parseFloat($('#custom-w').val()), parseFloat($('#custom-h').val())] : size;
             const opt = {
-                margin: 0, filename: 'PhysicalMenu.pdf',
+                margin: 0, filename: 'PhysicalMenu_Menutech.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
+                html2canvas: { scale: 2.5, useCORS: true, logging: false },
                 jsPDF: { unit: 'in', format: format, orientation: 'portrait' }
             };
 
-            showToast("Generating PDF...");
-            html2pdf().set(opt).from(element).save().then(() => showToast("PDF Downloaded!"));
+            showToast("Assembling PDF document...");
+            html2pdf().set(opt).from(element).save().then(() => showToast("PDF Successfully Generated!"));
         };
 
         window.showToast = (msg, isError = false) => {
@@ -984,6 +971,14 @@
             t.css('background', isError ? 'var(--error)' : '#1e293b');
             setTimeout(() => t.removeClass('active'), 3000);
         };
+
+        $('.workspace').on('mousedown', function(e) {
+            if (e.target === this || e.target.id === 'canvas-wrapper' || e.target.id === 'designer-canvas' || $(e.target).hasClass('page')) {
+                $('.canvas-element').removeClass('selected');
+                selectedEl = null;
+                $('#element-properties').addClass('hidden');
+            }
+        });
 
     </script>
 </body>
