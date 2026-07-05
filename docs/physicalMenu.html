@@ -13,7 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Lora:ital,wght@0,400;0,700;1,400&family=Stint+Ultra+Condensed&family=Great+Vibes&family=Montserrat:wght@300;400;700&family=Oswald:wght@300;400;700&family=Lato:wght@300;400;700&family=Open+Sans:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&family=Dancing+Script:wght@400;700&family=Pacifico&family=Cinzel:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Lora:ital,wght@0,400;0,700;1,400&family=Stint+Ultra+Condensed&family=Great+Vibes&family=Montserrat:wght@300;400;700&family=Oswald:wght@300;400;700&family=Lato:wght@300;400;700&family=Open+Sans:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&family=Dancing+Script:wght@400;700&family=Pacifico&family=Cinzel:wght@400;700&family=Raleway:wght@300;400;700&family=Quicksand:wght@300;400;700&family=Kalam:wght@300;400;700&family=Special+Elite&family=Courgette&display=swap');
 
         :root {
             --orange: #ff9533;
@@ -125,6 +125,7 @@
             background-color: #fff;
             user-select: none;
             -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
         .page.active { display: block; }
 
@@ -135,6 +136,16 @@
             border: 1px solid transparent;
             box-sizing: border-box;
             transition: none !important;
+            -webkit-touch-callout: none;
+        }
+        .canvas-element * {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .canvas-element .el-content[contenteditable="true"],
+        .canvas-element .el-content[contenteditable="true"] * {
+            user-select: text !important;
+            -webkit-user-select: text !important;
         }
         .canvas-element:hover { border: 1.5px dashed var(--orange); }
         .canvas-element.selected { border: 2px solid var(--orange); z-index: 100; }
@@ -976,14 +987,15 @@
                 $(this).addClass('selected');
                 selectedEl = $(this);
                 showElementProperties();
+            });
 
-                // If it was already selected, a click should enable editing for text elements
-                if (wasSelected && e.target.closest('.el-content')) {
+            // Click-to-edit logic: Click on an already selected element to edit text
+            el.on('click', function(e) {
+                if ($(this).hasClass('selected') && e.target.closest('.el-content')) {
                     const content = $(this).find('.el-content');
-                    // Small delay to allow click to finish before focusing
-                    setTimeout(() => {
+                    if (content.attr('contenteditable') !== 'true') {
                         content.attr('contenteditable', 'true').focus();
-                    }, 50);
+                    }
                 }
             });
 
@@ -1031,12 +1043,13 @@
                     },
                     move(event) {
                         const target = event.target;
+                        const scale = currentZoom || getCanvasScale();
                         let x = (parseFloat(target.getAttribute('data-x')) || 0);
                         let y = (parseFloat(target.getAttribute('data-y')) || 0);
-                        target.style.width = (event.rect.width / currentZoom) + 'px';
-                        target.style.height = (event.rect.height / currentZoom) + 'px';
-                        x += (event.deltaRect.left / currentZoom);
-                        y += (event.deltaRect.top / currentZoom);
+                        target.style.width = (event.rect.width / scale) + 'px';
+                        target.style.height = (event.rect.height / scale) + 'px';
+                        x += (event.deltaRect.left / scale);
+                        y += (event.deltaRect.top / scale);
                         target.style.transform = `translate(${x}px, ${y}px)`;
                         target.setAttribute('data-x', x);
                         target.setAttribute('data-y', y);
@@ -1049,8 +1062,9 @@
         }
 
         function moveEl(target, dx, dy) {
-            const x = (parseFloat(target.getAttribute('data-x')) || 0) + (dx / currentZoom);
-            const y = (parseFloat(target.getAttribute('data-y')) || 0) + (dy / currentZoom);
+            const scale = currentZoom || getCanvasScale();
+            const x = (parseFloat(target.getAttribute('data-x')) || 0) + (dx / scale);
+            const y = (parseFloat(target.getAttribute('data-y')) || 0) + (dy / scale);
             target.style.transform = `translate(${x}px, ${y}px)`;
             target.setAttribute('data-x', x);
             target.setAttribute('data-y', y);
@@ -1071,8 +1085,8 @@
 
             // 2-Column Logic
             const dishes = cat.dishes || [];
-            const colWidth = 240; // Even narrower for generous side margins
-            const colGap = 120;
+            const colWidth = 280;
+            const colGap = 60;
             const totalGridW = (colWidth * 2) + colGap;
             const startX = (canvasW - totalGridW) / 2;
 
@@ -1080,7 +1094,7 @@
                 const col = i % 2;
                 const row = Math.floor(i / 2);
                 const x = startX + (col * (colWidth + colGap));
-                const rowY = y + (row * 150); // Increased row height for breathing room
+                const rowY = y + (row * 130);
 
                 addDishElements(page, d, x, rowY, colWidth);
             });
@@ -1088,15 +1102,14 @@
         };
 
         function addDishElements(page, dish, x, y, width) {
-            // Compact yet distinct spacing
-            const priceW = 60;
-            const nameEl = createCanvasElement(page, 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1rem; color:#1a1a1a; text-transform: uppercase; border-bottom: 1.5px dotted rgba(0,0,0,0.1); padding-bottom: 2px; line-height: 1.1;">${dish.name}</div>`, { left: x, top: y, width: (width - priceW) + 'px' });
+            const priceW = 70;
+            const nameEl = createCanvasElement(page, 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1rem; color:#1a1a1a; text-transform: uppercase; border-bottom: 1.5px dotted rgba(0,0,0,0.1); padding-bottom: 2px; line-height: 1.2;">${dish.name}</div>`, { left: x, top: y, width: (width - priceW - 5) + 'px' });
 
             const priceEl = createCanvasElement(page, 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:1rem; color:#8b1d1d; text-align: right;">$${dish.price}</div>`, { left: x + (width - priceW), top: y, width: priceW + 'px' });
 
             if (dish.description) {
-                // description offset set to y + 55 for compact feel without overlap
-                const descEl = createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.7rem; color:#555; font-weight:500; font-style:italic; line-height: 1.2; padding-top: 3px;">${dish.description}</div>`, { left: x, top: y + 55, width: width + 'px' });
+                // Adjusting description Y position to be exactly below the name with a small margin
+                const descEl = createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.75rem; color:#555; font-weight:500; font-style:italic; line-height: 1.3; margin-top: 4px;">${dish.description}</div>`, { left: x, top: y + 28, width: width + 'px' });
             }
         }
 
@@ -1116,23 +1129,22 @@
             currentPageIndex = 0;
             let page = addBlankPage();
             const canvasW = $('#designer-canvas').width();
-            const maxPageY = 1000; // More space for content
-            const startY = 40;
+            const maxPageY = 960;
+            const startY = 60;
 
             let currentY = startY;
-            const colWidth = currentTemplate === 'classic' ? 260 : 650;
-            const colGap = currentTemplate === 'classic' ? 80 : 0;
+            const colWidth = currentTemplate === 'classic' ? 280 : 650;
+            const colGap = currentTemplate === 'classic' ? 60 : 0;
             const numCols = currentTemplate === 'classic' ? 2 : 1;
             const totalGridW = (colWidth * numCols) + ((numCols - 1) * colGap);
             const startX = (canvasW - totalGridW) / 2;
 
             menuData?.config?.categories?.forEach(cat => {
                 const dishes = cat.dishes || [];
-                const rowH = 120; // Tighter spacing
-                const headerH = 130;
+                const rowH = 110;
+                const headerH = 140;
                 const totalCatH = headerH + (Math.ceil(dishes.length / numCols) * rowH);
 
-                // Atomic Category Paging: Check if entire category fits
                 if (currentY + totalCatH > maxPageY && currentY > startY) {
                     page = addBlankPage();
                     currentY = startY;
@@ -1140,7 +1152,7 @@
 
                 const headerW = 450;
                 createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: (canvasW - headerW) / 2, top: currentY, width: headerW + 'px' });
-                currentY += 100;
+                currentY += 110;
 
                 dishes.forEach((d, i) => {
                     const col = i % numCols;
@@ -1154,7 +1166,7 @@
                     }
                 });
 
-                currentY += 30; // Tighter category gap
+                currentY += 40;
             });
 
             switchPage(0);
@@ -1191,6 +1203,11 @@
                         <option value="'Dancing Script'">Dancing Script</option>
                         <option value="'Pacifico'">Pacifico</option>
                         <option value="'Cinzel'">Cinzel</option>
+                        <option value="'Raleway'">Raleway</option>
+                        <option value="'Quicksand'">Quicksand</option>
+                        <option value="'Kalam'">Kalam</option>
+                        <option value="'Special Elite'">Special Elite</option>
+                        <option value="'Courgette'">Courgette</option>
                     </select>
                 </div>
                 <div class="prop-group">
