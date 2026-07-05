@@ -121,36 +121,42 @@
             background-position: center;
             padding: 0.6in; /* High Fidelity Margin */
             display: none;
+            background-color: #fff;
         }
         .page.active { display: block; }
-
-        /* Template Backgrounds */
-        .tmpl-hoja {
-            background-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/wood_bg_textured.jpg');
-            background-color: #fdf5e6;
-        }
-        .tmpl-minimal { background-color: #ffffff; }
-        .tmpl-dark { background-color: #1a1a1a; color: #fff; }
-        .tmpl-parchment { background-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/parchment_texture.jpg'); background-color: #f4ecd8; }
 
         /* Canvas Elements */
         .canvas-element {
             position: absolute; cursor: move; touch-action: none;
-            user-select: none; z-index: 10; padding: 5px;
+            user-select: none; z-index: 10; padding: 10px;
             border: 1.5px solid transparent;
+            box-sizing: border-box;
         }
         .canvas-element:hover { border: 1.5px dashed var(--orange); }
         .canvas-element.selected { border: 2px solid var(--orange); z-index: 100; }
 
+        /* Resize Handles */
+        .resize-handle {
+            position: absolute; width: 10px; height: 10px;
+            background: var(--orange); border: 1px solid white;
+            border-radius: 2px; display: none;
+        }
+        .canvas-element.selected .resize-handle { display: block; }
+        .handle-nw { top: -5px; left: -5px; cursor: nw-resize; }
+        .handle-ne { top: -5px; right: -5px; cursor: ne-resize; }
+        .handle-sw { bottom: -5px; left: -5px; cursor: sw-resize; }
+        .handle-se { bottom: -5px; right: -5px; cursor: se-resize; }
+
         .delete-btn {
-            position: absolute; top: -12px; right: -12px; background: var(--error);
+            position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--error);
             color: white; border: none; border-radius: 50%; width: 24px; height: 24px;
             cursor: pointer; display: none; font-weight: bold; z-index: 200; align-items: center; justify-content: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        .canvas-element:hover .delete-btn { display: flex; }
+        .canvas-element.selected .delete-btn { display: flex; }
 
-        .el-content { outline: none; }
+        .el-content { outline: none; pointer-events: auto; }
+        .el-content img { pointer-events: none; -webkit-user-drag: none; user-select: none; max-width: 100%; display: block; }
 
         /* Brush Header Component */
         .brush-header {
@@ -177,8 +183,8 @@
             clip-path: polygon(5% 0%, 95% 5%, 100% 50%, 95% 95%, 5% 100%, 0% 50%);
         }
 
-        /* Ornate Border Overlay */
-        .page::after {
+        /* Ornate Border Overlay (Optional class) */
+        .page.with-border::after {
             content: '';
             position: absolute;
             inset: 20px;
@@ -189,7 +195,6 @@
             mask-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/ornate_edge_mask.png');
             opacity: 0.8;
         }
-        .tmpl-minimal::after, .tmpl-dark::after { border: none !important; }
 
         /* Pagination Bar */
         .pagination-bar {
@@ -335,23 +340,23 @@
                     </div>
                 </div>
 
-                <span class="section-title">Templates</span>
+                <span class="section-title">Backgrounds</span>
                 <div class="template-grid">
-                    <div class="template-card active" data-tmpl="tmpl-hoja" onclick="selectTemplate('tmpl-hoja')">
-                        <div class="template-preview tmpl-hoja"></div>
-                        <div style="font-size:0.6rem; font-weight:900;">CLASSIC WOOD</div>
+                    <div class="template-card" onclick="setPageBg('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/wood_bg_textured.jpg')">
+                        <div class="template-preview" style="background-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/wood_bg_textured.jpg'); background-size: cover;"></div>
+                        <div style="font-size:0.6rem; font-weight:900;">WOOD</div>
                     </div>
-                    <div class="template-card" data-tmpl="tmpl-minimal" onclick="selectTemplate('tmpl-minimal')">
-                        <div class="template-preview tmpl-minimal"></div>
-                        <div style="font-size:0.6rem; font-weight:900;">MINIMAL</div>
-                    </div>
-                    <div class="template-card" data-tmpl="tmpl-dark" onclick="selectTemplate('tmpl-dark')">
-                        <div class="template-preview tmpl-dark"></div>
-                        <div style="font-size:0.6rem; font-weight:900;">DARK MODE</div>
-                    </div>
-                    <div class="template-card" data-tmpl="tmpl-parchment" onclick="selectTemplate('tmpl-parchment')">
-                        <div class="template-preview tmpl-parchment"></div>
+                    <div class="template-card" onclick="setPageBg('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/parchment_texture.jpg')">
+                        <div class="template-preview" style="background-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/parchment_texture.jpg'); background-size: cover;"></div>
                         <div style="font-size:0.6rem; font-weight:900;">PARCHMENT</div>
+                    </div>
+                    <div class="template-card" onclick="setPageBg('')">
+                        <div class="template-preview" style="background: white; border: 1px solid #ddd;"></div>
+                        <div style="font-size:0.6rem; font-weight:900;">WHITE</div>
+                    </div>
+                    <div class="template-card" onclick="setPageBg('#1a1a1a')">
+                        <div class="template-preview" style="background: #1a1a1a;"></div>
+                        <div style="font-size:0.6rem; font-weight:900;">DARK</div>
                     </div>
                 </div>
 
@@ -366,8 +371,19 @@
                 </div>
 
                 <span class="section-title">Decorative Assets</span>
+                <div class="template-grid" style="margin-bottom: 15px;">
+                    <div class="template-card" style="padding:5px;" onclick="addElement('stain', 'https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/coffee_stain.png')">
+                        <img src="https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/coffee_stain.png" style="width:100%; aspect-ratio:1; object-fit:contain;">
+                        <div style="font-size:0.55rem; font-weight:800;">STAIN</div>
+                    </div>
+                    <div class="template-card" style="padding:5px;" onclick="addElement('stain', 'https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/grease_stain.png')">
+                        <img src="https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/grease_stain.png" style="width:100%; aspect-ratio:1; object-fit:contain;">
+                        <div style="font-size:0.55rem; font-weight:800;">GREASE</div>
+                    </div>
+                </div>
                 <div class="tool-item" onclick="addElement('brush')"><span>🎨</span> Brush Header</div>
-                <div class="tool-item" onclick="addElement('stain')"><span>☕</span> Coffee Stain</div>
+
+                <span class="section-title">My Content Images</span>
                 <div class="gallery-grid" id="gallery"></div>
             </div>
         </aside>
@@ -459,7 +475,7 @@
         let selectedEl = null;
         let allUsers = [];
         let currentPageIndex = 0;
-        let currentTemplate = 'tmpl-hoja';
+        let currentBg = '';
 
         $(document).ready(async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -560,19 +576,23 @@
             });
         }
 
-        window.selectTemplate = (tmpl) => {
-            currentTemplate = tmpl;
-            $('.template-card').removeClass('active');
-            $(`.template-card[data-tmpl="${tmpl}"]`).addClass('active');
-            $('.page').removeClass('tmpl-hoja tmpl-dark tmpl-minimal tmpl-parchment').addClass(tmpl);
+        window.setPageBg = (bg) => {
+            currentBg = bg;
+            const page = $('.page').eq(currentPageIndex);
+            if (bg.startsWith('http')) {
+                page.css({ 'background-image': `url(${bg})`, 'background-color': 'transparent' });
+            } else {
+                page.css({ 'background-image': 'none', 'background-color': bg || '#ffffff' });
+            }
         };
 
         window.addBlankPage = () => {
-            const page = $(`<div class="page ${currentTemplate}"></div>`);
+            const page = $(`<div class="page"></div>`);
             $('#designer-canvas').append(page);
             updateSize();
             const newIndex = $('.page').length - 1;
             switchPage(newIndex);
+            if (currentBg) setPageBg(currentBg);
             return page;
         };
 
@@ -679,7 +699,8 @@
                 html = `<div class="brush-header">TITULO</div>`;
                 style = { width: '450px', left: '183', top: '100' };
             } else if (type === 'stain') {
-                html = `<img src="https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/coffee_stain.png" style="width:100%; opacity:0.25;">`;
+                const url = content || 'https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/coffee_stain.png';
+                html = `<img src="${url}" style="width:100%; opacity:0.25; filter: sepia(1) saturate(2);">`;
                 style = { width: '250px', left: '268', top: '400' };
             }
 
@@ -694,10 +715,14 @@
                 <div class="canvas-element" data-type="${type}" style="transform: translate(${x}px, ${y}px); width: ${style.width || 'auto'};" data-x="${x}" data-y="${y}">
                     <div class="el-content" contenteditable="true">${html}</div>
                     <button class="delete-btn">×</button>
+                    <div class="resize-handle handle-nw"></div>
+                    <div class="resize-handle handle-ne"></div>
+                    <div class="resize-handle handle-sw"></div>
+                    <div class="resize-handle handle-se"></div>
                 </div>
             `);
 
-            el.find('.delete-btn').click((e) => { e.stopPropagation(); el.remove(); });
+            el.find('.delete-btn').click((e) => { e.stopPropagation(); el.remove(); selectedEl = null; $('#element-properties').addClass('hidden'); });
 
             el.on('mousedown', function(e) {
                 e.stopPropagation();
@@ -708,6 +733,7 @@
             });
 
             interact(el[0]).draggable({
+                cursorChecker: (action, interactable, element, interacting) => { return 'move'; },
                 listeners: {
                     move(event) {
                         const target = event.target;
@@ -719,17 +745,18 @@
                     }
                 },
                 modifiers: [
-                    interact.modifiers.snap({ targets: [ interact.snappers.grid({ x: 4, y: 4 }) ], range: Infinity }),
+                    interact.modifiers.snap({ targets: [ interact.snappers.grid({ x: 2, y: 2 }) ], range: Infinity }),
                     interact.modifiers.restrictRect({ restriction: 'parent' })
                 ]
             }).resizable({
-                edges: { left: true, right: true, bottom: true, top: true },
+                edges: { left: '.handle-nw, .handle-sw', right: '.handle-ne, .handle-se', bottom: '.handle-sw, .handle-se', top: '.handle-nw, .handle-ne' },
                 listeners: {
                     move(event) {
                         const target = event.target;
                         let x = (parseFloat(target.getAttribute('data-x')) || 0);
                         let y = (parseFloat(target.getAttribute('data-y')) || 0);
                         target.style.width = event.rect.width + 'px';
+                        target.style.height = event.rect.height + 'px';
                         x += event.deltaRect.left;
                         y += event.deltaRect.top;
                         target.style.transform = `translate(${x}px, ${y}px)`;
@@ -747,20 +774,35 @@
             const cat = menuData?.config?.categories?.find(c => c.name === catName);
             if (!cat) return;
 
+            let page = $('.page').eq(currentPageIndex);
             let y = 100;
-            createCanvasElement($('.page').eq(currentPageIndex), 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: 183, top: y, width: '450px' });
+
+            // Category Header
+            createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: 183, top: y, width: '450px' });
             y += 120;
 
-            cat.dishes?.forEach(d => {
-                createCanvasElement($('.page').eq(currentPageIndex), 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1.35rem; color:#1a1a1a;">${d.name}</div>`, { left: 80, top: y, width: '450px' });
-                createCanvasElement($('.page').eq(currentPageIndex), 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:1.35rem; color:#8b1d1d; text-align:right;">$${d.price}</div>`, { left: 540, top: y, width: '180px' });
-                y += 28;
-                if (d.description) {
-                    createCanvasElement($('.page').eq(currentPageIndex), 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.85rem; color:#555; font-weight:500; font-style:italic;">${d.description}</div>`, { left: 80, top: y, width: '640px' });
-                    y += 48;
-                } else {
-                    y += 18;
-                }
+            // 2-Column Logic
+            const dishes = cat.dishes || [];
+            const colWidth = 340;
+            const colGap = 40;
+            const startX = 58;
+
+            dishes.forEach((d, i) => {
+                const col = i % 2;
+                const row = Math.floor(i / 2);
+                const x = startX + (col * (colWidth + colGap));
+                const rowY = y + (row * 90); // Estimating row height
+
+                const html = `
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; border-bottom: 1px dotted rgba(0,0,0,0.1); padding-bottom: 2px;">
+                        <span style="font-family:'Lora'; font-weight:900; font-size:1.1rem; color:#1a1a1a; text-transform: uppercase;">${d.name}</span>
+                        <span style="font-family:'Lora'; font-weight:900; font-size:1.1rem; color:#8b1d1d;">$${d.price}</span>
+                    </div>
+                    <div style="font-family:'Plus Jakarta Sans'; font-size:0.75rem; color:#555; font-weight:500; font-style:italic; line-height: 1.2; margin-top: 4px;">
+                        ${d.description || ''}
+                    </div>
+                `;
+                createCanvasElement(page, 'dish-block', html, { left: x, top: rowY, width: colWidth + 'px' });
             });
         };
 
@@ -768,40 +810,63 @@
             $('#designer-canvas').empty();
             currentPageIndex = 0;
             let page = addBlankPage();
-            let currentY = 50;
+            setPageBg('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/wood_bg_textured.jpg');
+
+            let currentY = 60;
+            const colWidth = 340;
+            const colGap = 40;
+            const startX = 58;
+
+            // Brand Header
+            createCanvasElement(page, 'logo', `<img src="${restaurantData?.logo_url || ''}" style="width:100%; border-radius:50%; border:3px solid #8b1d1d;">`, { width: '120px', left: '348', top: '40' });
+            createCanvasElement(page, 'name', `<h1 style="font-family:'Bebas Neue'; font-size:4rem; color:#1a1a1a; line-height:0.85; text-align:center;">${restaurantData?.name || 'NAME'}</h1>`, { left: '58', top: '170', width: '700px' });
+            currentY = 260;
 
             menuData?.config?.categories?.forEach(cat => {
-                const heightEstimate = 120 + ((cat.dishes?.length || 0) * 70);
-                if (currentY + heightEstimate > 950 && currentY > 50) {
+                const dishes = cat.dishes || [];
+                const rows = Math.ceil(dishes.length / 2);
+                const heightEstimate = 100 + (rows * 85);
+
+                if (currentY + heightEstimate > 980) {
                     page = addBlankPage();
-                    currentY = 50;
+                    currentY = 60;
                 }
 
+                // Category Title
                 createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: 183, top: currentY, width: '450px' });
-                currentY += 120;
+                currentY += 110;
 
-                cat.dishes?.forEach(d => {
-                    createCanvasElement(page, 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1.35rem; color:#1a1a1a;">${d.name}</div>`, { left: 80, top: currentY, width: '450px' });
-                    createCanvasElement(page, 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:1.35rem; color:#8b1d1d; text-align:right;">$${d.price}</div>`, { left: 540, top: currentY, width: '180px' });
-                    currentY += 28;
-                    if (d.description) {
-                        createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.85rem; color:#555; font-weight:500; font-style:italic;">${d.description}</div>`, { left: 80, top: currentY, width: '640px' });
-                        currentY += 48;
-                    } else {
-                        currentY += 18;
-                    }
+                dishes.forEach((d, i) => {
+                    const col = i % 2;
+                    const row = Math.floor(i / 2);
+                    const x = startX + (col * (colWidth + colGap));
+                    const rowY = currentY + (row * 85);
+
+                    const html = `
+                        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 1.5px dotted rgba(139, 29, 29, 0.2); padding-bottom: 2px;">
+                            <span style="font-family:'Lora'; font-weight:900; font-size:1.05rem; color:#1a1a1a; text-transform: uppercase;">${d.name}</span>
+                            <span style="font-family:'Lora'; font-weight:900; font-size:1.05rem; color:#8b1d1d;">$${d.price}</span>
+                        </div>
+                        <div style="font-family:'Plus Jakarta Sans'; font-size:0.75rem; color:#555; font-weight:500; font-style:italic; line-height: 1.2; margin-top: 3px;">
+                            ${d.description || ''}
+                        </div>
+                    `;
+                    createCanvasElement(page, 'dish-block', html, { left: x, top: rowY, width: colWidth + 'px' });
                 });
-                currentY += 40;
+
+                currentY += (rows * 85) + 40;
             });
 
             switchPage(0);
-            showToast("High fidelity layout generated!");
+            showToast("2-Column High-Fidelity Layout Generated!");
         };
 
         function showElementProperties() {
             if (!selectedEl) return;
             $('#element-properties').removeClass('hidden');
             const controls = $('#prop-controls').empty();
+
+            const target = selectedEl.find('.el-content').children().first().length ? selectedEl.find('.el-content').children().first() : selectedEl.find('.el-content');
 
             controls.append(`
                 <div class="prop-group">
@@ -810,7 +875,7 @@
                 </div>
                 <div class="prop-group">
                     <label>Typography</label>
-                    <select class="prop-input" onchange="selectedEl.find('.el-content *').css('font-family', this.value)">
+                    <select class="prop-input" id="prop-font">
                         <option value="'Plus Jakarta Sans'">Plus Jakarta (Modern)</option>
                         <option value="'Lora'">Lora (Serif)</option>
                         <option value="'Bebas Neue'">Bebas Neue (Display)</option>
@@ -821,17 +886,27 @@
                 </div>
                 <div class="prop-group">
                     <label>Text Color</label>
-                    <input type="color" class="prop-input" value="${rgbToHex(selectedEl.find('.el-content').css('color'))}" oninput="selectedEl.find('.el-content *').css('color', this.value)">
+                    <input type="color" id="prop-color" class="prop-input" value="${rgbToHex(target.css('color'))}">
                 </div>
                 <div class="prop-group">
                     <label>Font Size (px)</label>
-                    <input type="number" class="prop-input" value="${parseInt(selectedEl.find('.el-content *').first().css('font-size')) || 16}" oninput="selectedEl.find('.el-content *').css('font-size', this.value + 'px')">
+                    <input type="number" id="prop-size" class="prop-input" value="${parseInt(target.css('font-size')) || 16}">
                 </div>
                 <div class="prop-group">
                     <label>Element Opacity</label>
                     <input type="range" min="0" max="1" step="0.05" class="prop-input" value="${selectedEl.css('opacity')}" oninput="selectedEl.css('opacity', this.value)">
                 </div>
             `);
+
+            $('#prop-font').val(target.css('font-family')).on('change', function() {
+                selectedEl.find('.el-content, .el-content *').css('font-family', $(this).val());
+            });
+            $('#prop-color').on('input', function() {
+                selectedEl.find('.el-content, .el-content *').css('color', $(this).val());
+            });
+            $('#prop-size').on('input', function() {
+                selectedEl.find('.el-content, .el-content *').css('font-size', $(this).val() + 'px');
+            });
 
             if (selectedEl.find('.brush-header').length > 0) {
                 controls.append(`
@@ -847,6 +922,14 @@
             if (!selectedEl) return;
             const current = parseInt(selectedEl.css('z-index')) || 10;
             selectedEl.css('z-index', current + dir);
+        };
+
+        window.clearCanvas = () => {
+            if (confirm("This will delete all pages and elements. Are you sure?")) {
+                $('#designer-canvas').empty();
+                addBlankPage();
+                showToast("Designer reset");
+            }
         };
 
         function rgbToHex(rgb) {
@@ -887,23 +970,25 @@
         window.saveDesign = async () => {
             const pages = [];
             $('#designer-canvas .page').each(function() {
+                const pg = $(this);
                 const els = [];
-                $(this).find('.canvas-element').each(function() {
+                pg.find('.canvas-element').each(function() {
                     const e = $(this);
                     els.push({
                         type: e.data('type'),
                         x: e.attr('data-x'),
                         y: e.attr('data-y'),
                         w: e.css('width'),
+                        h: e.css('height'),
                         content: e.find('.el-content').html(),
                         zIndex: e.css('z-index'),
                         opacity: e.css('opacity')
                     });
                 });
-                pages.push(els);
+                pages.push({ elements: els, bg: pg.css('background-image'), bgColor: pg.css('background-color') });
             });
 
-            const config = { pages, tmpl: currentTemplate, size: $('#size-select').val(), lastPage: currentPageIndex, customW: $('#custom-w').val(), customH: $('#custom-h').val() };
+            const config = { pages, size: $('#size-select').val(), lastPage: currentPageIndex, customW: $('#custom-w').val(), customH: $('#custom-h').val() };
             const { error } = await supabase.from('menutech_physical_menus').upsert({
                 user_id: activeId, template_id: 'v4_hq', layout_config: config, updated_at: new Date()
             }, { onConflict: 'user_id, template_id' });
@@ -918,19 +1003,21 @@
 
             if (data?.layout_config) {
                 const cfg = data.layout_config;
-                currentTemplate = cfg.tmpl || 'tmpl-hoja';
-                $(`.template-card`).removeClass('active');
-                $(`.template-card[data-tmpl="${currentTemplate}"]`).addClass('active');
 
                 $('#size-select').val(cfg.size || 'letter');
                 $('#custom-w').val(cfg.customW || '8.5');
                 $('#custom-h').val(cfg.customH || '11');
                 updateSize();
 
-                cfg.pages.forEach((pEls) => {
+                cfg.pages.forEach((p) => {
                     const page = addBlankPage();
-                    pEls.forEach(e => {
+                    if (p.bg && p.bg !== 'none') page.css('background-image', p.bg);
+                    if (p.bgColor) page.css('background-color', p.bgColor);
+
+                    const els = p.elements || p; // Support old format
+                    els.forEach(e => {
                         const el = createCanvasElement(page, e.type, e.content, { left: e.x, top: e.y, width: e.w });
+                        if (e.h) el.css('height', e.h);
                         el.css('z-index', e.zIndex || 10);
                         el.css('opacity', e.opacity || 1);
                     });
@@ -939,7 +1026,6 @@
             } else {
                 addBlankPage();
             }
-            selectTemplate(currentTemplate);
             switchPage(currentPageIndex);
         }
 
