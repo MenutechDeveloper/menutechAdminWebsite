@@ -128,8 +128,8 @@
         /* Canvas Elements */
         .canvas-element {
             position: absolute; cursor: move; touch-action: none;
-            user-select: none; z-index: 10; padding: 10px;
-            border: 1.5px solid transparent;
+            user-select: none; z-index: 10; padding: 4px;
+            border: 1px solid transparent;
             box-sizing: border-box;
         }
         .canvas-element:hover { border: 1.5px dashed var(--orange); }
@@ -336,55 +336,66 @@
                     <span>✨</span>
                     <div>
                         <div style="font-weight: 900;">Generar Diseño</div>
-                        <div style="font-size: 0.65rem; color: #a16207; opacity: 0.8;">Auto-generate professional menu</div>
+                        <div style="font-size: 0.65rem; color: #a16207; opacity: 0.8;">Auto-generate from menu data</div>
                     </div>
                 </div>
 
-                <span class="section-title">Backgrounds</span>
-                <div class="template-grid">
-                    <div class="template-card" onclick="setPageBg('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/wood_bg_textured.jpg')">
-                        <div class="template-preview" style="background-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/wood_bg_textured.jpg'); background-size: cover;"></div>
-                        <div style="font-size:0.6rem; font-weight:900;">WOOD</div>
-                    </div>
-                    <div class="template-card" onclick="setPageBg('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/parchment_texture.jpg')">
-                        <div class="template-preview" style="background-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/parchment_texture.jpg'); background-size: cover;"></div>
-                        <div style="font-size:0.6rem; font-weight:900;">PARCHMENT</div>
-                    </div>
-                    <div class="template-card" onclick="setPageBg('')">
-                        <div class="template-preview" style="background: white; border: 1px solid #ddd;"></div>
-                        <div style="font-size:0.6rem; font-weight:900;">WHITE</div>
-                    </div>
-                    <div class="template-card" onclick="setPageBg('#1a1a1a')">
-                        <div class="template-preview" style="background: #1a1a1a;"></div>
-                        <div style="font-size:0.6rem; font-weight:900;">DARK</div>
-                    </div>
+                <div style="background: #f1f5f9; padding: 12px; border-radius: 12px; margin-top: 10px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.75rem; font-weight: 800; color: var(--text);">
+                        <input type="checkbox" id="group-move-toggle" checked> Group Dish Movement
+                    </label>
+                    <div style="font-size: 0.6rem; color: var(--text-dim); margin-top: 4px;">Moves Name/Price/Desc together</div>
                 </div>
 
-                <span class="section-title">Identity Elements</span>
-                <div class="tool-item" onclick="addElement('logo')"><span>🖼️</span> Logo</div>
-                <div class="tool-item" onclick="addElement('name')"><span>🏷️</span> Restaurant Name</div>
-                <div class="tool-item" onclick="addElement('contact')"><span>📞</span> Contact Info</div>
-
-                <span class="section-title">Categories</span>
-                <div id="category-list">
-                    <div style="font-size:0.75rem; color:var(--text-dim); text-align:center; padding:20px;">Loading categories...</div>
-                </div>
-
-                <span class="section-title">Decorative Assets</span>
+                <span class="section-title">Templates</span>
                 <div class="template-grid" style="margin-bottom: 15px;">
-                    <div class="template-card" style="padding:5px;" onclick="addElement('stain', 'https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/coffee_stain.png')">
-                        <img src="https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/coffee_stain.png" style="width:100%; aspect-ratio:1; object-fit:contain;">
-                        <div style="font-size:0.55rem; font-weight:800;">STAIN</div>
+                    <div class="template-card active" onclick="setTemplate('classic')">
+                        <div class="template-preview" style="background: #fff; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; font-weight: 800;">CLASSIC 2-COL</div>
+                        <div style="font-size: 0.65rem; font-weight: 800;">Classic</div>
                     </div>
-                    <div class="template-card" style="padding:5px;" onclick="addElement('stain', 'https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/grease_stain.png')">
-                        <img src="https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/grease_stain.png" style="width:100%; aspect-ratio:1; object-fit:contain;">
-                        <div style="font-size:0.55rem; font-weight:800;">GREASE</div>
+                    <div class="template-card" onclick="setTemplate('minimal')">
+                        <div class="template-preview" style="background: #fff; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; font-weight: 800;">MINIMAL 1-COL</div>
+                        <div style="font-size: 0.65rem; font-weight: 800;">Minimal</div>
                     </div>
                 </div>
-                <div class="tool-item" onclick="addElement('brush')"><span>🎨</span> Brush Header</div>
 
-                <span class="section-title">My Content Images</span>
-                <div class="gallery-grid" id="gallery"></div>
+                <span class="section-title">Branding</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                    <div class="tool-item" style="padding: 10px; margin-bottom: 0; flex-direction: column; gap: 5px;" onclick="addElement('logo')">
+                        <span style="font-size: 1rem;">🏷️</span>
+                        <div style="font-size: 0.6rem;">LOGO</div>
+                    </div>
+                    <div class="tool-item" style="padding: 10px; margin-bottom: 0; flex-direction: column; gap: 5px;" onclick="addElement('name')">
+                        <span style="font-size: 1rem;">📝</span>
+                        <div style="font-size: 0.6rem;">NAME</div>
+                    </div>
+                </div>
+                <div class="tool-item" onclick="addElement('contact')"><span>📞</span> Add Contact Info</div>
+
+                <span class="section-title">Generic Elements</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                    <div class="tool-item" style="padding: 10px; margin-bottom: 0; flex-direction: column; gap: 5px;" onclick="addElement('heading')">
+                        <span style="font-size: 1rem;">H1</span>
+                        <div style="font-size: 0.6rem;">HEADING</div>
+                    </div>
+                    <div class="tool-item" style="padding: 10px; margin-bottom: 0; flex-direction: column; gap: 5px;" onclick="addElement('text')">
+                        <span style="font-size: 1rem;">Aa</span>
+                        <div style="font-size: 0.6rem;">TEXT</div>
+                    </div>
+                </div>
+                <div class="tool-item" onclick="addElement('brush')"><span>🎨</span> Brush Stroke Header</div>
+
+                <span class="section-title">Menu Categories</span>
+                <div id="category-list">
+                    <div style="font-size:0.75rem; color:var(--text-dim); text-align:center; padding:20px;">Loading...</div>
+                </div>
+
+                <span class="section-title">Image Gallery</span>
+                <div class="gallery-grid" id="gallery">
+                    <!-- Loaded from menu/restaurant images -->
+                </div>
+
+                <div style="height: 50px;"></div>
             </div>
         </aside>
 
@@ -476,6 +487,7 @@
         let allUsers = [];
         let currentPageIndex = 0;
         let currentBg = '';
+        let currentTemplate = 'classic';
 
         $(document).ready(async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -689,6 +701,12 @@
             } else if (type === 'name') {
                 html = `<h1 style="font-family:'Bebas Neue'; font-size:4.5rem; color:inherit; line-height:0.85; text-align:center;">${restaurantData?.name || 'NAME'}</h1>`;
                 style = { left: '58', top: '220', width: '700px' };
+            } else if (type === 'heading') {
+                html = `<h2 style="font-family:'Bebas Neue'; font-size:3rem; color:inherit; text-align:center; text-transform:uppercase;">Heading</h2>`;
+                style = { left: '50', top: '100', width: '716px' };
+            } else if (type === 'text') {
+                html = `<p style="font-family:'Plus Jakarta Sans'; font-size:1.1rem; color:inherit; text-align:justify;">Enter your custom text here...</p>`;
+                style = { left: '50', top: '150', width: '716px' };
             } else if (type === 'contact') {
                 html = `<div style="font-family:'Outfit'; font-size:1.1rem; color:inherit; text-align:center;">${restaurantData?.phone || ''} • ${restaurantData?.address || ''}</div>`;
                 style = { left: '58', top: '320', width: '700px' };
@@ -696,7 +714,7 @@
                 html = `<img src="${content}" style="width:100%; border-radius:15px; box-shadow:0 15px 35px rgba(0,0,0,0.15);">`;
                 style = { width: '280px', left: '100', top: '100' };
             } else if (type === 'brush') {
-                html = `<div class="brush-header">TITULO</div>`;
+                html = `<div class="brush-header">CATEGORY</div>`;
                 style = { width: '450px', left: '183', top: '100' };
             } else if (type === 'stain') {
                 const url = content || 'https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/coffee_stain.png';
@@ -737,15 +755,23 @@
                 listeners: {
                     move(event) {
                         const target = event.target;
-                        const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-                        const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-                        target.style.transform = `translate(${x}px, ${y}px)`;
-                        target.setAttribute('data-x', x);
-                        target.setAttribute('data-y', y);
+                        const dx = event.dx;
+                        const dy = event.dy;
+
+                        const groupMove = $('#group-move-toggle').is(':checked');
+                        const groupId = target.getAttribute('data-group');
+
+                        if (groupMove && groupId) {
+                            $(`[data-group="${groupId}"]`).each(function() {
+                                moveEl(this, dx, dy);
+                            });
+                        } else {
+                            moveEl(target, dx, dy);
+                        }
                     }
                 },
                 modifiers: [
-                    interact.modifiers.snap({ targets: [ interact.snappers.grid({ x: 2, y: 2 }) ], range: Infinity }),
+                    interact.modifiers.snap({ targets: [ interact.snappers.grid({ x: 5, y: 5 }) ], range: Infinity }),
                     interact.modifiers.restrictRect({ restriction: 'parent' })
                 ]
             }).resizable({
@@ -770,6 +796,14 @@
             return el;
         }
 
+        function moveEl(target, dx, dy) {
+            const x = (parseFloat(target.getAttribute('data-x')) || 0) + dx;
+            const y = (parseFloat(target.getAttribute('data-y')) || 0) + dy;
+            target.style.transform = `translate(${x}px, ${y}px)`;
+            target.setAttribute('data-x', x);
+            target.setAttribute('data-y', y);
+        }
+
         window.addCategoryUI = (catName) => {
             const cat = menuData?.config?.categories?.find(c => c.name === catName);
             if (!cat) return;
@@ -783,48 +817,60 @@
 
             // 2-Column Logic
             const dishes = cat.dishes || [];
-            const colWidth = 340;
-            const colGap = 40;
+            const colWidth = 320;
+            const colGap = 60;
             const startX = 58;
 
             dishes.forEach((d, i) => {
                 const col = i % 2;
                 const row = Math.floor(i / 2);
                 const x = startX + (col * (colWidth + colGap));
-                const rowY = y + (row * 90); // Estimating row height
+                const rowY = y + (row * 85);
 
-                const html = `
-                    <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; border-bottom: 1px dotted rgba(0,0,0,0.1); padding-bottom: 2px;">
-                        <span style="font-family:'Lora'; font-weight:900; font-size:1.1rem; color:#1a1a1a; text-transform: uppercase;">${d.name}</span>
-                        <span style="font-family:'Lora'; font-weight:900; font-size:1.1rem; color:#8b1d1d;">$${d.price}</span>
-                    </div>
-                    <div style="font-family:'Plus Jakarta Sans'; font-size:0.75rem; color:#555; font-weight:500; font-style:italic; line-height: 1.2; margin-top: 4px;">
-                        ${d.description || ''}
-                    </div>
-                `;
-                createCanvasElement(page, 'dish-block', html, { left: x, top: rowY, width: colWidth + 'px' });
+                addDishElements(page, d, x, rowY, colWidth);
             });
+        };
+
+        function addDishElements(page, dish, x, y, width) {
+            const groupId = 'dish-' + Math.random().toString(36).substr(2, 9);
+
+            const nameEl = createCanvasElement(page, 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1.05rem; color:#1a1a1a; text-transform: uppercase; border-bottom: 1.5px dotted rgba(0,0,0,0.1);">${dish.name}</div>`, { left: x, top: y, width: (width - 60) + 'px' });
+            nameEl.attr('data-group', groupId);
+
+            const priceEl = createCanvasElement(page, 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:1.05rem; color:#8b1d1d; text-align: right;">$${dish.price}</div>`, { left: x + (width - 60), top: y, width: '60px' });
+            priceEl.attr('data-group', groupId);
+
+            if (dish.description) {
+                const descEl = createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.75rem; color:#555; font-weight:500; font-style:italic; line-height: 1.2;">${dish.description}</div>`, { left: x, top: y + 24, width: width + 'px' });
+                descEl.attr('data-group', groupId);
+            }
+        }
+
+        window.setTemplate = async (t) => {
+            if ($('#designer-canvas').children().length > 0) {
+                if (!confirm("Switching templates will load the saved design for that style. Unsaved changes to the current design will be lost. Continue?")) return;
+            }
+            currentTemplate = t;
+            $('.template-card').removeClass('active');
+            $(`.template-card[onclick="setTemplate('${t}')"]`).addClass('active');
+            await loadSavedDesign();
+            showToast(`Template switched to ${t}`);
         };
 
         window.generateDesign = () => {
             $('#designer-canvas').empty();
             currentPageIndex = 0;
             let page = addBlankPage();
-            setPageBg('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/wood_bg_textured.jpg');
 
             let currentY = 60;
-            const colWidth = 340;
-            const colGap = 40;
-            const startX = 58;
-
-            // Brand Header
-            createCanvasElement(page, 'logo', `<img src="${restaurantData?.logo_url || ''}" style="width:100%; border-radius:50%; border:3px solid #8b1d1d;">`, { width: '120px', left: '348', top: '40' });
-            createCanvasElement(page, 'name', `<h1 style="font-family:'Bebas Neue'; font-size:4rem; color:#1a1a1a; line-height:0.85; text-align:center;">${restaurantData?.name || 'NAME'}</h1>`, { left: '58', top: '170', width: '700px' });
-            currentY = 260;
+            const colWidth = currentTemplate === 'classic' ? 320 : 700;
+            const colGap = 60;
+            const startX = currentTemplate === 'classic' ? 58 : 58;
 
             menuData?.config?.categories?.forEach(cat => {
                 const dishes = cat.dishes || [];
-                const rows = Math.ceil(dishes.length / 2);
+                const numCols = currentTemplate === 'classic' ? 2 : 1;
+                const rows = Math.ceil(dishes.length / numCols);
                 const heightEstimate = 100 + (rows * 85);
 
                 if (currentY + heightEstimate > 980) {
@@ -837,28 +883,19 @@
                 currentY += 110;
 
                 dishes.forEach((d, i) => {
-                    const col = i % 2;
-                    const row = Math.floor(i / 2);
+                    const col = i % numCols;
+                    const row = Math.floor(i / numCols);
                     const x = startX + (col * (colWidth + colGap));
                     const rowY = currentY + (row * 85);
 
-                    const html = `
-                        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 1.5px dotted rgba(139, 29, 29, 0.2); padding-bottom: 2px;">
-                            <span style="font-family:'Lora'; font-weight:900; font-size:1.05rem; color:#1a1a1a; text-transform: uppercase;">${d.name}</span>
-                            <span style="font-family:'Lora'; font-weight:900; font-size:1.05rem; color:#8b1d1d;">$${d.price}</span>
-                        </div>
-                        <div style="font-family:'Plus Jakarta Sans'; font-size:0.75rem; color:#555; font-weight:500; font-style:italic; line-height: 1.2; margin-top: 3px;">
-                            ${d.description || ''}
-                        </div>
-                    `;
-                    createCanvasElement(page, 'dish-block', html, { left: x, top: rowY, width: colWidth + 'px' });
+                    addDishElements(page, d, x, rowY, colWidth);
                 });
 
                 currentY += (rows * 85) + 40;
             });
 
             switchPage(0);
-            showToast("2-Column High-Fidelity Layout Generated!");
+            showToast("Design Generated!");
         };
 
         function showElementProperties() {
@@ -908,6 +945,17 @@
                 selectedEl.find('.el-content, .el-content *').css('font-size', $(this).val() + 'px');
             });
 
+            controls.append(`
+                <div class="prop-group">
+                    <label>Alignment</label>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;">
+                        <button class="btn-small" onclick="setTextAlign('left')">Left</button>
+                        <button class="btn-small" onclick="setTextAlign('center')">Center</button>
+                        <button class="btn-small" onclick="setTextAlign('right')">Right</button>
+                    </div>
+                </div>
+            `);
+
             if (selectedEl.find('.brush-header').length > 0) {
                 controls.append(`
                     <div class="prop-group">
@@ -917,6 +965,11 @@
                 `);
             }
         }
+
+        window.setTextAlign = (align) => {
+            if (!selectedEl) return;
+            selectedEl.find('.el-content, .el-content *').css('text-align', align);
+        };
 
         window.changeLayer = (dir) => {
             if (!selectedEl) return;
@@ -976,6 +1029,7 @@
                     const e = $(this);
                     els.push({
                         type: e.data('type'),
+                        group: e.attr('data-group'),
                         x: e.attr('data-x'),
                         y: e.attr('data-y'),
                         w: e.css('width'),
@@ -990,15 +1044,15 @@
 
             const config = { pages, size: $('#size-select').val(), lastPage: currentPageIndex, customW: $('#custom-w').val(), customH: $('#custom-h').val() };
             const { error } = await supabase.from('menutech_physical_menus').upsert({
-                user_id: activeId, template_id: 'v4_hq', layout_config: config, updated_at: new Date()
+                user_id: activeId, template_id: currentTemplate, layout_config: config, updated_at: new Date()
             }, { onConflict: 'user_id, template_id' });
 
             if (error) showToast("Error: " + error.message, true);
-            else showToast("Layout Persisted Successfully!");
+            else showToast(`Design (${currentTemplate}) Persisted Successfully!`);
         };
 
         async function loadSavedDesign() {
-            const { data } = await supabase.from('menutech_physical_menus').select('*').eq('user_id', activeId).eq('template_id', 'v4_hq').maybeSingle();
+            const { data } = await supabase.from('menutech_physical_menus').select('*').eq('user_id', activeId).eq('template_id', currentTemplate).maybeSingle();
             $('#designer-canvas').empty();
 
             if (data?.layout_config) {
@@ -1018,6 +1072,7 @@
                     els.forEach(e => {
                         const el = createCanvasElement(page, e.type, e.content, { left: e.x, top: e.y, width: e.w });
                         if (e.h) el.css('height', e.h);
+                        if (e.group) el.attr('data-group', e.group);
                         el.css('z-index', e.zIndex || 10);
                         el.css('opacity', e.opacity || 1);
                     });
