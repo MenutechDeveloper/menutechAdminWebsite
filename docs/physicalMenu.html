@@ -98,8 +98,9 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            overflow: hidden;
+            overflow: auto; /* Changed to auto to allow scrolling when zoomed */
             position: relative;
+            padding: 40px;
         }
 
         /* Designer Canvas */
@@ -110,6 +111,7 @@
             background: white;
             box-shadow: 0 15px 50px rgba(0,0,0,0.2);
             flex-shrink: 0;
+            margin-bottom: 100px;
         }
 
         /* Page Styles */
@@ -167,6 +169,23 @@
             -webkit-user-select: none;
             max-width: 100%;
             display: block;
+        }
+
+        /* Zoom & History Controls */
+        .top-toolbar {
+            position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 10px; z-index: 4500;
+        }
+        .toolbar-btn {
+            background: white; border: 1px solid var(--border); border-radius: 8px;
+            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .toolbar-btn:hover { background: #f1f5f9; border-color: var(--orange); color: var(--orange); }
+        .toolbar-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .zoom-label {
+            background: white; padding: 0 12px; height: 40px; border: 1px solid var(--border);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 800; color: var(--text-dim); box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         /* Marquee Selection */
@@ -307,6 +326,17 @@
         }
         #toast.active { transform: translateX(-50%) translateY(0); }
 
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed; inset: 0; background: white; z-index: 10000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--orange);
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         .hidden { display: none !important; }
 
         /* Gallery Grid */
@@ -328,6 +358,11 @@
     </style>
 </head>
 <body>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div style="font-weight: 800; color: var(--text); letter-spacing: 1px;">PREPARING DESIGNER...</div>
+    </div>
 
     <div id="toast">Message</div>
 
@@ -355,18 +390,12 @@
             <div class="sidebar-content">
                 <span class="section-title">Design Engine</span>
                 <div class="tool-item" style="background: #fff1e6; border-color: #ffd8b0; justify-content: center; text-align: center;" onclick="generateDesign()">
-                    <div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
                         <div style="font-weight: 900;">Generar Diseño</div>
                         <div style="font-size: 0.65rem; color: #a16207; opacity: 0.8;">Auto-generate from menu data</div>
                     </div>
                 </div>
 
-                <div style="background: #f1f5f9; padding: 12px; border-radius: 12px; margin-top: 10px;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.75rem; font-weight: 800; color: var(--text);">
-                        <input type="checkbox" id="group-move-toggle" checked> Group Dish Movement
-                    </label>
-                    <div style="font-size: 0.6rem; color: var(--text-dim); margin-top: 4px;">Moves Name/Price/Desc together</div>
-                </div>
 
                 <span class="section-title">Templates</span>
                 <div class="template-grid" style="margin-bottom: 15px;">
@@ -411,6 +440,10 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l5 2"></path><path d="M2 2l2 5"></path><path d="M10 10l-2 2v4l4 2h4l2-2v-4l-2-2h-4z"></path></svg>
                     Brush Stroke Header
                 </div>
+                <div class="tool-item" onclick="addElement('stain')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    Add Texture/Stain
+                </div>
 
                 <span class="section-title">Menu Categories</span>
                 <div id="category-list">
@@ -428,6 +461,25 @@
 
         <!-- Workspace -->
         <main class="workspace">
+            <div class="top-toolbar">
+                <button class="toolbar-btn" onclick="undo()" id="undo-btn" title="Undo (Ctrl+Z)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-15 9 9 0 0 0-6 2.3L3 13"/></svg>
+                </button>
+                <button class="toolbar-btn" onclick="redo()" id="redo-btn" title="Redo (Ctrl+Y)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-15 9 9 0 0 1 6 2.3L21 13"/></svg>
+                </button>
+                <div style="width: 1px; background: var(--border); margin: 5px 0;"></div>
+                <button class="toolbar-btn" onclick="zoomCanvas(0.1)" title="Zoom In">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                </button>
+                <div class="zoom-label" id="zoom-value">100%</div>
+                <button class="toolbar-btn" onclick="zoomCanvas(-0.1)" title="Zoom Out">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                </button>
+                <button class="toolbar-btn" onclick="resetZoom()" title="Reset Zoom">
+                    <span style="font-size: 0.6rem; font-weight: 800;">AUTO</span>
+                </button>
+            </div>
             <div id="canvas-wrapper">
                 <div id="designer-canvas">
                     <!-- Pages -->
@@ -520,6 +572,11 @@
         let currentPageIndex = 0;
         let currentBg = '';
         let currentTemplate = 'classic';
+        let currentZoom = 1;
+
+        // History System
+        let history = [];
+        let historyIndex = -1;
 
         $(document).ready(async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -541,8 +598,119 @@
             }
 
             window.addEventListener('resize', updateScale);
+            $(document).on('keydown', handleGlobalShortcuts);
             await loadData();
+            $('#loading-overlay').fadeOut();
         });
+
+        function handleGlobalShortcuts(e) {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'z') { e.preventDefault(); undo(); }
+                if (e.key === 'y') { e.preventDefault(); redo(); }
+                if (e.key === '=') { e.preventDefault(); zoomCanvas(0.1); }
+                if (e.key === '-') { e.preventDefault(); zoomCanvas(-0.1); }
+                if (e.key === '0') { e.preventDefault(); resetZoom(); }
+            }
+        }
+
+        window.saveState = () => {
+            const pages = [];
+            $('#designer-canvas .page').each(function() {
+                const pg = $(this);
+                const els = [];
+                pg.find('.canvas-element').each(function() {
+                    const e = $(this);
+                    els.push({
+                        type: e.data('type'),
+                        group: e.attr('data-group'),
+                        x: e.attr('data-x'),
+                        y: e.attr('data-y'),
+                        w: e.css('width'),
+                        h: e.css('height'),
+                        content: e.find('.el-content').html(),
+                        zIndex: e.css('z-index'),
+                        opacity: e.css('opacity')
+                    });
+                });
+                pages.push({ elements: els, bg: pg.css('background-image'), bgColor: pg.css('background-color') });
+            });
+
+            const state = JSON.stringify({
+                pages,
+                size: $('#size-select').val(),
+                customW: $('#custom-w').val(),
+                customH: $('#custom-h').val(),
+                currentPageIndex
+            });
+
+            if (historyIndex < history.length - 1) {
+                history = history.slice(0, historyIndex + 1);
+            }
+
+            // Limit history size
+            if (history.length > 50) history.shift();
+            else historyIndex++;
+
+            history.push(state);
+            updateHistoryButtons();
+        };
+
+        window.undo = () => {
+            if (historyIndex > 0) {
+                historyIndex--;
+                applyState(history[historyIndex]);
+                updateHistoryButtons();
+            }
+        };
+
+        window.redo = () => {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                applyState(history[historyIndex]);
+                updateHistoryButtons();
+            }
+        };
+
+        function updateHistoryButtons() {
+            $('#undo-btn').prop('disabled', historyIndex <= 0);
+            $('#redo-btn').prop('disabled', historyIndex >= history.length - 1);
+        }
+
+        function applyState(json) {
+            const state = JSON.parse(json);
+            $('#designer-canvas').empty();
+
+            $('#size-select').val(state.size);
+            $('#custom-w').val(state.customW);
+            $('#custom-h').val(state.customH);
+            updateSize();
+
+            state.pages.forEach((p, i) => {
+                const page = addBlankPage();
+                if (p.bg && p.bg !== 'none') page.css('background-image', p.bg);
+                if (p.bgColor) page.css('background-color', p.bgColor);
+
+                p.elements.forEach(e => {
+                    const el = createCanvasElement(page, e.type, e.content, { left: e.x, top: e.y, width: e.w });
+                    if (e.h) el.css('height', e.h);
+                    if (e.group) el.attr('data-group', e.group);
+                    el.css({ 'z-index': e.zIndex || 10, 'opacity': e.opacity || 1 });
+                });
+            });
+
+            currentPageIndex = state.currentPageIndex;
+            switchPage(currentPageIndex);
+        }
+
+        window.zoomCanvas = (delta) => {
+            currentZoom = Math.max(0.1, Math.min(3, currentZoom + delta));
+            updateScale();
+        };
+
+        window.resetZoom = () => {
+            currentZoom = 0; // Trigger auto-scale
+            updateScale();
+        };
 
         async function loadContextSwitcher() {
             const { data } = await supabase.from('profiles').select('id, username, email, domain').order('username');
@@ -604,7 +772,7 @@
                     catList.append(`
                         <div class="tool-item" onclick="addCategoryUI('${c.name.replace(/'/g, "\\'")}')">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                            ${c.name}
+                            <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${c.name}</span>
                         </div>
                     `);
                 });
@@ -701,13 +869,16 @@
             const canvas = $('#designer-canvas');
             if (!canvas.length) return;
 
-            const wrapW = wrapper.width() - 40;
-            const wrapH = wrapper.height() - 40;
-            const canW = canvas.outerWidth();
-            const canH = canvas.outerHeight();
+            if (currentZoom === 0) {
+                const wrapW = wrapper.width() - 80;
+                const wrapH = wrapper.height() - 80;
+                const canW = canvas.outerWidth();
+                const canH = canvas.outerHeight();
+                currentZoom = Math.min(wrapW / canW, wrapH / canH, 1);
+            }
 
-            const scale = Math.min(wrapW / canW, wrapH / canH, 1);
-            canvas.css('transform', `scale(${scale})`);
+            canvas.css('transform', `scale(${currentZoom})`);
+            $('#zoom-value').text(Math.round(currentZoom * 100) + '%');
         }
 
         window.updateSize = () => {
@@ -765,7 +936,9 @@
                 style = { width: '250px', left: '268', top: '400' };
             }
 
-            return createCanvasElement(targetPage, type, html, style);
+            const el = createCanvasElement(targetPage, type, html, style);
+            saveState();
+            return el;
         };
 
         window.createCanvasElement = (page, type, html, style = {}) => {
@@ -785,7 +958,7 @@
                 </div>
             `);
 
-            el.find('.delete-btn').click((e) => { e.stopPropagation(); el.remove(); selectedEl = null; $('#element-properties').addClass('hidden'); });
+            el.find('.delete-btn').click((e) => { e.stopPropagation(); el.remove(); selectedEl = null; $('#element-properties').addClass('hidden'); saveState(); });
 
             el.on('mousedown', function(e) {
                 // If already editing, don't interfere
@@ -825,6 +998,9 @@
             interact(el[0]).draggable({
                 cursorChecker: (action, interactable, element, interacting) => { return 'move'; },
                 listeners: {
+                    end(event) {
+                        saveState();
+                    },
                     move(event) {
                         const target = event.target;
                         const dx = event.dx;
@@ -836,16 +1012,7 @@
                                 moveEl(this, dx, dy);
                             });
                         } else {
-                            const groupMove = $('#group-move-toggle').is(':checked');
-                            const groupId = target.getAttribute('data-group');
-
-                            if (groupMove && groupId) {
-                                $(`[data-group="${groupId}"]`).each(function() {
-                                    moveEl(this, dx, dy);
-                                });
-                            } else {
-                                moveEl(target, dx, dy);
-                            }
+                            moveEl(target, dx, dy);
                         }
                     }
                 },
@@ -856,14 +1023,17 @@
             }).resizable({
                 edges: { left: '.handle-nw, .handle-sw', right: '.handle-ne, .handle-se', bottom: '.handle-sw, .handle-se', top: '.handle-nw, .handle-ne' },
                 listeners: {
+                    end(event) {
+                        saveState();
+                    },
                     move(event) {
                         const target = event.target;
                         let x = (parseFloat(target.getAttribute('data-x')) || 0);
                         let y = (parseFloat(target.getAttribute('data-y')) || 0);
-                        target.style.width = event.rect.width + 'px';
-                        target.style.height = event.rect.height + 'px';
-                        x += event.deltaRect.left;
-                        y += event.deltaRect.top;
+                        target.style.width = (event.rect.width / currentZoom) + 'px';
+                        target.style.height = (event.rect.height / currentZoom) + 'px';
+                        x += (event.deltaRect.left / currentZoom);
+                        y += (event.deltaRect.top / currentZoom);
                         target.style.transform = `translate(${x}px, ${y}px)`;
                         target.setAttribute('data-x', x);
                         target.setAttribute('data-y', y);
@@ -876,8 +1046,8 @@
         }
 
         function moveEl(target, dx, dy) {
-            const x = (parseFloat(target.getAttribute('data-x')) || 0) + dx;
-            const y = (parseFloat(target.getAttribute('data-y')) || 0) + dy;
+            const x = (parseFloat(target.getAttribute('data-x')) || 0) + (dx / currentZoom);
+            const y = (parseFloat(target.getAttribute('data-y')) || 0) + (dy / currentZoom);
             target.style.transform = `translate(${x}px, ${y}px)`;
             target.setAttribute('data-x', x);
             target.setAttribute('data-y', y);
@@ -898,36 +1068,33 @@
 
             // 2-Column Logic
             const dishes = cat.dishes || [];
-            const colWidth = 280; // Slightly narrower for better side margins
-            const colGap = 120; // Increased gap
+            const colWidth = 240; // Even narrower for generous side margins
+            const colGap = 120;
             const totalGridW = (colWidth * 2) + colGap;
-            const startX = (canvasW - totalGridW) / 2; // Dynamic centering
+            const startX = (canvasW - totalGridW) / 2;
 
             dishes.forEach((d, i) => {
                 const col = i % 2;
                 const row = Math.floor(i / 2);
                 const x = startX + (col * (colWidth + colGap));
-                const rowY = y + (row * 110); // Increased row height
+                const rowY = y + (row * 150); // Increased row height for breathing room
 
                 addDishElements(page, d, x, rowY, colWidth);
             });
+            saveState();
         };
 
         function addDishElements(page, dish, x, y, width) {
-            const groupId = 'dish-' + Math.random().toString(36).substr(2, 9);
+            // Increased vertical spacing and better individual containers
+            // Wider price field to avoid clipping
+            const priceW = 70;
+            const nameEl = createCanvasElement(page, 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1.05rem; color:#1a1a1a; text-transform: uppercase; border-bottom: 1.5px dotted rgba(0,0,0,0.1); padding-bottom: 3px; line-height: 1.2;">${dish.name}</div>`, { left: x, top: y, width: (width - priceW) + 'px' });
 
-            // Name El with better alignment and dot border
-            const nameEl = createCanvasElement(page, 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1.05rem; color:#1a1a1a; text-transform: uppercase; border-bottom: 1.5px dotted rgba(0,0,0,0.1); margin-bottom: 5px; line-height: 1.2;">${dish.name}</div>`, { left: x, top: y, width: (width - 60) + 'px' });
-            nameEl.attr('data-group', groupId);
+            const priceEl = createCanvasElement(page, 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:1.05rem; color:#8b1d1d; text-align: right;">$${dish.price}</div>`, { left: x + (width - priceW), top: y, width: priceW + 'px' });
 
-            // Price El
-            const priceEl = createCanvasElement(page, 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:1.05rem; color:#8b1d1d; text-align: right;">$${dish.price}</div>`, { left: x + (width - 60), top: y, width: '60px' });
-            priceEl.attr('data-group', groupId);
-
-            // Description El - increased offset to y+55 to ensure no overlap even with wrapped names
             if (dish.description) {
-                const descEl = createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.75rem; color:#555; font-weight:500; font-style:italic; line-height: 1.3; padding-top: 5px;">${dish.description}</div>`, { left: x, top: y + 55, width: width + 'px' });
-                descEl.attr('data-group', groupId);
+                // description offset increased to y + 80 to prevent overlap with wrapped names
+                const descEl = createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.75rem; color:#555; font-weight:500; font-style:italic; line-height: 1.3; padding-top: 5px;">${dish.description}</div>`, { left: x, top: y + 80, width: width + 'px' });
             }
         }
 
@@ -947,43 +1114,55 @@
             currentPageIndex = 0;
             let page = addBlankPage();
             const canvasW = $('#designer-canvas').width();
+            const maxPageY = 920; // Ensure generous bleed/margin
 
-            let currentY = 60;
-            const colWidth = currentTemplate === 'classic' ? 280 : 650; // Slightly narrower for better side margins
-            const colGap = currentTemplate === 'classic' ? 120 : 0; // Increased gap
+            let currentY = 80;
+            const colWidth = currentTemplate === 'classic' ? 240 : 560;
+            const colGap = currentTemplate === 'classic' ? 120 : 0;
             const numCols = currentTemplate === 'classic' ? 2 : 1;
             const totalGridW = (colWidth * numCols) + ((numCols - 1) * colGap);
-            const startX = (canvasW - totalGridW) / 2; // Exact centering calculation
+            const startX = (canvasW - totalGridW) / 2;
 
             menuData?.config?.categories?.forEach(cat => {
                 const dishes = cat.dishes || [];
-                const rows = Math.ceil(dishes.length / numCols);
-                const rowH = 110; // Increased row height for breathing room
-                const heightEstimate = 130 + (rows * rowH);
+                const rowH = 160; // More breathing room
+                const headerH = 180;
 
-                if (currentY + heightEstimate > 980) {
+                // Category Title - check if fits on current page
+                if (currentY + headerH > maxPageY) {
                     page = addBlankPage();
-                    currentY = 60;
+                    currentY = 80;
                 }
 
-                // Category Title
                 const headerW = 450;
                 createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: (canvasW - headerW) / 2, top: currentY, width: headerW + 'px' });
-                currentY += 120;
+                currentY += 150;
 
                 dishes.forEach((d, i) => {
                     const col = i % numCols;
-                    const row = Math.floor(i / numCols);
+
+                    // If first item of a row and it exceeds page, new page
+                    if (col === 0 && (currentY + rowH > maxPageY)) {
+                        page = addBlankPage();
+                        currentY = 80;
+                    }
+
                     const x = startX + (col * (colWidth + colGap));
-                    const rowY = currentY + (row * rowH);
+                    const rowY = currentY;
 
                     addDishElements(page, d, x, rowY, colWidth);
+
+                    // Only increment Y after the full row is placed
+                    if (col === numCols - 1 || i === dishes.length - 1) {
+                        currentY += rowH;
+                    }
                 });
 
-                currentY += (rows * rowH) + 70;
+                currentY += 60; // Category gap
             });
 
             switchPage(0);
+            saveState();
             showToast("Design Generated!");
         };
 
@@ -1078,6 +1257,7 @@
             if (confirm("This will delete all pages and elements. Are you sure?")) {
                 $('#designer-canvas').empty();
                 addBlankPage();
+                saveState();
                 showToast("Designer reset");
             }
         };
@@ -1179,6 +1359,11 @@
                 addBlankPage();
             }
             switchPage(currentPageIndex);
+
+            // Clear history on fresh load
+            history = [];
+            historyIndex = -1;
+            saveState();
         }
 
         window.exportPDF = () => {
