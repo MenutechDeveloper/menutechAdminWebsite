@@ -1114,7 +1114,7 @@
             // Category Header
             const headerW = 600;
             createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: (canvasW - headerW) / 2, top: y, width: headerW + 'px' });
-            y += 115;
+            y += 95;
 
             // 2-Column Logic
             const dishes = cat.dishes || [];
@@ -1135,7 +1135,8 @@
 
         async function addDishElements(page, dish, x, y, width) {
             const priceW = 75;
-            const nameEl = createCanvasElement(page, 'dish-name', `<div class="dish-name-content" style="font-family:'Lora'; font-weight:900; font-size:0.92rem; color:#1a1a1a; text-transform: uppercase; border-bottom: 1.5px dotted rgba(0,0,0,0.1); padding-bottom: 1px; line-height: 1.1;">${dish.name}</div>`, { left: x, top: y, width: (width - priceW - 5) + 'px' });
+            // Removed dotted border and reduced padding for maximum compactness
+            const nameEl = createCanvasElement(page, 'dish-name', `<div class="dish-name-content" style="font-family:'Lora'; font-weight:900; font-size:0.92rem; color:#1a1a1a; text-transform: uppercase; line-height: 1.1;">${dish.name}</div>`, { left: x, top: y, width: (width - priceW - 5) + 'px' });
 
             const priceEl = createCanvasElement(page, 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:0.92rem; color:#8b1d1d; text-align: right;">$${dish.price}</div>`, { left: x + (width - priceW), top: y, width: priceW + 'px' });
 
@@ -1144,13 +1145,24 @@
                     setTimeout(() => {
                         const content = nameEl.find('.dish-name-content')[0];
                         const nameH = content ? content.offsetHeight : 15;
-                        const descY = y + nameH + 8; // Increased gap to 8px to prevent overlap
-                        createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.68rem; color:#555; font-weight:500; font-style:italic; line-height: 1.05;">${dish.description}</div>`, { left: x, top: descY, width: width + 'px' });
-                        resolve(nameH + 25); // Increased estimate
+                        const descY = y + nameH; // Tight spacing
+                        const descEl = createCanvasElement(page, 'dish-desc', `<div class="dish-desc-content" style="font-family:'Plus Jakarta Sans'; font-size:0.68rem; color:#555; font-weight:500; font-style:italic; line-height: 1.05;">${dish.description}</div>`, { left: x, top: descY, width: width + 'px' });
+
+                        setTimeout(() => {
+                            const dContent = descEl.find('.dish-desc-content')[0];
+                            const descH = dContent ? dContent.offsetHeight : 10;
+                            resolve(nameH + descH + 1);
+                        }, 10);
                     }, 50);
                 });
             }
-            return Promise.resolve(25);
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const content = nameEl.find('.dish-name-content')[0];
+                    const nameH = content ? content.offsetHeight : 15;
+                    resolve(nameH + 1);
+                }, 60);
+            });
         }
 
         window.setTemplate = async (t) => {
@@ -1171,14 +1183,14 @@
             const canvasW = $('#designer-canvas').width();
             const canvasH = $('#designer-canvas').height();
 
-            const marginSide = 100; // Increased margin for better centering
-            const marginTop = 35;
-            const colGap = currentTemplate === 'classic' ? 42 : 0;
+            const marginSide = 80; // Reduced margin slightly to fit more
+            const marginTop = 30;
+            const colGap = currentTemplate === 'classic' ? 40 : 0;
             const numCols = currentTemplate === 'classic' ? 2 : 1;
             const colWidth = (canvasW - (marginSide * 2) - ((numCols - 1) * colGap)) / numCols;
             const startX = marginSide;
 
-            const maxPageY = canvasH - 100; // conservative bleed zone
+            const maxPageY = canvasH - 40; // Use almost entire page
             const startY = marginTop;
 
             let currentY = startY;
@@ -1187,34 +1199,39 @@
 
             for (const cat of window.menuData.config.categories) {
                 const dishes = cat.dishes || [];
-                const estimatedRowH = 100;
-                const headerH = 130;
-                const totalCatH = headerH + (Math.ceil(dishes.length / numCols) * estimatedRowH);
 
-                // Atomic Category Paging
-                if (currentY + totalCatH > maxPageY && currentY > startY) {
+                // Aggressive check: Can we fit the header?
+                if (currentY + 60 > maxPageY && currentY > startY) {
                     page = addBlankPage();
                     currentY = startY;
                 }
 
                 const headerW = 600;
                 createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: (canvasW - headerW) / 2, top: currentY, width: headerW + 'px' });
-                currentY += 115;
+                currentY += 70;
 
+                let rowMaxH = 0;
                 for (let i = 0; i < dishes.length; i++) {
                     const d = dishes[i];
                     const col = i % numCols;
                     const x = startX + (col * (colWidth + colGap));
-                    const rowY = currentY;
 
-                    await addDishElements(page, d, x, rowY, colWidth);
+                    // Row paging check
+                    if (currentY + 25 > maxPageY) {
+                        page = addBlankPage();
+                        currentY = startY;
+                    }
+
+                    const dishH = await addDishElements(page, d, x, currentY, colWidth);
+                    rowMaxH = Math.max(rowMaxH, dishH);
 
                     if (col === numCols - 1 || i === dishes.length - 1) {
-                        currentY += estimatedRowH;
+                        currentY += rowMaxH + 1; // Minimal row gap
+                        rowMaxH = 0;
                     }
                 }
 
-                currentY += 35;
+                currentY += 5; // Minimal category gap
             }
 
             switchPage(0);
@@ -1444,74 +1461,124 @@
             saveState();
         }
 
-        window.exportPDF = () => {
-            const element = document.createElement('div');
+        window.exportPDF = async () => {
+            showToast("Generating PDF...");
+            await new Promise(r => setTimeout(r, 500));
+
             const canvasW = $('#designer-canvas').width();
             const canvasH = $('#designer-canvas').height();
 
-            $('#designer-canvas .page').each(function() {
+            const pdfContainer = document.createElement('div');
+            pdfContainer.style.margin = '0';
+            pdfContainer.style.padding = '0';
+            pdfContainer.style.width = canvasW + 'px';
+            pdfContainer.style.position = 'fixed';
+            pdfContainer.style.top = '0';
+            pdfContainer.style.left = '0';
+            pdfContainer.style.zIndex = '-9999';
+            pdfContainer.style.background = 'white';
+            document.body.appendChild(pdfContainer);
+
+            const pages = $('#designer-canvas .page');
+            pages.each(function() {
                 const clone = $(this).clone();
-                clone.find('.delete-btn').remove();
-                clone.find('.canvas-element').css({ 'border': 'none', 'box-shadow': 'none' }).removeClass('selected');
                 clone.css({
                     display: 'block',
                     margin: '0',
+                    padding: '0',
                     boxShadow: 'none',
-                    position: 'relative',
                     width: canvasW + 'px',
-                    height: canvasH + 'px'
+                    height: canvasH + 'px',
+                    position: 'relative',
+                    pageBreakAfter: 'always',
+                    overflow: 'hidden',
+                    backgroundSize: 'cover',
+                    backgroundColor: 'white'
                 });
-                element.appendChild(clone[0]);
+                clone.find('.delete-btn').remove();
+                clone.find('.canvas-element').css({ 'border': 'none', 'box-shadow': 'none' }).removeClass('selected');
+                clone.find('.el-content').attr('contenteditable', 'false');
+                pdfContainer.appendChild(clone[0]);
             });
-
-            document.body.appendChild(element); // Temporarily attach to DOM for style calculations
-            element.style.position = 'absolute';
-            element.style.left = '-9999px';
 
             const size = $('#size-select').val();
             const format = size === 'custom' ? [parseFloat($('#custom-w').val()), parseFloat($('#custom-h').val())] : size;
+
             const opt = {
-                margin: 0, filename: 'PhysicalMenu_Menutech.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false },
-                jsPDF: { unit: 'in', format: format, orientation: 'portrait' }
+                margin: 0,
+                filename: `MenuTech_Physical_Menu_${new Date().getTime()}.pdf`,
+                image: { type: 'jpeg', quality: 1.0 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    allowTaint: false,
+                    letterRendering: true
+                },
+                jsPDF: { unit: 'in', format: format, orientation: 'portrait', compress: true }
             };
 
-            showToast("Assembling PDF document...");
-            html2pdf().set(opt).from(element).save().then(() => {
-                showToast("PDF Successfully Generated!");
-                document.body.removeChild(element);
-            });
+            try {
+                await html2pdf().set(opt).from(pdfContainer).save();
+                showToast("PDF Downloaded!");
+            } catch (err) {
+                console.error("PDF Export Error:", err);
+                showToast("PDF Error. Try again.", true);
+            } finally {
+                setTimeout(() => { if (pdfContainer.parentNode) document.body.removeChild(pdfContainer); }, 2000);
+            }
         };
 
         window.exportPNG = async () => {
             const pages = $('#designer-canvas .page');
-            showToast(`Generating ${pages.length} images...`);
+            showToast(`Exporting ${pages.length} images...`);
 
             for (let i = 0; i < pages.length; i++) {
                 const pg = pages.eq(i);
                 const clone = pg.clone();
+
+                clone.css({
+                    display: 'block',
+                    position: 'absolute',
+                    top: '0', left: '-10000px',
+                    width: pg.width() + 'px',
+                    height: pg.height() + 'px',
+                    background: pg.css('background-color') || 'white',
+                    backgroundImage: pg.css('background-image'),
+                    backgroundSize: 'cover',
+                    boxShadow: 'none'
+                });
+
                 clone.find('.delete-btn').remove();
                 clone.find('.canvas-element').css({ 'border': 'none', 'box-shadow': 'none' }).removeClass('selected');
-                clone.css({ display: 'block', position: 'fixed', top: 0, left: '-9999px', width: pg.width(), height: pg.height(), background: 'transparent' });
+                clone.find('.el-content').attr('contenteditable', 'false');
 
                 document.body.appendChild(clone[0]);
 
-                const canvas = await html2canvas(clone[0], {
-                    backgroundColor: null,
-                    scale: 3,
-                    useCORS: true,
-                    logging: false
-                });
+                try {
+                    const canvas = await html2canvas(clone[0], {
+                        backgroundColor: null,
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                        allowTaint: false
+                    });
 
-                const link = document.createElement('a');
-                link.download = `Menu_Page_${i + 1}.png`;
-                link.href = canvas.toDataURL("image/png");
-                link.click();
+                    const link = document.createElement('a');
+                    link.href = canvas.toDataURL("image/png");
+                    link.download = `MenuTech_P${i + 1}_${new Date().getTime()}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
 
-                document.body.removeChild(clone[0]);
+                    await new Promise(r => setTimeout(r, 1000));
+                } catch (err) {
+                    console.error(`PNG P${i+1} Error:`, err);
+                } finally {
+                    document.body.removeChild(clone[0]);
+                }
             }
-            showToast("PNG Images Downloaded!");
+            showToast("PNG Export Complete!");
         };
 
         window.showToast = (msg, isError = false) => {
