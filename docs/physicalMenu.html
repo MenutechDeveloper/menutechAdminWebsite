@@ -14,7 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Lora:ital,wght@0,400;0,700;1,400&family=Stint+Ultra+Condensed&family=Great+Vibes&family=Montserrat:wght@300;400;700&family=Oswald:wght@300;400;700&family=Lato:wght@300;400;700&family=Open+Sans:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&family=Dancing+Script:wght@400;700&family=Pacifico&family=Cinzel:wght@400;700&family=Raleway:wght@300;400;700&family=Quicksand:wght@300;400;700&family=Kalam:wght@300;400;700&family=Special+Elite&family=Courgette&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Lora:ital,wght@0,400;0,700;1,400&family=Stint+Ultra+Condensed&family=Great+Vibes&family=Montserrat:wght@300;400;700&family=Oswald:wght@300;400;700&family=Lato:wght@300;400;700&family=Open+Sans:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&family=Dancing+Script:wght@400;700&family=Pacifico&family=Cinzel:wght@400;700&family=Raleway:wght@300;400;700&family=Quicksand:wght@300;400;700&family=Kalam:wght@300;400;700&family=Special+Elite&family=Courgette&family=Abel&family=Arvo:wght@400;700&family=Josefin+Sans:wght@300;400;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Anton&family=Lobster&family=Caveat:wght@400;700&family=Unna:ital,wght@0,400;0,700;1,400&family=Cardo:ital,wght@0,400;0,700;1,400&family=Playfair+Display+SC:wght@400;700&family=Bangers&family=Permanent+Marker&family=Cookie&family=Merienda:wght@400;700&display=swap');
 
         :root {
             --orange: #ff9533;
@@ -182,6 +182,19 @@
             display: block;
         }
 
+        /* Prevent selection during drag and for static images */
+        .canvas-element img {
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            -webkit-touch-callout: none !important;
+        }
+
+        body.dragging, body.dragging * {
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: move !important;
+        }
+
         /* Zoom & History Controls */
         .top-toolbar {
             position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 10px; z-index: 4500;
@@ -220,6 +233,7 @@
             text-align: center;
             white-space: nowrap;
             letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3); /* Fallback visibility */
         }
         .brush-header::before {
             content: '';
@@ -227,8 +241,11 @@
             inset: 0;
             z-index: -1;
             background: var(--brush-color, #8b1d1d);
+            -webkit-mask-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/brush_stroke_mask.png');
             mask-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/brush_stroke_mask.png');
+            -webkit-mask-size: 100% 100%;
             mask-size: 100% 100%;
+            -webkit-mask-repeat: no-repeat;
             mask-repeat: no-repeat;
             /* Fallback mask */
             clip-path: polygon(5% 0%, 95% 5%, 100% 50%, 95% 95%, 5% 100%, 0% 50%);
@@ -243,6 +260,7 @@
             border: 2px solid rgba(139, 29, 29, 0.1);
             border-left: 12px solid #8b1d1d;
             border-right: 12px solid #8b1d1d;
+            -webkit-mask-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/ornate_edge_mask.png');
             mask-image: url('https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/ornate_edge_mask.png');
             opacity: 0.8;
         }
@@ -965,7 +983,7 @@
 
             const el = $(`
                 <div class="canvas-element" data-type="${type}" style="transform: translate(${x}px, ${y}px); width: ${style.width || 'auto'};" data-x="${x}" data-y="${y}">
-                    <div class="el-content" contenteditable="false">${html}</div>
+                    <div class="el-content" contenteditable="false" ondragstart="return false;">${html}</div>
                     <button class="delete-btn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
@@ -978,7 +996,9 @@
 
             el.find('.delete-btn').click((e) => { e.stopPropagation(); el.remove(); selectedEl = null; $('#element-properties').addClass('hidden'); saveState(); });
 
+            let mDownPos = { x: 0, y: 0 };
             el.on('mousedown', function(e) {
+                mDownPos = { x: e.pageX, y: e.pageY };
                 // If already editing, don't interfere
                 if (e.target.closest('.el-content') && $(e.target.closest('.el-content')).attr('contenteditable') === 'true') return;
 
@@ -995,7 +1015,8 @@
 
             // Click-to-edit logic: Click on an already selected element to edit text
             el.on('click', function(e) {
-                if ($(this).hasClass('selected') && e.target.closest('.el-content')) {
+                const dist = Math.sqrt(Math.pow(e.pageX - mDownPos.x, 2) + Math.pow(e.pageY - mDownPos.y, 2));
+                if (dist < 3 && $(this).hasClass('selected') && e.target.closest('.el-content')) {
                     const content = $(this).find('.el-content');
                     if (content.attr('contenteditable') !== 'true') {
                         content.attr('contenteditable', 'true').focus();
@@ -1011,13 +1032,19 @@
 
             // Blur to disable edit
             el.find('.el-content').on('blur', function() {
+                const wasEditing = $(this).attr('contenteditable') === 'true';
                 $(this).attr('contenteditable', 'false');
+                if (wasEditing) saveState();
             });
 
             interact(el[0]).draggable({
                 cursorChecker: (action, interactable, element, interacting) => { return 'move'; },
                 listeners: {
+                    start(event) {
+                        $('body').addClass('dragging');
+                    },
                     end(event) {
+                        $('body').removeClass('dragging');
                         saveState();
                     },
                     move(event) {
@@ -1074,20 +1101,20 @@
             target.setAttribute('data-y', y);
         }
 
-        window.addCategoryUI = (catName) => {
+        window.addCategoryUI = async (catName) => {
             const cat = window.menuData?.config?.categories?.find(c => c.name === catName);
             if (!cat) return;
 
             let page = $('.page').eq(currentPageIndex);
             const canvasW = $('#designer-canvas').width();
-            const marginSide = 48;
+            const marginSide = 100; // Increased margin for better centering
             const marginTop = 35;
             let y = marginTop;
 
             // Category Header
-            const headerW = 450;
+            const headerW = 600;
             createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: (canvasW - headerW) / 2, top: y, width: headerW + 'px' });
-            y += 100;
+            y += 115;
 
             // 2-Column Logic
             const dishes = cat.dishes || [];
@@ -1095,32 +1122,35 @@
             const colWidth = (canvasW - (marginSide * 2) - colGap) / 2;
             const startX = marginSide;
 
-            dishes.forEach((d, i) => {
+            for (let i = 0; i < dishes.length; i++) {
                 const col = i % 2;
                 const row = Math.floor(i / 2);
                 const x = startX + (col * (colWidth + colGap));
-                const rowY = y + (row * 90);
+                const rowY = y + (row * 100);
 
-                addDishElements(page, d, x, rowY, colWidth);
-            });
+                await addDishElements(page, dishes[i], x, rowY, colWidth);
+            }
             saveState();
         };
 
-        function addDishElements(page, dish, x, y, width) {
+        async function addDishElements(page, dish, x, y, width) {
             const priceW = 75;
             const nameEl = createCanvasElement(page, 'dish-name', `<div class="dish-name-content" style="font-family:'Lora'; font-weight:900; font-size:0.92rem; color:#1a1a1a; text-transform: uppercase; border-bottom: 1.5px dotted rgba(0,0,0,0.1); padding-bottom: 1px; line-height: 1.1;">${dish.name}</div>`, { left: x, top: y, width: (width - priceW - 5) + 'px' });
 
             const priceEl = createCanvasElement(page, 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:0.92rem; color:#8b1d1d; text-align: right;">$${dish.price}</div>`, { left: x + (width - priceW), top: y, width: priceW + 'px' });
 
             if (dish.description) {
-                // Use a small timeout to ensure DOM is ready for measurement
-                setTimeout(() => {
-                    const content = nameEl.find('.dish-name-content')[0];
-                    const nameH = content ? content.offsetHeight : 15;
-                    const descY = y + nameH + 1;
-                    createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.68rem; color:#555; font-weight:500; font-style:italic; line-height: 1.05;">${dish.description}</div>`, { left: x, top: descY, width: width + 'px' });
-                }, 50);
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        const content = nameEl.find('.dish-name-content')[0];
+                        const nameH = content ? content.offsetHeight : 15;
+                        const descY = y + nameH + 8; // Increased gap to 8px to prevent overlap
+                        createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.68rem; color:#555; font-weight:500; font-style:italic; line-height: 1.05;">${dish.description}</div>`, { left: x, top: descY, width: width + 'px' });
+                        resolve(nameH + 25); // Increased estimate
+                    }, 50);
+                });
             }
+            return Promise.resolve(25);
         }
 
         window.setTemplate = async (t) => {
@@ -1134,14 +1164,14 @@
             showToast(`Template switched to ${t}`);
         };
 
-        window.generateDesign = () => {
+        window.generateDesign = async () => {
             $('#designer-canvas').empty();
             currentPageIndex = 0;
             let page = addBlankPage();
             const canvasW = $('#designer-canvas').width();
             const canvasH = $('#designer-canvas').height();
 
-            const marginSide = 48;
+            const marginSide = 100; // Increased margin for better centering
             const marginTop = 35;
             const colGap = currentTemplate === 'classic' ? 42 : 0;
             const numCols = currentTemplate === 'classic' ? 2 : 1;
@@ -1153,10 +1183,12 @@
 
             let currentY = startY;
 
-            window.menuData?.config?.categories?.forEach(cat => {
+            if (!window.menuData?.config?.categories) return;
+
+            for (const cat of window.menuData.config.categories) {
                 const dishes = cat.dishes || [];
-                const estimatedRowH = 90;
-                const headerH = 120;
+                const estimatedRowH = 100;
+                const headerH = 130;
                 const totalCatH = headerH + (Math.ceil(dishes.length / numCols) * estimatedRowH);
 
                 // Atomic Category Paging
@@ -1165,28 +1197,31 @@
                     currentY = startY;
                 }
 
-                const headerW = 450;
+                const headerW = 600;
                 createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: (canvasW - headerW) / 2, top: currentY, width: headerW + 'px' });
-                currentY += 100;
+                currentY += 115;
 
-                dishes.forEach((d, i) => {
+                for (let i = 0; i < dishes.length; i++) {
+                    const d = dishes[i];
                     const col = i % numCols;
                     const x = startX + (col * (colWidth + colGap));
                     const rowY = currentY;
 
-                    addDishElements(page, d, x, rowY, colWidth);
+                    await addDishElements(page, d, x, rowY, colWidth);
 
                     if (col === numCols - 1 || i === dishes.length - 1) {
                         currentY += estimatedRowH;
                     }
-                });
+                }
 
-                currentY += 30;
-            });
+                currentY += 35;
+            }
 
             switchPage(0);
-            saveState();
-            showToast("Design Generated!");
+            setTimeout(() => {
+                saveState();
+                showToast("Design Generated!");
+            }, 200);
         };
 
         function showElementProperties() {
@@ -1223,6 +1258,20 @@
                         <option value="'Kalam'">Kalam</option>
                         <option value="'Special Elite'">Special Elite</option>
                         <option value="'Courgette'">Courgette</option>
+                        <option value="'Abel'">Abel</option>
+                        <option value="'Arvo'">Arvo</option>
+                        <option value="'Josefin Sans'">Josefin Sans</option>
+                        <option value="'Libre Baskerville'">Libre Baskerville</option>
+                        <option value="'Anton'">Anton</option>
+                        <option value="'Lobster'">Lobster</option>
+                        <option value="'Caveat'">Caveat</option>
+                        <option value="'Unna'">Unna</option>
+                        <option value="'Cardo'">Cardo</option>
+                        <option value="'Playfair Display SC'">Playfair Display SC</option>
+                        <option value="'Bangers'">Bangers</option>
+                        <option value="'Permanent Marker'">Permanent Marker</option>
+                        <option value="'Cookie'">Cookie</option>
+                        <option value="'Merienda'">Merienda</option>
                     </select>
                 </div>
                 <div class="prop-group">
