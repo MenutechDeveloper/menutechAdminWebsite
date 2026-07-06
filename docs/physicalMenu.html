@@ -120,7 +120,7 @@
             overflow: hidden;
             background-size: cover;
             background-position: center;
-            padding: 0.6in; /* High Fidelity Margin */
+            padding: 0;
             display: none;
             background-color: #fff;
             user-select: none;
@@ -1076,25 +1076,26 @@
 
             let page = $('.page').eq(currentPageIndex);
             const canvasW = $('#designer-canvas').width();
-            let y = 100;
+            const marginSide = 40;
+            const marginTop = 25;
+            let y = marginTop;
 
             // Category Header
             const headerW = 450;
             createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: (canvasW - headerW) / 2, top: y, width: headerW + 'px' });
-            y += 120;
+            y += 85;
 
             // 2-Column Logic
             const dishes = cat.dishes || [];
-            const colWidth = 280;
-            const colGap = 60;
-            const totalGridW = (colWidth * 2) + colGap;
-            const startX = (canvasW - totalGridW) / 2;
+            const colGap = 40;
+            const colWidth = (canvasW - (marginSide * 2) - colGap) / 2;
+            const startX = marginSide;
 
             dishes.forEach((d, i) => {
                 const col = i % 2;
                 const row = Math.floor(i / 2);
                 const x = startX + (col * (colWidth + colGap));
-                const rowY = y + (row * 130);
+                const rowY = y + (row * 54);
 
                 addDishElements(page, d, x, rowY, colWidth);
             });
@@ -1102,14 +1103,13 @@
         };
 
         function addDishElements(page, dish, x, y, width) {
-            const priceW = 70;
-            const nameEl = createCanvasElement(page, 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:1rem; color:#1a1a1a; text-transform: uppercase; border-bottom: 1.5px dotted rgba(0,0,0,0.1); padding-bottom: 2px; line-height: 1.2;">${dish.name}</div>`, { left: x, top: y, width: (width - priceW - 5) + 'px' });
+            const priceW = 75;
+            const nameEl = createCanvasElement(page, 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:0.92rem; color:#1a1a1a; text-transform: uppercase; border-bottom: 1.5px dotted rgba(0,0,0,0.1); padding-bottom: 1px; line-height: 1.05;">${dish.name}</div>`, { left: x, top: y, width: (width - priceW - 5) + 'px' });
 
-            const priceEl = createCanvasElement(page, 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:1rem; color:#8b1d1d; text-align: right;">$${dish.price}</div>`, { left: x + (width - priceW), top: y, width: priceW + 'px' });
+            const priceEl = createCanvasElement(page, 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:0.92rem; color:#8b1d1d; text-align: right;">$${dish.price}</div>`, { left: x + (width - priceW), top: y, width: priceW + 'px' });
 
             if (dish.description) {
-                // Adjusting description Y position to be exactly below the name with a small margin
-                const descEl = createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.75rem; color:#555; font-weight:500; font-style:italic; line-height: 1.3; margin-top: 4px;">${dish.description}</div>`, { left: x, top: y + 28, width: width + 'px' });
+                const descEl = createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.65rem; color:#555; font-weight:500; font-style:italic; line-height: 1.05;">${dish.description}</div>`, { left: x, top: y + 15, width: width + 'px' });
             }
         }
 
@@ -1129,22 +1129,27 @@
             currentPageIndex = 0;
             let page = addBlankPage();
             const canvasW = $('#designer-canvas').width();
-            const maxPageY = 960;
-            const startY = 60;
+            const canvasH = $('#designer-canvas').height();
+
+            const marginSide = 40;
+            const marginTop = 25;
+            const colGap = currentTemplate === 'classic' ? 40 : 0;
+            const numCols = currentTemplate === 'classic' ? 2 : 1;
+            const colWidth = (canvasW - (marginSide * 2) - ((numCols - 1) * colGap)) / numCols;
+            const startX = marginSide;
+
+            const maxPageY = canvasH - 100; // conservative bleed zone at bottom
+            const startY = marginTop;
 
             let currentY = startY;
-            const colWidth = currentTemplate === 'classic' ? 280 : 650;
-            const colGap = currentTemplate === 'classic' ? 60 : 0;
-            const numCols = currentTemplate === 'classic' ? 2 : 1;
-            const totalGridW = (colWidth * numCols) + ((numCols - 1) * colGap);
-            const startX = (canvasW - totalGridW) / 2;
 
             menuData?.config?.categories?.forEach(cat => {
                 const dishes = cat.dishes || [];
-                const rowH = 110;
-                const headerH = 140;
+                const rowH = 54; // compact rows
+                const headerH = 95;
                 const totalCatH = headerH + (Math.ceil(dishes.length / numCols) * rowH);
 
+                // If entire category doesn't fit, move to next page
                 if (currentY + totalCatH > maxPageY && currentY > startY) {
                     page = addBlankPage();
                     currentY = startY;
@@ -1152,7 +1157,7 @@
 
                 const headerW = 450;
                 createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: (canvasW - headerW) / 2, top: currentY, width: headerW + 'px' });
-                currentY += 110;
+                currentY += 85;
 
                 dishes.forEach((d, i) => {
                     const col = i % numCols;
@@ -1166,7 +1171,7 @@
                     }
                 });
 
-                currentY += 40;
+                currentY += 10;
             });
 
             switchPage(0);
