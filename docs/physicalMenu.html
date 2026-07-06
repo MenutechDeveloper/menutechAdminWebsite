@@ -580,6 +580,9 @@
         <button class="btn-circle" title="Download PNG (Transparent)" onclick="exportPNG()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:24px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </button>
+        <button class="btn-circle" title="Download SVG (Editable)" onclick="exportSVG()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:24px"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </button>
     </div>
 
     <div id="selection-marquee"></div>
@@ -1564,6 +1567,93 @@
             } finally {
                 setTimeout(() => { if (pdfContainer.parentNode) document.body.removeChild(pdfContainer); }, 2000);
             }
+        };
+
+        window.exportSVG = async () => {
+            const pages = $('#designer-canvas .page');
+            showToast(`Generating ${pages.length} SVG files...`);
+
+            const canvasW = $('#designer-canvas').width();
+            const canvasH = $('#designer-canvas').height();
+
+            for (let i = 0; i < pages.length; i++) {
+                const pg = pages.eq(i);
+
+                let svgContent = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n`;
+                svgContent += `<svg width="${canvasW}" height="${canvasH}" viewBox="0 0 ${canvasW} ${canvasH}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n`;
+
+                // Embed Fonts
+                svgContent += `  <style>\n`;
+                svgContent += `    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;family=Outfit:wght@300;400;600;700;800&amp;family=Playfair+Display:ital,wght@0,400;0,700;1,400&amp;family=Bebas+Neue&amp;family=Lora:ital,wght@0,400;0,700;1,400&amp;family=Stint+Ultra+Condensed&amp;family=Great+Vibes&amp;family=Montserrat:wght@300;400;700&amp;family=Oswald:wght@300;400;700&amp;family=Lato:wght@300;400;700&amp;family=Open+Sans:wght@300;400;700&amp;family=Roboto+Condensed:wght@300;400;700&amp;family=Dancing+Script:wght@400;700&amp;family=Pacifico&amp;family=Cinzel:wght@400;700&amp;family=Raleway:wght@300;400;700&amp;family=Quicksand:wght@300;400;700&amp;family=Kalam:wght@300;400;700&amp;family=Special+Elite&amp;family=Courgette&amp;family=Abel&amp;family=Arvo:wght@400;700&amp;family=Josefin+Sans:wght@300;400;700&amp;family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&amp;family=Anton&amp;family=Lobster&amp;family=Caveat:wght@400;700&amp;family=Unna:ital,wght@0,400;0,700;1,400&amp;family=Cardo:ital,wght@0,400;0,700;1,400&amp;family=Playfair+Display+SC:wght@400;700&amp;family=Bangers&amp;family=Permanent+Marker&amp;family=Cookie&amp;family=Merienda:wght@400;700&amp;display=swap');\n`;
+                svgContent += `  </style>\n`;
+
+                // Page Background
+                const bgColor = pg.css('background-color');
+                if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+                    svgContent += `  <rect width="100%" height="100%" fill="${rgbToHex(bgColor)}"/>\n`;
+                }
+
+                const elements = pg.find('.canvas-element');
+                for (let el of elements) {
+                    const $el = $(el);
+                    const type = $el.data('type');
+                    const x = parseFloat($el.attr('data-x')) || 0;
+                    const y = parseFloat($el.attr('data-y')) || 0;
+                    const w = $el.outerWidth();
+                    const h = $el.outerHeight();
+                    const opacity = $el.css('opacity') || 1;
+
+                    const content = $el.find('.el-content');
+                    const inner = content.children().first().length ? content.children().first() : content;
+
+                    if (inner.is('img') || type === 'logo' || type === 'image' || type === 'stain') {
+                        let src = inner.is('img') ? inner.attr('src') : inner.find('img').attr('src');
+                        if (src) {
+                            svgContent += `  <image x="${x}" y="${y}" width="${w}" height="${h}" xlink:href="${src}" opacity="${opacity}"/>\n`;
+                        }
+                    } else if (type === 'brush' || inner.hasClass('brush-header')) {
+                        const color = inner.css('--brush-color') || '#8b1d1d';
+                        const brushData = await getTintedBrush(color);
+                        const text = inner.text();
+                        const font = inner.css('font-family').replace(/"/g, "'");
+                        const size = inner.css('font-size');
+                        const colorText = inner.css('color');
+
+                        if (brushData) {
+                            svgContent += `  <image x="${x}" y="${y}" width="${w}" height="${h}" xlink:href="${brushData}" opacity="${opacity}"/>\n`;
+                        }
+                        // Add text on top of brush
+                        svgContent += `  <text x="${x + w/2}" y="${y + h/2 + 10}" font-family="${font}" font-size="${size}" fill="${rgbToHex(colorText)}" text-anchor="middle" dominant-baseline="middle" opacity="${opacity}">${text}</text>\n`;
+                    } else {
+                        // Text Elements
+                        const text = inner.text();
+                        const font = inner.css('font-family').replace(/"/g, "'");
+                        const size = inner.css('font-size');
+                        const color = inner.css('color');
+                        const align = inner.css('text-align') || 'left';
+
+                        let anchor = 'start';
+                        let tx = x;
+                        if (align === 'center') { anchor = 'middle'; tx = x + w/2; }
+                        else if (align === 'right') { anchor = 'end'; tx = x + w; }
+
+                        svgContent += `  <text x="${tx}" y="${y + parseInt(size)}" font-family="${font}" font-size="${size}" fill="${rgbToHex(color)}" text-anchor="${anchor}" opacity="${opacity}">${text}</text>\n`;
+                    }
+                }
+
+                svgContent += `</svg>`;
+
+                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `MenuTech_P${i + 1}_${new Date().getTime()}.svg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+            showToast("SVG Export Complete!");
         };
 
         window.exportPNG = async () => {
