@@ -610,6 +610,26 @@
         let history = [];
         let historyIndex = -1;
 
+        async function getTintedBrush(color) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                img.src = 'https://res.cloudinary.com/dqr6m9v8p/image/upload/v1740611484/assets/brush_stroke_mask.png';
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    ctx.globalCompositeOperation = 'source-in';
+                    ctx.fillStyle = color || '#8b1d1d';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL());
+                };
+                img.onerror = () => resolve(null);
+            });
+        }
+
         $(document).ready(async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) { location.href = 'index.html'; return; }
@@ -1469,19 +1489,16 @@
             const canvasH = $('#designer-canvas').height();
 
             const pdfContainer = document.createElement('div');
-            pdfContainer.style.margin = '0';
-            pdfContainer.style.padding = '0';
             pdfContainer.style.width = canvasW + 'px';
-            pdfContainer.style.position = 'fixed';
-            pdfContainer.style.top = '0';
+            pdfContainer.style.position = 'absolute';
+            pdfContainer.style.top = '-20000px';
             pdfContainer.style.left = '0';
-            pdfContainer.style.zIndex = '-9999';
-            pdfContainer.style.background = 'white';
             document.body.appendChild(pdfContainer);
 
             const pages = $('#designer-canvas .page');
-            pages.each(function() {
-                const clone = $(this).clone();
+            for (let i = 0; i < pages.length; i++) {
+                const pg = pages.eq(i);
+                const clone = pg.clone();
                 clone.css({
                     display: 'block',
                     margin: '0',
@@ -1490,16 +1507,35 @@
                     width: canvasW + 'px',
                     height: canvasH + 'px',
                     position: 'relative',
-                    pageBreakAfter: 'always',
                     overflow: 'hidden',
                     backgroundSize: 'cover',
-                    backgroundColor: 'white'
+                    backgroundColor: pg.css('background-color') || 'white'
                 });
+
                 clone.find('.delete-btn').remove();
                 clone.find('.canvas-element').css({ 'border': 'none', 'box-shadow': 'none' }).removeClass('selected');
                 clone.find('.el-content').attr('contenteditable', 'false');
+
+                // Fix brush headers (No CSS Mask support)
+                const brushHeaders = clone.find('.brush-header');
+                for (let bh of brushHeaders) {
+                    const $bh = $(bh);
+                    const color = $bh.css('--brush-color') || '#8b1d1d';
+                    const dataUrl = await getTintedBrush(color);
+                    if (dataUrl) {
+                        $bh.css({
+                            'background-image': `url(${dataUrl})`,
+                            'background-size': '100% 100%',
+                            'background-repeat': 'no-repeat',
+                            'mask-image': 'none',
+                            '-webkit-mask-image': 'none'
+                        });
+                    }
+                }
+                clone.append('<style>.brush-header::before { display: none !important; }</style>');
+
                 pdfContainer.appendChild(clone[0]);
-            });
+            }
 
             const size = $('#size-select').val();
             const format = size === 'custom' ? [parseFloat($('#custom-w').val()), parseFloat($('#custom-h').val())] : size;
@@ -1515,7 +1551,8 @@
                     allowTaint: false,
                     letterRendering: true
                 },
-                jsPDF: { unit: 'in', format: format, orientation: 'portrait', compress: true }
+                jsPDF: { unit: 'in', format: format, orientation: 'portrait', compress: true },
+                pagebreak: { mode: 'avoid-all', after: '.page' }
             };
 
             try {
@@ -1543,7 +1580,7 @@
                     top: '0', left: '-10000px',
                     width: pg.width() + 'px',
                     height: pg.height() + 'px',
-                    background: pg.css('background-color') || 'white',
+                    backgroundColor: 'transparent',
                     backgroundImage: pg.css('background-image'),
                     backgroundSize: 'cover',
                     boxShadow: 'none'
@@ -1552,6 +1589,24 @@
                 clone.find('.delete-btn').remove();
                 clone.find('.canvas-element').css({ 'border': 'none', 'box-shadow': 'none' }).removeClass('selected');
                 clone.find('.el-content').attr('contenteditable', 'false');
+
+                // Fix brush headers for html2canvas (No CSS Mask support)
+                const brushHeaders = clone.find('.brush-header');
+                for (let bh of brushHeaders) {
+                    const $bh = $(bh);
+                    const color = $bh.css('--brush-color') || '#8b1d1d';
+                    const dataUrl = await getTintedBrush(color);
+                    if (dataUrl) {
+                        $bh.css({
+                            'background-image': `url(${dataUrl})`,
+                            'background-size': '100% 100%',
+                            'background-repeat': 'no-repeat',
+                            'mask-image': 'none',
+                            '-webkit-mask-image': 'none'
+                        });
+                    }
+                }
+                clone.append('<style>.brush-header::before { display: none !important; }</style>');
 
                 document.body.appendChild(clone[0]);
 
