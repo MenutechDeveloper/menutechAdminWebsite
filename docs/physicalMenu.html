@@ -10,6 +10,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
 
     <style>
@@ -558,6 +559,9 @@
         <button class="btn-circle" id="btn-pdf" title="Download PDF" onclick="exportPDF()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:24px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
+        <button class="btn-circle" title="Download PNG (Transparent)" onclick="exportPNG()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:24px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </button>
     </div>
 
     <div id="selection-marquee"></div>
@@ -576,7 +580,7 @@
         import { supabase } from './supabase.js';
 
         let user = null, role = null, activeId = null;
-        let restaurantData = null, menuData = null;
+        window.restaurantData = null; window.menuData = null;
         let selectedEl = null;
         let allUsers = [];
         let currentPageIndex = 0;
@@ -771,8 +775,8 @@
                 supabase.from('menutech_restaurants').select('*').eq('user_id', activeId).maybeSingle(),
                 supabase.from('menutech_menus').select('*').eq('user_id', activeId).maybeSingle()
             ]);
-            restaurantData = res.data;
-            menuData = men.data;
+            window.restaurantData = res.data;
+            window.menuData = men.data;
 
             renderToolbox();
             await loadSavedDesign();
@@ -780,8 +784,8 @@
 
         function renderToolbox() {
             const catList = $('#category-list').empty();
-            if (menuData?.config?.categories?.length > 0) {
-                menuData.config.categories.forEach(c => {
+            if (window.menuData?.config?.categories?.length > 0) {
+                window.menuData.config.categories.forEach(c => {
                     catList.append(`
                         <div class="tool-item" onclick="addCategoryUI('${c.name.replace(/'/g, "\\'")}')">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
@@ -795,8 +799,8 @@
 
             const gallery = $('#gallery').empty();
             const images = new Set();
-            if (restaurantData?.logo_url) images.add(restaurantData.logo_url);
-            menuData?.config?.categories?.forEach(c => {
+            if (window.restaurantData?.logo_url) images.add(window.restaurantData.logo_url);
+            window.menuData?.config?.categories?.forEach(c => {
                 if (c.image) images.add(c.image);
                 c.dishes?.forEach(d => { if (d.image) images.add(d.image); });
             });
@@ -924,10 +928,10 @@
             let style = { width: '300px', left: '50', top: '100' };
 
             if (type === 'logo') {
-                html = `<img src="${restaurantData?.logo_url || ''}" style="width:100%; border-radius:50%; border:3px solid #8b1d1d;">`;
+                html = `<img src="${window.restaurantData?.logo_url || ''}" style="width:100%; border-radius:50%; border:3px solid #8b1d1d;">`;
                 style = { width: '160px', left: '328', top: '40' };
             } else if (type === 'name') {
-                html = `<h1 style="font-family:'Bebas Neue'; font-size:4.5rem; color:inherit; line-height:0.85; text-align:center;">${restaurantData?.name || 'NAME'}</h1>`;
+                html = `<h1 style="font-family:'Bebas Neue'; font-size:4.5rem; color:inherit; line-height:0.85; text-align:center;">${window.restaurantData?.name || 'NAME'}</h1>`;
                 style = { left: '58', top: '220', width: '700px' };
             } else if (type === 'heading') {
                 html = `<h2 style="font-family:'Bebas Neue'; font-size:3rem; color:inherit; text-align:center; text-transform:uppercase;">Heading</h2>`;
@@ -936,7 +940,7 @@
                 html = `<p style="font-family:'Plus Jakarta Sans'; font-size:1.1rem; color:inherit; text-align:justify;">Enter your custom text here...</p>`;
                 style = { left: '50', top: '150', width: '716px' };
             } else if (type === 'contact') {
-                html = `<div style="font-family:'Outfit'; font-size:1.1rem; color:inherit; text-align:center;">${restaurantData?.phone || ''} • ${restaurantData?.address || ''}</div>`;
+                html = `<div style="font-family:'Outfit'; font-size:1.1rem; color:inherit; text-align:center;">${window.restaurantData?.phone || ''} • ${window.restaurantData?.address || ''}</div>`;
                 style = { left: '58', top: '320', width: '700px' };
             } else if (type === 'image') {
                 html = `<img src="${content}" style="width:100%; border-radius:15px; box-shadow:0 15px 35px rgba(0,0,0,0.15);">`;
@@ -1071,23 +1075,23 @@
         }
 
         window.addCategoryUI = (catName) => {
-            const cat = menuData?.config?.categories?.find(c => c.name === catName);
+            const cat = window.menuData?.config?.categories?.find(c => c.name === catName);
             if (!cat) return;
 
             let page = $('.page').eq(currentPageIndex);
             const canvasW = $('#designer-canvas').width();
-            const marginSide = 40;
-            const marginTop = 25;
+            const marginSide = 48;
+            const marginTop = 35;
             let y = marginTop;
 
             // Category Header
             const headerW = 450;
             createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: (canvasW - headerW) / 2, top: y, width: headerW + 'px' });
-            y += 85;
+            y += 100;
 
             // 2-Column Logic
             const dishes = cat.dishes || [];
-            const colGap = 40;
+            const colGap = 42;
             const colWidth = (canvasW - (marginSide * 2) - colGap) / 2;
             const startX = marginSide;
 
@@ -1095,7 +1099,7 @@
                 const col = i % 2;
                 const row = Math.floor(i / 2);
                 const x = startX + (col * (colWidth + colGap));
-                const rowY = y + (row * 54);
+                const rowY = y + (row * 90);
 
                 addDishElements(page, d, x, rowY, colWidth);
             });
@@ -1104,12 +1108,18 @@
 
         function addDishElements(page, dish, x, y, width) {
             const priceW = 75;
-            const nameEl = createCanvasElement(page, 'dish-name', `<div style="font-family:'Lora'; font-weight:900; font-size:0.92rem; color:#1a1a1a; text-transform: uppercase; border-bottom: 1.5px dotted rgba(0,0,0,0.1); padding-bottom: 1px; line-height: 1.05;">${dish.name}</div>`, { left: x, top: y, width: (width - priceW - 5) + 'px' });
+            const nameEl = createCanvasElement(page, 'dish-name', `<div class="dish-name-content" style="font-family:'Lora'; font-weight:900; font-size:0.92rem; color:#1a1a1a; text-transform: uppercase; border-bottom: 1.5px dotted rgba(0,0,0,0.1); padding-bottom: 1px; line-height: 1.1;">${dish.name}</div>`, { left: x, top: y, width: (width - priceW - 5) + 'px' });
 
             const priceEl = createCanvasElement(page, 'dish-price', `<div style="font-family:'Lora'; font-weight:900; font-size:0.92rem; color:#8b1d1d; text-align: right;">$${dish.price}</div>`, { left: x + (width - priceW), top: y, width: priceW + 'px' });
 
             if (dish.description) {
-                const descEl = createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.65rem; color:#555; font-weight:500; font-style:italic; line-height: 1.05;">${dish.description}</div>`, { left: x, top: y + 15, width: width + 'px' });
+                // Use a small timeout to ensure DOM is ready for measurement
+                setTimeout(() => {
+                    const content = nameEl.find('.dish-name-content')[0];
+                    const nameH = content ? content.offsetHeight : 15;
+                    const descY = y + nameH + 1;
+                    createCanvasElement(page, 'dish-desc', `<div style="font-family:'Plus Jakarta Sans'; font-size:0.68rem; color:#555; font-weight:500; font-style:italic; line-height: 1.05;">${dish.description}</div>`, { left: x, top: descY, width: width + 'px' });
+                }, 50);
             }
         }
 
@@ -1131,25 +1141,25 @@
             const canvasW = $('#designer-canvas').width();
             const canvasH = $('#designer-canvas').height();
 
-            const marginSide = 40;
-            const marginTop = 25;
-            const colGap = currentTemplate === 'classic' ? 40 : 0;
+            const marginSide = 48;
+            const marginTop = 35;
+            const colGap = currentTemplate === 'classic' ? 42 : 0;
             const numCols = currentTemplate === 'classic' ? 2 : 1;
             const colWidth = (canvasW - (marginSide * 2) - ((numCols - 1) * colGap)) / numCols;
             const startX = marginSide;
 
-            const maxPageY = canvasH - 100; // conservative bleed zone at bottom
+            const maxPageY = canvasH - 100; // conservative bleed zone
             const startY = marginTop;
 
             let currentY = startY;
 
-            menuData?.config?.categories?.forEach(cat => {
+            window.menuData?.config?.categories?.forEach(cat => {
                 const dishes = cat.dishes || [];
-                const rowH = 54; // compact rows
-                const headerH = 95;
-                const totalCatH = headerH + (Math.ceil(dishes.length / numCols) * rowH);
+                const estimatedRowH = 90;
+                const headerH = 120;
+                const totalCatH = headerH + (Math.ceil(dishes.length / numCols) * estimatedRowH);
 
-                // If entire category doesn't fit, move to next page
+                // Atomic Category Paging
                 if (currentY + totalCatH > maxPageY && currentY > startY) {
                     page = addBlankPage();
                     currentY = startY;
@@ -1157,7 +1167,7 @@
 
                 const headerW = 450;
                 createCanvasElement(page, 'cat-title', `<div class="brush-header">${cat.name.toUpperCase()}</div>`, { left: (canvasW - headerW) / 2, top: currentY, width: headerW + 'px' });
-                currentY += 85;
+                currentY += 100;
 
                 dishes.forEach((d, i) => {
                     const col = i % numCols;
@@ -1167,11 +1177,11 @@
                     addDishElements(page, d, x, rowY, colWidth);
 
                     if (col === numCols - 1 || i === dishes.length - 1) {
-                        currentY += rowH;
+                        currentY += estimatedRowH;
                     }
                 });
 
-                currentY += 10;
+                currentY += 30;
             });
 
             switchPage(0);
@@ -1274,6 +1284,7 @@
         window.clearCanvas = () => {
             if (confirm("This will delete all pages and elements. Are you sure?")) {
                 $('#designer-canvas').empty();
+                currentPageIndex = 0;
                 addBlankPage();
                 saveState();
                 showToast("Designer reset");
@@ -1386,25 +1397,72 @@
 
         window.exportPDF = () => {
             const element = document.createElement('div');
+            const canvasW = $('#designer-canvas').width();
+            const canvasH = $('#designer-canvas').height();
+
             $('#designer-canvas .page').each(function() {
                 const clone = $(this).clone();
                 clone.find('.delete-btn').remove();
-                clone.find('.canvas-element').css('border', 'none');
-                clone.css({ display: 'block', margin: '0', boxShadow: 'none', position: 'relative' });
+                clone.find('.canvas-element').css({ 'border': 'none', 'box-shadow': 'none' }).removeClass('selected');
+                clone.css({
+                    display: 'block',
+                    margin: '0',
+                    boxShadow: 'none',
+                    position: 'relative',
+                    width: canvasW + 'px',
+                    height: canvasH + 'px'
+                });
                 element.appendChild(clone[0]);
             });
+
+            document.body.appendChild(element); // Temporarily attach to DOM for style calculations
+            element.style.position = 'absolute';
+            element.style.left = '-9999px';
 
             const size = $('#size-select').val();
             const format = size === 'custom' ? [parseFloat($('#custom-w').val()), parseFloat($('#custom-h').val())] : size;
             const opt = {
                 margin: 0, filename: 'PhysicalMenu_Menutech.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2.5, useCORS: true, logging: false },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
                 jsPDF: { unit: 'in', format: format, orientation: 'portrait' }
             };
 
             showToast("Assembling PDF document...");
-            html2pdf().set(opt).from(element).save().then(() => showToast("PDF Successfully Generated!"));
+            html2pdf().set(opt).from(element).save().then(() => {
+                showToast("PDF Successfully Generated!");
+                document.body.removeChild(element);
+            });
+        };
+
+        window.exportPNG = async () => {
+            const pages = $('#designer-canvas .page');
+            showToast(`Generating ${pages.length} images...`);
+
+            for (let i = 0; i < pages.length; i++) {
+                const pg = pages.eq(i);
+                const clone = pg.clone();
+                clone.find('.delete-btn').remove();
+                clone.find('.canvas-element').css({ 'border': 'none', 'box-shadow': 'none' }).removeClass('selected');
+                clone.css({ display: 'block', position: 'fixed', top: 0, left: '-9999px', width: pg.width(), height: pg.height(), background: 'transparent' });
+
+                document.body.appendChild(clone[0]);
+
+                const canvas = await html2canvas(clone[0], {
+                    backgroundColor: null,
+                    scale: 3,
+                    useCORS: true,
+                    logging: false
+                });
+
+                const link = document.createElement('a');
+                link.download = `Menu_Page_${i + 1}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+
+                document.body.removeChild(clone[0]);
+            }
+            showToast("PNG Images Downloaded!");
         };
 
         window.showToast = (msg, isError = false) => {
