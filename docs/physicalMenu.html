@@ -465,7 +465,7 @@
                         <div style="font-size: 0.6rem;">TEXT</div>
                     </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div id="asset-buttons-container" class="hidden" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <div class="tool-item" style="padding: 10px; flex-direction: column; gap: 5px;" onclick="openAssetModal('background')">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                         <div style="font-size: 0.6rem;">BACKGROUND</div>
@@ -672,6 +672,7 @@
             if (['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'].includes(role)) {
                 $('#context-sidebar').show();
                 $('#admin-upload-section').removeClass('hidden');
+                $('#asset-buttons-container').removeClass('hidden').css('display', 'grid');
                 loadContextSwitcher();
             } else {
                 $('#context-sidebar').hide();
