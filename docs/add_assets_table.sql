@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Table to store assets (Backgrounds and Textures)
 CREATE TABLE IF NOT EXISTS public.menutech_assets (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
