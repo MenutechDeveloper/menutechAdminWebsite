@@ -12,6 +12,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   final PrintService _printService = PrintService();
   final _ipController = TextEditingController();
   List<String> _printerIps = [];
+  String? _activeIp;
 
   @override
   void initState() {
@@ -21,16 +22,22 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
 
   Future<void> _loadPrinters() async {
     final ips = await _printService.getSavedPrinterIps();
-    if (ips.isEmpty) {
-      final remoteIp = await _printService.getRemotePrinterIp();
-      if (remoteIp != null) {
-        await _printService.savePrinterIp(remoteIp);
-        final updatedIps = await _printService.getSavedPrinterIps();
-        setState(() => _printerIps = updatedIps);
-        return;
-      }
+    final remoteIp = await _printService.getRemotePrinterIp();
+
+    if (ips.isEmpty && remoteIp != null) {
+      await _printService.savePrinterIp(remoteIp);
+      final updatedIps = await _printService.getSavedPrinterIps();
+      setState(() {
+        _printerIps = updatedIps;
+        _activeIp = remoteIp;
+      });
+      return;
     }
-    setState(() => _printerIps = ips);
+
+    setState(() {
+      _printerIps = ips;
+      _activeIp = remoteIp;
+    });
   }
 
   Future<void> _discoverPrinters() async {
@@ -168,10 +175,45 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                 separatorBuilder: (context, index) => const Divider(),
                 itemBuilder: (context, index) {
                   final ip = _printerIps[index];
+                  final isActive = ip == _activeIp;
                   return ListTile(
-                    leading: const Icon(Icons.print, color: Color(0xFFFF9533)),
-                    title: Text(ip),
-                    subtitle: const Text("Ethernet Port 9100"),
+                    leading: Icon(
+                      isActive ? Icons.print : Icons.print_outlined,
+                      color: isActive ? const Color(0xFFFF9533) : Colors.grey,
+                    ),
+                    title: Text(
+                      ip,
+                      style: TextStyle(
+                        fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                        color: isActive ? const Color(0xFFFF9533) : Colors.black,
+                      ),
+                    ),
+                    subtitle: Text(isActive ? "Selected & Active" : "Click to connect & select"),
+                    onTap: () async {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFFFF9533))),
+                      );
+                      final success = await _printService.testConnection(ip);
+                      if (!context.mounted) return;
+                      // Close the progress dialog
+                      Navigator.of(context).pop();
+
+                      if (success) {
+                        await _printService.savePrinterIp(ip);
+                        await _loadPrinters();
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Printer $ip connected and selected successfully!'), backgroundColor: Colors.green),
+                        );
+                      } else {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Could not connect to $ip. Check network.'), backgroundColor: Colors.red),
+                        );
+                      }
+                    },
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.red),
                       onPressed: () => _removePrinter(ip),

@@ -59,12 +59,29 @@ class PrintService {
     }
   }
 
+  Future<bool> testConnection(String ip) async {
+    try {
+      final socket = await Socket.connect(ip, 9100, timeout: const Duration(seconds: 2));
+      socket.destroy();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<List<String>> discoverPrinters() async {
     List<String> discoveredIps = [];
 
     // Request permissions
-    final status = await Permission.locationWhenInUse.request();
-    if (!status.isGranted) return [];
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.locationWhenInUse,
+      Permission.nearbyWifiDevices,
+    ].request();
+
+    if (statuses[Permission.locationWhenInUse] != PermissionStatus.granted &&
+        statuses[Permission.nearbyWifiDevices] != PermissionStatus.granted) {
+      return [];
+    }
 
     final info = NetworkInfo();
     String? wifiIP = await info.getWifiIP();
@@ -93,7 +110,7 @@ class PrintService {
 
   Future<String?> _checkPrinter(String host) async {
     try {
-      final socket = await Socket.connect(host, 9100, timeout: const Duration(milliseconds: 700));
+      final socket = await Socket.connect(host, 9100, timeout: const Duration(milliseconds: 1500));
       socket.destroy();
       return host;
     } catch (e) {
