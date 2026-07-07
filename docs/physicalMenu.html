@@ -195,6 +195,10 @@
             cursor: move !important;
         }
 
+        body.hand-tool-active, body.hand-tool-active * { cursor: grab !important; }
+        body.panning, body.panning * { cursor: grabbing !important; }
+        body.hand-tool-active .canvas-element { pointer-events: none; }
+
         /* Zoom & History Controls */
         .top-toolbar {
             position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 10px; z-index: 4500;
@@ -632,6 +636,8 @@
         let currentBg = '';
         let currentTemplate = 'classic';
         let currentZoom = 0; // 0 means auto-fit
+        let isSpaceDown = false, isPanning = false;
+        let panStartX, panStartY, panScrollLeft, panScrollTop;
 
         // History System
         let history = [];
@@ -681,6 +687,15 @@
 
             window.addEventListener('resize', updateScale);
             $(document).on('keydown', handleGlobalShortcuts);
+
+            $('#canvas-wrapper').on('wheel', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    const delta = e.originalEvent.deltaY > 0 ? -0.1 : 0.1;
+                    zoomCanvas(delta);
+                }
+            });
+
             $('#asset-file-input').on('change', handleAssetUpload);
             await loadData();
             $('#loading-overlay').fadeOut();
@@ -703,6 +718,14 @@
                 }
             }
 
+            if (e.code === 'Space' && !isInput) {
+                if (!isSpaceDown) {
+                    isSpaceDown = true;
+                    $('body').addClass('hand-tool-active');
+                }
+                e.preventDefault();
+            }
+
             if ((e.key === 'Delete' || e.key === 'Backspace') && !isInput) {
                 const selected = $('.canvas-element.selected');
                 if (selected.length > 0) {
@@ -713,6 +736,20 @@
                 }
             }
         }
+
+        $(window).on('keyup', function(e) {
+            if (e.code === 'Space') {
+                isSpaceDown = false;
+                isPanning = false;
+                $('body').removeClass('hand-tool-active panning');
+            }
+        });
+
+        $(window).on('blur', function() {
+            isSpaceDown = false;
+            isPanning = false;
+            $('body').removeClass('hand-tool-active panning');
+        });
 
         function copySelection() {
             const selected = $('.canvas-element.selected');
@@ -1959,7 +1996,20 @@
 
         let isMarquee = false, marqueeStart = { x: 0, y: 0 };
 
+        $('#canvas-wrapper').on('mousedown', function(e) {
+            if (isSpaceDown) {
+                isPanning = true;
+                panStartX = e.pageX;
+                panStartY = e.pageY;
+                panScrollLeft = $(this).scrollLeft();
+                panScrollTop = $(this).scrollTop();
+                $('body').addClass('panning');
+                e.preventDefault();
+            }
+        });
+
         $('#designer-canvas').on('mousedown', function(e) {
+            if (isSpaceDown) return;
             if (e.target === this || $(e.target).hasClass('page')) {
                 $('.canvas-element').removeClass('selected');
                 selectedEl = null;
@@ -1981,6 +2031,13 @@
         });
 
         $(document).on('mousemove', function(e) {
+            if (isPanning) {
+                const dx = e.pageX - panStartX;
+                const dy = e.pageY - panStartY;
+                $('#canvas-wrapper').scrollLeft(panScrollLeft - dx);
+                $('#canvas-wrapper').scrollTop(panScrollTop - dy);
+                return;
+            }
             if (!isMarquee) return;
             const offset = $('#designer-canvas').offset();
             const scale = getCanvasScale();
@@ -2011,6 +2068,10 @@
         });
 
         $(document).on('mouseup', function() {
+            if (isPanning) {
+                isPanning = false;
+                $('body').removeClass('panning');
+            }
             if (isMarquee) {
                 isMarquee = false;
                 $('#selection-marquee').hide();
