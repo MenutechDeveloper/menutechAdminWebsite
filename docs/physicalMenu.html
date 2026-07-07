@@ -1680,9 +1680,10 @@
 
             const pdfContainer = document.createElement('div');
             pdfContainer.style.width = canvasW + 'px';
-            pdfContainer.style.position = 'absolute';
-            pdfContainer.style.top = '-20000px';
-            pdfContainer.style.left = '0';
+            pdfContainer.style.position = 'fixed';
+            pdfContainer.style.top = '0';
+            pdfContainer.style.left = '-10000px';
+            pdfContainer.style.zIndex = '-9999';
             document.body.appendChild(pdfContainer);
 
             const pages = $('#designer-canvas .page');
@@ -1698,8 +1699,11 @@
                     height: canvasH + 'px',
                     position: 'relative',
                     overflow: 'hidden',
-                    backgroundSize: 'cover',
-                    backgroundColor: pg.css('background-color') || 'white'
+                    backgroundColor: pg.css('background-color'),
+                    backgroundImage: pg.css('background-image'),
+                    backgroundSize: pg.css('background-size') || 'cover',
+                    backgroundPosition: pg.css('background-position') || 'center',
+                    backgroundRepeat: pg.css('background-repeat') || 'no-repeat'
                 });
 
                 clone.find('.delete-btn').remove();
@@ -1779,6 +1783,11 @@
                 if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
                     svgContent += `  <rect width="100%" height="100%" fill="${rgbToHex(bgColor)}"/>\n`;
                 }
+                const bgImg = pg.css('background-image');
+                if (bgImg && bgImg !== 'none') {
+                    const url = bgImg.replace(/url\(['"]?(.*?)['"]?\)/, '$1');
+                    svgContent += `  <image width="100%" height="100%" preserveAspectRatio="xMidYMid slice" xlink:href="${url}"/>\n`;
+                }
 
                 const elements = pg.find('.canvas-element');
                 for (let el of elements) {
@@ -1813,18 +1822,44 @@
                         svgContent += `  <text x="${x + w/2}" y="${y + h/2 + 10}" font-family="${font}" font-size="${size}" fill="${rgbToHex(colorText)}" text-anchor="middle" dominant-baseline="middle" opacity="${opacity}">${text}</text>\n`;
                     } else {
                         // Text Elements
-                        const text = inner.text();
+                        const text = inner.text().trim();
                         const font = inner.css('font-family').replace(/"/g, "'");
-                        const size = inner.css('font-size');
+                        const fontSize = inner.css('font-size');
                         const color = inner.css('color');
                         const align = inner.css('text-align') || 'left';
+                        const lineHeight = 1.2;
 
                         let anchor = 'start';
                         let tx = x;
                         if (align === 'center') { anchor = 'middle'; tx = x + w/2; }
                         else if (align === 'right') { anchor = 'end'; tx = x + w; }
 
-                        svgContent += `  <text x="${tx}" y="${y + parseInt(size)}" font-family="${font}" font-size="${size}" fill="${rgbToHex(color)}" text-anchor="${anchor}" opacity="${opacity}">${text}</text>\n`;
+                        // Wrap text logic
+                        const words = text.split(/\s+/);
+                        let lines = [];
+                        let currentLine = words[0];
+
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        ctx.font = `${fontSize} ${font}`;
+
+                        for (let k = 1; k < words.length; k++) {
+                            const word = words[k];
+                            const width = ctx.measureText(currentLine + " " + word).width;
+                            if (width < w) {
+                                currentLine += " " + word;
+                            } else {
+                                lines.push(currentLine);
+                                currentLine = word;
+                            }
+                        }
+                        lines.push(currentLine);
+
+                        svgContent += `  <text x="${tx}" y="${y + parseInt(fontSize) * 0.8}" font-family="${font}" font-size="${fontSize}" fill="${rgbToHex(color)}" text-anchor="${anchor}" opacity="${opacity}">\n`;
+                        lines.forEach((line, index) => {
+                            svgContent += `    <tspan x="${tx}" dy="${index === 0 ? 0 : '1.2em'}">${line}</tspan>\n`;
+                        });
+                        svgContent += `  </text>\n`;
                     }
                 }
 
@@ -1853,13 +1888,15 @@
 
                 clone.css({
                     display: 'block',
-                    position: 'absolute',
+                    position: 'fixed',
                     top: '0', left: '-10000px',
                     width: pg.width() + 'px',
                     height: pg.height() + 'px',
-                    backgroundColor: 'transparent',
+                    backgroundColor: pg.css('background-color'),
                     backgroundImage: pg.css('background-image'),
-                    backgroundSize: 'cover',
+                    backgroundSize: pg.css('background-size') || 'cover',
+                    backgroundPosition: pg.css('background-position') || 'center',
+                    backgroundRepeat: pg.css('background-repeat') || 'no-repeat',
                     boxShadow: 'none'
                 });
 
