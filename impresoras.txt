@@ -1,0 +1,25 @@
+Detalles de mejoras en la conexión de impresoras (Menutech Admin Android App):
+
+1. Permisos Robustos:
+   - Se agregaron permisos específicos en AndroidManifest.xml:
+     * CHANGE_WIFI_MULTICAST_STATE: Permite una mejor visibilidad de dispositivos en la red local.
+     * NEARBY_WIFI_DEVICES: Requerido para Android 13+ para descubrir dispositivos cercanos sin necesidad de permisos de ubicación precisos constantes.
+   - La aplicación ahora solicita tanto permisos de Ubicación como de Dispositivos Cercanos antes de iniciar el escaneo.
+
+2. Descubrimiento de Impresoras Mejorado:
+   - Se incrementó el tiempo de espera (timeout) de conexión durante el escaneo de 700ms a 1500ms. Esto permite que impresoras que responden un poco más lento sean detectadas correctamente.
+   - El escaneo es más exhaustivo y respeta las restricciones de red de las versiones más recientes de Android.
+
+3. Selección y Prueba de Conexión:
+   - Ahora puedes seleccionar manualmente qué impresora usar. Al tocar una impresora en la lista, la app realizará una prueba de conexión inmediata.
+   - Si la prueba es exitosa (la impresora es alcanzable), se marcará como la impresora ACTIVA tanto localmente como en el panel administrativo de Supabase.
+   - Se añadió feedback visual (iconos y colores) para identificar rápidamente cuál es la impresora seleccionada actualmente.
+   - Se utilizan SnackBar (mensajes flotantes) para informar si la conexión fue exitosa o si hubo algún error de red al intentar conectar.
+
+4. Sincronización:
+   - La impresora seleccionada se guarda automáticamente en la base de datos para que la configuración persista incluso si reinstalas la app o cambias de dispositivo.
+
+Recomendaciones para el usuario:
+- Asegúrate de que tanto el celular como la impresora estén en la misma red WiFi.
+- La impresora debe estar encendida y conectada vía Ethernet.
+- Si una impresora es detectada pero no "conecta" al tocarla, verifica que no haya un firewall en el router bloqueando el puerto 9100.
