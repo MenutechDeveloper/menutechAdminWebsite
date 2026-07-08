@@ -743,7 +743,7 @@
                         <input type="text" style="font-size:0.8rem; color:var(--text-dim); width:100%" value="${dish.description || ''}" placeholder="Description" onchange="updateDish(${catIdx}, ${i}, 'description', this.value)">
                         <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
                             <span style="font-size:0.8rem; font-weight:700">Price:</span>
-                            <input type="number" style="width:80px; font-weight:700; color:var(--orange)" value="${dish.price || 0}" step="0.01" onchange="updateDish(${catIdx}, ${i}, 'price', this.value)">
+                            <input type="number" style="width:80px; font-weight:700; color:var(--orange)" value="${dish.price || ''}" step="0.01" onchange="updateDish(${catIdx}, ${i}, 'price', this.value === '' ? 0 : this.value)">
                         </div>
                     </div>
                     <div class="category-actions">
@@ -783,7 +783,7 @@
             list.innerHTML = dish.sizes.map((s, i) => `
                 <div style="display:flex; gap:10px; margin-bottom:10px;">
                     <input type="text" style="flex:2; padding:10px; border-radius:10px; border:1px solid var(--border)" value="${s.name || ''}" placeholder="Size (e.g. Small)" onchange="updateSize(${i}, 'name', this.value)">
-                    <input type="number" style="flex:1; padding:10px; border-radius:10px; border:1px solid var(--border)" value="${s.price || 0}" step="0.01" onchange="updateSize(${i}, 'price', parseFloat(this.value))">
+                    <input type="number" style="flex:1; padding:10px; border-radius:10px; border:1px solid var(--border)" value="${s.price || ''}" step="0.01" onchange="updateSize(${i}, 'price', this.value === '' ? 0 : parseFloat(this.value))">
                     <button style="background:none; border:none; color:var(--error)" onclick="deleteSize(${i})">✕</button>
                 </div>
             `).join('');
@@ -866,7 +866,7 @@
                         ${(group.items || []).map((it, j) => `
                             <div style="display:flex; gap:10px; margin-bottom:10px;">
                                 <input type="text" style="flex:2; padding:8px; border-radius:8px; border:1px solid var(--border)" value="${it.name || ''}" placeholder="Option Name" onchange="updateToppingItem(${i}, ${j}, 'name', this.value)">
-                                <input type="number" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border)" value="${it.price || 0}" step="0.01" onchange="updateToppingItem(${i}, ${j}, 'price', parseFloat(this.value))">
+                                <input type="number" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border)" value="${it.price || ''}" step="0.01" onchange="updateToppingItem(${i}, ${j}, 'price', this.value === '' ? 0 : parseFloat(this.value))">
                                 <button style="background:none; border:none; color:var(--error)" onclick="deleteToppingItem(${i}, ${j})">✕</button>
                             </div>
                         `).join('')}
