@@ -1651,11 +1651,11 @@ class MenutechPlatformOrders extends HTMLElement {
                 .tab.active { background: #ff9533; color: #fff; box-shadow: 0 4px 12px rgba(255,149,51,0.3); }
 
                 /* Category Section */
-                .category-section { margin-bottom: 40px; scroll-margin-top: 80px; }
-                .category-header { margin-bottom: 20px; }
+                .category-section { margin-bottom: 60px; scroll-margin-top: 80px; }
+                .category-header { margin-bottom: 20px; ${style === 'mode2' ? 'padding: 0 20px;' : ''} }
                 .category-header h2 {
                     margin: 0; font-size: 1.6rem; color: #1a1c1e;
-                    ${style === 'mode2' ? 'border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; text-transform: uppercase; font-size: 1.4rem; letter-spacing: 1px;' : ''}
+                    ${style === 'mode2' ? 'border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; text-transform: uppercase; font-size: 1.8rem; letter-spacing: 2px; font-weight: 900; margin-top: 20px;' : ''}
                 }
                 .category-header p { margin: 5px 0 0; color: #666; font-size: 0.95rem; }
 
