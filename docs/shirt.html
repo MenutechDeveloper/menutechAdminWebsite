@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D T-Shirt Customizer</title>
+    <link rel="icon" href="data:;">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+body, html {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f5f5f5;
+    color: #333;
+    overflow: hidden;
+}
+#main-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+#canvas-flex-container, #model-container { /* Renamed from #canvas-container */
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+    height: 100%;
+}
+#canvas-wrapper { /* New wrapper for background */
+    width: 580px;
+    height: 580px;
+    position: relative;
+    background-image: url('plantilla.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+#texture-canvas {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+#model-container {
+    background-color: #e0e0e0;
+    position: relative;
+}
+#model-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+#model-error {
+    display: none;
+    position: absolute;
+    color: #ff0000;
+    font-size: 1.2em;
+    text-align: center;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+}
+.tool-panel {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    width: 280px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease-in-out;
+}
+.tool-panel.collapsed .tool-content {
+    display: none;
+}
+.tool-panel.collapsed {
+    height: auto;
+}
+.tool-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: grab;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+    margin-bottom: 20px;
+}
+.tool-header h3 {
+    margin: 0;
+    font-size: 20px;
+    color: #555;
+    display: flex;
+    align-items: center;
+}
+.tool-header i {
+    margin-right: 10px;
+}
+#toggle-panel, #toggle-product-panel, #toggle-templates-panel {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #888;
+}
+.tool-section {
+    margin-bottom: 20px;
+}
+.tool-section h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #666;
+    display: flex;
+    align-items: center;
+}
+.tool-section i {
+    margin-right: 8px;
+}
+.tool-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.tool-option label {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+.tool-option i {
+    margin-right: 8px;
+}
+.icon-button, #generate-template {
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    color: #555;
+    transition: all 0.2s;
+}
+.icon-button:hover, #generate-template:hover {
+    background-color: #f0f0f0;
+    border-color: #ccc;
+}
+.file-input {
+    width: 120px;
+}
+select, input[type="range"], input[type="color"] {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 5px;
+}
+input[type="range"] {
+    width: 120px;
+}
+input[type="color"] {
+    height: 35px;
+}
+.tool-footer {
+    margin-top: auto;
+}
+#generate-template, #generate-hq-template {
+    width: 100%;
+    background-color: #ff8c00;
+    color: white;
+    border: none;
+    padding: 12px;
+    font-size: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+#generate-template:hover, #generate-hq-template:hover {
+    background-color: #e67e00;
+}
+#generate-template i, #generate-hq-template i {
+    margin-right: 8px;
+}
+.design-actions {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+}
+.design-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    color: #555;
+    background-color: #fafafa;
+    flex-grow: 1;
+}
+.design-btn:hover {
+    background-color: #f0f0f0;
+    border-color: #ccc;
+}
+.design-btn i {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+        /* Product Panel Styles */
+        #product-panel {
+            left: auto;
+            right: 20px;
+            background-color: #efefef;
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 5px;
+        }
+        .neumorphic-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            height: 100px;
+            background: #efefef;
+            border-radius: 12px;
+            box-shadow:  6px 6px 12px #c5c5c5,
+                         -6px -6px 12px #ffffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #555;
+            margin: auto;
+        }
+        .neumorphic-btn:active {
+            box-shadow: inset 6px 6px 12px #c5c5c5,
+                        inset -6px -6px 12px #ffffff;
+        }
+        .neumorphic-btn i {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #ff8c00;
+        }
+        .neumorphic-btn span {
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .neumorphic-btn a {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Templates Panel Styles */
+        #templates-panel {
+            left: 320px;
+        }
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 15px;
+            padding: 5px;
+        }
+        .template-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .template-btn:hover {
+            transform: scale(1.05);
+        }
+        .template-shape {
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 5px;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .template-shape.blank {
+            border: 1px solid #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .template-shape img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .shape-rect {
+            width: 60px;
+            height: 90px;
+            border-radius: 4px;
+        }
+
+        /* Logo Overlay Styles */
+        #logo-overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 150px;
+            z-index: 2000;
+            line-height: 0;
+        }
+
+        /* Font Styles Panel */
+        #font-panel {
+            top: 450px;
+            left: 20px;
+        }
+        #font-panel .tool-content {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .font-style-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding: 5px;
+        }
+        .font-style-btn {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 50px;
+        }
+        .font-style-btn:hover {
+            background-color: #f0f0f0;
+            border-color: #ccc;
+        }
+        .font-style-btn span {
+            display: block;
+        }
+        #logo-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            cursor: move;
+            pointer-events: auto;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+        #logo-resize-handle {
+            width: 12px;
+            height: 12px;
+            background-color: #ff8c00;
+            border-radius: 50%;
+            position: absolute;
+            bottom: -6px;
+            right: -6px;
+            cursor: se-resize;
+            z-index: 2001;
+        }
+    </style>
+</head>
+<body>
+    <div id="logo-overlay">
+        <img src="https://menutech.services/assets/img/logomt.png" id="logo-img" alt="Logo" draggable="false">
+        <div id="logo-resize-handle"></div>
+    </div>
+
+    <div id="tool-panel" class="tool-panel">
+        <div class="tool-header">
+            <h3><i class="fas fa-tools"></i> Tool Panel</h3>
+            <button id="toggle-panel"><i class="fas fa-minus"></i></button>
+        </div>
+        <div class="tool-content">
+            <div class="tool-section">
+                <h4><i class="fas fa-palette"></i> Design</h4>
+                <div class="design-actions">
+                    <button id="add-text" class="design-btn">
+                        <i class="fas fa-font"></i>
+                        <span>Add Text</span>
+                    </button>
+                    <label for="add-image" class="design-btn">
+                        <i class="fas fa-image"></i>
+                        <span>Upload</span>
+                    </label>
+                    <input type="file" id="add-image" accept="image/*" style="display: none;">
+                </div>
+            </div>
+            <div class="tool-section">
+                <h4><i class="fas fa-cog"></i> Options</h4>
+                <div class="tool-option">
+                    <label for="font-family">Font</label>
+                    <select id="font-family">
+                        <option value="Arial">Arial</option>
+                        <option value="Helvetica" selected>Helvetica</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier New</option>
+                    </select>
+                </div>
+                <div class="tool-option">
+                    <label for="font-size">Size</label>
+                    <input type="range" id="font-size" min="10" max="100" value="40">
+                </div>
+                <div class="tool-option">
+                    <label for="fill-color">Fill</label>
+                    <input type="color" id="fill-color" value="#000000">
+                </div>
+            </div>
+            <div class="tool-footer">
+                <button id="generate-hq-template">Descargar Alta Calidad</button>
+                <button id="generate-template"><i class="fas fa-download"></i> Generate Template</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="font-panel" class="tool-panel">
+        <div class="tool-header" id="font-panel-header">
+            <h3><i class="fas fa-font"></i> Estilos PRO</h3>
+            <button id="toggle-font-panel"><i class="fas fa-minus"></i></button>
+        </div>
+        <div class="tool-content">
+            <div class="tool-section">
+                <h4><i class="fas fa-sliders"></i> Ajustes Básicos</h4>
+                <div class="tool-option">
+                    <label for="text-color">Color</label>
+                    <input type="color" id="text-color" value="#ff8c00">
+                </div>
+                <div class="tool-option">
+                    <label for="text-scale">Escala</label>
+                    <input type="range" id="text-scale" min="0.1" max="5" step="0.1" value="1">
+                </div>
+                <div class="tool-option">
+                    <label>Curvatura</label>
+                    <input type="range" id="text-curved" min="0" max="100" step="1" value="0">
+                </div>
+            </div>
+            <div class="tool-section">
+                <h4><i class="fas fa-wand-magic-sparkles"></i> Efectos WOW (Impresión)</h4>
+                <div class="font-style-grid">
+                    <button class="font-style-btn" data-style="graffiti" style="font-family: 'Bangers'; color: #ff0000; -webkit-text-stroke: 1px #000; text-shadow: 3px 3px 0 #ffff00;"><span>GRAFFITI</span></button>
+                    <button class="font-style-btn" data-style="mega_3d" style="font-family: 'Alfa Slab One'; color: #ff8c00; text-shadow: 1px 1px #000, 2px 2px #000, 3px 3px #000, 4px 4px #000, 5px 5px #000;"><span>MEGA 3D</span></button>
+                    <button class="font-style-btn" data-style="luxury_gold" style="font-family: 'Playfair Display'; color: #ffd700; text-shadow: 0 0 5px rgba(0,0,0,0.5); font-weight: bold;"><span>LUXURY</span></button>
+                    <button class="font-style-btn" data-style="punk" style="font-family: 'Creepster'; color: #fff; -webkit-text-stroke: 1px #ff00de; text-shadow: 2px 2px 0 #000;"><span>PUNK</span></button>
+                    <button class="font-style-btn" data-style="cloud" style="font-family: 'Luckiest Guy'; color: #00d2ff; -webkit-text-stroke: 1.5px #fff; text-shadow: 0 0 10px rgba(255,255,255,0.8);"><span>CLOUD</span></button>
+                    <button class="font-style-btn" data-style="retro_pop" style="font-family: 'Monoton'; color: #fe019a;"><span>RETRO</span></button>
+                    <button class="font-style-btn" data-style="neon_glow" style="color: #fff; background: #1a1a1a; text-shadow: 0 0 7px #fff, 0 0 10px #fff, 0 0 21px #fff, 0 0 42px #0fa, 0 0 82px #0fa;"><span>NEON</span></button>
+                    <button class="font-style-btn" data-style="hollow_bold" style="font-family: 'Alfa Slab One'; color: transparent; -webkit-text-stroke: 1.5px #ff8c00;"><span>HOLLOW</span></button>
+                    <button class="font-style-btn" data-style="clean_bold" style="font-family: 'Roboto'; font-weight: 900; color: #333;"><span>CLEAN</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="templates-panel" class="tool-panel">
+        <div class="tool-header" id="templates-panel-header">
+            <h3><i class="fas fa-layer-group"></i> Templates</h3>
+            <button id="toggle-templates-panel"><i class="fas fa-minus"></i></button>
+        </div>
+        <div class="tool-content">
+            <div class="tool-section">
+                <h4><i class="fas fa-th-large"></i> Select Template</h4>
+                <div class="templates-grid" id="templates-grid">
+                    <div class="template-btn" id="template-blank">
+                        <div class="template-shape shape-rect blank"></div>
+                        <span>Blank</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="product-panel" class="tool-panel">
+        <div class="tool-header" id="product-panel-header">
+            <h3><i class="fas fa-box-open"></i> Products</h3>
+            <button id="toggle-product-panel"><i class="fas fa-minus"></i></button>
+        </div>
+        <div class="tool-content product-grid">
+            <div class="neumorphic-btn">
+                <a href="index.html">
+                    <i class="fas fa-shirt"></i>
+                    <span>Shirt</span>
+                </a>
+            </div>
+            <div class="neumorphic-btn">
+                <a href="#">
+                    <i class="fas fa-image"></i>
+                    <span>Poster</span>
+                </a>
+            </div>
+            <div class="neumorphic-btn">
+                <a href="sticker.html">
+                    <i class="fas fa-note-sticky"></i>
+                    <span>Stickers</span>
+                </a>
+            </div>
+            <div class="neumorphic-btn">
+                <a href="#">
+                    <i class="fas fa-vest"></i>
+                    <span>Hoodies</span>
+                </a>
+            </div>
+            <div class="neumorphic-btn">
+                <a href="flag.html">
+                    <i class="fas fa-flag"></i>
+                    <span>Flag</span>
+                </a>
+            </div>
+            <div class="neumorphic-btn">
+                <a href="banner.html">
+                    <i class="fas fa-scroll"></i>
+                    <span>Banner</span>
+                </a>
+            </div>
+            <div class="neumorphic-btn">
+                <a href="xbanner.html">
+                    <i class="fas fa-ad"></i>
+                    <span>X-banner</span>
+                </a>
+            </div>
+            <div class="neumorphic-btn">
+                <a href="#">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Flyers</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-container">
+        <div id="canvas-flex-container"> <!-- Renamed from #canvas-container -->
+            <div id="canvas-wrapper"> <!-- New wrapper -->
+                <canvas id="texture-canvas" width="580" height="580"></canvas>
+            </div>
+        </div>
+        <div id="model-container">
+            <canvas id="model-canvas"></canvas>
+            <div id="model-error">Could not load 3D model.</div>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
+    <script>
+        // Load Custom Fonts
+        WebFont.load({
+            google: {
+                families: ['Alfa Slab One', 'Bangers', 'Permanent Marker', 'Monoton', 'Creepster', 'Luckiest Guy', 'Playfair Display:700']
+            },
+            active: function() {
+                console.log("Fonts loaded");
+                if (typeof fabricCanvas !== 'undefined') fabricCanvas.renderAll();
+            }
+        });
+
+        const modelCanvas = document.getElementById('model-canvas');
+        const textureCanvas = document.getElementById('texture-canvas');
+        const modelError = document.getElementById('model-error');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, modelCanvas.clientWidth / modelCanvas.clientHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: modelCanvas, antialias: true, alpha: true });
+        renderer.setSize(modelCanvas.clientWidth, modelCanvas.clientHeight);
+        renderer.setClearColor(0xf0f0f0, 0);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(1, 1, 5);
+        scene.add(directionalLight);
+        const fabricCanvas = new fabric.Canvas('texture-canvas');
+        let model;
+        let originalTexture;
+        const textureLoader = new THREE.TextureLoader();
+        const gltfLoader = new THREE.GLTFLoader();
+
+        function updateTexture() {
+            if (!originalTexture) return;
+
+            const activeObject = fabricCanvas.getActiveObject();
+            
+            // Temporarily hide controls for texture generation
+            if (activeObject) {
+                activeObject.set({
+                    hasControls: false,
+                    hasBorders: false
+                });
+                fabricCanvas.renderAll();
+            }
+
+            const combinedCanvas = document.createElement('canvas');
+            const context = combinedCanvas.getContext('2d');
+            
+            combinedCanvas.width = originalTexture.image.width;
+            combinedCanvas.height = originalTexture.image.height;
+
+            context.drawImage(originalTexture.image, 0, 0);
+            context.drawImage(fabricCanvas.getElement(), 0, 0, combinedCanvas.width, combinedCanvas.height);
+
+            const newTexture = new THREE.CanvasTexture(combinedCanvas);
+            newTexture.flipY = false;
+            newTexture.encoding = THREE.sRGBEncoding;
+            
+            model.traverse((node) => {
+                if (node.isMesh && node.material) {
+                    if (node.material.map) {
+                        node.material.map.dispose();
+                    }
+                    node.material.map = newTexture;
+                    node.material.needsUpdate = true;
+                }
+            });
+
+            if (activeObject) {
+                activeObject.set({
+                    hasControls: true,
+                    hasBorders: true
+                });
+                fabricCanvas.setActiveObject(activeObject);
+                fabricCanvas.renderAll();
+            }
+        }
+
+        Promise.all([
+            new Promise((resolve, reject) => textureLoader.load('shirt.png', resolve, undefined, reject)),
+            new Promise((resolve, reject) => gltfLoader.load('shirt.gltf', resolve, undefined, reject))
+        ]).then(([texture, gltf]) => {
+            originalTexture = texture;
+            originalTexture.flipY = false;
+            originalTexture.encoding = THREE.sRGBEncoding;
+
+            model = gltf.scene;
+            model.traverse((node) => {
+                if (node.isMesh) {
+                    node.material = new THREE.MeshStandardMaterial({
+                        map: originalTexture
+                    });
+                }
+            });
+
+            const box = new THREE.Box3().setFromObject(model);
+            const center = box.getCenter(new THREE.Vector3());
+            model.position.sub(center);
+            scene.add(model);
+        }).catch(error => {
+            console.error('An error happened during loading:', error);
+            modelError.style.display = 'block';
+        });
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.enableZoom = true;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+        controls.target.set(0, 0, 0);
+        camera.position.z = 1.2;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        const addTextButton = document.getElementById('add-text');
+        const addImageInput = document.getElementById('add-image');
+        const fontFamilySelect = document.getElementById('font-family');
+        const fontSizeInput = document.getElementById('font-size');
+        const fillColorInput = document.getElementById('fill-color');
+        const strokeColorInput = document.getElementById('stroke-color');
+
+        fontFamilySelect.addEventListener('change', (e) => {
+            const activeObject = fabricCanvas.getActiveObject();
+            if (activeObject && activeObject.type === 'i-text') {
+                activeObject.set('fontFamily', e.target.value);
+                fabricCanvas.renderAll();
+                updateTexture();
+            }
+        });
+
+        fontSizeInput.addEventListener('input', (e) => {
+            const activeObject = fabricCanvas.getActiveObject();
+            if (activeObject && activeObject.type === 'i-text') {
+                activeObject.set('fontSize', parseInt(e.target.value));
+                fabricCanvas.renderAll();
+                updateTexture();
+            }
+        });
+
+        fillColorInput.addEventListener('input', (e) => {
+            const activeObject = fabricCanvas.getActiveObject();
+            if (activeObject && activeObject.type === 'i-text') {
+                activeObject.set('fill', e.target.value);
+                fabricCanvas.renderAll();
+                updateTexture();
+            }
+        });
+
+        addTextButton.addEventListener('click', () => {
+            const text = new fabric.IText('TEXT', {
+                left: 100,
+                top: 100,
+                fontFamily: fontFamilySelect.value,
+                fontSize: parseInt(fontSizeInput.value),
+                fill: '#ff8c00', // Default color changed to orange
+                stroke: 'transparent',
+                strokeWidth: 0
+            });
+            fabricCanvas.add(text);
+            fabricCanvas.setActiveObject(text);
+            updateTexture();
+        });
+
+        addImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    fabric.Image.fromURL(event.target.result, (img) => {
+                        fabricCanvas.add(img);
+                        updateTexture();
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Drag and Drop Image Upload
+        const canvasFlexContainer = document.getElementById('canvas-flex-container'); // Changed from canvas-container
+
+        canvasFlexContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            // Optional: Add a visual indicator
+        });
+
+        canvasFlexContainer.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            // Optional: Remove the visual indicator
+        });
+
+        canvasFlexContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    fabric.Image.fromURL(event.target.result, (img) => {
+                        img.set({
+                            left: fabricCanvas.width / 2,
+                            top: fabricCanvas.height / 2,
+                            originX: 'center',
+                            originY: 'center',
+                        });
+                        fabricCanvas.add(img);
+                        fabricCanvas.setActiveObject(img);
+                        updateTexture();
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        fabricCanvas.on('object:modified', updateTexture);
+
+        function updateToolPanel(target) {
+            if (target && target.type === 'i-text') {
+                fontFamilySelect.value = target.fontFamily;
+                fontSizeInput.value = target.fontSize;
+                fillColorInput.value = target.fill;
+            }
+        }
+
+        fabricCanvas.on('selection:created', (e) => {
+            updateToolPanel(e.target);
+        });
+
+        fabricCanvas.on('selection:updated', (e) => {
+            updateToolPanel(e.target);
+        });
+
+        fabricCanvas.on('selection:cleared', () => {
+            fontFamilySelect.value = 'Helvetica';
+            fontSizeInput.value = 40;
+            fillColorInput.value = '#000000';
+        });
+
+        document.body.addEventListener('keydown', (e) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                const activeObject = fabricCanvas.getActiveObject();
+                if (activeObject && !activeObject.isEditing) {
+                    fabricCanvas.remove(activeObject);
+                    fabricCanvas.discardActiveObject();
+                    fabricCanvas.renderAll(); // Re-render the canvas after removal
+                    updateTexture(); // Update the texture with the cleared canvas
+                }
+            }
+        });
+
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = modelCanvas.clientWidth / modelCanvas.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(modelCanvas.clientWidth, modelCanvas.clientHeight);
+        }
+
+        const generateTemplateButton = document.getElementById('generate-template');
+        generateTemplateButton.addEventListener('click', () => {
+            const dataURL = fabricCanvas.toDataURL({
+                format: 'png',
+                quality: 1.0
+            });
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = 'tshirt-design.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        const generateHQTemplateButton = document.getElementById('generate-hq-template');
+        generateHQTemplateButton.addEventListener('click', () => {
+            const activeObject = fabricCanvas.getActiveObject();
+            if (activeObject) {
+                activeObject.set({
+                    hasControls: false,
+                    hasBorders: false
+                });
+                fabricCanvas.renderAll();
+            }
+
+            const dataURL = fabricCanvas.toDataURL({
+                format: 'png',
+                quality: 1.0,
+                multiplier: 6
+            });
+
+            if (activeObject) {
+                activeObject.set({
+                    hasControls: true,
+                    hasBorders: true
+                });
+                fabricCanvas.renderAll();
+            }
+
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = 'tshirt-design-hq.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // Tool Panel Logic
+        const toolPanel = document.getElementById('tool-panel');
+        const toggleButton = document.getElementById('toggle-panel');
+
+        toggleButton.addEventListener('click', () => {
+            toolPanel.classList.toggle('collapsed');
+            const icon = toggleButton.querySelector('i');
+            icon.classList.toggle('fa-minus');
+            icon.classList.toggle('fa-plus');
+        });
+
+        // Product Panel Logic
+        const productPanel = document.getElementById('product-panel');
+        document.getElementById('toggle-product-panel').addEventListener('click', () => {
+            productPanel.classList.toggle('collapsed');
+            const icon = document.querySelector('#toggle-product-panel i');
+            icon.classList.toggle('fa-minus');
+            icon.classList.toggle('fa-plus');
+        });
+
+        // Drag Functionality
+        function makeDraggable(element, handle) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            handle.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+
+                // Switch to top/left positioning immediately
+                element.style.top = element.offsetTop + "px";
+                element.style.left = element.offsetLeft + "px";
+                element.style.bottom = "auto";
+                element.style.right = "auto";
+
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        makeDraggable(document.getElementById('tool-panel'), document.querySelector('#tool-panel .tool-header'));
+        makeDraggable(document.getElementById('product-panel'), document.getElementById('product-panel-header'));
+
+        // Improved Font Styles Panel Logic
+        const fontStyles = {
+            graffiti: {
+                fontFamily: 'Bangers',
+                fill: '#ff0000',
+                stroke: '#000',
+                strokeWidth: 2,
+                paintFirst: 'stroke',
+                shadow: new fabric.Shadow({ color: '#ffff00', blur: 0, offsetX: 5, offsetY: 5 })
+            },
+            mega_3d: {
+                fontFamily: 'Alfa Slab One',
+                fill: '#ff8c00',
+                stroke: '#333',
+                strokeWidth: 1,
+                shadow: new fabric.Shadow({ color: '#000', blur: 0, offsetX: 8, offsetY: 8 })
+            },
+            luxury_gold: {
+                fontFamily: 'Playfair Display',
+                fill: '#ffd700',
+                stroke: '#b8860b',
+                strokeWidth: 0.5,
+                shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.4)', blur: 10, offsetX: 3, offsetY: 3 })
+            },
+            punk: {
+                fontFamily: 'Creepster',
+                fill: '#fff',
+                stroke: '#ff00de',
+                strokeWidth: 2,
+                shadow: new fabric.Shadow({ color: '#000', blur: 2, offsetX: 4, offsetY: 4 })
+            },
+            cloud: {
+                fontFamily: 'Luckiest Guy',
+                fill: '#00d2ff',
+                stroke: '#fff',
+                strokeWidth: 4,
+                paintFirst: 'stroke',
+                shadow: new fabric.Shadow({ color: 'rgba(255,255,255,0.9)', blur: 20, offsetX: 0, offsetY: 0 })
+            },
+            retro_pop: {
+                fontFamily: 'Monoton',
+                fill: '#fe019a',
+                stroke: 'transparent',
+                strokeWidth: 0,
+                shadow: new fabric.Shadow({ color: '#333', blur: 2, offsetX: 3, offsetY: 3 })
+            },
+            neon_glow: {
+                fontFamily: 'Helvetica',
+                fill: '#fff',
+                stroke: '#0fa',
+                strokeWidth: 1,
+                shadow: new fabric.Shadow({ color: '#0fa', blur: 30, offsetX: 0, offsetY: 0 })
+            },
+            hollow_bold: {
+                fontFamily: 'Alfa Slab One',
+                fill: 'transparent',
+                stroke: '#ff8c00',
+                strokeWidth: 2,
+                shadow: null
+            },
+            clean_bold: {
+                fontFamily: 'Roboto',
+                fontWeight: 900,
+                fill: '#333',
+                stroke: 'transparent',
+                strokeWidth: 0,
+                shadow: null
+            }
+        };
+
+        const fontPanel = document.getElementById('font-panel');
+        const textColorInput = document.getElementById('text-color');
+        const textScaleInput = document.getElementById('text-scale');
+        const textCurvedInput = document.getElementById('text-curved');
+        const toggleFontPanelBtn = document.getElementById('toggle-font-panel');
+
+        if (toggleFontPanelBtn) {
+            toggleFontPanelBtn.addEventListener('click', () => {
+                fontPanel.classList.toggle('collapsed');
+                const icon = toggleFontPanelBtn.querySelector('i');
+                icon.classList.toggle('fa-minus');
+                icon.classList.toggle('fa-plus');
+            });
+        }
+
+        makeDraggable(fontPanel, document.getElementById('font-panel-header'));
+
+        textColorInput.addEventListener('input', (e) => {
+            const activeObject = fabricCanvas.getActiveObject();
+            if (activeObject && (activeObject.type === 'i-text' || activeObject.type === 'text')) {
+                activeObject.set('fill', e.target.value);
+                fabricCanvas.renderAll();
+                updateTexture();
+            }
+        });
+
+        textScaleInput.addEventListener('input', (e) => {
+            const activeObject = fabricCanvas.getActiveObject();
+            if (activeObject) {
+                activeObject.set({
+                    scaleX: parseFloat(e.target.value),
+                    scaleY: parseFloat(e.target.value)
+                });
+                fabricCanvas.renderAll();
+                updateTexture();
+            }
+        });
+
+        textCurvedInput.addEventListener('input', (e) => {
+            const activeObject = fabricCanvas.getActiveObject();
+            if (activeObject && (activeObject.type === 'i-text' || activeObject.type === 'text')) {
+                const val = parseInt(e.target.value);
+                if (val > 0) {
+                    // Unify curvature range and prevent overlap
+                    const radius = 400 - (val * 2.5);
+                    const path = new fabric.Path(`M 0 0 a ${radius} ${radius} 0 1 1 ${radius*2} 0`, {
+                        fill: 'transparent',
+                        stroke: 'transparent',
+                        visible: false
+                    });
+                    activeObject.set({
+                        path: path,
+                        charSpacing: val * 3 // Dynamically adjust spacing to prevent overlapping
+                    });
+                } else {
+                    activeObject.set({
+                        path: null,
+                        charSpacing: 0
+                    });
+                }
+                fabricCanvas.renderAll();
+                updateTexture();
+            }
+        });
+
+        document.querySelectorAll('.font-style-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const styleName = btn.getAttribute('data-style');
+                const style = fontStyles[styleName];
+                let activeObject = fabricCanvas.getActiveObject();
+
+                if (!activeObject || (activeObject.type !== 'i-text' && activeObject.type !== 'text')) {
+                    activeObject = new fabric.IText('TEXT', {
+                        left: fabricCanvas.width / 2,
+                        top: fabricCanvas.height / 2,
+                        originX: 'center',
+                        originY: 'center',
+                        fontSize: 60,
+                        textAlign: 'center'
+                    });
+                    fabricCanvas.add(activeObject);
+                    fabricCanvas.setActiveObject(activeObject);
+                }
+
+                activeObject.set(style);
+                if (style.fill && style.fill !== 'transparent') {
+                    textColorInput.value = style.fill;
+                }
+                fabricCanvas.renderAll();
+                updateTexture();
+            });
+        });
+
+        function syncFontPanel() {
+            const target = fabricCanvas.getActiveObject();
+            if (target && (target.type === 'i-text' || target.type === 'text')) {
+                if (target.fill && target.fill !== 'transparent' && typeof target.fill === 'string') {
+                    textColorInput.value = target.fill;
+                }
+                textScaleInput.value = target.scaleX;
+                if (!target.path) {
+                    textCurvedInput.value = 0;
+                }
+            }
+        }
+
+        fabricCanvas.on('selection:created', syncFontPanel);
+        fabricCanvas.on('selection:updated', syncFontPanel);
+
+        // Templates Panel Logic
+        const templatesPanel = document.getElementById('templates-panel');
+        document.getElementById('toggle-templates-panel').addEventListener('click', () => {
+            templatesPanel.classList.toggle('collapsed');
+            const icon = document.querySelector('#toggle-templates-panel i');
+            icon.classList.toggle('fa-minus');
+            icon.classList.toggle('fa-plus');
+        });
+
+        let currentTemplate = null;
+        function setTemplate(imageUrl) {
+            if (currentTemplate) {
+                fabricCanvas.remove(currentTemplate);
+                currentTemplate = null;
+            }
+            if (imageUrl) {
+                fabric.Image.fromURL(imageUrl, (img) => {
+                    img.set({
+                        originX: 'center',
+                        originY: 'center',
+                        left: fabricCanvas.width / 2,
+                        top: fabricCanvas.height / 2,
+                    });
+                    img.scaleToWidth(fabricCanvas.width);
+                    if (img.getScaledHeight() > fabricCanvas.height) {
+                        img.scaleToHeight(fabricCanvas.height);
+                    }
+                    fabricCanvas.add(img);
+                    fabricCanvas.sendToBack(img);
+                    currentTemplate = img;
+                    fabricCanvas.renderAll();
+                    updateTexture();
+                });
+            } else {
+                fabricCanvas.renderAll();
+                updateTexture();
+            }
+        }
+
+        document.getElementById('template-blank').addEventListener('click', () => setTemplate(null));
+
+        makeDraggable(templatesPanel, document.getElementById('templates-panel-header'));
+
+        // Logo Logic
+        function makeResizable(element, handle) {
+            handle.addEventListener('mousedown', initResize, false);
+
+            function initResize(e) {
+                e.preventDefault();
+                e.stopPropagation(); // Prevent drag from starting
+                window.addEventListener('mousemove', resize, false);
+                window.addEventListener('mouseup', stopResize, false);
+            }
+
+            function resize(e) {
+                const newWidth = e.clientX - element.offsetLeft;
+                if (newWidth > 50) { // Minimum width
+                    element.style.width = newWidth + 'px';
+                }
+            }
+
+            function stopResize(e) {
+                window.removeEventListener('mousemove', resize, false);
+                window.removeEventListener('mouseup', stopResize, false);
+            }
+        }
+
+        const logoOverlay = document.getElementById('logo-overlay');
+        const logoImg = document.getElementById('logo-img');
+        const logoHandle = document.getElementById('logo-resize-handle');
+
+        makeDraggable(logoOverlay, logoImg);
+        makeResizable(logoOverlay, logoHandle);
+    </script>
+</body>
+</html>
