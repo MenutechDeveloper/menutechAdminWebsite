@@ -15,6 +15,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
@@ -509,6 +510,7 @@
 
         // --- FABRIC CANVAS SETUP ---
         const fabricCanvas = new fabric.Canvas('texture-canvas');
+        window.fabricCanvas = fabricCanvas;
 
         window.showToast = (message, type = 'success') => {
             const container = document.getElementById('toast-container');
@@ -742,6 +744,33 @@
                 $(this).find('i').toggleClass('fa-minus fa-plus');
             });
 
+            // Drag and Drop
+            const canvasWrapper = document.getElementById('canvas-wrapper');
+            canvasWrapper.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                canvasWrapper.style.border = '2px dashed var(--orange)';
+            });
+
+            canvasWrapper.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                canvasWrapper.style.border = '';
+            });
+
+            canvasWrapper.addEventListener('drop', (e) => {
+                e.preventDefault();
+                canvasWrapper.style.border = '';
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    Array.from(files).forEach(file => {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => addImageToCanvas(event.target.result);
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                }
+            });
+
             // Fabric events
             fabricCanvas.on('object:modified', updateTexture);
             fabricCanvas.on('object:added', updateTexture);
@@ -888,12 +917,70 @@
 
         async function exportSVG() {
             if (role === 'OWNER') return;
-            const svgData = fabricCanvas.toSVG();
-            const blob = new Blob([svgData], { type: 'image/svg+xml' });
-            const url = URL.createObjectURL(blob);
+
+            const images = fabricCanvas.getObjects('image');
+            if (images.length === 0) {
+                const svgData = fabricCanvas.toSVG();
+                const blob = new Blob([svgData], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'shirt-design.svg';
+                link.click();
+                return;
+            }
+
+            // Create ZIP for design with images
+            const zip = new JSZip();
+            const assetsFolder = zip.folder("assets");
+            let svgString = fabricCanvas.toSVG();
+
+            const imagePromises = images.map(async (img, index) => {
+                const originalSrc = img.getSrc();
+                let fileName = `img_${index + 1}`;
+                let extension = 'png';
+
+                if (originalSrc.startsWith('data:')) {
+                    const match = originalSrc.match(/^data:image\/([a-zA-Z+]+);base64,/);
+                    if (match) extension = match[1].replace('svg+xml', 'svg');
+                } else {
+                    const urlParts = originalSrc.split('.');
+                    if (urlParts.length > 1) {
+                        extension = urlParts.pop().split(/[?#]/)[0];
+                    }
+                }
+                fileName = `${fileName}.${extension}`;
+                const relativePath = `assets/${fileName}`;
+
+                try {
+                    let blob;
+                    if (originalSrc.startsWith('data:')) {
+                        const res = await fetch(originalSrc);
+                        blob = await res.blob();
+                    } else {
+                        // Use anonymous cross-origin for fetch if possible
+                        const res = await fetch(originalSrc, { mode: 'cors' }).catch(() => fetch(originalSrc, { mode: 'no-cors' }));
+                        blob = await res.blob();
+                    }
+                    assetsFolder.file(fileName, blob);
+
+                    // Replace URL in SVG string with relative path
+                    // Fabric.js escaping might vary, so we replace exactly what getSrc() returns
+                    const escapedSrc = originalSrc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`(xlink:href|href)="${escapedSrc}"`, 'g');
+                    svgString = svgString.replace(regex, `$1="${relativePath}"`);
+                } catch (err) {
+                    console.error("Could not bundle image:", originalSrc, err);
+                }
+            });
+
+            await Promise.all(imagePromises);
+
+            zip.file("shirt-design.svg", svgString);
+            const content = await zip.generateAsync({ type: "blob" });
             const link = document.createElement('a');
-            link.href = url;
-            link.download = 'shirt-design.svg';
+            link.href = URL.createObjectURL(content);
+            link.download = 'shirt-design-package.zip';
             link.click();
         }
 
