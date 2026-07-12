@@ -10,8 +10,9 @@ class OrderDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final order = ModalRoute.of(context)!.settings.arguments as OrderModel;
+    final displayId = order.id.length > 5 ? order.id.substring(0, 5) : order.id;
     return Scaffold(
-      appBar: AppBar(title: Text("Order #${order.id.substring(0, 5)}")),
+      appBar: AppBar(title: Text("Order #$displayId")),
       body: OrderDetailView(order: order),
     );
   }
@@ -79,6 +80,24 @@ class _OrderDetailViewState extends State<OrderDetailView> {
       return;
     }
 
+    if (ips.length == 1) {
+      // Direct print if only one printer is registered
+      final ip = ips.first;
+      final success = await _printService.printTicket(order, ip);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(success ? 'Ticket printed!' : 'Printing failed.'),
+            backgroundColor: success ? Colors.green : Colors.red,
+          )
+        );
+      }
+      return;
+    }
+
+    // Multiple printers configured - load custom names
+    final printerNames = await _printService.getPrinterNames();
+
     if (mounted) {
       showDialog(
         context: context,
@@ -89,22 +108,28 @@ class _OrderDetailViewState extends State<OrderDetailView> {
             child: ListView.builder(
               shrinkWrap: true,
               itemCount: ips.length,
-              itemBuilder: (context, index) => ListTile(
-                title: Text(ips[index]),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final success = await _printService.printTicket(order, ips[index]);
-                  if (mounted) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(success ? 'Ticket printed!' : 'Printing failed.'),
-                        backgroundColor: success ? Colors.green : Colors.red,
-                      )
-                    );
-                  }
-                },
-              ),
+              itemBuilder: (context, index) {
+                final ip = ips[index];
+                final displayName = printerNames[ip] ?? "Printer $ip";
+                return ListTile(
+                  leading: const Icon(Icons.print, color: Color(0xFFFF9533)),
+                  title: Text(displayName),
+                  subtitle: Text(ip),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final success = await _printService.printTicket(order, ip);
+                    if (mounted) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(success ? 'Ticket printed!' : 'Printing failed.'),
+                          backgroundColor: success ? Colors.green : Colors.red,
+                        )
+                      );
+                    }
+                  },
+                );
+              },
             ),
           ),
         ),

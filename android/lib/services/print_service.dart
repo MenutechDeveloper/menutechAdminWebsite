@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:intl/intl.dart';
 import '../models/order_model.dart';
@@ -18,6 +19,34 @@ class PrintService {
   Future<List<String>> getSavedPrinterIps() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getStringList('printer_ips') ?? [];
+  }
+
+  Future<Map<String, String>> getPrinterNames() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = prefs.getString('printer_names');
+    if (jsonStr == null) return {};
+    try {
+      final Map<String, dynamic> decoded = jsonDecode(jsonStr);
+      return decoded.map((key, value) => MapEntry(key, value.toString()));
+    } catch (e) {
+      return {};
+    }
+  }
+
+  Future<void> savePrinterName(String ip, String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    final names = await getPrinterNames();
+    names[ip] = name;
+    await prefs.setString('printer_names', jsonEncode(names));
+  }
+
+  Future<void> removePrinterName(String ip) async {
+    final prefs = await SharedPreferences.getInstance();
+    final names = await getPrinterNames();
+    if (names.containsKey(ip)) {
+      names.remove(ip);
+      await prefs.setString('printer_names', jsonEncode(names));
+    }
   }
 
   Future<void> savePrinterIp(String ip) async {
@@ -123,6 +152,7 @@ class PrintService {
     final ips = prefs.getStringList('printer_ips') ?? [];
     ips.remove(ip);
     await prefs.setStringList('printer_ips', ips);
+    await removePrinterName(ip);
   }
 
   Future<Map<String, dynamic>?> getTicketConfig(String userId) async {
@@ -143,6 +173,7 @@ class PrintService {
       final config = await getTicketConfig(order.userId);
       final payload = _buildPayload(order, config);
 
+      print("Attempting printTcp to IP: $ip, payload length: ${payload.length}");
       await FlutterThermalPrinterPos.printTcp(
         ip: ip,
         port: 9100,
@@ -152,8 +183,11 @@ class PrintService {
         mmFeedPaper: 20,
       );
 
+      print("printTcp call completed successfully for IP: $ip");
       return true;
-    } catch (e) {
+    } catch (e, stack) {
+      print("Error printing ticket to $ip: $e");
+      print(stack);
       return false;
     }
   }
@@ -182,7 +216,8 @@ class PrintService {
     sb.writeln("[C]================================");
 
     // Order Info
-    sb.writeln("[L]Order ID: ${order.id.substring(0, 8)}");
+    final displayId = order.id.length > 8 ? order.id.substring(0, 8) : order.id;
+    sb.writeln("[L]Order ID: $displayId");
     sb.writeln("[L]Date: ${DateFormat('yyyy-MM-dd HH:mm').format(order.createdAt)}");
     sb.writeln("[L]Type: ${order.orderType.toUpperCase()}");
     sb.writeln("[C]--------------------------------");
