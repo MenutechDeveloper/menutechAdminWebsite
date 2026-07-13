@@ -227,7 +227,7 @@ class PrintService {
       final config = await getTicketConfig(order.userId);
       final payload = _buildPayload(order, config);
 
-      print("Attempting printTcp to IP: $ip, payload length: ${payload.length}");
+      print("Attempting printTcp with logo to IP: $ip, payload length: ${payload.length}");
       await FlutterThermalPrinterPos.printTcp(
         ip: ip,
         port: 9100,
@@ -240,20 +240,56 @@ class PrintService {
       print("printTcp call completed successfully for IP: $ip");
       return true;
     } catch (e, stack) {
-      print("Error printing ticket to $ip: $e");
+      print("Error printing ticket with logo to $ip: $e");
       print(stack);
-      return false;
+
+      // FALLBACK: If printing failed (likely due to an issue loading/decoding the logo image),
+      // we attempt printing a text-only ticket without the logo so the business can still function!
+      try {
+        print("Attempting fallback text-only print without logo to IP: $ip...");
+        final config = await getTicketConfig(order.userId);
+        final payloadWithoutLogo = _buildPayload(order, config, includeLogo: false);
+
+        await FlutterThermalPrinterPos.printTcp(
+          ip: ip,
+          port: 9100,
+          payload: payloadWithoutLogo,
+          autoCut: true,
+          openCashbox: false,
+          mmFeedPaper: 20,
+        );
+        print("Fallback text-only print completed successfully for IP: $ip");
+        return true;
+      } catch (fallbackError, fallbackStack) {
+        print("Fallback print without logo also failed to $ip: $fallbackError");
+        print(fallbackStack);
+        return false;
+      }
     }
   }
 
-  String _buildPayload(OrderModel order, Map<String, dynamic>? configData) {
+  String _buildPayload(OrderModel order, Map<String, dynamic>? configData, {bool includeLogo = true}) {
     StringBuffer sb = StringBuffer();
 
-    final config = configData?['config'] as Map<String, dynamic>?;
+    Map<String, dynamic>? config;
+    final rawConfig = configData?['config'];
+    if (rawConfig is Map) {
+      config = rawConfig.map((key, value) => MapEntry(key.toString(), value));
+    } else if (rawConfig is String && rawConfig.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(rawConfig);
+        if (decoded is Map) {
+          config = decoded.map((key, value) => MapEntry(key.toString(), value));
+        }
+      } catch (e) {
+        print("Error decoding config JSON string: $e");
+      }
+    }
+
     final header = config?['header_text'] ?? "MENUTECH";
     final footer = config?['footer_text'] ?? "Thank you for your order!\nPowered by Menutech";
     final logoUrl = config?['logo_url'] as String?;
-    final showLogo = config?['show_logo'] ?? true;
+    final showLogo = includeLogo && (config?['show_logo'] ?? true);
 
     // Logo
     if (showLogo) {

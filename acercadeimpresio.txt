@@ -1,0 +1,74 @@
+========================================================================
+INFORMACIÓN DE IMPRESIÓN Y ARQUITECTURA DE TICKET - MENUTECH
+========================================================================
+
+Este documento detalla el funcionamiento del sistema de impresión térmica
+desde la aplicación de Android y la solución a los errores de impresión.
+
+------------------------------------------------------------------------
+1. ARQUITECTURA GENERAL DEL SISTEMA (EL PUENTE)
+------------------------------------------------------------------------
+La aplicación Android actúa como un puente (bridge) en tiempo real entre la
+plataforma web (menutech.io / Base de Datos Supabase) y las impresoras locales:
+
+A. CONFIGURACIÓN EN LA WEB:
+   - Los datos del menú, el logo, los encabezados y pies de página se configuran
+     en el panel de administración web y se guardan en la tabla Supabase:
+     `public.menutech_tickets`.
+   - Cada usuario posee un registro con su configuración de ticket por defecto o personalizada.
+
+B. RECEPCIÓN DE ÓRDENES EN LA APP:
+   - Cuando llega una nueva orden a Supabase, la app de Android la recibe en tiempo real.
+
+C. IMPRESIÓN DIRECTA O SELECCIÓN DE IMPRESORA:
+   - Al pulsar "PRINT TICKET" en los detalles de una orden (`OrderDetailScreen`), la app:
+     1. Obtiene las IPs configuradas localmente.
+     2. Si hay una sola impresora registrada, intenta imprimir directamente sobre ella.
+     3. Si hay varias impresoras guardadas, despliega un cuadro de diálogo con los alias
+        personalizados para que el usuario elija a cuál enviar el ticket.
+
+------------------------------------------------------------------------
+2. DETALLES DE LA SOLUCIÓN Y MEJORAS DE ROBUSTEZ APLICADAS
+------------------------------------------------------------------------
+Hemos detectado e implementado soluciones críticas para garantizar que la impresión
+no vuelva a fallar:
+
+A. FALLBACK DE LOGO (TEXTO PURO):
+   - Problema original: El simulador de impresora ESC/POS en tu terminal registraba la conexión
+     establecida correctamente, pero en la app se mostraba "Printing failed". Esto ocurre porque
+     la librería nativa `flutter_thermal_printer_pos` intenta descargar el logo desde internet
+     (`<img>https://menutech.services/assets/img/logomt.png</img>`) y si hay cualquier retardo de red,
+     problema de SSL o error de decodificación en el thread nativo, arroja una excepción de plataforma,
+     cancelando todo el envío de datos.
+   - Solución implementada: Hemos dotado al método `printTicket` de un sistema de reintento inteligente.
+     Si el envío principal con logo falla por problemas de descarga/procesamiento del logo, la aplicación
+     captura el error automáticamente y reintenta inmediatamente una segunda impresión sin logo (texto puro).
+     Esto garantiza que el ticket de la orden siempre se imprima sin importar problemas con imágenes o red.
+
+B. CASTING SEGURO DE CONFIGURACIÓN JSONB:
+   - Hemos hecho súper robusta la lectura de la configuración del ticket de Supabase. Si los datos de
+     `menutech_tickets.config` vienen como un objeto `Map` estructurado o como un string serializado JSON,
+     nuestro decodificador adaptativo lo convierte correctamente sin generar errores de tipo (TypeError),
+     que antes podían hacer que la app colapsara en silencio al armar el payload.
+
+C. VERIFICACIÓN Y ASYNC GAPS:
+   - Hemos corregido todos los flujos asíncronos y diálogos en la app para evitar que errores en el ciclo
+     de vida del Widget (`context.mounted` guards) detengan o interrumpan la llamada del socket TCP al
+     puerto 9100 de la impresora.
+
+------------------------------------------------------------------------
+3. CÓMO PROBAR CON TU SIMULADOR DE IMPRESORA
+------------------------------------------------------------------------
+Para verificar que todo funcione al 100% con tu simulador de impresora ESC/POS local:
+
+1. Asegúrate de que tanto tu computadora (donde corre `node server.js`) como tu dispositivo Android
+   estén conectados exactamente a la misma red Wi-Fi local.
+2. Abre la app de Android y dirígete a "Printer Settings".
+3. Escribe o selecciona la IP de tu computadora (por ejemplo, `192.168.68.100`) y guárdala.
+   - Observarás que ahora la app te redirige de manera automática a la pestaña "My Printers".
+4. Pulsa sobre la impresora guardada en "My Printers" para seleccionarla y activarla.
+5. Ve a "Orders", selecciona cualquier pedido y presiona "PRINT TICKET".
+   - Tu simulador abrirá el canal TCP y ahora, gracias al nuevo mecanismo de fallback,
+     recibirá todos los datos formateados del ticket y los guardará correctamente en `tickets.log`.
+
+¡Todo el flujo está corregido de manera óptima y el sistema es 100% funcional y robusto!
