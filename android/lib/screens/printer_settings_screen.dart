@@ -179,16 +179,16 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Sing
           unselectedLabelColor: Colors.grey,
           indicatorColor: const Color(0xFFFF9533),
           tabs: const [
-            Tab(text: "My Printers", icon: Icon(Icons.print_rounded)),
             Tab(text: "Search & Add", icon: Icon(Icons.search_rounded)),
+            Tab(text: "My Printers", icon: Icon(Icons.print_rounded)),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildMyPrintersTab(),
           _buildSearchAndAddTab(),
+          _buildMyPrintersTab(),
         ],
       ),
     );
