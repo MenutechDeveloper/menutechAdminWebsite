@@ -101,21 +101,60 @@ class PrintService {
   Future<List<String>> discoverPrinters() async {
     List<String> discoveredIps = [];
 
-    // Request permissions
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.locationWhenInUse,
-      Permission.nearbyWifiDevices,
-    ].request();
-
-    if (statuses[Permission.locationWhenInUse] != PermissionStatus.granted &&
-        statuses[Permission.nearbyWifiDevices] != PermissionStatus.granted) {
-      return [];
+    // Request permissions but do not block execution if they are not fully granted
+    try {
+      await [
+        Permission.locationWhenInUse,
+        Permission.nearbyWifiDevices,
+      ].request();
+    } catch (e) {
+      print("Permission request failed: $e");
     }
 
     final info = NetworkInfo();
-    String? wifiIP = await info.getWifiIP();
+    String? wifiIP;
+    try {
+      wifiIP = await info.getWifiIP();
+    } catch (e) {
+      print("Failed to get wifi IP: $e");
+    }
 
-    if (wifiIP == null) return [];
+    // Robust fallback: use network interfaces if getWifiIP is null or empty
+    if (wifiIP == null || wifiIP.isEmpty) {
+      try {
+        final interfaces = await NetworkInterface.list(
+          includeLoopback: false,
+          type: InternetAddressType.IPv4,
+        );
+        for (var interface in interfaces) {
+          for (var addr in interface.addresses) {
+            if (!addr.isLoopback && addr.address.startsWith('192.168.')) {
+              wifiIP = addr.address;
+              break;
+            }
+          }
+          if (wifiIP != null) break;
+        }
+        if (wifiIP == null && interfaces.isNotEmpty) {
+          for (var interface in interfaces) {
+            for (var addr in interface.addresses) {
+              if (!addr.isLoopback && !addr.address.startsWith('127.')) {
+                wifiIP = addr.address;
+                break;
+              }
+            }
+            if (wifiIP != null) break;
+          }
+        }
+      } catch (e) {
+        print("Failed to get network interfaces: $e");
+      }
+    }
+
+    if (wifiIP == null || !wifiIP.contains('.')) {
+      print("No valid local IP/subnet detected.");
+      return [];
+    }
 
     final String subnet = wifiIP.substring(0, wifiIP.lastIndexOf('.'));
 
@@ -153,6 +192,21 @@ class PrintService {
     ips.remove(ip);
     await prefs.setStringList('printer_ips', ips);
     await removePrinterName(ip);
+
+    // Also update Supabase remote IP so it doesn't resurrect deleted IP
+    final user = _supabase.currentUser;
+    if (user != null) {
+      try {
+        final String? newRemoteIp = ips.isNotEmpty ? ips.first : null;
+        await _supabase.client.from('menutech_tickets').upsert({
+          'user_id': user.id,
+          'printer_ip': newRemoteIp,
+          'updated_at': DateTime.now().toIso8601String(),
+        }, onConflict: 'user_id');
+      } catch (e) {
+        print("Error updating Supabase after printer deletion: $e");
+      }
+    }
   }
 
   Future<Map<String, dynamic>?> getTicketConfig(String userId) async {

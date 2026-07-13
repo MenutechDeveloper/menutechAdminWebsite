@@ -143,6 +143,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Sing
 
     if (result == true) {
       await _loadPrinters();
+      _tabController.animateTo(1); // Switch to the "My Printers" tab (index 1)
     }
   }
 
@@ -253,12 +254,36 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Sing
               );
             } else {
               if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Could not connect to $ip. Verify network.'),
-                  backgroundColor: Colors.red,
+              // Prompt the user if they still want to select it anyway
+              final selectAnyway = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Connection Failed'),
+                  content: Text('Could not connect to printer "$name" ($ip). Make sure the printer is turned on and connected to the same Wi-Fi network.\n\nDo you want to select it as the active printer anyway?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('CANCEL'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('SELECT ANYWAY', style: TextStyle(color: Color(0xFFFF9533))),
+                    ),
+                  ],
                 ),
               );
+
+              if (selectAnyway == true) {
+                await _printService.savePrinterIp(ip);
+                await _loadPrinters();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Printer "$name" ($ip) is now active!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
             }
           },
           borderRadius: BorderRadius.circular(16),
@@ -473,6 +498,7 @@ class ConfigurePrinterScreen extends StatefulWidget {
 
 class _ConfigurePrinterScreenState extends State<ConfigurePrinterScreen> {
   final PrintService _printService = PrintService();
+  late final TextEditingController _ipController;
   final _nameController = TextEditingController();
   bool _isTesting = false;
   String? _testStatus; // null, "success", "failed"
@@ -480,22 +506,32 @@ class _ConfigurePrinterScreenState extends State<ConfigurePrinterScreen> {
   @override
   void initState() {
     super.initState();
+    _ipController = TextEditingController(text: widget.ip);
     _nameController.text = widget.initialName ?? '';
   }
 
   @override
   void dispose() {
+    _ipController.dispose();
     _nameController.dispose();
     super.dispose();
   }
 
   Future<void> _testConnection() async {
+    final ip = _ipController.text.trim();
+    if (ip.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter an IP address'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     setState(() {
       _isTesting = true;
       _testStatus = null;
     });
 
-    final success = await _printService.testConnection(widget.ip);
+    final success = await _printService.testConnection(ip);
 
     if (!mounted) return;
     setState(() {
@@ -505,14 +541,35 @@ class _ConfigurePrinterScreenState extends State<ConfigurePrinterScreen> {
   }
 
   Future<void> _save() async {
+    final newIp = _ipController.text.trim();
     final name = _nameController.text.trim();
 
+    if (newIp.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('IP Address cannot be empty'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    final ipRegex = RegExp(r'^(\d{1,3}\.){3}\d{1,3}$');
+    if (!ipRegex.hasMatch(newIp)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid IP Address'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    // If the IP changed, remove the old configuration from print service first
+    if (widget.ip != newIp) {
+      await _printService.removePrinterIp(widget.ip);
+    }
+
     // Save configuration
-    await _printService.savePrinterIp(widget.ip);
+    await _printService.savePrinterIp(newIp);
     if (name.isNotEmpty) {
-      await _printService.savePrinterName(widget.ip, name);
+      await _printService.savePrinterName(newIp, name);
     } else {
-      await _printService.savePrinterName(widget.ip, "Printer ${widget.ip}");
+      await _printService.savePrinterName(newIp, "Printer $newIp");
     }
 
     if (!mounted) return;
@@ -560,18 +617,14 @@ class _ConfigurePrinterScreenState extends State<ConfigurePrinterScreen> {
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
+            TextField(
+              controller: _ipController,
+              decoration: InputDecoration(
+                hintText: "e.g. 192.168.1.100",
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
-              child: Text(
-                widget.ip,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blueGrey),
-              ),
+              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 20),
             const Text(
@@ -631,7 +684,7 @@ class _ConfigurePrinterScreenState extends State<ConfigurePrinterScreen> {
                       child: Text(
                         _testStatus == "success"
                             ? "Connection successful! Printer is reachable."
-                            : "Could not connect to printer at ${widget.ip}. Please check network connection and port 9100.",
+                            : "Could not connect to printer at ${_ipController.text}. Please check network connection and port 9100.",
                         style: TextStyle(
                           color: _testStatus == "success" ? Colors.green.shade800 : Colors.red.shade800,
                           fontWeight: FontWeight.w600,
