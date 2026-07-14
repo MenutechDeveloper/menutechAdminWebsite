@@ -687,12 +687,29 @@
             const [baseUrl, hash] = url.split('#');
             if (!baseUrl.includes('/upload/')) return url;
             const parts = baseUrl.split('/upload/');
-            let transformations = ['f_auto', 'q_auto'];
-            if (options.width) transformations.push(`w_${options.width}`);
+
+            // Check if parts[1] starts with an existing transformation segment
+            let pathSegments = parts[1].split('/');
+            if (pathSegments.length > 1) {
+                const firstSegment = pathSegments[0];
+                const isVersion = /^v\d+$/.test(firstSegment);
+                const isTransformation = !isVersion && (firstSegment.includes('_') || firstSegment.includes(','));
+                if (isTransformation) {
+                    pathSegments.shift(); // Remove the old transformation segment
+                }
+            }
+            const cleanPath = pathSegments.join('/');
+
+            let transformations = ['f_auto', 'q_auto:eco', 'dpr_auto'];
+            if (options.width) {
+                transformations.push(`w_${options.width}`);
+            } else {
+                transformations.push('w_400');
+            }
             if (options.height) transformations.push(`h_${options.height}`);
             if (options.crop) transformations.push(`c_${options.crop}`);
             const transformationString = transformations.join(',');
-            const optimizedUrl = `${parts[0]}/upload/${transformationString}/${parts[1]}`;
+            const optimizedUrl = `${parts[0]}/upload/${transformationString}/${cleanPath}`;
             return hash ? `${optimizedUrl}#${hash}` : optimizedUrl;
         };
         let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
