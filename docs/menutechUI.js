@@ -1547,8 +1547,9 @@ class MenutechPlatformOrders extends HTMLElement {
 
                 @media (min-width: 769px) {
                     .main-popup-content {
-                        width: 500px;
-                        height: 500px;
+                        width: 800px;
+                        height: 85vh;
+                        max-height: 800px;
                         border-radius: 24px;
                         box-shadow: 0 25px 50px rgba(0,0,0,0.5);
                         overflow: hidden;
