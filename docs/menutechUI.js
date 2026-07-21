@@ -1473,8 +1473,14 @@ class MenutechPlatformOrders extends HTMLElement {
         const customLabel = this.getAttribute('custom-label') || 'See MENU & Order Now!';
         this.shadowRoot.innerHTML = `
             <style>
-                :host { display: block; font-family: 'Helvetica', 'Arial', sans-serif; }
-                :host { display: block; text-align: center; }
+                :host {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    width: 100%;
+                    font-family: 'Helvetica', 'Arial', sans-serif;
+                    box-sizing: border-box;
+                }
                 .btn-see-menu {
                     background: #ff9533;
                     color: #fff;
@@ -1538,6 +1544,22 @@ class MenutechPlatformOrders extends HTMLElement {
                     transition: 0.3s;
                 }
                 .close-main-popup:hover { transform: scale(1.1); }
+
+                @media (min-width: 769px) {
+                    .main-popup-content {
+                        width: 500px;
+                        height: 500px;
+                        border-radius: 24px;
+                        box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+                        overflow: hidden;
+                    }
+                    .close-main-popup {
+                        top: 15px;
+                        right: 15px;
+                        width: 38px;
+                        height: 38px;
+                    }
+                }
             </style>
             <button class="btn-see-menu" id="trigger-popup">
                 <span>${customLabel}</span>
@@ -1548,7 +1570,7 @@ class MenutechPlatformOrders extends HTMLElement {
                     <button class="close-main-popup" id="close-main-menu">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;color:#000"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
-                    <div id="menu-container-inner" style="height: 100%; overflow-y: auto;">
+                    <div id="menu-container-inner" style="height: 100%; overflow: hidden;">
                         <div class="loader" style="padding: 100px; text-align: center; color: #ff9533; font-weight: 600;">Loading Menu...</div>
                     </div>
                 </div>
@@ -1979,9 +2001,9 @@ class MenutechPlatformOrders extends HTMLElement {
 
         const menuHtml = `
             ${styles}
-            <div class="menu-wrapper" style="${isPopupView ? 'height: 100vh; margin: 0; max-width: 100%; border-radius: 0;' : ''}">
+            <div class="menu-wrapper" style="${isPopupView ? 'height: 100%; margin: 0; max-width: 100%; border-radius: 0;' : ''}">
                 ${style === 'mode2' ? `
-                    <div class="mode2-main-header">
+                    <div class="mode2-main-header" style="${isPopupView ? 'padding-right: 80px;' : ''}">
                         <h1 class="restaurant-name">${config.restaurant_name || 'Menutech'}</h1>
                         <div class="header-icons">
                             <div class="header-icon active" id="header-menu-btn">
