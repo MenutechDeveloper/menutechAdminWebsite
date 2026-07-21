@@ -1474,9 +1474,8 @@ class MenutechPlatformOrders extends HTMLElement {
         this.shadowRoot.innerHTML = `
             <style>
                 :host {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
+                    display: block;
+                    text-align: center;
                     width: 100%;
                     font-family: 'Helvetica', 'Arial', sans-serif;
                     box-sizing: border-box;
@@ -1661,9 +1660,21 @@ class MenutechPlatformOrders extends HTMLElement {
             return true;
         });
 
+        const hostStyle = isPopupView ? `
+                :host {
+                    display: block;
+                    text-align: center;
+                    width: 100%;
+                    font-family: 'Helvetica', 'Arial', sans-serif;
+                    box-sizing: border-box;
+                }
+        ` : `
+                :host { display: block; font-family: 'Helvetica', 'Arial', sans-serif; color: #1a1c1e; background: #f0f2f5; min-height: 100vh; }
+        `;
+
         const styles = `
             <style>
-                :host { display: block; font-family: 'Helvetica', 'Arial', sans-serif; color: #1a1c1e; background: #f0f2f5; min-height: 100vh; }
+                ${hostStyle}
 
                 * { box-sizing: border-box; }
 
@@ -2068,7 +2079,8 @@ class MenutechPlatformOrders extends HTMLElement {
 
     initInteractivity() {
         const tabs = this.shadowRoot.querySelectorAll('.tab');
-        const overlay = this.shadowRoot.getElementById('popup');
+        // dishDetailOverlay refers to the detailed dish/checkout popup element (#popup)
+        const dishDetailOverlay = this.shadowRoot.getElementById('popup');
         const popupContent = this.shadowRoot.getElementById('popup-content');
 
         tabs.forEach(tab => {
@@ -2127,23 +2139,23 @@ class MenutechPlatformOrders extends HTMLElement {
             };
         }
 
-        overlay.onclick = (e) => {
-            if (e.target === overlay) {
-                overlay.style.display = 'none';
+        dishDetailOverlay.onclick = (e) => {
+            if (e.target === dishDetailOverlay) {
+                dishDetailOverlay.style.display = 'none';
             }
         };
 
-        // MutationObserver to automatically hide/show #close-main-menu when detailed popup is active
+        // MutationObserver to automatically hide/show #close-main-menu when detailed popup (#popup) is active
         const closeMainMenuBtn = this.shadowRoot.getElementById('close-main-menu');
-        if (closeMainMenuBtn && overlay) {
+        if (closeMainMenuBtn && dishDetailOverlay) {
             const observer = new MutationObserver(() => {
-                if (overlay.style.display === 'flex') {
+                if (dishDetailOverlay.style.display === 'flex') {
                     closeMainMenuBtn.style.setProperty('display', 'none', 'important');
                 } else {
                     closeMainMenuBtn.style.setProperty('display', 'flex');
                 }
             });
-            observer.observe(overlay, { attributes: true, attributeFilter: ['style'] });
+            observer.observe(dishDetailOverlay, { attributes: true, attributeFilter: ['style'] });
         }
 
         const modal = this.shadowRoot.getElementById('custom-modal');
