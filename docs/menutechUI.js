@@ -1526,24 +1526,36 @@ class MenutechPlatformOrders extends HTMLElement {
                     flex-direction: column;
                 }
 
+                #menu-container-inner {
+                    height: 100%;
+                    overflow: hidden;
+                    background: #fff;
+                }
+
                 .close-main-popup {
                     position: absolute;
-                    top: 25px;
-                    right: 25px;
-                    width: 45px;
-                    height: 45px;
+                    top: 15px;
+                    right: 15px;
+                    width: 38px;
+                    height: 38px;
                     border-radius: 50%;
-                    background: #fff;
+                    background: #ef4444;
                     border: none;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.25);
                     z-index: 100001;
                     transition: 0.3s;
                 }
-                .close-main-popup:hover { transform: scale(1.1); }
+                .close-main-popup svg {
+                    color: #fff !important;
+                }
+                .close-main-popup:hover {
+                    transform: scale(1.1);
+                    background: #dc2626;
+                }
 
                 @media (min-width: 769px) {
                     .main-popup-content {
@@ -1551,12 +1563,15 @@ class MenutechPlatformOrders extends HTMLElement {
                         height: 85vh;
                         max-height: 800px;
                         border-radius: 24px;
+                        overflow: visible;
+                    }
+                    #menu-container-inner {
+                        border-radius: 24px;
                         box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-                        overflow: hidden;
                     }
                     .close-main-popup {
-                        top: 15px;
-                        right: 15px;
+                        top: -15px;
+                        right: -15px;
                         width: 38px;
                         height: 38px;
                     }
@@ -1569,9 +1584,9 @@ class MenutechPlatformOrders extends HTMLElement {
             <div class="main-popup-overlay" id="main-menu-popup">
                 <div class="main-popup-content">
                     <button class="close-main-popup" id="close-main-menu">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;color:#000"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;color:#fff"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
-                    <div id="menu-container-inner" style="height: 100%; overflow: hidden;">
+                    <div id="menu-container-inner">
                         <div class="loader" style="padding: 100px; text-align: center; color: #ff9533; font-weight: 600;">Loading Menu...</div>
                     </div>
                 </div>
@@ -2117,6 +2132,19 @@ class MenutechPlatformOrders extends HTMLElement {
                 overlay.style.display = 'none';
             }
         };
+
+        // MutationObserver to automatically hide/show #close-main-menu when detailed popup is active
+        const closeMainMenuBtn = this.shadowRoot.getElementById('close-main-menu');
+        if (closeMainMenuBtn && overlay) {
+            const observer = new MutationObserver(() => {
+                if (overlay.style.display === 'flex') {
+                    closeMainMenuBtn.style.setProperty('display', 'none', 'important');
+                } else {
+                    closeMainMenuBtn.style.setProperty('display', 'flex');
+                }
+            });
+            observer.observe(overlay, { attributes: true, attributeFilter: ['style'] });
+        }
 
         const modal = this.shadowRoot.getElementById('custom-modal');
         this.shadowRoot.getElementById('modal-close-btn').onclick = () => {
