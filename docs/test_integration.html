@@ -2,19 +2,36 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Website Integration Test</title>
   <style>
     body {
       font-family: sans-serif;
-      margin: 40px;
+      margin: 15px;
       background: #fdfdfd;
+    }
+    .container {
+      border: 2px dashed #999;
+      padding: 15px;
+      max-width: 900px;
+      margin: 20px auto;
+      background: #fff;
+    }
+    @media (min-width: 600px) {
+      body {
+        margin: 40px;
+      }
+      .container {
+        padding: 40px;
+        margin: 40px auto;
+      }
     }
   </style>
 </head>
 <body>
   <h1>User Website Integration</h1>
   <p>Below is the integrated Menutech Menu button inside a container.</p>
-  <div style="border: 2px dashed #999; padding: 40px; max-width: 900px; margin: 40px auto; background: #fff;">
+  <div class="container">
     <!-- Menutech Menu -->
     <script src="http://localhost:8000/docs/menutechUI.js"></script>
     <menutech-platform-orders domain="lasalsitapinchi.com" view="popup"></menutech-platform-orders>

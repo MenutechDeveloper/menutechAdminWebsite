@@ -1393,8 +1393,19 @@ class MenutechPlatformOrders extends HTMLElement {
 
     async connectedCallback() {
         await this.initSupabase();
+        // Prefetch data immediately so it's ready when clicked
+        this.loadData();
         this.render();
         this.checkExistingOrder();
+    }
+
+    disconnectedCallback() {
+        if (this._windowScrollHandler) {
+            window.removeEventListener('scroll', this._windowScrollHandler);
+        }
+        if (this._dishObserver) {
+            this._dishObserver.disconnect();
+        }
     }
 
     async initSupabase() {
@@ -1558,9 +1569,8 @@ class MenutechPlatformOrders extends HTMLElement {
 
                 @media (min-width: 769px) {
                     .main-popup-content {
-                        width: 800px;
-                        height: 85vh;
-                        max-height: 800px;
+                        width: 500px;
+                        height: 500px;
                         border-radius: 24px;
                         overflow: visible;
                     }
@@ -1593,10 +1603,34 @@ class MenutechPlatformOrders extends HTMLElement {
         `;
 
         this.shadowRoot.getElementById('trigger-popup').onclick = () => {
-            this.shadowRoot.getElementById('main-menu-popup').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-            if (!this.menuData) {
-                this.loadData();
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                const domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
+                const slug = this.getAttribute('restaurant');
+                // Construct path to menu.html relative to menutechUI.js or absolute depending on use
+                let path = 'menu.html';
+                if (slug) {
+                    path += `?n=${slug}`;
+                } else {
+                    path += `?domain=${domain}`;
+                }
+                // Try absolute URL if we are embedded elsewhere
+                const currentScript = document.querySelector('script[src*="menutechUI.js"]');
+                if (currentScript) {
+                    const src = currentScript.getAttribute('src');
+                    if (src && src.startsWith('http')) {
+                        const url = new URL(src);
+                        path = `${url.origin}/menu.html` + (slug ? `?n=${slug}` : `?domain=${domain}`);
+                    }
+                }
+                // Open directly in a new tab for mobile
+                window.open(path, '_blank');
+            } else {
+                this.shadowRoot.getElementById('main-menu-popup').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+                if (!this.menuData) {
+                    this.loadData();
+                }
             }
         };
 
@@ -1683,6 +1717,13 @@ class MenutechPlatformOrders extends HTMLElement {
                     box-shadow: 0 40px 120px rgba(0,0,0,0.2);
                     border-radius: 12px; overflow-y: auto;
                     position: relative;
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
+                }
+                :host([view="popup"]) .menu-wrapper {
+                    height: 500px !important;
+                    margin: 0 !important;
+                    border-radius: 24px !important;
                     scrollbar-width: none;
                     -ms-overflow-style: none;
                 }
@@ -2096,21 +2137,49 @@ class MenutechPlatformOrders extends HTMLElement {
         // Sticky scroll highlight
         const sections = this.shadowRoot.querySelectorAll('.category-section');
         const container = this.shadowRoot.querySelector('.menu-content');
-        window.addEventListener('scroll', () => {
+
+        const isPopupView = this.getAttribute('view') === 'popup';
+        const scrollContainer = isPopupView ? this.shadowRoot.querySelector('.menu-wrapper') : window;
+
+        if (this._windowScrollHandler) {
+            window.removeEventListener('scroll', this._windowScrollHandler);
+            this._windowScrollHandler = null;
+        }
+        if (this._popupScrollHandler) {
+            const oldPopupContainer = this.shadowRoot.querySelector('.menu-wrapper');
+            if (oldPopupContainer) {
+                oldPopupContainer.removeEventListener('scroll', this._popupScrollHandler);
+            }
+            this._popupScrollHandler = null;
+        }
+
+        const handleScroll = () => {
             let current = '';
             sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                if (window.pageYOffset >= sectionTop - 100) {
+                const rect = section.getBoundingClientRect();
+                // In both popup mode and full-page mode, check when section top is near the top of the viewing area
+                if (rect.top <= 150) {
                     current = section.getAttribute('id');
                 }
             });
-            tabs.forEach(tab => {
-                tab.classList.remove('active');
-                if (tab.getAttribute('data-target') === current) {
-                    tab.classList.add('active');
-                }
-            });
-        }, { passive: true });
+            if (current) {
+                tabs.forEach(tab => {
+                    tab.classList.remove('active');
+                    if (tab.getAttribute('data-target') === current) {
+                        tab.classList.add('active');
+                    }
+                });
+            }
+        };
+
+        if (scrollContainer) {
+            scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+            if (isPopupView) {
+                this._popupScrollHandler = handleScroll;
+            } else {
+                this._windowScrollHandler = handleScroll;
+            }
+        }
 
         const cards = this.shadowRoot.querySelectorAll('.dish-card, .mode2-item');
         cards.forEach(card => {
@@ -2145,17 +2214,21 @@ class MenutechPlatformOrders extends HTMLElement {
             }
         };
 
+        if (this._dishObserver) {
+            this._dishObserver.disconnect();
+        }
+
         // MutationObserver to automatically hide/show #close-main-menu when detailed popup (#popup) is active
         const closeMainMenuBtn = this.shadowRoot.getElementById('close-main-menu');
         if (closeMainMenuBtn && dishDetailOverlay) {
-            const observer = new MutationObserver(() => {
+            this._dishObserver = new MutationObserver(() => {
                 if (dishDetailOverlay.style.display === 'flex') {
                     closeMainMenuBtn.style.setProperty('display', 'none', 'important');
                 } else {
                     closeMainMenuBtn.style.setProperty('display', 'flex');
                 }
             });
-            observer.observe(dishDetailOverlay, { attributes: true, attributeFilter: ['style'] });
+            this._dishObserver.observe(dishDetailOverlay, { attributes: true, attributeFilter: ['style'] });
         }
 
         const modal = this.shadowRoot.getElementById('custom-modal');
