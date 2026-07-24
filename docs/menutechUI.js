@@ -1389,6 +1389,7 @@ class MenutechPlatformOrders extends HTMLElement {
         this.menuData = null;
         this.cart = [];
         this.trackingChannel = null;
+        this.popupRoot = this.shadowRoot;
     }
 
     async connectedCallback() {
@@ -1405,6 +1406,9 @@ class MenutechPlatformOrders extends HTMLElement {
         }
         if (this._dishObserver) {
             this._dishObserver.disconnect();
+        }
+        if (this._portal && this._portal.parentNode) {
+            this._portal.parentNode.removeChild(this._portal);
         }
     }
 
@@ -1449,16 +1453,16 @@ class MenutechPlatformOrders extends HTMLElement {
     renderFloatingTracker() {
         const lastOrderId = localStorage.getItem('mt_last_order_id');
         if (!lastOrderId) {
-            const existing = this.shadowRoot.getElementById('floating-tracker');
+            const existing = this.popupRoot.getElementById('floating-tracker');
             if (existing) existing.remove();
             return;
         }
 
-        let tracker = this.shadowRoot.getElementById('floating-tracker');
+        let tracker = this.popupRoot.getElementById('floating-tracker');
         if (!tracker) {
             tracker = document.createElement('div');
             tracker.id = 'floating-tracker';
-            this.shadowRoot.appendChild(tracker);
+            this.popupRoot.appendChild(tracker);
         }
 
         tracker.innerHTML = `
@@ -1481,6 +1485,20 @@ class MenutechPlatformOrders extends HTMLElement {
     }
 
     renderPopupTrigger() {
+        // Initialize global Portal element in document.body
+        let portal = document.getElementById('menutech-popup-portal');
+        if (!portal) {
+            portal = document.createElement('div');
+            portal.id = 'menutech-popup-portal';
+            portal.style.position = 'static';
+            document.body.appendChild(portal);
+        }
+        this._portal = portal;
+        if (!portal.shadowRoot) {
+            portal.attachShadow({ mode: 'open' });
+        }
+        this.popupRoot = portal.shadowRoot;
+
         const customLabel = this.getAttribute('custom-label') || 'See MENU & Order Now!';
         this.shadowRoot.innerHTML = `
             <style>
@@ -1514,17 +1532,27 @@ class MenutechPlatformOrders extends HTMLElement {
                     filter: brightness(1.1);
                 }
                 .btn-see-menu svg { width: 20px; height: 20px; stroke-width: 2.5; }
+            </style>
+            <button class="btn-see-menu" id="trigger-popup">
+                <span>${customLabel}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8L22 12L18 16"/><path d="M2 12H22"/></svg>
+            </button>
+        `;
 
+        // Render the actual popup overlay inside the popupRoot portal shadow root
+        this.popupRoot.innerHTML = `
+            <style>
                 .main-popup-overlay {
                     position: fixed;
                     inset: 0;
-                    background: rgba(0,0,0,0.85);
+                    background: rgba(0,0,0,0.8);
                     backdrop-filter: blur(10px);
                     z-index: 100000;
                     display: none;
                     align-items: center;
                     justify-content: center;
                     animation: fadeIn 0.4s ease;
+                    font-family: 'Helvetica', 'Arial', sans-serif;
                 }
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -1588,10 +1616,6 @@ class MenutechPlatformOrders extends HTMLElement {
                     }
                 }
             </style>
-            <button class="btn-see-menu" id="trigger-popup">
-                <span>${customLabel}</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8L22 12L18 16"/><path d="M2 12H22"/></svg>
-            </button>
             <div class="main-popup-overlay" id="main-menu-popup">
                 <div class="main-popup-content">
                     <button class="close-main-popup" id="close-main-menu">
@@ -1628,7 +1652,7 @@ class MenutechPlatformOrders extends HTMLElement {
                 // Open directly in a new tab for mobile
                 window.open(path, '_blank');
             } else {
-                this.shadowRoot.getElementById('main-menu-popup').style.display = 'flex';
+                this.popupRoot.getElementById('main-menu-popup').style.display = 'flex';
                 document.body.style.overflow = 'hidden';
                 if (!this.menuData) {
                     this.loadData();
@@ -1636,8 +1660,8 @@ class MenutechPlatformOrders extends HTMLElement {
             }
         };
 
-        this.shadowRoot.getElementById('close-main-menu').onclick = () => {
-            this.shadowRoot.getElementById('main-menu-popup').style.display = 'none';
+        this.popupRoot.getElementById('close-main-menu').onclick = () => {
+            this.popupRoot.getElementById('main-menu-popup').style.display = 'none';
             document.body.style.overflow = '';
         };
     }
@@ -1653,9 +1677,9 @@ class MenutechPlatformOrders extends HTMLElement {
         if (!data) {
             const errorMsg = '<div style="padding: 40px; text-align: center; color: #666;">Menu not found.</div>';
             if (this.getAttribute('view') === 'popup') {
-                this.shadowRoot.getElementById('menu-container-inner').innerHTML = errorMsg;
+                this.popupRoot.getElementById('menu-container-inner').innerHTML = errorMsg;
             } else {
-                this.shadowRoot.innerHTML = errorMsg;
+                this.popupRoot.innerHTML = errorMsg;
             }
             return;
         }
@@ -1664,7 +1688,7 @@ class MenutechPlatformOrders extends HTMLElement {
     }
 
     renderLoading() {
-        this.shadowRoot.innerHTML = `
+        this.popupRoot.innerHTML = `
             <style>
                 :host { display: block; font-family: 'Plus Jakarta Sans', sans-serif; }
                 .loader { padding: 100px; text-align: center; color: #ff9533; font-weight: 600; }
@@ -2112,43 +2136,43 @@ class MenutechPlatformOrders extends HTMLElement {
         `;
 
         if (isPopupView) {
-            this.shadowRoot.getElementById('menu-container-inner').innerHTML = menuHtml;
+            this.popupRoot.getElementById('menu-container-inner').innerHTML = menuHtml;
         } else {
-            this.shadowRoot.innerHTML = menuHtml;
+            this.popupRoot.innerHTML = menuHtml;
         }
 
         this.initInteractivity();
     }
 
     initInteractivity() {
-        const tabs = this.shadowRoot.querySelectorAll('.tab');
+        const tabs = this.popupRoot.querySelectorAll('.tab');
         // dishDetailOverlay refers to the detailed dish/checkout popup element (#popup)
-        const dishDetailOverlay = this.shadowRoot.getElementById('popup');
-        const popupContent = this.shadowRoot.getElementById('popup-content');
+        const dishDetailOverlay = this.popupRoot.getElementById('popup');
+        const popupContent = this.popupRoot.getElementById('popup-content');
 
         tabs.forEach(tab => {
             tab.onclick = () => {
                 tabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 const targetId = tab.getAttribute('data-target');
-                const target = this.shadowRoot.getElementById(targetId);
+                const target = this.popupRoot.getElementById(targetId);
                 target.scrollIntoView({ behavior: 'smooth' });
             };
         });
 
         // Sticky scroll highlight
-        const sections = this.shadowRoot.querySelectorAll('.category-section');
-        const container = this.shadowRoot.querySelector('.menu-content');
+        const sections = this.popupRoot.querySelectorAll('.category-section');
+        const container = this.popupRoot.querySelector('.menu-content');
 
         const isPopupView = this.getAttribute('view') === 'popup';
-        const scrollContainer = isPopupView ? this.shadowRoot.querySelector('.menu-wrapper') : window;
+        const scrollContainer = isPopupView ? this.popupRoot.querySelector('.menu-wrapper') : window;
 
         if (this._windowScrollHandler) {
             window.removeEventListener('scroll', this._windowScrollHandler);
             this._windowScrollHandler = null;
         }
         if (this._popupScrollHandler) {
-            const oldPopupContainer = this.shadowRoot.querySelector('.menu-wrapper');
+            const oldPopupContainer = this.popupRoot.querySelector('.menu-wrapper');
             if (oldPopupContainer) {
                 oldPopupContainer.removeEventListener('scroll', this._popupScrollHandler);
             }
@@ -2183,7 +2207,7 @@ class MenutechPlatformOrders extends HTMLElement {
             }
         }
 
-        const cards = this.shadowRoot.querySelectorAll('.dish-card, .mode2-item');
+        const cards = this.popupRoot.querySelectorAll('.dish-card, .mode2-item');
         cards.forEach(card => {
             card.onclick = (e) => {
                 const dish = JSON.parse(card.getAttribute('data-dish'));
@@ -2191,19 +2215,19 @@ class MenutechPlatformOrders extends HTMLElement {
             };
         });
 
-        const headerCartBtn = this.shadowRoot.getElementById('header-cart-btn-top');
+        const headerCartBtn = this.popupRoot.getElementById('header-cart-btn-top');
         if (headerCartBtn) {
             headerCartBtn.onclick = () => this.openCartPopup();
         }
 
-        const headerInfoBtn = this.shadowRoot.getElementById('header-info-btn');
+        const headerInfoBtn = this.popupRoot.getElementById('header-info-btn');
         if (headerInfoBtn) {
             headerInfoBtn.onclick = () => {
                 this.showModal('INFORMACIÓN', this.menuData.config.restaurant_name || 'Menutech Restaurant Information');
             };
         }
 
-        const headerMenuBtn = this.shadowRoot.getElementById('header-menu-btn');
+        const headerMenuBtn = this.popupRoot.getElementById('header-menu-btn');
         if (headerMenuBtn) {
             headerMenuBtn.onclick = () => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2221,7 +2245,7 @@ class MenutechPlatformOrders extends HTMLElement {
         }
 
         // MutationObserver to automatically hide/show #close-main-menu when detailed popup (#popup) is active
-        const closeMainMenuBtn = this.shadowRoot.getElementById('close-main-menu');
+        const closeMainMenuBtn = this.popupRoot.getElementById('close-main-menu');
         if (closeMainMenuBtn && dishDetailOverlay) {
             this._dishObserver = new MutationObserver(() => {
                 if (dishDetailOverlay.style.display === 'flex') {
@@ -2233,8 +2257,8 @@ class MenutechPlatformOrders extends HTMLElement {
             this._dishObserver.observe(dishDetailOverlay, { attributes: true, attributeFilter: ['style'] });
         }
 
-        const modal = this.shadowRoot.getElementById('custom-modal');
-        this.shadowRoot.getElementById('modal-close-btn').onclick = () => {
+        const modal = this.popupRoot.getElementById('custom-modal');
+        this.popupRoot.getElementById('modal-close-btn').onclick = () => {
             modal.style.display = 'none';
         };
         modal.onclick = (e) => {
@@ -2243,15 +2267,15 @@ class MenutechPlatformOrders extends HTMLElement {
     }
 
     showModal(title, message) {
-        const modal = this.shadowRoot.getElementById('custom-modal');
-        this.shadowRoot.getElementById('modal-title').textContent = title;
-        this.shadowRoot.getElementById('modal-message').textContent = message;
+        const modal = this.popupRoot.getElementById('custom-modal');
+        this.popupRoot.getElementById('modal-title').textContent = title;
+        this.popupRoot.getElementById('modal-message').textContent = message;
         modal.style.display = 'flex';
     }
 
     openDishPopup(dish, cardEl) {
-        const overlay = this.shadowRoot.getElementById('popup');
-        const popupContent = this.shadowRoot.getElementById('popup-content');
+        const overlay = this.popupRoot.getElementById('popup');
+        const popupContent = this.popupRoot.getElementById('popup-content');
 
         if (window.innerWidth > 1024 && cardEl) {
             const rect = cardEl.getBoundingClientRect();
@@ -2382,7 +2406,7 @@ class MenutechPlatformOrders extends HTMLElement {
     }
 
     updatePopupTotal(dish, qty = 1) {
-        const popupContent = this.shadowRoot.getElementById('popup-content');
+        const popupContent = this.popupRoot.getElementById('popup-content');
         let baseTotal = parseFloat(dish.price);
 
         // Check if size is selected
@@ -2411,7 +2435,7 @@ class MenutechPlatformOrders extends HTMLElement {
                 toppings: Array.from(popupContent.querySelectorAll('.option-item[data-type="topping"].active')).map(i => i.querySelector('span').textContent)
             };
             this.addToCart(item);
-            this.shadowRoot.getElementById('popup').style.display = 'none';
+            this.popupRoot.getElementById('popup').style.display = 'none';
         };
     }
 
@@ -2421,9 +2445,9 @@ class MenutechPlatformOrders extends HTMLElement {
     }
 
     updateCartUI() {
-        const btn = this.shadowRoot.getElementById('cart-btn');
-        const count = this.shadowRoot.getElementById('cart-count');
-        const countTop = this.shadowRoot.getElementById('cart-count-top');
+        const btn = this.popupRoot.getElementById('cart-btn');
+        const count = this.popupRoot.getElementById('cart-count');
+        const countTop = this.popupRoot.getElementById('cart-count-top');
 
         const totalItems = this.cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
@@ -2443,8 +2467,8 @@ class MenutechPlatformOrders extends HTMLElement {
     }
 
     openCartPopup() {
-        const overlay = this.shadowRoot.getElementById('popup');
-        const popupContent = this.shadowRoot.getElementById('popup-content');
+        const overlay = this.popupRoot.getElementById('popup');
+        const popupContent = this.popupRoot.getElementById('popup-content');
 
         // Load saved values from localStorage
         const savedData = JSON.parse(localStorage.getItem('mt_customer_info') || '{}');
@@ -2741,12 +2765,12 @@ class MenutechPlatformOrders extends HTMLElement {
         if (this.cart.length > 0) {
             this.openCartPopup(); // Refresh popup
         } else {
-            this.shadowRoot.getElementById('popup').style.display = 'none';
+            this.popupRoot.getElementById('popup').style.display = 'none';
         }
     }
 
     async sendOrder() {
-        const popupContent = this.shadowRoot.getElementById('popup-content');
+        const popupContent = this.popupRoot.getElementById('popup-content');
         const name = popupContent.querySelector('#cust-name').value;
         const phone = popupContent.querySelector('#cust-phone').value;
 
@@ -2804,7 +2828,7 @@ class MenutechPlatformOrders extends HTMLElement {
             this.showSuccessAnimation(data ? data.id : null);
             this.cart = [];
             this.updateCartUI();
-            this.shadowRoot.getElementById('popup').style.display = 'none';
+            this.popupRoot.getElementById('popup').style.display = 'none';
         } catch (e) {
             this.showModal('ERROR', 'Error sending order: ' + e.message);
             btn.textContent = `SEND ORDER • $${total.toFixed(2)}`;
@@ -2842,14 +2866,14 @@ class MenutechPlatformOrders extends HTMLElement {
             <button id="track-btn" style="margin-top:50px; background:#ff9533; color:#fff; border:none; padding:15px 40px; border-radius:20px; font-weight:700; cursor:pointer; width: 100%; max-width: 300px;">TRACK MY ORDER</button>
             <button id="close-anim" style="margin-top:15px; background:transparent; color:#666; border:none; padding:10px; font-weight:600; cursor:pointer;">DONE</button>
         `;
-        this.shadowRoot.appendChild(anim);
+        this.popupRoot.appendChild(anim);
 
-        this.shadowRoot.getElementById('track-btn').onclick = () => {
+        this.popupRoot.getElementById('track-btn').onclick = () => {
             anim.remove();
             if (orderId) this.showOrderTracking(orderId);
         };
 
-        this.shadowRoot.getElementById('close-anim').onclick = () => {
+        this.popupRoot.getElementById('close-anim').onclick = () => {
             anim.remove();
             this.renderFloatingTracker();
         };
@@ -2866,8 +2890,8 @@ class MenutechPlatformOrders extends HTMLElement {
         if (!this.supabase) await this.initSupabase();
 
         // Open modal immediately with loading state
-        const overlay = this.shadowRoot.getElementById('popup');
-        const popupContent = this.shadowRoot.getElementById('popup-content');
+        const overlay = this.popupRoot.getElementById('popup');
+        const popupContent = this.popupRoot.getElementById('popup-content');
         overlay.style.display = 'flex';
         overlay.classList.remove('side-popup');
         popupContent.style.maxWidth = '500px';
@@ -2899,7 +2923,7 @@ class MenutechPlatformOrders extends HTMLElement {
     }
 
     renderTrackingUI(order) {
-        const popupContent = this.shadowRoot.getElementById('popup-content');
+        const popupContent = this.popupRoot.getElementById('popup-content');
         if (!popupContent) return;
 
         const status = order.status;
@@ -2965,7 +2989,7 @@ class MenutechPlatformOrders extends HTMLElement {
         `;
 
         popupContent.querySelector('.close-popup').onclick = () => {
-            this.shadowRoot.getElementById('popup').style.display = 'none';
+            this.popupRoot.getElementById('popup').style.display = 'none';
             this.renderFloatingTracker();
         };
 
@@ -2973,7 +2997,7 @@ class MenutechPlatformOrders extends HTMLElement {
         if (finishBtn) {
             finishBtn.onclick = () => {
                 localStorage.removeItem('mt_last_order_id');
-                this.shadowRoot.getElementById('popup').style.display = 'none';
+                this.popupRoot.getElementById('popup').style.display = 'none';
                 this.renderFloatingTracker();
                 if (this.trackingChannel) this.supabase.removeChannel(this.trackingChannel);
             };
@@ -2982,7 +3006,7 @@ class MenutechPlatformOrders extends HTMLElement {
         const closeBtn = popupContent.querySelector('#track-close-btn');
         if (closeBtn) {
             closeBtn.onclick = () => {
-                this.shadowRoot.getElementById('popup').style.display = 'none';
+                this.popupRoot.getElementById('popup').style.display = 'none';
                 this.renderFloatingTracker();
             };
         }
