@@ -1800,6 +1800,7 @@ class MenutechPlatformOrders extends HTMLElement {
                     background: #fff; border-radius: 24px; padding: 15px;
                     display: flex; gap: 15px; cursor: pointer; transition: 0.3s;
                     box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid #f8f8f8;
+                    text-align: left;
                 }
                 .dish-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.06); }
 
@@ -1828,21 +1829,22 @@ class MenutechPlatformOrders extends HTMLElement {
                 .mode2-item {
                     display: flex; flex-direction: column; padding: 18px 0;
                     border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s;
+                    text-align: left;
                 }
                 .mode2-item:hover { background: #fcfcfc; }
                 .mode2-top-row { display: flex; justify-content: flex-start; align-items: flex-start; gap: 15px; }
-                .mode2-left { flex: 1; }
+                .mode2-left { flex: 1; text-align: left; }
                 .mode2-name-price { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
-                .mode2-name { font-weight: 800; font-size: 1.05rem; color: #333; text-transform: uppercase; font-family: 'Helvetica', 'Arial', sans-serif; }
+                .mode2-name { font-weight: 800; font-size: 1.05rem; color: #333; text-transform: uppercase; font-family: 'Helvetica', 'Arial', sans-serif; text-align: left; }
                 .mode2-price { font-weight: 800; color: #333; font-size: 1.05rem; font-family: 'Helvetica', 'Arial', sans-serif; }
                 .mode2-image { width: 80px; height: 80px; border-radius: 12px; overflow: hidden; flex-shrink: 0; }
                 .mode2-image img { width: 100%; height: 100%; object-fit: cover; }
-                .mode2-desc { font-size: 0.88rem; color: #777; line-height: 1.4; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; }
+                .mode2-desc { font-size: 0.88rem; color: #777; line-height: 1.4; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; text-align: left; }
 
-                .dish-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-                .dish-info h3 { margin: 0; font-size: 1.1rem; color: #1a1c1e; }
+                .dish-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; text-align: left; }
+                .dish-info h3 { margin: 0; font-size: 1.1rem; color: #1a1c1e; text-align: left; }
                 .dish-info p { margin: 5px 0; color: #666; font-size: 0.85rem; line-height: 1.4;
-                    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+                    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-align: left; }
                 .dish-price { font-weight: 700; color: #ff9533; font-size: 1.1rem; margin-top: 10px; }
 
                 .dish-image { width: 100px; height: 100px; border-radius: 18px; overflow: hidden; flex-shrink: 0; }
