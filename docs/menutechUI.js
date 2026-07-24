@@ -1569,8 +1569,10 @@ class MenutechPlatformOrders extends HTMLElement {
 
                 @media (min-width: 769px) {
                     .main-popup-content {
-                        width: 500px;
-                        height: 500px;
+                        width: 90%;
+                        max-width: 800px;
+                        height: 90%;
+                        max-height: 800px;
                         border-radius: 24px;
                         overflow: visible;
                     }
@@ -1721,7 +1723,7 @@ class MenutechPlatformOrders extends HTMLElement {
                     -ms-overflow-style: none;
                 }
                 :host([view="popup"]) .menu-wrapper {
-                    height: 500px !important;
+                    height: 100% !important;
                     margin: 0 !important;
                     border-radius: 24px !important;
                     scrollbar-width: none;
