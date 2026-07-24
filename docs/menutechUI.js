@@ -2279,6 +2279,9 @@ class MenutechPlatformOrders extends HTMLElement {
         const overlay = this.popupRoot.getElementById('popup');
         const popupContent = this.popupRoot.getElementById('popup-content');
 
+        // Reset maxWidth to default to prevent inheriting the checkout modal's 900px width on desktop
+        popupContent.style.maxWidth = '';
+
         if (window.innerWidth > 1024 && cardEl) {
             const rect = cardEl.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
@@ -2494,6 +2497,8 @@ class MenutechPlatformOrders extends HTMLElement {
         // Set width for two-column layout on PC
         if (window.innerWidth > 1024) {
             popupContent.style.maxWidth = '900px';
+        } else {
+            popupContent.style.maxWidth = '';
         }
 
         const total = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
