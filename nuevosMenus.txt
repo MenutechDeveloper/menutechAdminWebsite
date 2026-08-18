@@ -1,0 +1,91 @@
+================================================================================
+ANÁLISIS DE FACTIBILIDAD Y ARQUITECTURA: INTEGRACIÓN DE MENÚS DIGITALES HTML PERSONALIZADOS EN MENUTECH
+================================================================================
+
+1. CONCLUSIÓN GENERAL Y VEREDICTO
+--------------------------------------------------------------------------------
+Sí, ES TOTALMENTE POSIBLE diseñar archivos .html desde cero con diseños únicos,
+animaciones avanzadas y el branding exclusivo de cada restaurante, e integrarlos
+a la plataforma Menutech para que ejecuten todas las funciones de la plataforma
+(carrito de compras, checkout, envío de órdenes a la base de datos de Supabase,
+notificaciones en tiempo real a la app móvil Android, impresión de tickets y
+seguimiento de pedidos).
+
+
+2. NIVEL DE DIFICULTAD Y COMPLEJIDAD
+--------------------------------------------------------------------------------
+NO ES COMPLICADO SINCRONIZAR TODO.
+La razón principal es que toda la infraestructura pesada del backend ya existe y
+está funcionando perfectamente en Menutech:
+  • La tabla 'menutech_orders' en Supabase para recibir y almacenar los pedidos.
+  • La escucha en tiempo real de la App Android para recibir pedidos e imprimir tickets.
+  • El panel de administración 'adminOrders.html' para gestionar estados de orden.
+
+Lo único que se requiere para conectar un HTML personalizado con Menutech es un
+pequeño puente de JavaScript (un SDK/script ligero de enlace, ej: menutechSDK.js)
+que escuche los eventos del diseño personalizado y ejecute la lógica del carrito
+y el envío de orden.
+
+
+3. ESTRATEGIAS DE INTEGRACIÓN (MANTENIENDO EL DISEÑO DEL CLIENTE)
+--------------------------------------------------------------------------------
+
+Opción A: Integración por Atributos / Clases HTML (Data Attributes)
+-------------------------------------------------------------------
+Esta opción permite al diseñador crear cualquier HTML/CSS. Solo debe añadir
+atributos especiales a sus elementos HTML para que el script de Menutech los
+reconozca automáticamente.
+Ejemplo:
+  • <button data-mt-add-to-cart data-dish-name="Hamburguesa Deluxe" data-dish-price="12.50">Agregar</button>
+  • <span data-mt-cart-count>0</span>  (Muestra la cantidad de productos en el carrito)
+  • <button data-mt-open-checkout>Ver Carrito / Pedir</button>
+
+Ventaja: El usuario o diseñador solo maqueta en HTML/CSS como prefiera y coloca
+atributos sencillos sin escribir código JavaScript complejo.
+
+
+Opción B: API de JavaScript Global (Modo Headless / SDK)
+--------------------------------------------------------
+El script de Menutech expone un objeto global (ejemplo: window.MenutechCart) con
+métodos sencillos que el diseñador puede llamar desde sus propios scripts o animaciones.
+Ejemplo de funciones:
+  • MenutechCart.addItem({ id: 'd1', name: 'Tacos Al Pastor', price: 8.50, quantity: 1, size: 'Grande', toppings: ['Salsa Verde'] });
+  • MenutechCart.removeItem(index);
+  • MenutechCart.openCheckout();
+  • MenutechCart.sendOrder(customerData);
+
+Ventaja: Libertad del 100% para desarrollar animaciones complejas (GSAP, Swiper,
+Three.js, etc.) e interactuar con el carrito desde cualquier evento visual.
+
+
+Opción C: Consumo Dinámico de Datos (Sincronizado con adminMenus.html)
+---------------------------------------------------------------------
+Para que el cliente continúe administrando sus platillos, precios e imágenes desde
+'adminMenus.html', el script puede consultar la configuración en Supabase
+('menutech_menus') usando el dominio o slug del restaurante y renderizar los
+platillos dentro de contenedores con clases/IDs definidos en el HTML del cliente.
+
+
+4. FLUJO DE TRABAJO SUGERIDO PARA NUEVOS MENÚS CUSTOM
+--------------------------------------------------------------------------------
+1. El diseñador web crea el archivo .html personalizado con la estructura visual,
+   estilos CSS y animaciones requeridas para el restaurante.
+2. Se incluye el script ligero de Menutech al final del .html:
+   <script src="https://menutech.io/menutechSDK.js" data-domain="restaurante.com"></script>
+3. Al interactuar con el menú custom, los productos se agregan al carrito interno
+   gestionado por el SDK.
+4. Al hacer clic en "Finalizar Pedir", se despliega el modal de checkout
+   estándar de Menutech (o un formulario propio) para capturar nombre, teléfono,
+   dirección y método de pago.
+5. La orden se registra en Supabase y llega instantáneamente a la App móvil de
+   Menutech para su impresión y preparación.
+
+
+5. RESUMEN
+--------------------------------------------------------------------------------
+• ¿Es posible? SÍ, 100% factible.
+• ¿Es complicado? NO, porque el backend, la recepción de órdenes y la app móvil
+  ya están listas. Solo se añade una capa de enlace (SDK).
+• ¿Mantiene el branding y animaciones del restaurante? SÍ, el .html del cliente
+  puede ser totalmente libre en cuanto a código, estilos y animaciones.
+================================================================================
