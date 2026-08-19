@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extractor de Menús | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
+
+    <!-- Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #059669;
+            --error: #dc2626;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
+
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
+        #top-nav > * { pointer-events: auto; }
+
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; }
+        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
+
+        .theme-switch { width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        #user-display-pill {
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); min-width: 180px;
+        }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); }
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
+        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); }
+
+        .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 100px 24px 60px 24px; animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        header { text-align: center; margin-bottom: 40px; }
+        .logo-main { width: 100%; max-width: 260px; height: auto; margin: 0 auto 12px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
+        header h1 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 800; margin-bottom: 8px; }
+        header p { color: var(--text-dim); font-size: 0.95rem; font-weight: 500; }
+
+        .extractor-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 32px; padding: 36px; box-shadow: 0 20px 50px rgba(0,0,0,0.06); margin-bottom: 40px; }
+
+        .input-group { display: flex; gap: 16px; flex-wrap: wrap; }
+        .input-wrapper { flex: 1; min-width: 280px; position: relative; }
+        .input-wrapper input {
+            width: 100%; background: var(--input); border: 1.5px solid var(--border); border-radius: 20px;
+            padding: 18px 24px; color: var(--text); font-size: 1rem; font-family: inherit; transition: 0.3s;
+        }
+        .input-wrapper input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 4px rgba(255,149,51,0.12); }
+
+        .btn-extract {
+            background: var(--orange); color: #000; border: none; padding: 18px 36px; border-radius: 20px;
+            font-size: 0.95rem; font-weight: 800; cursor: pointer; transition: 0.3s; display: inline-flex;
+            align-items: center; gap: 10px; font-family: 'Outfit', sans-serif; letter-spacing: 0.5px;
+            box-shadow: 0 8px 25px rgba(255,149,51,0.3); white-space: nowrap;
+        }
+        .btn-extract:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255,149,51,0.4); }
+        .btn-extract:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* Progress section */
+        #progress-card { display: none; margin-top: 24px; background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px; }
+        .progress-bar-container { width: 100%; height: 8px; background: var(--border); border-radius: 10px; overflow: hidden; margin-top: 12px; }
+        .progress-bar { height: 100%; width: 0%; background: var(--orange); transition: width 0.4s ease; border-radius: 10px; }
+        .progress-status { font-size: 0.85rem; font-weight: 700; color: var(--orange); display: flex; align-items: center; justify-content: space-between; }
+
+        /* Results section */
+        #results-wrapper { display: none; }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+        .section-header h2 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 700; }
+
+        .export-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-export {
+            background: var(--input); border: 1.5px solid var(--border); color: var(--text); padding: 10px 18px;
+            border-radius: 14px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.3s;
+            display: inline-flex; align-items: center; gap: 8px; font-family: inherit;
+        }
+        .btn-export:hover { border-color: var(--orange); color: var(--orange); transform: translateY(-2px); }
+        .btn-export.primary { background: var(--orange); color: #000; border-color: var(--orange); }
+        .btn-export.primary:hover { filter: brightness(1.1); color: #000; }
+
+        .restaurant-info-card {
+            background: var(--card); border: 1.5px solid var(--border); border-radius: 28px; padding: 28px;
+            margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;
+        }
+        .info-field label { display: block; font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .info-field div { font-size: 0.95rem; font-weight: 600; color: var(--text); word-break: break-word; }
+        .info-field div.empty { color: var(--text-dim); font-style: italic; font-weight: 400; font-size: 0.85rem; }
+
+        .categories-container { display: flex; flex-direction: column; gap: 28px; }
+
+        .category-card {
+            background: var(--card); border: 1.5px solid var(--border); border-radius: 28px; padding: 28px;
+        }
+        .category-title {
+            font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--orange);
+            margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .category-count { font-size: 0.75rem; font-weight: 700; background: rgba(255,149,51,0.12); color: var(--orange); padding: 4px 12px; border-radius: 20px; }
+
+        .dishes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+
+        .dish-card {
+            background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px;
+            display: flex; flex-direction: column; justify-content: space-between; gap: 12px; transition: 0.3s;
+        }
+        .dish-card:hover { border-color: var(--orange); }
+
+        .dish-header { display: flex; gap: 14px; align-items: flex-start; }
+        .dish-img { width: 70px; height: 70px; border-radius: 14px; object-fit: cover; background: var(--border); flex-shrink: 0; }
+        .dish-main-info { flex: 1; min-width: 0; }
+        .dish-name { font-weight: 700; font-size: 0.95rem; color: var(--text); margin-bottom: 4px; line-height: 1.3; }
+        .dish-price { font-weight: 800; font-size: 0.9rem; color: var(--orange); font-family: 'Outfit', sans-serif; }
+        .dish-desc { font-size: 0.8rem; color: var(--text-dim); line-height: 1.4; margin-top: 6px; }
+
+        .dish-meta { font-size: 0.75rem; border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
+        .dish-meta-item { display: flex; gap: 6px; flex-wrap: wrap; }
+        .meta-tag { background: var(--card); border: 1px solid var(--border); padding: 2px 8px; border-radius: 8px; color: var(--text-dim); font-size: 0.7rem; font-weight: 600; }
+
+        /* Toast Notifications */
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast { min-width: 300px; max-width: 420px; padding: 16px 20px; border-radius: 20px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.85rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.4s ease; line-height: 1.4; }
+        .toast.success { border-left: 5px solid var(--success); }
+        .toast.error { border-left: 5px solid var(--error); }
+        .toast.warning { border-left: 5px solid var(--orange); }
+        @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        .loader-spin { border: 3px solid rgba(255, 149, 51, 0.2); width: 22px; height: 22px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 0.8s linear infinite; display: inline-block; }
+        @keyframes rotate { to { transform: rotate(360deg); } }
+
+        @media (max-width: 640px) {
+            .container { padding-top: 90px; }
+            .input-group { flex-direction: column; }
+            .btn-extract { width: 100%; justify-content: center; }
+            .dishes-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
+
+    <div id="top-nav">
+        <div>
+            <button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="theme-switch" id="theme-toggle" title="Cambiar Tema">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+            <div id="user-display-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: var(--orange);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div class="pill-info">
+                    <div id="user-name">Menutech</div>
+                    <div id="user-role-label">Extractor Tool</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
+            <h1>Extractor de Menús y Restaurantes</h1>
+            <p>Ingresa el enlace de un restaurante o menú online para extraer su información automáticamente.</p>
+        </header>
+
+        <div class="extractor-card">
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <input type="url" id="target-url" placeholder="https://ejemplo-restaurante.com/menu o link de DoorDash, etc..." autocomplete="off">
+                </div>
+                <button class="btn-extract" id="btn-extract" onclick="startExtraction()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px;"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+                    <span>Extraer Información</span>
+                </button>
+            </div>
+
+            <div id="progress-card">
+                <div class="progress-status">
+                    <span id="progress-text">Iniciando conexión...</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Display -->
+        <div id="results-wrapper">
+            <div class="section-header">
+                <h2>Vista Previa de Información Extraída</h2>
+                <div class="export-actions">
+                    <button class="btn-export" onclick="exportTXT()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        Exportar TXT
+                    </button>
+                    <button class="btn-export" onclick="exportJSON()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="10" y1="12" x2="14" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+                        Exportar JSON
+                    </button>
+                    <button class="btn-export" onclick="exportSVG()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                        Exportar SVG
+                    </button>
+                    <button class="btn-export primary" onclick="exportPDF()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Exportar PDF
+                    </button>
+                    <button class="btn-export" id="btn-download-images" onclick="downloadImagesZip()" style="border-color: var(--orange); color: var(--orange);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Descargar Imágenes (ZIP)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Restaurant General Info Card -->
+            <div class="restaurant-info-card" id="restaurant-info-display">
+                <!-- Dynamically filled -->
+            </div>
+
+            <!-- Categories and Dishes -->
+            <div class="categories-container" id="categories-display">
+                <!-- Dynamically filled -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Export Container for PDF / SVG Rendering -->
+    <div id="export-printable-container" style="display: none; background: #fff; color: #000; padding: 40px; font-family: 'Plus Jakarta Sans', sans-serif;"></div>
+
+    <script type="module">
+        import { supabase as sb } from './supabase.js';
+
+        // State Data
+        window.extractedData = {
+            restaurant: {
+                name: "",
+                address: "",
+                phone: "",
+                hours: "",
+                websiteUrl: ""
+            },
+            categories: [], // [{ name: "", dishes: [{ name, description, price, sizes, extras, image }] }]
+            allImages: [] // Array of unique image URLs extracted
+        };
+
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const msg = document.createElement('div');
+            msg.textContent = message;
+            toast.appendChild(msg);
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
+            checkUserSession();
+        });
+
+        async function checkUserSession() {
+            if (sb) {
+                const { data: { session } } = await sb.auth.getSession();
+                if (session && session.user) {
+                    const { data: profile } = await sb.from('profiles').select('username, role').eq('id', session.user.id).single();
+                    if (profile) {
+                        document.getElementById('user-name').textContent = profile.username || session.user.email.split('@')[0];
+                        document.getElementById('user-role-label').textContent = profile.role || 'User';
+                    }
+                }
+            }
+        }
+
+        function initTheme() {
+            const toggle = document.getElementById('theme-toggle');
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            toggle.onclick = () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            };
+        }
+
+        function updateProgress(percent, text) {
+            const card = document.getElementById('progress-card');
+            const bar = document.getElementById('progress-bar');
+            const pText = document.getElementById('progress-text');
+            const pPercent = document.getElementById('progress-percent');
+
+            card.style.display = 'block';
+            bar.style.width = percent + '%';
+            pText.textContent = text;
+            pPercent.textContent = percent + '%';
+        }
+
+        function hideProgress() {
+            document.getElementById('progress-card').style.display = 'none';
+        }
+
+        window.startExtraction = async () => {
+            const urlInput = document.getElementById('target-url');
+            let targetUrl = urlInput.value.trim();
+
+            if (!targetUrl) {
+                showToast("Por favor ingresa una URL válida.", "warning");
+                return;
+            }
+
+            if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+                targetUrl = 'https://' + targetUrl;
+                urlInput.value = targetUrl;
+            }
+
+            const btn = document.getElementById('btn-extract');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="loader-spin"></span> Extrayendo...`;
+            document.getElementById('results-wrapper').style.display = 'none';
+
+            updateProgress(10, "Analizando URL y preparando conexión...");
+
+            try {
+                const htmlContent = await fetchHtmlWithProxies(targetUrl);
+                updateProgress(50, "Procesando código y buscando datos estructurados...");
+
+                await parseRestaurantData(htmlContent, targetUrl);
+
+                updateProgress(90, "Organizando menú e imágenes...");
+                renderResults();
+
+                updateProgress(100, "¡Extracción completada!");
+                setTimeout(hideProgress, 1200);
+                showToast("Extracción realizada con éxito.", "success");
+            } catch (err) {
+                console.error("Extraction failed:", err);
+                hideProgress();
+                showToast("Error al extraer información: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px;"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg><span>Extraer Información</span>`;
+            }
+        };
+
+        // Attempt direct fetch first, then CORS proxy service cascade
+        async function fetchHtmlWithProxies(targetUrl) {
+            const proxies = [
+                (u) => u, // Direct fetch first
+                (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+                (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+                (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
+            ];
+
+            let lastError = null;
+            for (let i = 0; i < proxies.length; i++) {
+                const proxyUrl = proxies[i](targetUrl);
+                updateProgress(20 + i * 10, i === 0 ? "Intentando acceso directo..." : `Probando conexión alternativa ${i}...`);
+                try {
+                    const response = await fetch(proxyUrl, {
+                        headers: {
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                        }
+                    });
+                    if (response.ok) {
+                        const html = await response.text();
+                        if (html && html.trim().length > 100) {
+                            return html;
+                        }
+                    }
+                } catch (e) {
+                    lastError = e;
+                }
+            }
+            throw new Error(lastError ? lastError.message : "No se pudo obtener el contenido de la página debido a restricciones del servidor.");
+        }
+
+        async function parseRestaurantData(htmlContent, sourceUrl) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlContent, 'text/html');
+
+            window.extractedData = {
+                restaurant: {
+                    name: "",
+                    address: "",
+                    phone: "",
+                    hours: "",
+                    websiteUrl: sourceUrl
+                },
+                categories: [],
+                allImages: []
+            };
+
+            const restaurant = window.extractedData.restaurant;
+            const categoryMap = new Map(); // Category Name -> Array of Dishes
+            const imageSet = new Set();
+
+            // 1. Check for JSON-LD Scripts
+            const jsonLdScripts = doc.querySelectorAll('script[type="application/ld+json"]');
+            jsonLdScripts.forEach(script => {
+                try {
+                    const data = JSON.parse(script.textContent);
+                    processJsonLd(data, restaurant, categoryMap, imageSet);
+                } catch (e) {}
+            });
+
+            // 2. Check for __NEXT_DATA__ or inline JSON state (DoorDash, Toast, UberEats, etc)
+            const nextDataScript = doc.querySelector('script#__NEXT_DATA__');
+            if (nextDataScript) {
+                try {
+                    const nextData = JSON.parse(nextDataScript.textContent);
+                    processNextData(nextData, restaurant, categoryMap, imageSet);
+                } catch (e) {}
+            }
+
+            // 3. Fallback to Meta Tags (OpenGraph, Microdata) for Restaurant Info if missing
+            if (!restaurant.name) {
+                const ogTitle = doc.querySelector('meta[property="og:title"]')?.content || doc.querySelector('title')?.textContent;
+                if (ogTitle) restaurant.name = ogTitle.split('|')[0].split('-')[0].trim();
+            }
+
+            if (!restaurant.address) {
+                const street = doc.querySelector('[itemprop="streetAddress"]')?.textContent;
+                const locality = doc.querySelector('[itemprop="addressLocality"]')?.textContent;
+                if (street || locality) {
+                    restaurant.address = [street, locality].filter(Boolean).join(', ').trim();
+                }
+            }
+
+            if (!restaurant.phone) {
+                const phoneEl = doc.querySelector('[itemprop="telephone"]') || doc.querySelector('a[href^="tel:"]');
+                if (phoneEl) restaurant.phone = phoneEl.textContent.trim() || phoneEl.getAttribute('href').replace('tel:', '').trim();
+            }
+
+            // 4. DOM Heuristic Parsing if categories/dishes are empty or partial
+            if (categoryMap.size === 0) {
+                processDomHeuristics(doc, categoryMap, imageSet, sourceUrl);
+            }
+
+            // Convert categoryMap to structured categories array
+            const categories = [];
+            categoryMap.forEach((dishes, catName) => {
+                if (dishes && dishes.length > 0) {
+                    categories.push({
+                        name: catName,
+                        dishes: dishes
+                    });
+                }
+            });
+
+            window.extractedData.categories = categories;
+            window.extractedData.allImages = Array.from(imageSet);
+        }
+
+        // --- JSON-LD Processor ---
+        function processJsonLd(data, restaurant, categoryMap, imageSet) {
+            if (!data) return;
+
+            if (Array.isArray(data)) {
+                data.forEach(item => processJsonLd(item, restaurant, categoryMap, imageSet));
+                return;
+            }
+
+            if (data['@graph'] && Array.isArray(data['@graph'])) {
+                data['@graph'].forEach(item => processJsonLd(item, restaurant, categoryMap, imageSet));
+                return;
+            }
+
+            const type = data['@type'];
+            if (type === 'Restaurant' || type === 'FoodEstablishment' || type === 'FastFoodRestaurant') {
+                if (!restaurant.name && data.name) restaurant.name = data.name;
+                if (!restaurant.phone && data.telephone) restaurant.phone = data.telephone;
+                if (!restaurant.address) {
+                    if (typeof data.address === 'string') restaurant.address = data.address;
+                    else if (data.address && typeof data.address === 'object') {
+                        restaurant.address = [data.address.streetAddress, data.address.addressLocality, data.address.addressRegion, data.address.postalCode].filter(Boolean).join(', ');
+                    }
+                }
+                if (!restaurant.hours && data.openingHours) {
+                    restaurant.hours = Array.isArray(data.openingHours) ? data.openingHours.join(' | ') : data.openingHours;
+                }
+                if (data.hasMenu) {
+                    processJsonLd(data.hasMenu, restaurant, categoryMap, imageSet);
+                }
+            }
+
+            if (type === 'Menu') {
+                if (data.hasMenuSection && Array.isArray(data.hasMenuSection)) {
+                    data.hasMenuSection.forEach(section => {
+                        const catName = section.name || "Menú General";
+                        const items = section.hasMenuItem || section.hasOfferCatalog?.itemListElement || [];
+                        items.forEach(item => {
+                            addDishToMap(categoryMap, catName, parseJsonLdMenuItem(item, imageSet));
+                        });
+                    });
+                }
+            }
+
+            if (type === 'MenuItem' || type === 'Product') {
+                const dish = parseJsonLdMenuItem(data, imageSet);
+                addDishToMap(categoryMap, "Menú Principal", dish);
+            }
+        }
+
+        function parseJsonLdMenuItem(item, imageSet) {
+            const dish = {
+                name: item.name || "",
+                description: item.description || "",
+                price: "",
+                sizes: [],
+                extras: [],
+                image: ""
+            };
+
+            if (item.offers) {
+                const offer = Array.isArray(item.offers) ? item.offers[0] : item.offers;
+                if (offer && offer.price !== undefined) {
+                    dish.price = offer.priceCurrency ? `${offer.priceCurrency} ${offer.price}` : `$${offer.price}`;
+                }
+            }
+
+            if (item.image) {
+                const imgUrl = typeof item.image === 'string' ? item.image : (item.image.url || (Array.isArray(item.image) ? item.image[0] : ''));
+                if (imgUrl) {
+                    dish.image = imgUrl;
+                    imageSet.add(imgUrl);
+                }
+            }
+
+            return dish;
+        }
+
+        // --- NextData / React State Processor ---
+        function processNextData(nextData, restaurant, categoryMap, imageSet) {
+            const findDeepKeys = (obj, targetKey, matches = []) => {
+                if (!obj || typeof obj !== 'object') return matches;
+                if (Array.isArray(obj)) {
+                    obj.forEach(item => findDeepKeys(item, targetKey, matches));
+                    return matches;
+                }
+                for (const key in obj) {
+                    if (key.toLowerCase().includes(targetKey.toLowerCase())) {
+                        matches.push(obj[key]);
+                    }
+                    findDeepKeys(obj[key], targetKey, matches);
+                }
+                return matches;
+            };
+
+            const storeNames = findDeepKeys(nextData, 'storeName');
+            if (!restaurant.name && storeNames.length > 0) restaurant.name = storeNames[0];
+
+            const menuSections = findDeepKeys(nextData, 'menu') || findDeepKeys(nextData, 'categories');
+            menuSections.forEach(section => {
+                if (Array.isArray(section)) {
+                    section.forEach(cat => {
+                        const catName = cat.name || cat.title || "Menú General";
+                        const items = cat.items || cat.dishes || cat.menuItems || [];
+                        if (Array.isArray(items)) {
+                            items.forEach(it => {
+                                if (it && (it.name || it.title)) {
+                                    const dish = {
+                                        name: it.name || it.title || "",
+                                        description: it.description || "",
+                                        price: it.price ? (typeof it.price === 'number' ? `$${(it.price / 100).toFixed(2)}` : `${it.price}`) : "",
+                                        sizes: it.sizes || [],
+                                        extras: it.extras || it.options || [],
+                                        image: it.imageUrl || it.image || ""
+                                    };
+                                    if (dish.image) imageSet.add(dish.image);
+                                    addDishToMap(categoryMap, catName, dish);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // --- DOM Heuristics Parsing ---
+        function processDomHeuristics(doc, categoryMap, imageSet, sourceUrl) {
+            // Find potential category headings (h2, h3, h4, or sections)
+            const headings = doc.querySelectorAll('h2, h3, h4, .menu-category-title, .category-header, [class*="category"]');
+
+            if (headings.length > 0) {
+                headings.forEach(heading => {
+                    const catName = heading.textContent.trim();
+                    if (!catName || catName.length > 60) return;
+
+                    // Search parent or next sibling for items
+                    const parentSection = heading.closest('section, div, article') || heading.parentElement;
+                    if (!parentSection) return;
+
+                    const items = parentSection.querySelectorAll('.menu-item, .dish, .product, [class*="item"], [class*="dish"], article');
+                    items.forEach(itemEl => {
+                        const nameEl = itemEl.querySelector('h3, h4, h5, .name, .title, [class*="name"], [class*="title"]');
+                        if (!nameEl) return;
+
+                        const name = nameEl.textContent.trim();
+                        if (!name || name === catName) return;
+
+                        const descEl = itemEl.querySelector('.description, .desc, p, [class*="desc"]');
+                        const priceEl = itemEl.querySelector('.price, .cost, [class*="price"]');
+                        const imgEl = itemEl.querySelector('img');
+
+                        let priceText = "";
+                        if (priceEl) {
+                            priceText = priceEl.textContent.trim();
+                        } else {
+                            // Regex search for price format in item text
+                            const priceMatch = itemEl.textContent.match(/\$\s?\d+(\.\d{2})?/);
+                            if (priceMatch) priceText = priceMatch[0];
+                        }
+
+                        let imgUrl = "";
+                        if (imgEl) {
+                            imgUrl = imgEl.getAttribute('src') || imgEl.getAttribute('data-src') || "";
+                            if (imgUrl && !imgUrl.startsWith('data:') && !imgUrl.startsWith('http')) {
+                                try {
+                                    imgUrl = new URL(imgUrl, sourceUrl).href;
+                                } catch (e) {}
+                            }
+                            if (imgUrl && imgUrl.startsWith('http')) {
+                                imageSet.add(imgUrl);
+                            }
+                        }
+
+                        const dish = {
+                            name: name,
+                            description: descEl ? descEl.textContent.trim() : "",
+                            price: priceText,
+                            sizes: [],
+                            extras: [],
+                            image: imgUrl
+                        };
+
+                        addDishToMap(categoryMap, catName, dish);
+                    });
+                });
+            }
+
+            // Fallback: search all elements with prices
+            if (categoryMap.size === 0) {
+                const allElements = doc.querySelectorAll('div, li, article');
+                allElements.forEach(el => {
+                    if (el.children.length > 0 && el.children.length < 8) {
+                        const text = el.textContent;
+                        const priceMatch = text.match(/\$\s?\d+(\.\d{2})?/);
+                        if (priceMatch) {
+                            const nameEl = el.querySelector('h1, h2, h3, h4, h5, strong, b, .name');
+                            if (nameEl) {
+                                const dishName = nameEl.textContent.trim();
+                                if (dishName && dishName.length < 80) {
+                                    const dish = {
+                                        name: dishName,
+                                        description: text.replace(dishName, '').replace(priceMatch[0], '').trim(),
+                                        price: priceMatch[0],
+                                        sizes: [],
+                                        extras: [],
+                                        image: ""
+                                    };
+                                    addDishToMap(categoryMap, "Menú Extraído", dish);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function addDishToMap(categoryMap, catName, dish) {
+            if (!dish.name || dish.name.trim().length < 2) return;
+            const cleanCat = catName.trim() || "Menú General";
+            if (!categoryMap.has(cleanCat)) {
+                categoryMap.set(cleanCat, []);
+            }
+            const list = categoryMap.get(cleanCat);
+            // Avoid duplicate dish names inside same category
+            if (!list.some(d => d.name.toLowerCase() === dish.name.toLowerCase())) {
+                list.push(dish);
+            }
+        }
+
+        // --- Render Results UI ---
+        function renderResults() {
+            const wrapper = document.getElementById('results-wrapper');
+            const infoDisplay = document.getElementById('restaurant-info-display');
+            const categoriesDisplay = document.getElementById('categories-display');
+
+            const r = window.extractedData.restaurant;
+
+            infoDisplay.innerHTML = `
+                <div class="info-field">
+                    <label>Nombre del Restaurante</label>
+                    <div class="${!r.name ? 'empty' : ''}">${r.name || 'No encontrado'}</div>
+                </div>
+                <div class="info-field">
+                    <label>Dirección</label>
+                    <div class="${!r.address ? 'empty' : ''}">${r.address || 'No encontrada'}</div>
+                </div>
+                <div class="info-field">
+                    <label>Teléfono</label>
+                    <div class="${!r.phone ? 'empty' : ''}">${r.phone || 'No encontrado'}</div>
+                </div>
+                <div class="info-field">
+                    <label>Horarios</label>
+                    <div class="${!r.hours ? 'empty' : ''}">${r.hours || 'No encontrados'}</div>
+                </div>
+            `;
+
+            if (window.extractedData.categories.length === 0) {
+                categoriesDisplay.innerHTML = `
+                    <div class="category-card" style="text-align: center; color: var(--text-dim); padding: 40px;">
+                        No se pudieron extraer platillos automáticamente de este enlace.
+                    </div>
+                `;
+            } else {
+                categoriesDisplay.innerHTML = window.extractedData.categories.map(cat => `
+                    <div class="category-card">
+                        <div class="category-title">
+                            <span>${cat.name}</span>
+                            <span class="category-count">${cat.dishes.length} platillos</span>
+                        </div>
+                        <div class="dishes-grid">
+                            ${cat.dishes.map(dish => `
+                                <div class="dish-card">
+                                    <div>
+                                        <div class="dish-header">
+                                            ${dish.image ? `<img src="${dish.image}" class="dish-img" alt="${dish.name}" onerror="this.style.display='none'">` : ''}
+                                            <div class="dish-main-info">
+                                                <div class="dish-name">${dish.name}</div>
+                                                <div class="dish-price">${dish.price || 'Sin precio'}</div>
+                                            </div>
+                                        </div>
+                                        ${dish.description ? `<div class="dish-desc">${dish.description}</div>` : ''}
+                                    </div>
+                                    ${(dish.sizes.length > 0 || dish.extras.length > 0) ? `
+                                        <div class="dish-meta">
+                                            ${dish.sizes.length > 0 ? `<div class="dish-meta-item"><strong>Tamaños:</strong> ${dish.sizes.map(s => `<span class="meta-tag">${s}</span>`).join('')}</div>` : ''}
+                                            ${dish.extras.length > 0 ? `<div class="dish-meta-item"><strong>Extras:</strong> ${dish.extras.map(e => `<span class="meta-tag">${e}</span>`).join('')}</div>` : ''}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            wrapper.style.display = 'block';
+            wrapper.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- Multi-Format Export Handlers ---
+
+        window.exportTXT = () => {
+            const data = window.extractedData;
+            let text = `========================================\n`;
+            text += `INFORMACIÓN DEL RESTAURANTE\n`;
+            text += `========================================\n`;
+            text += `Nombre: ${data.restaurant.name || 'No encontrado'}\n`;
+            text += `Dirección: ${data.restaurant.address || 'No encontrada'}\n`;
+            text += `Teléfono: ${data.restaurant.phone || 'No encontrado'}\n`;
+            text += `Horarios: ${data.restaurant.hours || 'No encontrados'}\n`;
+            text += `URL Origen: ${data.restaurant.websiteUrl}\n\n`;
+
+            text += `========================================\n`;
+            text += `MENÚ Y PLATILLOS (${data.categories.length} Categorías)\n`;
+            text += `========================================\n\n`;
+
+            data.categories.forEach(cat => {
+                text += `--- CATEGORÍA: ${cat.name.toUpperCase()} ---\n`;
+                cat.dishes.forEach(dish => {
+                    text += `• ${dish.name} - ${dish.price || 'Sin precio'}\n`;
+                    if (dish.description) text += `  Descripción: ${dish.description}\n`;
+                    if (dish.sizes.length) text += `  Tamaños: ${dish.sizes.join(', ')}\n`;
+                    if (dish.extras.length) text += `  Extras: ${dish.extras.join(', ')}\n`;
+                    if (dish.image) text += `  Imagen: ${dish.image}\n`;
+                    text += `\n`;
+                });
+                text += `\n`;
+            });
+
+            downloadBlob(text, `restaurante_${sanitizeFileName(data.restaurant.name || 'menu')}.txt`, 'text/plain;charset=utf-8');
+        };
+
+        window.exportJSON = () => {
+            const jsonStr = JSON.stringify(window.extractedData, null, 2);
+            downloadBlob(jsonStr, `restaurante_${sanitizeFileName(window.extractedData.restaurant.name || 'menu')}.json`, 'application/json');
+        };
+
+        window.exportSVG = () => {
+            const data = window.extractedData;
+            let y = 60;
+            const width = 800;
+
+            let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} 2000" width="${width}" style="background-color:#ffffff; font-family:sans-serif; color:#1a1c1e;">`;
+            svgContent += `<style>
+                .title { font-size: 28px; font-weight: bold; fill: #ff9533; }
+                .sub { font-size: 14px; fill: #4a5568; }
+                .cat { font-size: 20px; font-weight: bold; fill: #1a1c1e; }
+                .dish { font-size: 16px; font-weight: bold; fill: #1a1c1e; }
+                .price { font-size: 16px; font-weight: bold; fill: #ff9533; }
+                .desc { font-size: 12px; fill: #4a5568; }
+            </style>`;
+
+            svgContent += `<text x="40" y="${y}" class="title">${escapeXml(data.restaurant.name || 'Menú Restaurante')}</text>`;
+            y += 25;
+            if (data.restaurant.address) { svgContent += `<text x="40" y="${y}" class="sub">Dirección: ${escapeXml(data.restaurant.address)}</text>`; y += 20; }
+            if (data.restaurant.phone) { svgContent += `<text x="40" y="${y}" class="sub">Tel: ${escapeXml(data.restaurant.phone)}</text>`; y += 20; }
+            y += 30;
+
+            data.categories.forEach(cat => {
+                svgContent += `<text x="40" y="${y}" class="cat">${escapeXml(cat.name)}</text>`;
+                y += 10;
+                svgContent += `<line x1="40" y1="${y}" x2="760" y2="${y}" stroke="#f8e8d8" stroke-width="2"/>`;
+                y += 30;
+
+                cat.dishes.forEach(dish => {
+                    svgContent += `<text x="40" y="${y}" class="dish">${escapeXml(dish.name)}</text>`;
+                    svgContent += `<text x="760" y="${y}" class="price" text-anchor="end">${escapeXml(dish.price)}</text>`;
+                    y += 20;
+                    if (dish.description) {
+                        svgContent += `<text x="40" y="${y}" class="desc">${escapeXml(dish.description.substring(0, 90))}</text>`;
+                        y += 20;
+                    }
+                    y += 10;
+                });
+                y += 20;
+            });
+
+            svgContent += `</svg>`;
+
+            downloadBlob(svgContent, `restaurante_${sanitizeFileName(data.restaurant.name || 'menu')}.svg`, 'image/svg+xml');
+        };
+
+        window.exportPDF = () => {
+            const data = window.extractedData;
+            const container = document.getElementById('export-printable-container');
+            container.style.display = 'block';
+
+            container.innerHTML = `
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <div style="text-align: center; border-bottom: 2px solid #ff9533; padding-bottom: 20px; margin-bottom: 30px;">
+                        <h1 style="font-size: 28px; color: #ff9533; margin-bottom: 8px;">${data.restaurant.name || 'Restaurante'}</h1>
+                        <p style="font-size: 14px; color: #555; margin: 4px 0;">${data.restaurant.address || ''}</p>
+                        <p style="font-size: 14px; color: #555; margin: 4px 0;">${data.restaurant.phone || ''} ${data.restaurant.hours ? ' | ' + data.restaurant.hours : ''}</p>
+                    </div>
+
+                    ${data.categories.map(cat => `
+                        <div style="margin-bottom: 30px; page-break-inside: avoid;">
+                            <h2 style="font-size: 20px; color: #1a1c1e; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin-bottom: 16px;">${cat.name}</h2>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                ${cat.dishes.map(dish => `
+                                    <div style="border: 1px solid #eee; padding: 12px; border-radius: 8px;">
+                                        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 15px; margin-bottom: 4px;">
+                                            <span>${dish.name}</span>
+                                            <span style="color: #ff9533;">${dish.price}</span>
+                                        </div>
+                                        ${dish.description ? `<p style="font-size: 12px; color: #666; margin: 0;">${dish.description}</p>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            const opt = {
+                margin: 0.5,
+                filename: `restaurante_${sanitizeFileName(data.restaurant.name || 'menu')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(container).save().then(() => {
+                container.style.display = 'none';
+            });
+        };
+
+        window.downloadImagesZip = async () => {
+            const images = window.extractedData.allImages;
+            if (!images || images.length === 0) {
+                showToast("No se encontraron imágenes para descargar.", "warning");
+                return;
+            }
+
+            const btn = document.getElementById('btn-download-images');
+            const oldText = btn.innerHTML;
+            btn.innerHTML = `<span class="loader-spin"></span> Creando ZIP...`;
+            btn.disabled = true;
+
+            try {
+                const zip = new JSZip();
+                const imgFolder = zip.folder("imagenes_restaurante");
+
+                let count = 0;
+                for (let i = 0; i < images.length; i++) {
+                    const imgUrl = images[i];
+                    try {
+                        // Use proxy fallback for downloading image blobs
+                        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(imgUrl)}`;
+                        const res = await fetch(proxyUrl);
+                        if (res.ok) {
+                            const blob = await res.blob();
+                            const ext = blob.type.split('/')[1] || 'jpg';
+                            imgFolder.file(`imagen_${i + 1}.${ext}`, blob);
+                            count++;
+                        }
+                    } catch (e) {
+                        console.error("Failed to fetch image for ZIP", imgUrl, e);
+                    }
+                }
+
+                if (count === 0) {
+                    showToast("No se pudieron descargar las imágenes debido a restricciones de origen.", "warning");
+                } else {
+                    const zipContent = await zip.generateAsync({ type: "blob" });
+                    downloadBlob(zipContent, `imagenes_${sanitizeFileName(window.extractedData.restaurant.name || 'restaurante')}.zip`, 'application/zip');
+                    showToast(`ZIP descargado con ${count} imágenes.`, "success");
+                }
+            } catch (err) {
+                console.error("ZIP creation error:", err);
+                showToast("Error al generar archivo ZIP: " + err.message, "error");
+            } finally {
+                btn.innerHTML = oldText;
+                btn.disabled = false;
+            }
+        };
+
+        function downloadBlob(content, fileName, mimeType) {
+            const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function sanitizeFileName(name) {
+            return name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_');
+        }
+
+        function escapeXml(unsafe) {
+            if (!unsafe) return "";
+            return unsafe.replace(/[<>&'"]/g, (c) => {
+                switch (c) {
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '&': return '&amp;';
+                    case '\'': return '&apos;';
+                    case '"': return '&quot;';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
