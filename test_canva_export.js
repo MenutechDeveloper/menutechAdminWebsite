@@ -17,7 +17,7 @@ const server = http.createServer((req, res) => {
   }
 });
 
-const PORT = 8089;
+const PORT = 8090;
 
 server.listen(PORT, async () => {
   try {
@@ -83,14 +83,18 @@ server.listen(PORT, async () => {
     });
 
     assert.strictEqual(result.filename, 'canva_tacos_el_rey.svg');
+    assert.ok(result.svg.includes('<g id="text_header_title_1">'), 'SVG contains header group');
+    assert.ok(result.svg.includes('<g id="text_dish_name_1_1">'), 'SVG contains dish group');
     assert.ok(result.svg.includes('Tacos El Rey'), 'SVG contains restaurant name');
     assert.ok(result.svg.includes('Dirección: Av. Principal 123'), 'SVG contains address');
     assert.ok(result.svg.includes('Tel: 555-0199'), 'SVG contains phone');
     assert.ok(result.svg.includes('Taco al Pastor'), 'SVG contains dish name');
     assert.ok(result.svg.includes('$25.00'), 'SVG contains price');
     assert.strictEqual(result.svg.includes('<style>'), false, 'SVG does not contain style tags');
+    assert.strictEqual(result.svg.includes('<rect'), false, 'SVG does not contain rect elements');
+    assert.strictEqual(result.svg.includes('<line'), false, 'SVG does not contain line elements');
 
-    console.log('Test passed successfully!');
+    console.log('All tests passed successfully!');
     await browser.close();
     server.close();
   } catch (err) {

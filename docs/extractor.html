@@ -1125,62 +1125,61 @@
             let y = 60;
             const width = 800;
             const elements = [];
+            let itemCounter = 1;
 
             if (data.restaurant.name) {
-                elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ff9533" xml:space="preserve">${escapeXml(data.restaurant.name)}</text>`);
+                elements.push(`<g id="text_header_title_${itemCounter++}">\n  <text x="40" y="${y}" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ff9533" xml:space="preserve">${escapeXml(data.restaurant.name)}</text>\n</g>`);
                 y += 32;
             } else {
-                elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ff9533" xml:space="preserve">Menú Restaurante</text>`);
+                elements.push(`<g id="text_header_title_${itemCounter++}">\n  <text x="40" y="${y}" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ff9533" xml:space="preserve">Menú Restaurante</text>\n</g>`);
                 y += 32;
             }
 
             if (data.restaurant.address) {
-                elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#4a5568" xml:space="preserve">Dirección: ${escapeXml(data.restaurant.address)}</text>`);
+                elements.push(`<g id="text_header_address_${itemCounter++}">\n  <text x="40" y="${y}" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#4a5568" xml:space="preserve">Dirección: ${escapeXml(data.restaurant.address)}</text>\n</g>`);
                 y += 22;
             }
 
             if (data.restaurant.phone) {
-                elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#4a5568" xml:space="preserve">Tel: ${escapeXml(data.restaurant.phone)}</text>`);
+                elements.push(`<g id="text_header_phone_${itemCounter++}">\n  <text x="40" y="${y}" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#4a5568" xml:space="preserve">Tel: ${escapeXml(data.restaurant.phone)}</text>\n</g>`);
                 y += 22;
             }
 
             if (data.restaurant.hours) {
-                elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#4a5568" xml:space="preserve">Horarios: ${escapeXml(data.restaurant.hours)}</text>`);
+                elements.push(`<g id="text_header_hours_${itemCounter++}">\n  <text x="40" y="${y}" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#4a5568" xml:space="preserve">Horarios: ${escapeXml(data.restaurant.hours)}</text>\n</g>`);
                 y += 22;
             }
 
             y += 20;
 
-            data.categories.forEach(cat => {
-                elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#1a1c1e" xml:space="preserve">${escapeXml(cat.name)}</text>`);
-                y += 12;
-                elements.push(`<line x1="40" y1="${y}" x2="760" y2="${y}" stroke="#f8e8d8" stroke-width="2"/>`);
-                y += 28;
+            data.categories.forEach((cat, catIdx) => {
+                elements.push(`<g id="text_category_${catIdx + 1}">\n  <text x="40" y="${y}" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#1a1c1e" xml:space="preserve">${escapeXml(cat.name)}</text>\n</g>`);
+                y += 32;
 
-                cat.dishes.forEach(dish => {
-                    elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#1a1c1e" xml:space="preserve">${escapeXml(dish.name)}</text>`);
+                cat.dishes.forEach((dish, dishIdx) => {
+                    elements.push(`<g id="text_dish_name_${catIdx + 1}_${dishIdx + 1}">\n  <text x="40" y="${y}" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#1a1c1e" xml:space="preserve">${escapeXml(dish.name)}</text>\n</g>`);
 
                     if (dish.price) {
-                        elements.push(`<text x="760" y="${y}" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ff9533" text-anchor="end" xml:space="preserve">${escapeXml(dish.price)}</text>`);
+                        elements.push(`<g id="text_dish_price_${catIdx + 1}_${dishIdx + 1}">\n  <text x="760" y="${y}" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ff9533" text-anchor="end" xml:space="preserve">${escapeXml(dish.price)}</text>\n</g>`);
                     }
 
                     y += 20;
 
                     if (dish.description) {
                         const descLines = chunkText(dish.description, 80);
-                        descLines.forEach(line => {
-                            elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="12" font-weight="normal" fill="#4a5568" xml:space="preserve">${escapeXml(line)}</text>`);
+                        descLines.forEach((line, lineIdx) => {
+                            elements.push(`<g id="text_dish_desc_${catIdx + 1}_${dishIdx + 1}_${lineIdx + 1}">\n  <text x="40" y="${y}" font-family="Arial, sans-serif" font-size="12" font-weight="normal" fill="#4a5568" xml:space="preserve">${escapeXml(line)}</text>\n</g>`);
                             y += 16;
                         });
                     }
 
                     if (dish.sizes && dish.sizes.length > 0) {
-                        elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="11" font-weight="normal" fill="#718096" xml:space="preserve">Tamaños: ${escapeXml(dish.sizes.join(', '))}</text>`);
+                        elements.push(`<g id="text_dish_sizes_${catIdx + 1}_${dishIdx + 1}">\n  <text x="40" y="${y}" font-family="Arial, sans-serif" font-size="11" font-weight="normal" fill="#718096" xml:space="preserve">Tamaños: ${escapeXml(dish.sizes.join(', '))}</text>\n</g>`);
                         y += 15;
                     }
 
                     if (dish.extras && dish.extras.length > 0) {
-                        elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="11" font-weight="normal" fill="#718096" xml:space="preserve">Extras: ${escapeXml(dish.extras.join(', '))}</text>`);
+                        elements.push(`<g id="text_dish_extras_${catIdx + 1}_${dishIdx + 1}">\n  <text x="40" y="${y}" font-family="Arial, sans-serif" font-size="11" font-weight="normal" fill="#718096" xml:space="preserve">Extras: ${escapeXml(dish.extras.join(', '))}</text>\n</g>`);
                         y += 15;
                     }
 
@@ -1193,7 +1192,6 @@
             const totalHeight = Math.max(y + 40, 300);
 
             let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${totalHeight}" width="${width}" height="${totalHeight}">\n`;
-            svgContent += `<rect width="100%" height="100%" fill="#ffffff"/>\n`;
             svgContent += elements.join('\n');
             svgContent += `\n</svg>`;
 
