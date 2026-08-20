@@ -69,8 +69,6 @@
 
         header { text-align: center; margin-bottom: 40px; }
         .logo-main { width: 100%; max-width: 260px; height: auto; margin: 0 auto 12px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
-        header h1 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 800; margin-bottom: 8px; }
-        header p { color: var(--text-dim); font-size: 0.95rem; font-weight: 500; }
 
         .extractor-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 32px; padding: 36px; box-shadow: 0 20px 50px rgba(0,0,0,0.06); margin-bottom: 40px; }
 
@@ -83,7 +81,7 @@
         .input-wrapper input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 4px rgba(255,149,51,0.12); }
 
         .btn-extract {
-            background: var(--orange); color: #000; border: none; padding: 18px 36px; border-radius: 20px;
+            background: var(--orange); color: #ffffff; border: none; padding: 18px 36px; border-radius: 20px;
             font-size: 0.95rem; font-weight: 800; cursor: pointer; transition: 0.3s; display: inline-flex;
             align-items: center; gap: 10px; font-family: 'Outfit', sans-serif; letter-spacing: 0.5px;
             box-shadow: 0 8px 25px rgba(255,149,51,0.3); white-space: nowrap;
@@ -197,17 +195,14 @@
     <div class="container">
         <header>
             <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
-            <h1>Extractor de Menús y Restaurantes</h1>
-            <p>Ingresa el enlace de un restaurante o menú online para extraer su información automáticamente.</p>
         </header>
 
         <div class="extractor-card">
             <div class="input-group">
                 <div class="input-wrapper">
-                    <input type="url" id="target-url" placeholder="https://ejemplo-restaurante.com/menu o link de DoorDash, etc..." autocomplete="off">
+                    <input type="url" id="target-url" autocomplete="off">
                 </div>
                 <button class="btn-extract" id="btn-extract" onclick="startExtraction()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px;"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
                     <span>Extraer Información</span>
                 </button>
             </div>
@@ -375,23 +370,24 @@
                 showToast("Error al extraer información: " + err.message, "error");
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px;"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg><span>Extraer Información</span>`;
+                btn.innerHTML = `<span>Extraer Información</span>`;
             }
         };
 
         // Attempt direct fetch first, then CORS proxy service cascade
         async function fetchHtmlWithProxies(targetUrl) {
             const proxies = [
-                (u) => u, // Direct fetch first
-                (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-                (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-                (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
+                { name: "Directo", url: (u) => u },
+                { name: "Proxy Corsproxy", url: (u) => `https://corsproxy.io/?${encodeURIComponent(u)}` },
+                { name: "Proxy Allorigins", url: (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}` },
+                { name: "Proxy Codetabs", url: (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}` }
             ];
 
-            let lastError = null;
+            let errors = [];
             for (let i = 0; i < proxies.length; i++) {
-                const proxyUrl = proxies[i](targetUrl);
-                updateProgress(20 + i * 10, i === 0 ? "Intentando acceso directo..." : `Probando conexión alternativa ${i}...`);
+                const proxy = proxies[i];
+                const proxyUrl = proxy.url(targetUrl);
+                updateProgress(20 + i * 10, i === 0 ? "Intentando acceso directo..." : `Probando conexión alternativa (${proxy.name})...`);
                 try {
                     const response = await fetch(proxyUrl, {
                         headers: {
@@ -402,13 +398,26 @@
                         const html = await response.text();
                         if (html && html.trim().length > 100) {
                             return html;
+                        } else {
+                            errors.push(`${proxy.name}: Respuesta vacía o insuficiente`);
                         }
+                    } else {
+                        errors.push(`${proxy.name}: HTTP ${response.status} ${response.statusText}`);
                     }
                 } catch (e) {
-                    lastError = e;
+                    errors.push(`${proxy.name}: ${e.message || "Error de red/CORS"}`);
                 }
             }
-            throw new Error(lastError ? lastError.message : "No se pudo obtener el contenido de la página debido a restricciones del servidor.");
+
+            // Build clear diagnostic cause explanation
+            let possibleCause = "";
+            if (targetUrl.includes('door-dash') || targetUrl.includes('doordash') || targetUrl.includes('ubereats') || targetUrl.includes('grubhub')) {
+                possibleCause = "La plataforma seleccionada (DoorDash/UberEats/Grubhub) utiliza protección Anti-Bot/Cloudflare que bloquea peticiones automáticas.";
+            } else {
+                possibleCause = "La página bloquea peticiones de otros orígenes (CORS), requiere autenticación/cookies, o utiliza protección Cloudflare/Bot-blocker.";
+            }
+
+            throw new Error(`No se pudo acceder a la URL (${targetUrl}). Causa probable: ${possibleCause}`);
         }
 
         async function parseRestaurantData(htmlContent, sourceUrl) {
