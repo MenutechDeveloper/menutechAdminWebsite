@@ -353,6 +353,23 @@
             updateProgress(10, "Analizando URL y preparando conexión...");
 
             try {
+                // Check if target URL is a digital ordering menu with restaurant_uid or ruid parameter
+                const urlObj = new URL(targetUrl);
+                const ruid = urlObj.searchParams.get('restaurant_uid') || urlObj.searchParams.get('ruid');
+
+                if (ruid) {
+                    updateProgress(40, "Detectado menú digital. Consultando API de platillos...");
+                    const apiHandled = await fetchAndParseDigitalMenuApi(ruid, targetUrl);
+                    if (apiHandled) {
+                        updateProgress(90, "Organizando menú e imágenes...");
+                        renderResults();
+                        updateProgress(100, "¡Extracción completada!");
+                        setTimeout(hideProgress, 1200);
+                        showToast("Extracción realizada con éxito.", "success");
+                        return;
+                    }
+                }
+
                 const htmlContent = await fetchHtmlWithProxies(targetUrl);
                 updateProgress(50, "Procesando código y buscando datos estructurados...");
 
@@ -468,6 +485,115 @@
             throw new Error(`No se pudo acceder a la URL (${targetUrl}). Detalles de los intentos:\n` + errors.map(e => `• ${e}`).join('\n'));
         }
 
+        // --- Fetch & Parse Digital Ordering API ---
+        async function fetchAndParseDigitalMenuApi(ruid, sourceUrl) {
+            const apiEndpoints = [
+                `https://www.menu-technology.com/api/restaurant/${ruid}`,
+                `https://www.foodbooking.com/api/restaurant/${ruid}`,
+                `https://proxy.cors.sh/https://www.menu-technology.com/api/restaurant/${ruid}`,
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://www.menu-technology.com/api/restaurant/${ruid}`)}`
+            ];
+
+            let data = null;
+            for (const ep of apiEndpoints) {
+                try {
+                    const res = await fetchWithTimeout(ep, {}, 6000);
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json && (json.menu || json.name)) {
+                            data = json;
+                            break;
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            if (!data) return false;
+
+            const restaurant = {
+                name: data.name || "Restaurante Digital",
+                address: [data.street, data.city, data.zipcode, data.country_code].filter(Boolean).join(', '),
+                phone: data.phone || data.telephone || "",
+                hours: "",
+                websiteUrl: sourceUrl
+            };
+
+            // Format opening hours if available
+            if (Array.isArray(data.opening_hours) && data.opening_hours.length > 0) {
+                const daysMap = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+                const hoursList = data.opening_hours.map(oh => {
+                    const startH = String(Math.floor(oh.begin_minute / 60)).padStart(2, '0');
+                    const startM = String(oh.begin_minute % 60).padStart(2, '0');
+                    const endH = String(Math.floor(oh.end_minute / 60)).padStart(2, '0');
+                    const endM = String(oh.end_minute % 60).padStart(2, '0');
+                    return `${startH}:${startM} - ${endH}:${endM}`;
+                });
+                restaurant.hours = Array.from(new Set(hoursList)).join(' | ');
+            }
+
+            const categoryMap = new Map();
+            const imageSet = new Set();
+
+            const cdnBase = data.cdn_base_path || "https://www.fbgcdn.com/pictures/";
+            const menuObj = data.menu || data;
+            const categoriesList = menuObj.categories || [];
+
+            categoriesList.forEach(cat => {
+                const catName = cat.name || "Menú General";
+                const items = cat.items || [];
+                items.forEach(it => {
+                    if (it && it.name) {
+                        let imgUrl = "";
+                        if (it.picture_id && data.pictures) {
+                            const picObj = Object.values(data.pictures).find(p => p.picture_id === it.picture_id || p.id === it.picture_id);
+                            if (picObj && picObj.filename) {
+                                imgUrl = `${cdnBase}${picObj.filename}`;
+                                imageSet.add(imgUrl);
+                            }
+                        }
+
+                        let priceText = "";
+                        if (it.price !== undefined && it.price !== null) {
+                            priceText = `$${parseFloat(it.price).toFixed(2)}`;
+                        }
+
+                        const dish = {
+                            name: it.name,
+                            description: it.description || "",
+                            price: priceText,
+                            sizes: [],
+                            extras: [],
+                            image: imgUrl
+                        };
+
+                        addDishToMap(categoryMap, catName, dish);
+                    }
+                });
+            });
+
+            // Add widget pictures if available
+            if (data.pictures) {
+                Object.values(data.pictures).forEach(pic => {
+                    if (pic && pic.filename) imageSet.add(`${cdnBase}${pic.filename}`);
+                });
+            }
+
+            const categories = [];
+            categoryMap.forEach((dishes, catName) => {
+                if (dishes && dishes.length > 0) {
+                    categories.push({ name: catName, dishes: dishes });
+                }
+            });
+
+            window.extractedData = {
+                restaurant: restaurant,
+                categories: categories,
+                allImages: Array.from(imageSet)
+            };
+
+            return true;
+        }
+
         async function parseRestaurantData(htmlContent, sourceUrl) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlContent, 'text/html');
@@ -518,14 +644,27 @@
             if (!restaurant.address) {
                 const street = doc.querySelector('[itemprop="streetAddress"]')?.textContent;
                 const locality = doc.querySelector('[itemprop="addressLocality"]')?.textContent;
+                const fullAddressEl = doc.querySelector('.address, .location, [class*="address"], [id*="address"]');
                 if (street || locality) {
                     restaurant.address = [street, locality].filter(Boolean).join(', ').trim();
+                } else if (fullAddressEl) {
+                    restaurant.address = fullAddressEl.textContent.replace(/\s+/g, ' ').trim();
                 }
             }
 
             if (!restaurant.phone) {
                 const phoneEl = doc.querySelector('[itemprop="telephone"]') || doc.querySelector('a[href^="tel:"]');
-                if (phoneEl) restaurant.phone = phoneEl.textContent.trim() || phoneEl.getAttribute('href').replace('tel:', '').trim();
+                if (phoneEl) {
+                    restaurant.phone = phoneEl.textContent.trim() || phoneEl.getAttribute('href').replace('tel:', '').trim();
+                } else {
+                    const phoneMatch = htmlContent.match(/\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
+                    if (phoneMatch) restaurant.phone = phoneMatch[0];
+                }
+            }
+
+            if (!restaurant.hours) {
+                const hoursEl = doc.querySelector('.hours, .opening-hours, [class*="hours"]');
+                if (hoursEl) restaurant.hours = hoursEl.textContent.replace(/\s+/g, ' ').trim();
             }
 
             // 4. DOM Heuristic Parsing if categories/dishes are empty or partial
@@ -986,8 +1125,8 @@
                 <div style="max-width: 800px; margin: 0 auto;">
                     <div style="text-align: center; border-bottom: 2px solid #ff9533; padding-bottom: 20px; margin-bottom: 30px;">
                         <h1 style="font-size: 28px; color: #ff9533; margin-bottom: 8px;">${data.restaurant.name || 'Restaurante'}</h1>
-                        <p style="font-size: 14px; color: #555; margin: 4px 0;">${data.restaurant.address || ''}</p>
-                        <p style="font-size: 14px; color: #555; margin: 4px 0;">${data.restaurant.phone || ''} ${data.restaurant.hours ? ' | ' + data.restaurant.hours : ''}</p>
+                        <p style="font-size: 14px; color: #333; margin: 4px 0; font-weight: 600;">Dirección: <span style="font-weight: 400; color: #555;">${data.restaurant.address || 'No especificada'}</span></p>
+                        <p style="font-size: 14px; color: #333; margin: 4px 0; font-weight: 600;">Teléfono: <span style="font-weight: 400; color: #555;">${data.restaurant.phone || 'No especificado'}</span> ${data.restaurant.hours ? ' | Horarios: <span style="font-weight: 400; color: #555;">' + data.restaurant.hours + '</span>' : ''}</p>
                     </div>
 
                     ${data.categories.map(cat => `
