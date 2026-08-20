@@ -152,7 +152,7 @@
 
         /* Toast Notifications */
         #toast-container { position: fixed; top: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
-        .toast { min-width: 300px; max-width: 420px; padding: 16px 20px; border-radius: 20px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.85rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.4s ease; line-height: 1.4; }
+        .toast { min-width: 300px; max-width: 460px; padding: 16px 20px; border-radius: 20px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.85rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.4s ease; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
         .toast.success { border-left: 5px solid var(--success); }
         .toast.error { border-left: 5px solid var(--error); }
         .toast.warning { border-left: 5px solid var(--orange); }
@@ -374,50 +374,98 @@
             }
         };
 
+        // Helper to fetch with timeout
+        async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const res = await fetch(url, { ...options, signal: controller.signal });
+                clearTimeout(timer);
+                return res;
+            } catch (e) {
+                clearTimeout(timer);
+                if (e.name === 'AbortError') throw new Error('Tiempo de espera agotado (Timeout)');
+                throw e;
+            }
+        }
+
         // Attempt direct fetch first, then CORS proxy service cascade
         async function fetchHtmlWithProxies(targetUrl) {
             const proxies = [
-                { name: "Directo", url: (u) => u },
-                { name: "Proxy Corsproxy", url: (u) => `https://corsproxy.io/?${encodeURIComponent(u)}` },
-                { name: "Proxy Allorigins", url: (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}` },
-                { name: "Proxy Codetabs", url: (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}` }
+                {
+                    name: "Directo",
+                    fetch: async (u) => {
+                        const res = await fetchWithTimeout(u, { headers: { 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' } }, 4000);
+                        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
+                        return await res.text();
+                    }
+                },
+                {
+                    name: "Cors.sh",
+                    fetch: async (u) => {
+                        const res = await fetchWithTimeout(`https://proxy.cors.sh/${u}`, {}, 5000);
+                        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
+                        return await res.text();
+                    }
+                },
+                {
+                    name: "AllOrigins Raw",
+                    fetch: async (u) => {
+                        const res = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&_=${Date.now()}`, {}, 5000);
+                        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
+                        return await res.text();
+                    }
+                },
+                {
+                    name: "CorsProxy.org",
+                    fetch: async (u) => {
+                        const res = await fetchWithTimeout(`https://corsproxy.org/?${encodeURIComponent(u)}`, {}, 5000);
+                        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
+                        return await res.text();
+                    }
+                },
+                {
+                    name: "AllOrigins Get",
+                    fetch: async (u) => {
+                        const res = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(u)}&_=${Date.now()}`, {}, 5000);
+                        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
+                        const text = await res.text();
+                        try {
+                            const data = JSON.parse(text);
+                            if (data && data.contents) return data.contents;
+                        } catch (e) {
+                            if (text && text.length > 100) return text;
+                        }
+                        throw new Error("Respuesta no contiene datos HTML válidos");
+                    }
+                },
+                {
+                    name: "CodeTabs",
+                    fetch: async (u) => {
+                        const res = await fetchWithTimeout(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, {}, 5000);
+                        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
+                        return await res.text();
+                    }
+                }
             ];
 
             let errors = [];
             for (let i = 0; i < proxies.length; i++) {
                 const proxy = proxies[i];
-                const proxyUrl = proxy.url(targetUrl);
-                updateProgress(20 + i * 10, i === 0 ? "Intentando acceso directo..." : `Probando conexión alternativa (${proxy.name})...`);
+                updateProgress(20 + i * 12, i === 0 ? "Intentando acceso directo..." : `Probando conexión alternativa (${proxy.name})...`);
                 try {
-                    const response = await fetch(proxyUrl, {
-                        headers: {
-                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-                        }
-                    });
-                    if (response.ok) {
-                        const html = await response.text();
-                        if (html && html.trim().length > 100) {
-                            return html;
-                        } else {
-                            errors.push(`${proxy.name}: Respuesta vacía o insuficiente`);
-                        }
+                    const html = await proxy.fetch(targetUrl);
+                    if (html && html.trim().length > 100 && !html.includes("Server-side requests are not allowed")) {
+                        return html;
                     } else {
-                        errors.push(`${proxy.name}: HTTP ${response.status} ${response.statusText}`);
+                        errors.push(`${proxy.name}: Contenido devuelto inválido o vacío`);
                     }
                 } catch (e) {
                     errors.push(`${proxy.name}: ${e.message || "Error de red/CORS"}`);
                 }
             }
 
-            // Build clear diagnostic cause explanation
-            let possibleCause = "";
-            if (targetUrl.includes('door-dash') || targetUrl.includes('doordash') || targetUrl.includes('ubereats') || targetUrl.includes('grubhub')) {
-                possibleCause = "La plataforma seleccionada (DoorDash/UberEats/Grubhub) utiliza protección Anti-Bot/Cloudflare que bloquea peticiones automáticas.";
-            } else {
-                possibleCause = "La página bloquea peticiones de otros orígenes (CORS), requiere autenticación/cookies, o utiliza protección Cloudflare/Bot-blocker.";
-            }
-
-            throw new Error(`No se pudo acceder a la URL (${targetUrl}). Causa probable: ${possibleCause}`);
+            throw new Error(`No se pudo acceder a la URL (${targetUrl}). Detalles de los intentos:\n` + errors.map(e => `• ${e}`).join('\n'));
         }
 
         async function parseRestaurantData(htmlContent, sourceUrl) {
@@ -449,7 +497,10 @@
                 } catch (e) {}
             });
 
-            // 2. Check for __NEXT_DATA__ or inline JSON state (DoorDash, Toast, UberEats, etc)
+            // 2. Check for window.MENU_TECH_STATE or Menutech custom tags
+            processMenutechState(htmlContent, doc, restaurant, categoryMap, imageSet);
+
+            // 3. Check for __NEXT_DATA__ or inline JSON state (DoorDash, Toast, UberEats, etc)
             const nextDataScript = doc.querySelector('script#__NEXT_DATA__');
             if (nextDataScript) {
                 try {
@@ -495,6 +546,39 @@
 
             window.extractedData.categories = categories;
             window.extractedData.allImages = Array.from(imageSet);
+        }
+
+        // --- Menutech State Processor ---
+        function processMenutechState(htmlContent, doc, restaurant, categoryMap, imageSet) {
+            // Check for window.MENU_TECH_STATE script
+            const stateMatch = htmlContent.match(/window\.MENU_TECH_STATE\s*=\s*(\{[\s\S]*?\});/);
+            if (stateMatch) {
+                try {
+                    const state = JSON.parse(stateMatch[1]);
+                    if (state.info) {
+                        if (!restaurant.address && state.info.address) restaurant.address = state.info.address;
+                        if (!restaurant.phone && state.info.phone) restaurant.phone = state.info.phone;
+                        if (!restaurant.hours && state.info.hours) restaurant.hours = state.info.hours;
+                    }
+                    if (state.title && !restaurant.name) {
+                        restaurant.name = state.title;
+                    }
+                    if (Array.isArray(state.gallery)) {
+                        state.gallery.forEach(imgUrl => {
+                            if (imgUrl) imageSet.add(imgUrl);
+                        });
+                    }
+                    if (state.heroImg) imageSet.add(state.heroImg);
+                    if (state.logoImg) imageSet.add(state.logoImg);
+                } catch (e) {}
+            }
+
+            // Check for custom elements like <menutech-orders> or <menutech-reservations>
+            const ordersTag = doc.querySelector('menutech-orders, menutech-platform-orders');
+            if (ordersTag) {
+                const title = ordersTag.getAttribute('restaurant-name') || ordersTag.getAttribute('title');
+                if (title && !restaurant.name) restaurant.name = title;
+            }
         }
 
         // --- JSON-LD Processor ---
@@ -624,6 +708,20 @@
 
         // --- DOM Heuristics Parsing ---
         function processDomHeuristics(doc, categoryMap, imageSet, sourceUrl) {
+            // Extract all image sources from doc into imageSet
+            const allImgs = doc.querySelectorAll('img');
+            allImgs.forEach(img => {
+                let src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || '';
+                if (src && !src.startsWith('data:')) {
+                    if (!src.startsWith('http')) {
+                        try { src = new URL(src, sourceUrl).href; } catch (e) {}
+                    }
+                    if (src.startsWith('http') && !src.includes('logo') && !src.includes('icon') && !src.includes('avatar')) {
+                        imageSet.add(src);
+                    }
+                }
+            });
+
             // Find potential category headings (h2, h3, h4, or sections)
             const headings = doc.querySelectorAll('h2, h3, h4, .menu-category-title, .category-header, [class*="category"]');
 
@@ -943,18 +1041,29 @@
                 let count = 0;
                 for (let i = 0; i < images.length; i++) {
                     const imgUrl = images[i];
-                    try {
-                        // Use proxy fallback for downloading image blobs
-                        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(imgUrl)}`;
-                        const res = await fetch(proxyUrl);
-                        if (res.ok) {
-                            const blob = await res.blob();
-                            const ext = blob.type.split('/')[1] || 'jpg';
-                            imgFolder.file(`imagen_${i + 1}.${ext}`, blob);
-                            count++;
-                        }
-                    } catch (e) {
-                        console.error("Failed to fetch image for ZIP", imgUrl, e);
+                    let fetchedBlob = null;
+
+                    // Try direct, then corsproxy.org, then cors.sh
+                    const tryUrls = [
+                        imgUrl,
+                        `https://corsproxy.org/?${encodeURIComponent(imgUrl)}`,
+                        `https://proxy.cors.sh/${imgUrl}`
+                    ];
+
+                    for (const u of tryUrls) {
+                        try {
+                            const res = await fetch(u);
+                            if (res.ok) {
+                                fetchedBlob = await res.blob();
+                                if (fetchedBlob && fetchedBlob.size > 0) break;
+                            }
+                        } catch (e) {}
+                    }
+
+                    if (fetchedBlob) {
+                        const ext = (fetchedBlob.type && fetchedBlob.type.includes('/')) ? fetchedBlob.type.split('/')[1] : 'jpg';
+                        imgFolder.file(`imagen_${i + 1}.${ext}`, fetchedBlob);
+                        count++;
                     }
                 }
 
