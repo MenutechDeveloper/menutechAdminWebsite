@@ -235,6 +235,10 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                         Exportar SVG
                     </button>
+                    <button class="btn-export" onclick="exportCanvaSVG()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        Descargar para Canva
+                    </button>
                     <button class="btn-export primary" onclick="exportPDF()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                         Exportar PDF
@@ -1115,6 +1119,105 @@
 
             downloadBlob(svgContent, `restaurante_${sanitizeFileName(data.restaurant.name || 'menu')}.svg`, 'image/svg+xml');
         };
+
+        window.exportCanvaSVG = () => {
+            const data = window.extractedData;
+            let y = 60;
+            const width = 800;
+            const elements = [];
+
+            if (data.restaurant.name) {
+                elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ff9533" xml:space="preserve">${escapeXml(data.restaurant.name)}</text>`);
+                y += 32;
+            } else {
+                elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ff9533" xml:space="preserve">Menú Restaurante</text>`);
+                y += 32;
+            }
+
+            if (data.restaurant.address) {
+                elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#4a5568" xml:space="preserve">Dirección: ${escapeXml(data.restaurant.address)}</text>`);
+                y += 22;
+            }
+
+            if (data.restaurant.phone) {
+                elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#4a5568" xml:space="preserve">Tel: ${escapeXml(data.restaurant.phone)}</text>`);
+                y += 22;
+            }
+
+            if (data.restaurant.hours) {
+                elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#4a5568" xml:space="preserve">Horarios: ${escapeXml(data.restaurant.hours)}</text>`);
+                y += 22;
+            }
+
+            y += 20;
+
+            data.categories.forEach(cat => {
+                elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#1a1c1e" xml:space="preserve">${escapeXml(cat.name)}</text>`);
+                y += 12;
+                elements.push(`<line x1="40" y1="${y}" x2="760" y2="${y}" stroke="#f8e8d8" stroke-width="2"/>`);
+                y += 28;
+
+                cat.dishes.forEach(dish => {
+                    elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#1a1c1e" xml:space="preserve">${escapeXml(dish.name)}</text>`);
+
+                    if (dish.price) {
+                        elements.push(`<text x="760" y="${y}" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ff9533" text-anchor="end" xml:space="preserve">${escapeXml(dish.price)}</text>`);
+                    }
+
+                    y += 20;
+
+                    if (dish.description) {
+                        const descLines = chunkText(dish.description, 80);
+                        descLines.forEach(line => {
+                            elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="12" font-weight="normal" fill="#4a5568" xml:space="preserve">${escapeXml(line)}</text>`);
+                            y += 16;
+                        });
+                    }
+
+                    if (dish.sizes && dish.sizes.length > 0) {
+                        elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="11" font-weight="normal" fill="#718096" xml:space="preserve">Tamaños: ${escapeXml(dish.sizes.join(', '))}</text>`);
+                        y += 15;
+                    }
+
+                    if (dish.extras && dish.extras.length > 0) {
+                        elements.push(`<text x="40" y="${y}" font-family="Arial, sans-serif" font-size="11" font-weight="normal" fill="#718096" xml:space="preserve">Extras: ${escapeXml(dish.extras.join(', '))}</text>`);
+                        y += 15;
+                    }
+
+                    y += 12;
+                });
+
+                y += 20;
+            });
+
+            const totalHeight = Math.max(y + 40, 300);
+
+            let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${totalHeight}" width="${width}" height="${totalHeight}">\n`;
+            svgContent += `<rect width="100%" height="100%" fill="#ffffff"/>\n`;
+            svgContent += elements.join('\n');
+            svgContent += `\n</svg>`;
+
+            downloadBlob(svgContent, `canva_${sanitizeFileName(data.restaurant.name || 'menu')}.svg`, 'image/svg+xml');
+        };
+
+        function chunkText(text, maxChars) {
+            if (!text) return [];
+            if (text.length <= maxChars) return [text];
+            const words = text.split(' ');
+            const lines = [];
+            let currentLine = '';
+
+            words.forEach(word => {
+                if ((currentLine + ' ' + word).trim().length <= maxChars) {
+                    currentLine = (currentLine + ' ' + word).trim();
+                } else {
+                    if (currentLine) lines.push(currentLine);
+                    currentLine = word;
+                }
+            });
+            if (currentLine) lines.push(currentLine);
+            return lines;
+        }
 
         window.exportPDF = () => {
             const data = window.extractedData;
