@@ -1,7 +1,7 @@
 /**
  * Menutech AI Chatbot Widget (menutechbot.gltf & Gemini Edge Function)
  * Features:
- * - 3D Floating Canvas displaying 'assets/img/menutechbot.gltf' with smooth 3D rotation & fallback
+ * - 3D Floating Canvas displaying 'assets/img/menutechbot.gltf' with smooth 3D rotation
  * - Professional responsive chat interface (glassmorphism UI, light/dark mode compatible)
  * - Text-To-Speech (Bot Voice) with toggle button
  * - Speech-To-Text (Voice Input / Microphone) via Web Speech API
@@ -491,12 +491,6 @@
                     <i class="fa-solid fa-cloud-arrow-up"></i>
                     <span style="font-weight:700;">Drop Image Here</span>
                 </div>
-                <div class="mt-msg bot">
-                    <div class="mt-msg-bubble">
-                        ¡Hola! 👋 Soy <b>Menutech Bot</b>. ¿En qué puedo ayudarte hoy con tus menús, sitio web o diseños?
-                    </div>
-                    <div class="mt-msg-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-                </div>
             </div>
 
             <div class="mt-attach-preview hidden" id="mt-attach-preview">
@@ -554,7 +548,7 @@
     const attachRemove = document.getElementById('mt-attach-remove');
     const dropZone = document.getElementById('mt-drop-zone');
 
-    // --- 3D CANVAS rendering 'assets/img/menutechbot.gltf' with Three.js ---
+    // --- 3D CANVAS rendering STRICTLY 'assets/img/menutechbot.gltf' ---
     function init3DModel() {
         const canvas = document.getElementById('mt-bot-canvas');
         if (!canvas) return;
@@ -579,14 +573,13 @@
 
             let botMesh = null;
 
-            // Attempt to load GLTF
+            // Load GLTF strictly (No sphere fallback)
             if (typeof THREE.GLTFLoader !== 'undefined') {
                 const loader = new THREE.GLTFLoader();
                 loader.load(
                     CONFIG.MODEL_URL,
                     (gltf) => {
                         botMesh = gltf.scene;
-                        // Center model
                         const box = new THREE.Box3().setFromObject(botMesh);
                         const center = box.getCenter(new THREE.Vector3());
                         botMesh.position.sub(center);
@@ -595,12 +588,9 @@
                     },
                     undefined,
                     (err) => {
-                        console.log("menutechbot.gltf not found or failed to load, using default 3D avatar:", err);
-                        createFallback3DMesh(scene, (mesh) => { botMesh = mesh; });
+                        // Strict mode: Do not draw any fallback sphere
                     }
                 );
-            } else {
-                createFallback3DMesh(scene, (mesh) => { botMesh = mesh; });
             }
 
             // Animation Loop
@@ -617,57 +607,6 @@
             animate();
         }
 
-        function createFallback3DMesh(scene, callback) {
-            const group = new THREE.Group();
-
-            // Bot Head Sphere
-            const headGeo = new THREE.SphereGeometry(0.7, 32, 32);
-            const headMat = new THREE.MeshStandardMaterial({
-                color: 0xffffff,
-                roughness: 0.2,
-                metalness: 0.5
-            });
-            const head = new THREE.Mesh(headGeo, headMat);
-            group.add(head);
-
-            // Visor
-            const visorGeo = new THREE.BoxGeometry(0.9, 0.35, 0.5);
-            const visorMat = new THREE.MeshStandardMaterial({
-                color: 0x0f172a,
-                roughness: 0.1
-            });
-            const visor = new THREE.Mesh(visorGeo, visorMat);
-            visor.position.set(0, 0.05, 0.35);
-            group.add(visor);
-
-            // Eyes Glowing
-            const eyeGeo = new THREE.SphereGeometry(0.08, 16, 16);
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-            const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-            eyeL.position.set(-0.2, 0.05, 0.58);
-            const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-            eyeR.position.set(0.2, 0.05, 0.58);
-            group.add(eyeL);
-            group.add(eyeR);
-
-            // Antenna
-            const antGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.3);
-            const antMat = new THREE.MeshStandardMaterial({ color: 0xff9533 });
-            const ant = new THREE.Mesh(antGeo, antMat);
-            ant.position.set(0, 0.8, 0);
-            group.add(ant);
-
-            const tipGeo = new THREE.SphereGeometry(0.08, 16, 16);
-            const tipMat = new THREE.MeshBasicMaterial({ color: 0xff9533 });
-            const tip = new THREE.Mesh(tipGeo, tipMat);
-            tip.position.set(0, 0.95, 0);
-            group.add(tip);
-
-            scene.add(group);
-            callback(group);
-        }
-
-        // Script loading helper
         if (typeof THREE === 'undefined') {
             const script3 = document.createElement('script');
             script3.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
@@ -710,7 +649,6 @@
         };
 
         recognition.onerror = (event) => {
-            console.error("Speech Recognition Error:", event.error);
             stopListening();
         };
 
@@ -731,9 +669,7 @@
         if (recognition && !isListening) {
             try {
                 recognition.start();
-            } catch (e) {
-                console.error(e);
-            }
+            } catch (e) {}
         }
     }
 
@@ -750,9 +686,9 @@
     // --- TEXT TO SPEECH (Bot Voice Output) ---
     function speakText(text) {
         if (!isTtsEnabled || !('speechSynthesis' in window)) return;
-        window.speechSynthesis.cancel(); // Stop ongoing speech
+        window.speechSynthesis.cancel();
 
-        const cleanText = text.replace(/[*#_`]/g, ''); // strip markdown
+        const cleanText = text.replace(/[*#_`]/g, '');
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.lang = 'es-ES';
         utterance.rate = 1.0;
@@ -766,17 +702,14 @@
         const text = inputEl.value.trim();
         if (!text && !currentImage) return;
 
-        // Display user message in UI
         appendUserMessage(text, currentImage ? currentImage.data : null);
 
         const payloadPrompt = text;
         const payloadImage = currentImage ? { ...currentImage } : null;
 
-        // Reset input & preview
         inputEl.value = '';
         clearImageAttachment();
 
-        // Add typing indicator
         const typingEl = appendTypingIndicator();
 
         try {
@@ -796,27 +729,23 @@
             removeTypingIndicator(typingEl);
 
             if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                appendBotMessage("Lo siento, ocurrió un error al comunicarme con el asistente. Inténtalo de nuevo.");
+                appendBotMessage("Error de conexión con la Edge Function. Verifica que esté configurada tu GEMINI_API_KEY en Supabase.");
                 return;
             }
 
             const data = await res.json();
             const reply = data.reply || "Sin respuesta del servidor.";
 
-            // Save to chat history
             chatHistory.push({ role: "user", text: payloadPrompt });
             chatHistory.push({ role: "model", text: reply });
             if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
 
-            // Display bot reply
             appendBotMessage(reply);
             speakText(reply);
 
         } catch (err) {
-            console.error("Chatbot Fetch Error:", err);
             removeTypingIndicator(typingEl);
-            appendBotMessage("Error de conexión. Verifica tu conexión a internet.");
+            appendBotMessage("Error al enviar el mensaje. Revisa la consola o configuración de Supabase.");
         }
     }
 
@@ -843,7 +772,6 @@
         const msgDiv = document.createElement('div');
         msgDiv.className = 'mt-msg bot';
 
-        // Format basic markdown bold / line breaks
         let formatted = escapeHtml(text)
             .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
             .replace(/\n/g, '<br>');
@@ -949,7 +877,6 @@
     };
     attachRemove.onclick = clearImageAttachment;
 
-    // Drag and drop onto chat window
     windowEl.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropZone.classList.add('active');
@@ -968,7 +895,6 @@
         }
     });
 
-    // Initialize components
     init3DModel();
     initSpeechRecognition();
 
