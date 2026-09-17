@@ -1,0 +1,26 @@
+====================================================================
+  GUÍA DE CONFIGURACIÓN Y DESPLIEGUE - SUPABASE EDGE FUNCTION & GEMINI
+====================================================================
+
+1. NOMBRE DE LA EDGE FUNCTION:
+   - Debes nombrar tu Edge Function como: gemini-chat
+
+2. NOMBRE DEL SECRET / VARIABLE DE ENTORNO PARA LA API KEY:
+   - Debes guardar tu API Key de Google Gemini con el nombre exacto: GEMINI_API_KEY
+
+3. COMANDO PARA CONFIGURAR LA API KEY EN SUPABASE:
+   Abre la terminal de Supabase CLI y ejecuta:
+   supabase secrets set GEMINI_API_KEY="TU_API_KEY_DE_GEMINI_AQUI"
+
+4. COMANDO PARA DESPLEGAR LA EDGE FUNCTION A SUPABASE:
+   Ejecuta en la terminal el siguiente comando para desplegar la función:
+   supabase functions deploy gemini-chat --no-verify-jwt
+
+5. UBICACIÓN DEL CÓDIGO EN EL PROYECTO:
+   - El código TypeScript Deno de la función ya está creado en:
+     supabase/functions/gemini-chat/index.ts
+
+6. URL FINAL DE LA EDGE FUNCTION QUE CONECTA CON EL CHATBOT:
+   https://eemqyrysdgasfjlitads.supabase.co/functions/v1/gemini-chat
+
+====================================================================
