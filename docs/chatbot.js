@@ -1,7 +1,7 @@
 /**
  * Menutech AI Chatbot Widget (menutechbot.gltf & Gemini Edge Function)
  * Features:
- * - 3D Floating Canvas displaying 'assets/img/menutechbot.gltf' with smooth 3D rotation
+ * - 3D Floating Canvas displaying strictly 'assets/img/menutechbot.gltf' with smooth 3D rotation (100% transparent container)
  * - Professional responsive chat interface (glassmorphism UI, light/dark mode compatible)
  * - Text-To-Speech (Bot Voice) with toggle button
  * - Speech-To-Text (Voice Input / Microphone) via Web Speech API
@@ -46,53 +46,30 @@
             pointer-events: auto;
         }
 
-        /* 3D Trigger Widget */
+        /* 3D Trigger Widget - Completely transparent container */
         #mt-bot-trigger {
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: linear-gradient(135deg, rgba(255,149,51,0.9), rgba(255,100,20,0.95));
-            box-shadow: 0 10px 30px rgba(255, 149, 51, 0.4), 0 0 0 3px rgba(255, 255, 255, 0.2);
+            background: transparent !important;
+            box-shadow: none !important;
             cursor: pointer;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             user-select: none;
         }
         #mt-bot-trigger:hover {
             transform: scale(1.08) translateY(-4px);
-            box-shadow: 0 16px 36px rgba(255, 149, 51, 0.5), 0 0 0 4px rgba(255, 255, 255, 0.4);
         }
         #mt-bot-canvas {
-            width: 74px;
-            height: 74px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             pointer-events: none;
-        }
-        #mt-bot-badge {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            width: 16px;
-            height: 16px;
-            background: #10b981;
-            border: 2.5px solid #ffffff;
-            border-radius: 50%;
-            box-shadow: 0 0 8px #10b981;
-        }
-        #mt-bot-pulse {
-            position: absolute;
-            inset: -4px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 149, 51, 0.6);
-            animation: mtPulse 2s infinite ease-out;
-            pointer-events: none;
-        }
-        @keyframes mtPulse {
-            0% { transform: scale(0.95); opacity: 0.8; }
-            100% { transform: scale(1.35); opacity: 0; }
+            background: transparent !important;
         }
 
         /* Floating Chat Window */
@@ -517,9 +494,7 @@
         </div>
 
         <div id="mt-bot-trigger" title="Menutech AI Assistant">
-            <div id="mt-bot-pulse"></div>
             <canvas id="mt-bot-canvas"></canvas>
-            <div id="mt-bot-badge"></div>
         </div>
     `;
     document.body.appendChild(botRoot);
@@ -559,7 +534,7 @@
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-            renderer.setSize(74, 74);
+            renderer.setSize(80, 80);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
             const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
@@ -573,7 +548,7 @@
 
             let botMesh = null;
 
-            // Load GLTF strictly (No sphere fallback)
+            // Load GLTF strictly (100% transparent until loaded)
             if (typeof THREE.GLTFLoader !== 'undefined') {
                 const loader = new THREE.GLTFLoader();
                 loader.load(
@@ -588,7 +563,7 @@
                     },
                     undefined,
                     (err) => {
-                        // Strict mode: Do not draw any fallback sphere
+                        // Completely transparent when file is missing
                     }
                 );
             }
@@ -648,7 +623,7 @@
             sendMessage();
         };
 
-        recognition.onerror = (event) => {
+        recognition.onerror = () => {
             stopListening();
         };
 
