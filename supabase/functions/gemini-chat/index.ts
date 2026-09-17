@@ -1,5 +1,6 @@
 // Supabase Edge Function: gemini-chat
 // Handles AI Chatbot requests using Google Gemini API with multimodal (text + image) support.
+// Compatible with Supabase Web Dashboard Edge Function editor & Deno runtime.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -26,10 +27,12 @@ serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get("GEMINI_API_KEY");
+    const rawApiKey = Deno.env.get("GEMINI_API_KEY");
+    const apiKey = rawApiKey ? rawApiKey.trim() : "";
+
     if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: "GEMINI_API_KEY environment variable is not configured in Supabase Secrets." }),
+        JSON.stringify({ error: "GEMINI_API_KEY environment variable is not configured in Supabase Web Dashboard Secrets." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -64,9 +67,7 @@ serve(async (req) => {
     }
 
     if (image && image.data) {
-      // image.data is base64 string, image.mimeType e.g. "image/png" or "image/jpeg"
       const mimeType = image.mimeType || "image/png";
-      // Strip data url prefix if included
       const cleanBase64 = image.data.replace(/^data:image\/[a-zA-Z+]+;base64,/, "");
       currentParts.push({
         inlineData: {
@@ -93,16 +94,28 @@ serve(async (req) => {
       }
     };
 
-    // Call Gemini API (gemini-1.5-flash or gemini-2.5-flash)
+    // Standard Gemini 1.5 Flash Endpoint (Supports all key formats: AQ.A..., AIza...)
     const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-    const geminiRes = await fetch(geminiEndpoint, {
+    let geminiRes = await fetch(geminiEndpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(geminiPayload),
     });
+
+    // Fallback to gemini-1.5-pro if 1.5-flash returns 404
+    if (geminiRes.status === 404) {
+      const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
+      geminiRes = await fetch(fallbackEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(geminiPayload),
+      });
+    }
 
     if (!geminiRes.ok) {
       const errText = await geminiRes.text();
