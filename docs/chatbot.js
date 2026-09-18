@@ -16,7 +16,7 @@
     // --- CONFIGURATION ---
     const CONFIG = {
         EDGE_FUNCTION_URL: "https://eemqyrysdgasfjlitads.supabase.co/functions/v1/gemini-chat",
-        SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInR5cCI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY",
+        SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY",
         MODEL_URL: "assets/img/menutechbot.gltf"
     };
 
@@ -692,10 +692,12 @@
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "apikey": CONFIG.SUPABASE_ANON_KEY,
                     "Authorization": `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
                 },
                 body: JSON.stringify({
                     prompt: payloadPrompt,
+                    message: payloadPrompt,
                     history: chatHistory,
                     image: payloadImage
                 })
@@ -703,13 +705,15 @@
 
             removeTypingIndicator(typingEl);
 
+            const data = await res.json().catch(() => ({}));
+
             if (!res.ok) {
-                appendBotMessage("Error de conexión con la Edge Function. Verifica que esté configurada tu GEMINI_API_KEY en Supabase.");
+                const errorMsg = data.error || data.message || `HTTP ${res.status}`;
+                appendBotMessage(`Error de la Edge Function (${errorMsg}). Revisa los logs de Supabase.`);
                 return;
             }
 
-            const data = await res.json();
-            const reply = data.reply || "Sin respuesta del servidor.";
+            const reply = data.reply || data.message || "Sin respuesta del servidor.";
 
             chatHistory.push({ role: "user", text: payloadPrompt });
             chatHistory.push({ role: "model", text: reply });
@@ -720,7 +724,7 @@
 
         } catch (err) {
             removeTypingIndicator(typingEl);
-            appendBotMessage("Error al enviar el mensaje. Revisa la consola o configuración de Supabase.");
+            appendBotMessage("Error de red al conectar con Supabase: " + err.message);
         }
     }
 
