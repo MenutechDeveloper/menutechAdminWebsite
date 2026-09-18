@@ -1,7 +1,7 @@
 /**
  * Menutech AI Chatbot Widget (menutechbot.gltf & Gemini Edge Function)
  * Features:
- * - 3D Floating Canvas displaying strictly 'assets/menutechbot.gltf' with smooth 3D rotation (100% transparent container)
+ * - <model-viewer> 3D Floating Widget & Chat Header rendering strictly 'assets/menutechbot.gltf'
  * - Professional responsive chat interface (glassmorphism UI, light/dark mode compatible)
  * - Text-To-Speech (Bot Voice) with toggle button
  * - Speech-To-Text (Voice Input / Microphone) via Web Speech API
@@ -28,6 +28,14 @@
         document.head.appendChild(fa);
     }
 
+    // Dynamically inject Google model-viewer library if missing
+    if (!document.querySelector('script[src*="model-viewer"]')) {
+        const mvScript = document.createElement('script');
+        mvScript.type = 'module';
+        mvScript.src = 'https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js';
+        document.head.appendChild(mvScript);
+    }
+
     // --- INJECT CSS STYLES ---
     const style = document.createElement('style');
     style.id = 'menutech-chatbot-styles';
@@ -48,8 +56,8 @@
 
         /* 3D Trigger Widget - Completely transparent container */
         #mt-bot-trigger {
-            width: 80px;
-            height: 80px;
+            width: 85px;
+            height: 85px;
             border-radius: 50%;
             background: transparent !important;
             box-shadow: none !important;
@@ -64,12 +72,13 @@
         #mt-bot-trigger:hover {
             transform: scale(1.08) translateY(-4px);
         }
-        #mt-bot-canvas {
-            width: 80px;
-            height: 80px;
+        .mt-trigger-mv {
+            width: 85px;
+            height: 85px;
             border-radius: 50%;
             pointer-events: none;
-            background: transparent !important;
+            --poster-color: transparent;
+            background-color: transparent !important;
         }
 
         /* Floating Chat Window */
@@ -81,7 +90,7 @@
             max-width: calc(100vw - 32px);
             height: 580px;
             max-height: calc(100vh - 120px);
-            background: rgba(255, 255, 255, 0.94);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.5);
@@ -96,7 +105,7 @@
             transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         body.dark-mode #mt-bot-window {
-            background: rgba(28, 31, 38, 0.94);
+            background: rgba(28, 31, 38, 0.95);
             border-color: rgba(255, 255, 255, 0.1);
             color: #f8fafc;
         }
@@ -117,7 +126,7 @@
             box-shadow: 0 4px 15px rgba(249, 115, 22, 0.2);
         }
         .mt-bot-banner {
-            height: 110px;
+            height: 120px;
             background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
             display: flex;
             align-items: center;
@@ -130,11 +139,11 @@
             background: linear-gradient(180deg, #242832 0%, #181b22 100%);
             border-color: rgba(255, 255, 255, 0.05);
         }
-        #mt-window-canvas {
-            width: 100px;
-            height: 100px;
-            background: transparent !important;
-            pointer-events: none;
+        .mt-window-mv {
+            width: 120px;
+            height: 120px;
+            background-color: transparent !important;
+            --poster-color: transparent;
         }
         .mt-bot-profile {
             display: flex;
@@ -484,7 +493,17 @@
             </div>
 
             <div class="mt-bot-banner">
-                <canvas id="mt-window-canvas"></canvas>
+                <model-viewer
+                    class="mt-window-mv"
+                    src="${CONFIG.MODEL_URL}"
+                    alt="Menutech 3D Bot"
+                    auto-rotate
+                    camera-controls
+                    disable-zoom
+                    disable-pan
+                    shadow-intensity="1"
+                    interaction-prompt="none">
+                </model-viewer>
             </div>
 
             <div class="mt-bot-messages" id="mt-bot-messages">
@@ -518,7 +537,16 @@
         </div>
 
         <div id="mt-bot-trigger" title="Menutech AI Assistant">
-            <canvas id="mt-bot-canvas"></canvas>
+            <model-viewer
+                class="mt-trigger-mv"
+                src="${CONFIG.MODEL_URL}"
+                alt="Menutech 3D Bot"
+                auto-rotate
+                disable-zoom
+                disable-pan
+                shadow-intensity="0"
+                interaction-prompt="none">
+            </model-viewer>
         </div>
     `;
     document.body.appendChild(botRoot);
@@ -546,82 +574,6 @@
     const attachName = document.getElementById('mt-attach-name');
     const attachRemove = document.getElementById('mt-attach-remove');
     const dropZone = document.getElementById('mt-drop-zone');
-
-    // --- 3D CANVAS rendering STRICTLY 'assets/menutechbot.gltf' ---
-    function init3DModel() {
-        const triggerCanvas = document.getElementById('mt-bot-canvas');
-        const windowCanvas = document.getElementById('mt-window-canvas');
-
-        function setupCanvasRenderer(targetCanvas, size = 80, scaleFactor = 0.9) {
-            if (!targetCanvas || typeof THREE === 'undefined') return;
-
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ canvas: targetCanvas, antialias: true, alpha: true });
-            renderer.setSize(size, size);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1.3);
-            scene.add(ambientLight);
-
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            dirLight.position.set(2, 4, 5);
-            scene.add(dirLight);
-
-            camera.position.set(0, 0, 2.5);
-
-            let botMesh = null;
-
-            if (typeof THREE.GLTFLoader !== 'undefined') {
-                const loader = new THREE.GLTFLoader();
-                loader.load(
-                    CONFIG.MODEL_URL,
-                    (gltf) => {
-                        botMesh = gltf.scene;
-                        const box = new THREE.Box3().setFromObject(botMesh);
-                        const center = box.getCenter(new THREE.Vector3());
-                        botMesh.position.sub(center);
-                        botMesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
-                        scene.add(botMesh);
-                    },
-                    undefined,
-                    () => {}
-                );
-            }
-
-            let clock = new THREE.Clock();
-            function animate() {
-                requestAnimationFrame(animate);
-                const delta = clock.getElapsedTime();
-                if (botMesh) {
-                    botMesh.rotation.y = delta * 0.8;
-                    botMesh.position.y = Math.sin(delta * 2) * 0.08;
-                }
-                renderer.render(scene, camera);
-            }
-            animate();
-        }
-
-        function loadThreeAndRenderAll() {
-            if (triggerCanvas) setupCanvasRenderer(triggerCanvas, 80, 0.9);
-            if (windowCanvas) setupCanvasRenderer(windowCanvas, 100, 1.15);
-        }
-
-        if (typeof THREE === 'undefined') {
-            const script3 = document.createElement('script');
-            script3.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-            script3.onload = () => {
-                const scriptGltf = document.createElement('script');
-                scriptGltf.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
-                scriptGltf.onload = loadThreeAndRenderAll;
-                scriptGltf.onerror = loadThreeAndRenderAll;
-                document.head.appendChild(scriptGltf);
-            };
-            document.head.appendChild(script3);
-        } else {
-            loadThreeAndRenderAll();
-        }
-    }
 
     // --- VOICE RECOGNITION (Speech To Text) ---
     function initSpeechRecognition() {
@@ -899,7 +851,6 @@
         }
     });
 
-    init3DModel();
     initSpeechRecognition();
 
 })();
