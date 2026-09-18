@@ -132,12 +132,12 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            border-bottom: 1px solid rgba(255, 149, 51, 0.15);
+            border-bottom: none;
             flex-shrink: 0;
         }
         body.dark-mode .mt-bot-banner {
             background: linear-gradient(180deg, #242832 0%, #181b22 100%);
-            border-color: rgba(255, 255, 255, 0.05);
+            border-color: transparent;
         }
         .mt-window-mv {
             width: 120px;
@@ -338,6 +338,10 @@
             font-size: 2.5rem;
         }
 
+        .hidden {
+            display: none !important;
+        }
+
         /* Attachment Preview Bar */
         .mt-attach-preview {
             padding: 8px 16px;
@@ -476,7 +480,7 @@
                         <i class="fa-solid fa-sparkles"></i>
                     </div>
                     <div>
-                        <div class="mt-bot-title">Asistente IA</div>
+                        <div class="mt-bot-title">Menutech AI</div>
                         <div class="mt-bot-sub">
                             <span class="mt-bot-sub-dot"></span> En línea
                         </div>
