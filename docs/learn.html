@@ -127,102 +127,125 @@
         #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
         #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; }
 
-        /* Main Container */
+        /* Main Container 2-Column Split */
         .container {
             width: 100%;
-            max-width: 1100px;
+            max-width: 1350px;
             margin: 0 auto;
-            padding: 100px 24px 80px 24px;
+            padding: 100px 24px 60px 24px;
             animation: fadeIn 0.8s ease-out;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Centered 3D Hero & Speech Bubble */
-        .hero-section {
+        .learn-layout {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        /* LEFT SIDE: 3D Bot & Thought Bubble */
+        .left-bot-column {
+            position: sticky;
+            top: 100px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin-bottom: 50px;
-            position: relative;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 36px;
+            padding: 40px 24px;
+            box-shadow: 0 16px 50px rgba(0,0,0,0.04);
         }
 
-        .speech-bubble {
+        /* Thought Bubble Style ("Globo de pensamiento") */
+        .thought-bubble-wrapper {
             position: relative;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .thought-bubble {
             background: linear-gradient(135deg, #ff9533 0%, #f97316 100%);
             color: #ffffff;
-            padding: 16px 32px;
-            border-radius: 30px;
+            padding: 18px 32px;
+            border-radius: 40px;
             font-family: 'Outfit', sans-serif;
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 800;
             box-shadow: 0 16px 40px rgba(249, 115, 22, 0.3);
             text-align: center;
-            margin-bottom: 12px;
             letter-spacing: 0.5px;
-            animation: floatBubble 3s ease-in-out infinite;
+            animation: floatBubble 3.2s ease-in-out infinite;
         }
-        .speech-bubble::after {
-            content: '';
-            position: absolute;
-            bottom: -14px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-width: 14px 14px 0;
-            border-style: solid;
-            border-color: #f97316 transparent;
-            display: block;
-            width: 0;
+
+        /* Thought Dots */
+        .thought-dots {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
         }
+        .thought-dot {
+            background: #f97316;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(249, 115, 22, 0.25);
+        }
+        .thought-dot.dot-1 { width: 14px; height: 14px; }
+        .thought-dot.dot-2 { width: 9px; height: 9px; opacity: 0.8; }
+        .thought-dot.dot-3 { width: 6px; height: 6px; opacity: 0.6; }
+
         @keyframes floatBubble {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-8px); }
         }
 
         .canvas-container {
-            width: 320px;
-            height: 320px;
+            width: 340px;
+            height: 340px;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         #hero-bot-canvas {
-            width: 320px;
-            height: 320px;
+            width: 340px;
+            height: 340px;
             background: transparent !important;
             cursor: grab;
         }
 
-        .hero-subtitle {
+        .bot-caption {
             text-align: center;
+            font-size: 0.88rem;
             color: var(--text-dim);
-            font-size: 1.05rem;
-            max-width: 600px;
+            line-height: 1.5;
             margin-top: 10px;
-            line-height: 1.6;
         }
 
-        /* Bento Grid Sections */
-        .learn-grid {
-            display: grid;
-            grid-template-columns: 1fr;
+        /* RIGHT SIDE: CRUD & Knowledge Manager */
+        .right-content-column {
+            display: flex;
+            flex-direction: column;
             gap: 30px;
-            margin-top: 30px;
         }
 
         .card-panel {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 32px;
-            padding: 36px;
+            padding: 32px;
             box-shadow: 0 12px 40px rgba(0,0,0,0.04);
             transition: all 0.3s ease;
         }
 
         .card-title {
             font-family: 'Outfit', sans-serif;
-            font-size: 1.4rem;
+            font-size: 1.35rem;
             font-weight: 700;
             margin-bottom: 20px;
             display: flex;
@@ -234,7 +257,7 @@
             color: var(--orange);
         }
 
-        /* Tabs Navigation for Knowledge Loading */
+        /* Tabs Navigation */
         .nav-tabs {
             display: flex;
             gap: 10px;
@@ -246,11 +269,11 @@
         .tab-btn {
             background: var(--input);
             border: 1px solid var(--border);
-            padding: 12px 20px;
+            padding: 10px 18px;
             border-radius: 16px;
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             color: var(--text-dim);
             cursor: pointer;
             transition: all 0.3s;
@@ -270,13 +293,13 @@
             box-shadow: 0 6px 18px rgba(255, 149, 51, 0.25);
         }
 
-        /* Form Inputs */
+        /* Form Controls */
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         .form-group label {
             display: block;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 700;
             color: var(--orange);
             text-transform: uppercase;
@@ -288,10 +311,10 @@
             background: var(--input);
             border: 1px solid var(--border);
             border-radius: 18px;
-            padding: 14px 18px;
+            padding: 12px 16px;
             color: var(--text);
             font-family: inherit;
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             transition: all 0.3s;
             outline: none;
         }
@@ -301,13 +324,13 @@
         }
         textarea {
             resize: vertical;
-            min-height: 120px;
+            min-height: 110px;
         }
 
         .file-upload-area {
             border: 2px dashed var(--border);
             border-radius: 20px;
-            padding: 24px;
+            padding: 20px;
             text-align: center;
             background: var(--input);
             cursor: pointer;
@@ -319,32 +342,32 @@
             background: rgba(255, 149, 51, 0.05);
         }
         .file-upload-area i {
-            font-size: 2rem;
+            font-size: 1.8rem;
             color: var(--orange);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .btn-submit {
             background: linear-gradient(135deg, #ff9533 0%, #f97316 100%);
             color: #ffffff;
             border: none;
-            padding: 16px 28px;
-            border-radius: 20px;
+            padding: 14px 24px;
+            border-radius: 18px;
             font-weight: 800;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 8px 25px rgba(249, 115, 22, 0.25);
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
         .btn-submit:hover {
             transform: translateY(-2px);
             box-shadow: 0 12px 30px rgba(249, 115, 22, 0.35);
         }
 
-        /* Knowledge Items Dashboard */
+        /* Dashboard & Search Header */
         .dashboard-header {
             display: flex;
             align-items: center;
@@ -356,7 +379,7 @@
         .search-box {
             position: relative;
             flex: 1;
-            min-width: 240px;
+            min-width: 220px;
         }
         .search-box i {
             position: absolute;
@@ -375,11 +398,11 @@
             overflow-x: auto;
         }
         .filter-badge {
-            padding: 8px 16px;
+            padding: 8px 14px;
             border-radius: 12px;
             background: var(--input);
             border: 1px solid var(--border);
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 700;
             color: var(--text-dim);
             cursor: pointer;
@@ -392,11 +415,12 @@
             border-color: var(--orange);
         }
 
+        /* CRUD Knowledge Item Cards */
         .knowledge-list {
             display: flex;
             flex-direction: column;
             gap: 16px;
-            max-height: 480px;
+            max-height: 520px;
             overflow-y: auto;
             padding-right: 4px;
         }
@@ -433,7 +457,7 @@
         .item-type-tag {
             padding: 4px 10px;
             border-radius: 10px;
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -443,11 +467,11 @@
         .tag-sheet { background: rgba(168, 85, 247, 0.15); color: #9333ea; }
 
         .item-content {
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             color: var(--text-dim);
             line-height: 1.5;
             white-space: pre-wrap;
-            max-height: 100px;
+            max-height: 90px;
             overflow: hidden;
             text-overflow: ellipsis;
         }
@@ -459,6 +483,28 @@
             color: var(--text-dim);
             margin-top: 4px;
         }
+        .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-edit {
+            background: rgba(255, 149, 51, 0.12);
+            color: var(--orange-dark);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-edit:hover {
+            background: var(--orange);
+            color: #ffffff;
+        }
+
         .btn-delete {
             background: rgba(220, 38, 38, 0.1);
             color: var(--error);
@@ -479,21 +525,73 @@
         .ai-test-box {
             display: flex;
             gap: 12px;
-            margin-top: 16px;
+            margin-top: 14px;
         }
         .ai-test-box input {
             flex: 1;
         }
         .ai-reply-box {
-            margin-top: 20px;
+            margin-top: 18px;
             background: var(--input);
             border: 1px solid var(--border);
             border-radius: 20px;
-            padding: 20px;
-            font-size: 0.95rem;
+            padding: 18px;
+            font-size: 0.92rem;
             line-height: 1.6;
             color: var(--text);
             display: none;
+        }
+
+        /* EDIT MODAL */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 32px;
+            width: 100%;
+            max-width: 550px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            transform: scale(0.92);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .modal-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+        .btn-close-modal {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            cursor: pointer;
         }
 
         /* Toast Notifications */
@@ -501,21 +599,21 @@
             position: fixed;
             top: 24px;
             right: 24px;
-            z-index: 10000;
+            z-index: 20000;
             display: flex;
             flex-direction: column;
             gap: 12px;
             pointer-events: none;
         }
         .toast {
-            min-width: 320px;
-            max-width: 440px;
-            padding: 16px 20px;
-            border-radius: 20px;
+            min-width: 300px;
+            max-width: 420px;
+            padding: 14px 18px;
+            border-radius: 18px;
             background: #1c1f26;
             border: 1px solid var(--border);
             color: #fff;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 600;
             box-shadow: 0 12px 32px rgba(0,0,0,0.4);
             display: flex;
@@ -531,18 +629,17 @@
 
         .loader {
             border: 3px solid rgba(255, 149, 51, 0.2);
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             border-left-color: var(--orange);
             animation: rotate 1s linear infinite;
         }
         @keyframes rotate { to { transform: rotate(360deg); } }
 
-        @media (max-width: 768px) {
-            .speech-bubble { font-size: 1.25rem; padding: 12px 24px; }
-            .canvas-container, #hero-bot-canvas { width: 250px; height: 250px; }
-            .card-panel { padding: 24px; }
+        @media (max-width: 992px) {
+            .learn-layout { grid-template-columns: 1fr; }
+            .left-bot-column { position: relative; top: 0; }
         }
     </style>
 </head>
@@ -572,152 +669,194 @@
         </div>
     </div>
 
-    <!-- Main Container -->
+    <!-- Main 2-Column Split Container -->
     <div class="container">
+        <div class="learn-layout">
 
-        <!-- Hero Section with Centered 3D Bot & Speech Bubble -->
-        <div class="hero-section">
-            <div class="speech-bubble">
-                <i class="fa-solid fa-sparkles" style="margin-right: 8px;"></i> Que voy a aprender hoy
-            </div>
-
-            <div class="canvas-container">
-                <canvas id="hero-bot-canvas"></canvas>
-            </div>
-
-            <p class="hero-subtitle">
-                Carga preguntas frecuentes, documentos y tablas/sheets para que la Inteligencia Artificial aprenda todo sobre tu negocio y responda de forma precisa.
-            </p>
-        </div>
-
-        <div class="learn-grid">
-
-            <!-- Section 1: Upload / Input Knowledge -->
-            <div class="card-panel">
-                <div class="card-title">
-                    <i class="fa-solid fa-brain"></i>
-                    <span>Cargar Conocimiento a la IA</span>
-                </div>
-
-                <div class="nav-tabs">
-                    <button class="tab-btn active" data-tab="faq">
-                        <i class="fa-solid fa-circle-question"></i> Preguntas Frecuentes (FAQ)
-                    </button>
-                    <button class="tab-btn" data-tab="document">
-                        <i class="fa-solid fa-file-lines"></i> Documentos
-                    </button>
-                    <button class="tab-btn" data-tab="sheet">
-                        <i class="fa-solid fa-table"></i> Sheets / Tablas
-                    </button>
-                </div>
-
-                <!-- Form: FAQ -->
-                <div id="form-faq" class="tab-content">
-                    <div class="form-group">
-                        <label>Pregunta (FAQ)</label>
-                        <input type="text" id="faq-question" placeholder="Ej: ¿Cuáles son sus horarios de atención?">
+            <!-- LEFT COLUMN: 3D Bot with Thought Bubble -->
+            <div class="left-bot-column">
+                <div class="thought-bubble-wrapper">
+                    <div class="thought-bubble">
+                        Que voy a aprender hoy
                     </div>
-                    <div class="form-group">
-                        <label>Respuesta</label>
-                        <textarea id="faq-answer" placeholder="Ej: Atendemos de lunes a domingo de 12:00 PM a 10:00 PM."></textarea>
-                    </div>
-                    <button class="btn-submit" id="btn-save-faq">
-                        <i class="fa-solid fa-floppy-disk"></i> Guardar Pregunta Frecuente
-                    </button>
-                </div>
-
-                <!-- Form: Document -->
-                <div id="form-document" class="tab-content" style="display: none;">
-                    <div class="form-group">
-                        <label>Título del Documento</label>
-                        <input type="text" id="doc-title" placeholder="Ej: Menú Completo o Políticas de Servicio">
-                    </div>
-
-                    <div class="file-upload-area" id="doc-file-zone">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">Subir archivo de texto (.txt, .md, .json, .csv)</div>
-                        <div style="font-size: 0.8rem; color: var(--text-dim);">Haz clic o arrastra un archivo aquí para extraer su texto automáticamente</div>
-                        <input type="file" id="doc-file-input" accept=".txt,.md,.json,.csv,.text" style="display: none;">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Contenido del Documento</label>
-                        <textarea id="doc-content" style="min-height: 160px;" placeholder="Escribe o pega el contenido detallado del documento aquí..."></textarea>
-                    </div>
-                    <button class="btn-submit" id="btn-save-doc">
-                        <i class="fa-solid fa-floppy-disk"></i> Guardar Documento
-                    </button>
-                </div>
-
-                <!-- Form: Sheet / Table -->
-                <div id="form-sheet" class="tab-content" style="display: none;">
-                    <div class="form-group">
-                        <label>Nombre de la Tabla / Sheet</label>
-                        <input type="text" id="sheet-title" placeholder="Ej: Lista de Precios o Inventario de Platillos">
-                    </div>
-                    <div class="form-group">
-                        <label>Datos Tabulares (CSV o Formato Columna: Valor)</label>
-                        <textarea id="sheet-content" style="min-height: 160px;" placeholder="Platillo, Precio, Categoria&#10;Pizza Pepperoni, $12, Pizzas&#10;Hamburguesa Doble, $10, Hamburguesas"></textarea>
-                    </div>
-                    <button class="btn-submit" id="btn-save-sheet">
-                        <i class="fa-solid fa-floppy-disk"></i> Guardar Sheet / Tabla
-                    </button>
-                </div>
-            </div>
-
-            <!-- Section 2: Knowledge Dashboard List -->
-            <div class="card-panel">
-                <div class="dashboard-header">
-                    <div class="card-title" style="margin-bottom: 0;">
-                        <i class="fa-solid fa-database"></i>
-                        <span>Conocimientos Aprendidos (<span id="total-count">0</span>)</span>
-                    </div>
-
-                    <div class="filter-badge-container">
-                        <div class="filter-badge active" data-filter="all">Todos</div>
-                        <div class="filter-badge" data-filter="faq">FAQs</div>
-                        <div class="filter-badge" data-filter="document">Documentos</div>
-                        <div class="filter-badge" data-filter="sheet">Sheets</div>
+                    <div class="thought-dots">
+                        <div class="thought-dot dot-1"></div>
+                        <div class="thought-dot dot-2"></div>
+                        <div class="thought-dot dot-3"></div>
                     </div>
                 </div>
 
-                <div class="search-box" style="margin-bottom: 20px;">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="search-input" placeholder="Buscar en el conocimiento aprendidos...">
+                <div class="canvas-container">
+                    <canvas id="hero-bot-canvas"></canvas>
                 </div>
 
-                <div class="knowledge-list" id="knowledge-list">
-                    <div style="text-align: center; padding: 40px; color: var(--text-dim);">
-                        <div class="loader" style="margin: 0 auto 12px auto;"></div>
-                        Cargando conocimientos de Supabase...
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 3: Test AI Learning -->
-            <div class="card-panel">
-                <div class="card-title">
-                    <i class="fa-solid fa-comments"></i>
-                    <span>Probar lo que la IA ha Aprendido</span>
-                </div>
-                <p style="font-size: 0.9rem; color: var(--text-dim);">
-                    Hazle una pregunta a Menutech AI y comprobará si puede responder usando la base de datos de conocimientos que le cargaste.
+                <p class="bot-caption">
+                    Menutech AI aprende en tiempo real de tus FAQs, Documentos y Tablas.
                 </p>
-
-                <div class="ai-test-box">
-                    <input type="text" id="test-query-input" placeholder="Ej: ¿Qué pizzas tienen y cuánto cuestan?">
-                    <button class="btn-submit" id="btn-ask-ai">
-                        <i class="fa-solid fa-paper-plane"></i> Preguntar
-                    </button>
-                </div>
-
-                <div class="ai-reply-box" id="test-ai-reply"></div>
             </div>
 
+            <!-- RIGHT COLUMN: CRUD & File Knowledge Base -->
+            <div class="right-content-column">
+
+                <!-- Section 1: Upload / Add Knowledge -->
+                <div class="card-panel">
+                    <div class="card-title">
+                        <i class="fa-solid fa-brain"></i>
+                        <span>Cargar Conocimiento a la IA</span>
+                    </div>
+
+                    <div class="nav-tabs">
+                        <button class="tab-btn active" data-tab="faq">
+                            <i class="fa-solid fa-circle-question"></i> Preguntas Frecuentes (FAQ)
+                        </button>
+                        <button class="tab-btn" data-tab="document">
+                            <i class="fa-solid fa-file-lines"></i> Documentos
+                        </button>
+                        <button class="tab-btn" data-tab="sheet">
+                            <i class="fa-solid fa-table"></i> Sheets / Tablas
+                        </button>
+                    </div>
+
+                    <!-- Form: FAQ -->
+                    <div id="form-faq" class="tab-content">
+                        <div class="form-group">
+                            <label>Pregunta (FAQ)</label>
+                            <input type="text" id="faq-question" placeholder="Ej: ¿Cuáles son sus horarios de atención?">
+                        </div>
+                        <div class="form-group">
+                            <label>Respuesta</label>
+                            <textarea id="faq-answer" placeholder="Ej: Atendemos de lunes a domingo de 12:00 PM a 10:00 PM."></textarea>
+                        </div>
+                        <button class="btn-submit" id="btn-save-faq">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar Pregunta Frecuente
+                        </button>
+                    </div>
+
+                    <!-- Form: Document -->
+                    <div id="form-document" class="tab-content" style="display: none;">
+                        <div class="form-group">
+                            <label>Título del Documento</label>
+                            <input type="text" id="doc-title" placeholder="Ej: Menú Completo o Políticas de Servicio">
+                        </div>
+
+                        <div class="file-upload-area" id="doc-file-zone">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">Subir archivo (.txt, .md, .json, .csv)</div>
+                            <div style="font-size: 0.8rem; color: var(--text-dim);">Haz clic o arrastra un archivo para extraer su texto automáticamente</div>
+                            <input type="file" id="doc-file-input" accept=".txt,.md,.json,.csv,.text" style="display: none;">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Contenido del Documento</label>
+                            <textarea id="doc-content" style="min-height: 140px;" placeholder="Escribe o pega el contenido detallado del documento aquí..."></textarea>
+                        </div>
+                        <button class="btn-submit" id="btn-save-doc">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar Documento
+                        </button>
+                    </div>
+
+                    <!-- Form: Sheet / Table -->
+                    <div id="form-sheet" class="tab-content" style="display: none;">
+                        <div class="form-group">
+                            <label>Nombre de la Tabla / Sheet</label>
+                            <input type="text" id="sheet-title" placeholder="Ej: Lista de Precios o Inventario de Platillos">
+                        </div>
+                        <div class="form-group">
+                            <label>Datos Tabulares (CSV o Formato Columna: Valor)</label>
+                            <textarea id="sheet-content" style="min-height: 140px;" placeholder="Platillo, Precio, Categoria&#10;Pizza Pepperoni, $12, Pizzas&#10;Hamburguesa Doble, $10, Hamburguesas"></textarea>
+                        </div>
+                        <button class="btn-submit" id="btn-save-sheet">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar Sheet / Tabla
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section 2: Knowledge CRUD Dashboard -->
+                <div class="card-panel">
+                    <div class="dashboard-header">
+                        <div class="card-title" style="margin-bottom: 0;">
+                            <i class="fa-solid fa-database"></i>
+                            <span>Archivos & Conocimientos (<span id="total-count">0</span>)</span>
+                        </div>
+
+                        <div class="filter-badge-container">
+                            <div class="filter-badge active" data-filter="all">Todos</div>
+                            <div class="filter-badge" data-filter="faq">FAQs</div>
+                            <div class="filter-badge" data-filter="document">Documentos</div>
+                            <div class="filter-badge" data-filter="sheet">Sheets</div>
+                        </div>
+                    </div>
+
+                    <div class="search-box" style="margin-bottom: 20px;">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="search-input" placeholder="Buscar por nombre o contenido...">
+                    </div>
+
+                    <div class="knowledge-list" id="knowledge-list">
+                        <div style="text-align: center; padding: 40px; color: var(--text-dim);">
+                            <div class="loader" style="margin: 0 auto 12px auto;"></div>
+                            Cargando datos de Supabase...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Test Gemini Learning -->
+                <div class="card-panel">
+                    <div class="card-title">
+                        <i class="fa-solid fa-comments"></i>
+                        <span>Probar lo que la IA ha Aprendido</span>
+                    </div>
+                    <p style="font-size: 0.88rem; color: var(--text-dim);">
+                        Hazle una pregunta a Menutech AI y responderá utilizando los conocimientos almacenados.
+                    </p>
+
+                    <div class="ai-test-box">
+                        <input type="text" id="test-query-input" placeholder="Ej: ¿Cuáles son sus horarios y precios?">
+                        <button class="btn-submit" id="btn-ask-ai">
+                            <i class="fa-solid fa-paper-plane"></i> Preguntar
+                        </button>
+                    </div>
+
+                    <div class="ai-reply-box" id="test-ai-reply"></div>
+                </div>
+
+            </div>
         </div>
     </div>
 
-    <!-- Script Import -->
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Editar Conocimiento</h3>
+                <button class="btn-close-modal" id="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <input type="hidden" id="edit-id">
+            <div class="form-group">
+                <label>Título / Nombre</label>
+                <input type="text" id="edit-title">
+            </div>
+            <div class="form-group">
+                <label>Tipo</label>
+                <select id="edit-type">
+                    <option value="faq">Pregunta Frecuente (FAQ)</option>
+                    <option value="document">Documento</option>
+                    <option value="sheet">Sheet / Tabla</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Contenido</label>
+                <textarea id="edit-content" style="min-height: 160px;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button class="btn-submit" id="btn-update-knowledge">
+                    <i class="fa-solid fa-check"></i> Actualizar Conocimiento
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Imports & Logic -->
     <script type="module">
         import { MT_CONFIG } from './config.js';
         import { supabase as sb } from './supabase.js';
@@ -752,9 +891,9 @@
             loadKnowledgeList();
             initSearchAndFilter();
             initAiTest();
+            initModalControls();
         });
 
-        // Theme toggle
         function initTheme() {
             const toggle = document.getElementById('theme-toggle');
             if (localStorage.getItem('theme') === 'dark') {
@@ -766,7 +905,6 @@
             });
         }
 
-        // Render Centered 3D Bot
         function init3DHero() {
             const canvas = document.getElementById('hero-bot-canvas');
             if (!canvas) return;
@@ -777,7 +915,7 @@
                 const scene = new THREE.Scene();
                 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
                 const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-                renderer.setSize(320, 320);
+                renderer.setSize(340, 340);
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
                 const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
@@ -806,7 +944,7 @@
                             const box = new THREE.Box3().setFromObject(botMesh);
                             const center = box.getCenter(new THREE.Vector3());
                             botMesh.position.sub(center);
-                            botMesh.scale.set(1.15, 1.15, 1.15);
+                            botMesh.scale.set(1.2, 1.2, 1.2);
                             scene.add(botMesh);
                         },
                         undefined,
@@ -814,7 +952,6 @@
                     );
                 }
 
-                // Interactive Mouse Dragging & Floating Animation
                 canvas.addEventListener('mousedown', (e) => {
                     isDragging = true;
                     previousMousePosition = { x: e.clientX, y: e.clientY };
@@ -865,7 +1002,6 @@
             }
         }
 
-        // Tabs logic
         function initTabs() {
             const tabs = document.querySelectorAll('.tab-btn');
             tabs.forEach(tab => {
@@ -880,7 +1016,6 @@
             });
         }
 
-        // File upload reader for documents
         function initFileUpload() {
             const zone = document.getElementById('doc-file-zone');
             const fileInput = document.getElementById('doc-file-input');
@@ -923,7 +1058,6 @@
             reader.readAsText(file);
         }
 
-        // Form submission handlers
         function initForms() {
             document.getElementById('btn-save-faq').onclick = async () => {
                 const question = document.getElementById('faq-question').value.trim();
@@ -983,7 +1117,6 @@
             };
         }
 
-        // Save knowledge item to Supabase
         async function saveKnowledgeItem(item) {
             try {
                 const { data, error } = await sb
@@ -1001,7 +1134,6 @@
             }
         }
 
-        // Load Knowledge items list from Supabase
         async function loadKnowledgeList() {
             const listEl = document.getElementById('knowledge-list');
             try {
@@ -1020,7 +1152,6 @@
             }
         }
 
-        // Render list with current filter and search text
         function renderKnowledgeList() {
             const listEl = document.getElementById('knowledge-list');
             const searchVal = document.getElementById('search-input').value.toLowerCase();
@@ -1035,7 +1166,7 @@
             totalCountEl.textContent = filtered.length;
 
             if (filtered.length === 0) {
-                listEl.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-dim);">No se encontraron elementos de conocimiento.</div>`;
+                listEl.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-dim);">No se encontraron elementos.</div>`;
                 return;
             }
 
@@ -1053,18 +1184,72 @@
                         <div class="item-content">${escapeHtml(item.content)}</div>
                         <div class="item-footer">
                             <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
-                            <button class="btn-delete" onclick="deleteKnowledgeItem('${item.id}', '${escapeHtml(item.title)}')">
-                                <i class="fa-solid fa-trash"></i> Eliminar
-                            </button>
+                            <div class="item-actions">
+                                <button class="btn-edit" onclick="openEditModal('${item.id}')">
+                                    <i class="fa-solid fa-pen"></i> Editar
+                                </button>
+                                <button class="btn-delete" onclick="deleteKnowledgeItem('${item.id}', '${escapeHtml(item.title)}')">
+                                    <i class="fa-solid fa-trash"></i> Eliminar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        // Delete item from Supabase
+        window.openEditModal = (id) => {
+            const item = knowledgeData.find(k => k.id === id);
+            if (!item) return;
+
+            document.getElementById('edit-id').value = item.id;
+            document.getElementById('edit-title').value = item.title;
+            document.getElementById('edit-type').value = item.type;
+            document.getElementById('edit-content').value = item.content;
+
+            document.getElementById('edit-modal').classList.add('active');
+        };
+
+        function initModalControls() {
+            const modal = document.getElementById('edit-modal');
+            const closeBtn = document.getElementById('btn-close-modal');
+            const updateBtn = document.getElementById('btn-update-knowledge');
+
+            closeBtn.onclick = () => modal.classList.remove('active');
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.classList.remove('active');
+            };
+
+            updateBtn.onclick = async () => {
+                const id = document.getElementById('edit-id').value;
+                const title = document.getElementById('edit-title').value.trim();
+                const type = document.getElementById('edit-type').value;
+                const content = document.getElementById('edit-content').value.trim();
+
+                if (!title || !content) {
+                    showToast("El título y contenido no pueden estar vacíos.", "warning");
+                    return;
+                }
+
+                try {
+                    const { error } = await sb
+                        .from('menutech_knowledge')
+                        .update({ title, type, content })
+                        .eq('id', id);
+
+                    if (error) throw error;
+
+                    showToast("Conocimiento actualizado correctamente.", "success");
+                    modal.classList.remove('active');
+                    loadKnowledgeList();
+                } catch (err) {
+                    showToast("Error al actualizar: " + err.message, "error");
+                }
+            };
+        }
+
         window.deleteKnowledgeItem = async (id, title) => {
-            if (!confirm(`¿Estás seguro de eliminar "${title}" de la base de conocimientos?`)) return;
+            if (!confirm(`¿Estás seguro de eliminar "${title}"?`)) return;
 
             try {
                 const { error } = await sb
@@ -1081,7 +1266,6 @@
             }
         };
 
-        // Search & Filter listeners
         function initSearchAndFilter() {
             document.getElementById('search-input').oninput = renderKnowledgeList;
 
@@ -1096,7 +1280,6 @@
             });
         }
 
-        // AI Query Test Interface
         function initAiTest() {
             const input = document.getElementById('test-query-input');
             const btn = document.getElementById('btn-ask-ai');
@@ -1112,7 +1295,6 @@
                 replyBox.style.display = 'block';
                 replyBox.innerHTML = `<div style="display:flex; align-items:center; gap:10px; color:var(--orange); font-weight:700;"><div class="loader"></div> Consultando a Menutech AI con tus conocimientos aprendidos...</div>`;
 
-                // Build context prompt from knowledgeData
                 let contextPrompt = "";
                 if (knowledgeData.length > 0) {
                     contextPrompt = "CONOCIMIENTOS BASE DEL RESTAURANTE / PLATAFORMA:\n\n";
@@ -1147,7 +1329,7 @@
                     const replyText = data.reply || data.message || "Sin respuesta del modelo.";
                     replyBox.innerHTML = `
                         <div style="font-weight:800; color:var(--orange); margin-bottom:8px; font-family:'Outfit',sans-serif;">
-                            <i class="fa-solid fa-robot"></i> Menutech AI
+                            <i class="fa-solid fa-sparkles"></i> Menutech AI
                         </div>
                         <div>${escapeHtml(replyText).replace(/\n/g, '<br>')}</div>
                     `;
