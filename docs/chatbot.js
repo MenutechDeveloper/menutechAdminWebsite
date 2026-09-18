@@ -76,7 +76,7 @@
             width: 85px;
             height: 85px;
             border-radius: 50%;
-            pointer-events: none;
+            pointer-events: auto;
             --poster-color: transparent;
             background-color: transparent !important;
         }
@@ -542,6 +542,7 @@
                 src="${CONFIG.MODEL_URL}"
                 alt="Menutech 3D Bot"
                 auto-rotate
+                camera-controls
                 disable-zoom
                 disable-pan
                 shadow-intensity="0"
