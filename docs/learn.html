@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprender IA | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --orange-dark: #f97316;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #059669;
+            --error: #dc2626;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .bg-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 45%),
+                        radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 45%);
+        }
+
+        /* Top Bar Navigation */
+        #top-nav {
+            position: fixed;
+            top: 20px;
+            left: 24px;
+            right: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 5000;
+            pointer-events: none;
+        }
+        #top-nav > * { pointer-events: auto; }
+
+        .btn-panel-top {
+            background: var(--orange);
+            color: #fff;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.4s;
+            letter-spacing: 1.5px;
+            box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3);
+            text-transform: uppercase;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-panel-top:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4);
+        }
+
+        .theme-switch {
+            width: 50px;
+            height: 50px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.4s;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+        .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        #user-display-pill {
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            padding: 8px 24px;
+            border-radius: 40px;
+            border: 1.5px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            min-width: 180px;
+        }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); }
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
+        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; }
+
+        /* Main Container */
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 100px 24px 80px 24px;
+            animation: fadeIn 0.8s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Centered 3D Hero & Speech Bubble */
+        .hero-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .speech-bubble {
+            position: relative;
+            background: linear-gradient(135deg, #ff9533 0%, #f97316 100%);
+            color: #ffffff;
+            padding: 16px 32px;
+            border-radius: 30px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            box-shadow: 0 16px 40px rgba(249, 115, 22, 0.3);
+            text-align: center;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+            animation: floatBubble 3s ease-in-out infinite;
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 14px 14px 0;
+            border-style: solid;
+            border-color: #f97316 transparent;
+            display: block;
+            width: 0;
+        }
+        @keyframes floatBubble {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .canvas-container {
+            width: 320px;
+            height: 320px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #hero-bot-canvas {
+            width: 320px;
+            height: 320px;
+            background: transparent !important;
+            cursor: grab;
+        }
+
+        .hero-subtitle {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 1.05rem;
+            max-width: 600px;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        /* Bento Grid Sections */
+        .learn-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .card-panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 36px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.04);
+            transition: all 0.3s ease;
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text);
+        }
+        .card-title i {
+            color: var(--orange);
+        }
+
+        /* Tabs Navigation for Knowledge Loading */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            border-bottom: 1.5px solid var(--border);
+            padding-bottom: 12px;
+            overflow-x: auto;
+        }
+        .tab-btn {
+            background: var(--input);
+            border: 1px solid var(--border);
+            padding: 12px 20px;
+            border-radius: 16px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .tab-btn:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+        .tab-btn.active {
+            background: var(--orange);
+            color: #ffffff;
+            border-color: var(--orange);
+            box-shadow: 0 6px 18px rgba(255, 149, 51, 0.25);
+        }
+
+        /* Form Inputs */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--orange);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 14px 18px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            outline: none;
+        }
+        input[type="text"]:focus, textarea:focus, select:focus {
+            border-color: var(--orange);
+            box-shadow: 0 0 0 4px rgba(255, 149, 51, 0.1);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .file-upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            background: var(--input);
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 16px;
+        }
+        .file-upload-area:hover, .file-upload-area.dragover {
+            border-color: var(--orange);
+            background: rgba(255, 149, 51, 0.05);
+        }
+        .file-upload-area i {
+            font-size: 2rem;
+            color: var(--orange);
+            margin-bottom: 8px;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #ff9533 0%, #f97316 100%);
+            color: #ffffff;
+            border: none;
+            padding: 16px 28px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(249, 115, 22, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(249, 115, 22, 0.35);
+        }
+
+        /* Knowledge Items Dashboard */
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 240px;
+        }
+        .search-box i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+        }
+        .search-box input {
+            padding-left: 44px;
+        }
+
+        .filter-badge-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+        }
+        .filter-badge {
+            padding: 8px 16px;
+            border-radius: 12px;
+            background: var(--input);
+            border: 1px solid var(--border);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .filter-badge.active {
+            background: var(--orange);
+            color: #fff;
+            border-color: var(--orange);
+        }
+
+        .knowledge-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-height: 480px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .knowledge-list::-webkit-scrollbar { width: 6px; }
+        .knowledge-list::-webkit-scrollbar-thumb { background: rgba(255, 149, 51, 0.3); border-radius: 10px; }
+
+        .knowledge-item {
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .knowledge-item:hover {
+            border-color: var(--orange);
+            transform: translateY(-2px);
+        }
+        .item-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .item-title {
+            font-weight: 800;
+            font-size: 1.05rem;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+        }
+        .item-type-tag {
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tag-faq { background: rgba(59, 130, 246, 0.15); color: #2563eb; }
+        .tag-document { background: rgba(16, 185, 129, 0.15); color: #059669; }
+        .tag-sheet { background: rgba(168, 85, 247, 0.15); color: #9333ea; }
+
+        .item-content {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+            white-space: pre-wrap;
+            max-height: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .item-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+        .btn-delete {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--error);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-delete:hover {
+            background: var(--error);
+            color: #ffffff;
+        }
+
+        /* AI Ask & Test Section */
+        .ai-test-box {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .ai-test-box input {
+            flex: 1;
+        }
+        .ai-reply-box {
+            margin-top: 20px;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text);
+            display: none;
+        }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+        .toast {
+            min-width: 320px;
+            max-width: 440px;
+            padding: 16px 20px;
+            border-radius: 20px;
+            background: #1c1f26;
+            border: 1px solid var(--border);
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            pointer-events: auto;
+            animation: toastSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .toast.success { border-left: 6px solid var(--success); }
+        .toast.error { border-left: 6px solid var(--error); }
+        .toast.warning { border-left: 6px solid var(--orange); }
+        @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        .loader {
+            border: 3px solid rgba(255, 149, 51, 0.2);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border-left-color: var(--orange);
+            animation: rotate 1s linear infinite;
+        }
+        @keyframes rotate { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .speech-bubble { font-size: 1.25rem; padding: 12px 24px; }
+            .canvas-container, #hero-bot-canvas { width: 250px; height: 250px; }
+            .card-panel { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
+
+    <!-- Top Navigation Bar -->
+    <div id="top-nav">
+        <div>
+            <a href="index.html" class="btn-panel-top">
+                <i class="fa-solid fa-arrow-left"></i> PANEL
+            </a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="theme-switch" id="theme-toggle" title="Cambiar tema">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+            <div id="user-display-pill">
+                <i class="fa-solid fa-graduation-cap" style="color: var(--orange);"></i>
+                <div class="pill-info">
+                    <div id="user-name">Menutech AI</div>
+                    <div id="user-role-label">Aprender</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+
+        <!-- Hero Section with Centered 3D Bot & Speech Bubble -->
+        <div class="hero-section">
+            <div class="speech-bubble">
+                <i class="fa-solid fa-sparkles" style="margin-right: 8px;"></i> Que voy a aprender hoy
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="hero-bot-canvas"></canvas>
+            </div>
+
+            <p class="hero-subtitle">
+                Carga preguntas frecuentes, documentos y tablas/sheets para que la Inteligencia Artificial aprenda todo sobre tu negocio y responda de forma precisa.
+            </p>
+        </div>
+
+        <div class="learn-grid">
+
+            <!-- Section 1: Upload / Input Knowledge -->
+            <div class="card-panel">
+                <div class="card-title">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>Cargar Conocimiento a la IA</span>
+                </div>
+
+                <div class="nav-tabs">
+                    <button class="tab-btn active" data-tab="faq">
+                        <i class="fa-solid fa-circle-question"></i> Preguntas Frecuentes (FAQ)
+                    </button>
+                    <button class="tab-btn" data-tab="document">
+                        <i class="fa-solid fa-file-lines"></i> Documentos
+                    </button>
+                    <button class="tab-btn" data-tab="sheet">
+                        <i class="fa-solid fa-table"></i> Sheets / Tablas
+                    </button>
+                </div>
+
+                <!-- Form: FAQ -->
+                <div id="form-faq" class="tab-content">
+                    <div class="form-group">
+                        <label>Pregunta (FAQ)</label>
+                        <input type="text" id="faq-question" placeholder="Ej: ¿Cuáles son sus horarios de atención?">
+                    </div>
+                    <div class="form-group">
+                        <label>Respuesta</label>
+                        <textarea id="faq-answer" placeholder="Ej: Atendemos de lunes a domingo de 12:00 PM a 10:00 PM."></textarea>
+                    </div>
+                    <button class="btn-submit" id="btn-save-faq">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar Pregunta Frecuente
+                    </button>
+                </div>
+
+                <!-- Form: Document -->
+                <div id="form-document" class="tab-content" style="display: none;">
+                    <div class="form-group">
+                        <label>Título del Documento</label>
+                        <input type="text" id="doc-title" placeholder="Ej: Menú Completo o Políticas de Servicio">
+                    </div>
+
+                    <div class="file-upload-area" id="doc-file-zone">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">Subir archivo de texto (.txt, .md, .json, .csv)</div>
+                        <div style="font-size: 0.8rem; color: var(--text-dim);">Haz clic o arrastra un archivo aquí para extraer su texto automáticamente</div>
+                        <input type="file" id="doc-file-input" accept=".txt,.md,.json,.csv,.text" style="display: none;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Contenido del Documento</label>
+                        <textarea id="doc-content" style="min-height: 160px;" placeholder="Escribe o pega el contenido detallado del documento aquí..."></textarea>
+                    </div>
+                    <button class="btn-submit" id="btn-save-doc">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar Documento
+                    </button>
+                </div>
+
+                <!-- Form: Sheet / Table -->
+                <div id="form-sheet" class="tab-content" style="display: none;">
+                    <div class="form-group">
+                        <label>Nombre de la Tabla / Sheet</label>
+                        <input type="text" id="sheet-title" placeholder="Ej: Lista de Precios o Inventario de Platillos">
+                    </div>
+                    <div class="form-group">
+                        <label>Datos Tabulares (CSV o Formato Columna: Valor)</label>
+                        <textarea id="sheet-content" style="min-height: 160px;" placeholder="Platillo, Precio, Categoria&#10;Pizza Pepperoni, $12, Pizzas&#10;Hamburguesa Doble, $10, Hamburguesas"></textarea>
+                    </div>
+                    <button class="btn-submit" id="btn-save-sheet">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar Sheet / Tabla
+                    </button>
+                </div>
+            </div>
+
+            <!-- Section 2: Knowledge Dashboard List -->
+            <div class="card-panel">
+                <div class="dashboard-header">
+                    <div class="card-title" style="margin-bottom: 0;">
+                        <i class="fa-solid fa-database"></i>
+                        <span>Conocimientos Aprendidos (<span id="total-count">0</span>)</span>
+                    </div>
+
+                    <div class="filter-badge-container">
+                        <div class="filter-badge active" data-filter="all">Todos</div>
+                        <div class="filter-badge" data-filter="faq">FAQs</div>
+                        <div class="filter-badge" data-filter="document">Documentos</div>
+                        <div class="filter-badge" data-filter="sheet">Sheets</div>
+                    </div>
+                </div>
+
+                <div class="search-box" style="margin-bottom: 20px;">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="search-input" placeholder="Buscar en el conocimiento aprendidos...">
+                </div>
+
+                <div class="knowledge-list" id="knowledge-list">
+                    <div style="text-align: center; padding: 40px; color: var(--text-dim);">
+                        <div class="loader" style="margin: 0 auto 12px auto;"></div>
+                        Cargando conocimientos de Supabase...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Test AI Learning -->
+            <div class="card-panel">
+                <div class="card-title">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>Probar lo que la IA ha Aprendido</span>
+                </div>
+                <p style="font-size: 0.9rem; color: var(--text-dim);">
+                    Hazle una pregunta a Menutech AI y comprobará si puede responder usando la base de datos de conocimientos que le cargaste.
+                </p>
+
+                <div class="ai-test-box">
+                    <input type="text" id="test-query-input" placeholder="Ej: ¿Qué pizzas tienen y cuánto cuestan?">
+                    <button class="btn-submit" id="btn-ask-ai">
+                        <i class="fa-solid fa-paper-plane"></i> Preguntar
+                    </button>
+                </div>
+
+                <div class="ai-reply-box" id="test-ai-reply"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script Import -->
+    <script type="module">
+        import { MT_CONFIG } from './config.js';
+        import { supabase as sb } from './supabase.js';
+
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = document.createElement('div');
+            icon.innerHTML = type === 'success'
+                ? '<i class="fa-solid fa-circle-check" style="color:#059669; font-size:1.2rem;"></i>'
+                : type === 'error'
+                ? '<i class="fa-solid fa-circle-xmark" style="color:#dc2626; font-size:1.2rem;"></i>'
+                : '<i class="fa-solid fa-triangle-exclamation" style="color:#ff9533; font-size:1.2rem;"></i>';
+            const msg = document.createElement('div');
+            msg.textContent = message;
+            toast.appendChild(icon);
+            toast.appendChild(msg);
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        };
+
+        let knowledgeData = [];
+        let activeFilter = 'all';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            init3DHero();
+            initTabs();
+            initForms();
+            initFileUpload();
+            loadKnowledgeList();
+            initSearchAndFilter();
+            initAiTest();
+        });
+
+        // Theme toggle
+        function initTheme() {
+            const toggle = document.getElementById('theme-toggle');
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+            }
+            toggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            });
+        }
+
+        // Render Centered 3D Bot
+        function init3DHero() {
+            const canvas = document.getElementById('hero-bot-canvas');
+            if (!canvas) return;
+
+            function renderHeroModel() {
+                if (typeof THREE === 'undefined') return;
+
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+                renderer.setSize(320, 320);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+                const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
+                scene.add(ambientLight);
+
+                const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.0);
+                dirLight1.position.set(3, 5, 4);
+                scene.add(dirLight1);
+
+                const dirLight2 = new THREE.DirectionalLight(0xff9533, 0.5);
+                dirLight2.position.set(-3, -2, -2);
+                scene.add(dirLight2);
+
+                camera.position.set(0, 0, 2.6);
+
+                let botMesh = null;
+                let isDragging = false;
+                let previousMousePosition = { x: 0, y: 0 };
+
+                if (typeof THREE.GLTFLoader !== 'undefined') {
+                    const loader = new THREE.GLTFLoader();
+                    loader.load(
+                        'assets/menutechbot.gltf',
+                        (gltf) => {
+                            botMesh = gltf.scene;
+                            const box = new THREE.Box3().setFromObject(botMesh);
+                            const center = box.getCenter(new THREE.Vector3());
+                            botMesh.position.sub(center);
+                            botMesh.scale.set(1.15, 1.15, 1.15);
+                            scene.add(botMesh);
+                        },
+                        undefined,
+                        (err) => console.warn("Error cargando GLTF en Hero:", err)
+                    );
+                }
+
+                // Interactive Mouse Dragging & Floating Animation
+                canvas.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                    canvas.style.cursor = 'grabbing';
+                });
+
+                window.addEventListener('mouseup', () => {
+                    isDragging = false;
+                    canvas.style.cursor = 'grab';
+                });
+
+                canvas.addEventListener('mousemove', (e) => {
+                    if (!isDragging || !botMesh) return;
+                    const deltaX = e.clientX - previousMousePosition.x;
+                    const deltaY = e.clientY - previousMousePosition.y;
+
+                    botMesh.rotation.y += deltaX * 0.01;
+                    botMesh.rotation.x += deltaY * 0.01;
+
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                });
+
+                let clock = new THREE.Clock();
+                function animate() {
+                    requestAnimationFrame(animate);
+                    const delta = clock.getElapsedTime();
+                    if (botMesh && !isDragging) {
+                        botMesh.rotation.y = delta * 0.5;
+                        botMesh.position.y = Math.sin(delta * 2.2) * 0.06;
+                    }
+                    renderer.render(scene, camera);
+                }
+                animate();
+            }
+
+            if (typeof THREE === 'undefined') {
+                const script3 = document.createElement('script');
+                script3.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+                script3.onload = () => {
+                    const scriptGltf = document.createElement('script');
+                    scriptGltf.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+                    scriptGltf.onload = renderHeroModel;
+                    document.head.appendChild(scriptGltf);
+                };
+                document.head.appendChild(script3);
+            } else {
+                renderHeroModel();
+            }
+        }
+
+        // Tabs logic
+        function initTabs() {
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const targetTab = tab.getAttribute('data-tab');
+                    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+                    document.getElementById(`form-${targetTab}`).style.display = 'block';
+                });
+            });
+        }
+
+        // File upload reader for documents
+        function initFileUpload() {
+            const zone = document.getElementById('doc-file-zone');
+            const fileInput = document.getElementById('doc-file-input');
+
+            zone.onclick = () => fileInput.click();
+
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+            zone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+            });
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) handleDocFile(e.dataTransfer.files[0]);
+            });
+
+            fileInput.onchange = (e) => {
+                if (e.target.files.length > 0) handleDocFile(e.target.files[0]);
+            };
+        }
+
+        function handleDocFile(file) {
+            const titleInput = document.getElementById('doc-title');
+            const contentInput = document.getElementById('doc-content');
+
+            if (!titleInput.value.trim()) {
+                titleInput.value = file.name.replace(/\.[^/.]+$/, "");
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                contentInput.value = e.target.result;
+                showToast(`Archivo "${file.name}" leído correctamente.`, 'success');
+            };
+            reader.onerror = () => showToast("Error al leer el archivo.", 'error');
+            reader.readAsText(file);
+        }
+
+        // Form submission handlers
+        function initForms() {
+            document.getElementById('btn-save-faq').onclick = async () => {
+                const question = document.getElementById('faq-question').value.trim();
+                const answer = document.getElementById('faq-answer').value.trim();
+
+                if (!question || !answer) {
+                    showToast("Por favor ingresa la pregunta y la respuesta.", "warning");
+                    return;
+                }
+
+                await saveKnowledgeItem({
+                    title: question,
+                    type: 'faq',
+                    content: `Pregunta: ${question}\nRespuesta: ${answer}`
+                });
+
+                document.getElementById('faq-question').value = '';
+                document.getElementById('faq-answer').value = '';
+            };
+
+            document.getElementById('btn-save-doc').onclick = async () => {
+                const title = document.getElementById('doc-title').value.trim();
+                const content = document.getElementById('doc-content').value.trim();
+
+                if (!title || !content) {
+                    showToast("Por favor ingresa el título y el contenido del documento.", "warning");
+                    return;
+                }
+
+                await saveKnowledgeItem({
+                    title: title,
+                    type: 'document',
+                    content: content
+                });
+
+                document.getElementById('doc-title').value = '';
+                document.getElementById('doc-content').value = '';
+            };
+
+            document.getElementById('btn-save-sheet').onclick = async () => {
+                const title = document.getElementById('sheet-title').value.trim();
+                const content = document.getElementById('sheet-content').value.trim();
+
+                if (!title || !content) {
+                    showToast("Por favor ingresa el título y los datos de la tabla/sheet.", "warning");
+                    return;
+                }
+
+                await saveKnowledgeItem({
+                    title: title,
+                    type: 'sheet',
+                    content: content
+                });
+
+                document.getElementById('sheet-title').value = '';
+                document.getElementById('sheet-content').value = '';
+            };
+        }
+
+        // Save knowledge item to Supabase
+        async function saveKnowledgeItem(item) {
+            try {
+                const { data, error } = await sb
+                    .from('menutech_knowledge')
+                    .insert([item])
+                    .select();
+
+                if (error) throw error;
+
+                showToast(`Conocimiento ("${item.title}") guardado con éxito.`, "success");
+                loadKnowledgeList();
+            } catch (err) {
+                console.error("Error guardando en Supabase:", err);
+                showToast("Error al guardar en Supabase: " + err.message, "error");
+            }
+        }
+
+        // Load Knowledge items list from Supabase
+        async function loadKnowledgeList() {
+            const listEl = document.getElementById('knowledge-list');
+            try {
+                const { data, error } = await sb
+                    .from('menutech_knowledge')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                knowledgeData = data || [];
+                renderKnowledgeList();
+            } catch (err) {
+                console.error("Error cargando lista:", err);
+                listEl.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--error);">Error al cargar datos de Supabase. Revisa si ejecutaste el script SQL.</div>`;
+            }
+        }
+
+        // Render list with current filter and search text
+        function renderKnowledgeList() {
+            const listEl = document.getElementById('knowledge-list');
+            const searchVal = document.getElementById('search-input').value.toLowerCase();
+            const totalCountEl = document.getElementById('total-count');
+
+            let filtered = knowledgeData.filter(item => {
+                const matchFilter = activeFilter === 'all' || item.type === activeFilter;
+                const matchSearch = item.title.toLowerCase().includes(searchVal) || item.content.toLowerCase().includes(searchVal);
+                return matchFilter && matchSearch;
+            });
+
+            totalCountEl.textContent = filtered.length;
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-dim);">No se encontraron elementos de conocimiento.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(item => {
+                const dateStr = new Date(item.created_at).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const tagClass = item.type === 'faq' ? 'tag-faq' : item.type === 'document' ? 'tag-document' : 'tag-sheet';
+                const typeLabel = item.type === 'faq' ? 'FAQ' : item.type === 'document' ? 'Documento' : 'Sheet';
+
+                return `
+                    <div class="knowledge-item" data-id="${item.id}">
+                        <div class="item-top">
+                            <div class="item-title">${escapeHtml(item.title)}</div>
+                            <span class="item-type-tag ${tagClass}">${typeLabel}</span>
+                        </div>
+                        <div class="item-content">${escapeHtml(item.content)}</div>
+                        <div class="item-footer">
+                            <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
+                            <button class="btn-delete" onclick="deleteKnowledgeItem('${item.id}', '${escapeHtml(item.title)}')">
+                                <i class="fa-solid fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Delete item from Supabase
+        window.deleteKnowledgeItem = async (id, title) => {
+            if (!confirm(`¿Estás seguro de eliminar "${title}" de la base de conocimientos?`)) return;
+
+            try {
+                const { error } = await sb
+                    .from('menutech_knowledge')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showToast("Conocimiento eliminado correctamente.", "success");
+                loadKnowledgeList();
+            } catch (err) {
+                showToast("Error al eliminar: " + err.message, "error");
+            }
+        };
+
+        // Search & Filter listeners
+        function initSearchAndFilter() {
+            document.getElementById('search-input').oninput = renderKnowledgeList;
+
+            const filterBadges = document.querySelectorAll('.filter-badge');
+            filterBadges.forEach(badge => {
+                badge.addEventListener('click', () => {
+                    filterBadges.forEach(b => b.classList.remove('active'));
+                    badge.classList.add('active');
+                    activeFilter = badge.getAttribute('data-filter');
+                    renderKnowledgeList();
+                });
+            });
+        }
+
+        // AI Query Test Interface
+        function initAiTest() {
+            const input = document.getElementById('test-query-input');
+            const btn = document.getElementById('btn-ask-ai');
+            const replyBox = document.getElementById('test-ai-reply');
+
+            async function askAi() {
+                const query = input.value.trim();
+                if (!query) {
+                    showToast("Escribe una pregunta para probar la IA.", "warning");
+                    return;
+                }
+
+                replyBox.style.display = 'block';
+                replyBox.innerHTML = `<div style="display:flex; align-items:center; gap:10px; color:var(--orange); font-weight:700;"><div class="loader"></div> Consultando a Menutech AI con tus conocimientos aprendidos...</div>`;
+
+                // Build context prompt from knowledgeData
+                let contextPrompt = "";
+                if (knowledgeData.length > 0) {
+                    contextPrompt = "CONOCIMIENTOS BASE DEL RESTAURANTE / PLATAFORMA:\n\n";
+                    knowledgeData.forEach((k, idx) => {
+                        contextPrompt += `[Item ${idx + 1} - ${k.type.toUpperCase()}]: ${k.title}\n${k.content}\n\n`;
+                    });
+                    contextPrompt += `PREGUNTA DEL USUARIO: ${query}\n\nPor favor responde la pregunta de forma precisa y amable usando los conocimientos base provistos si aplican.`;
+                } else {
+                    contextPrompt = query;
+                }
+
+                try {
+                    const res = await fetch(MT_CONFIG.SUPABASE_URL + "/functions/v1/gemini-chat", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "apikey": MT_CONFIG.SUPABASE_KEY,
+                            "Authorization": `Bearer ${MT_CONFIG.SUPABASE_KEY}`
+                        },
+                        body: JSON.stringify({
+                            prompt: contextPrompt,
+                            message: contextPrompt
+                        })
+                    });
+
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                        replyBox.innerHTML = `<span style="color:var(--error);">Error: ${data.error || 'No se pudo obtener respuesta'}</span>`;
+                        return;
+                    }
+
+                    const replyText = data.reply || data.message || "Sin respuesta del modelo.";
+                    replyBox.innerHTML = `
+                        <div style="font-weight:800; color:var(--orange); margin-bottom:8px; font-family:'Outfit',sans-serif;">
+                            <i class="fa-solid fa-robot"></i> Menutech AI
+                        </div>
+                        <div>${escapeHtml(replyText).replace(/\n/g, '<br>')}</div>
+                    `;
+
+                } catch (err) {
+                    replyBox.innerHTML = `<span style="color:var(--error);">Error de red: ${err.message}</span>`;
+                }
+            }
+
+            btn.onclick = askAi;
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') askAi();
+            };
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+
+    <!-- Chatbot Widget Script -->
+    <script src="chatbot.js"></script>
+</body>
+</html>
