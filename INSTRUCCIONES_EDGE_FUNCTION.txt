@@ -1,27 +1,31 @@
 ====================================================================
-  GUÍA DE CONFIGURACIÓN PASO A PASO EN LA WEB DE SUPABASE (EDGE FUNCTIONS)
+  GUÍA DEFINITIVA DE CONFIGURACIÓN Y DESPLIEGUE EN SUPABASE (EDGE FUNCTION)
 ====================================================================
 
-1. PASO 1: CREAR LA EDGE FUNCTION DESDE EL DASHBOARD WEB
-   - Entra al Dashboard Web de Supabase (https://supabase.com/dashboard).
-   - Selecciona tu proyecto (`eemqyrysdgasfjlitads`).
+Sigue estos sencillos pasos en la web de Supabase para dejar funcionando el chatbot:
+
+1. PASO 1: ENTRAR A SUPABASE WEB DASHBOARD
+   - Entra a https://supabase.com/dashboard y abre tu proyecto (`eemqyrysdgasfjlitads`).
+
+2. PASO 2: CREAR O REEMPLAZAR EL CÓDIGO EN EDGE FUNCTIONS
    - En el menú lateral izquierdo, haz clic en "Edge Functions".
-   - Haz clic en el botón "+ Create a new Function" (o "New Function").
-   - Nombra la función exactamente como: gemini-chat
-   - Abre el editor de código web que se muestra en Supabase y COPIA Y PEGA todo el código que está en el archivo:
+   - Si no has creado la función, haz clic en "+ New Function" y nómbrala exactamente:
+     gemini-chat
+   - Abre el editor de código web que te muestra Supabase y COPIA Y PEGA todo el código que se encuentra en el archivo:
      supabase/functions/gemini-chat/index.ts
-   - Haz clic en "Deploy" o "Save".
+   - Guarda los cambios haciendo clic en "Save" / "Deploy".
 
-2. PASO 2: CONFIGURAR LA VARIABLE DE ENTORNO / SECRET DE LA API KEY
-   - En el mismo panel de Supabase Web Dashboard, ve a "Edge Functions" -> "Secrets" (o "Project Settings" -> "Edge Functions" -> "Secrets").
-   - Añade un nuevo Secret con el nombre EXACTO:
+3. PASO 3: CONFIGURAR LA VARIABLE / SECRET DE LA API KEY DE GEMINI
+   - En el panel izquierdo de Supabase, ve a "Project Settings" -> "Edge Functions" -> "Secrets" (o dentro de Edge Functions en la pestaña "Secrets").
+   - Agrega una nueva clave con el nombre EXACTO:
      GEMINI_API_KEY
-   - En el valor, pega tu clave de API de Google Gemini (incluso si empieza por AQ.A...).
-   - Guarda los cambios.
+   - En el valor de la clave, pega tu API Key de Google Gemini (no importa si empieza por AQ.A...).
+   - Guarda el Secret.
 
-3. PASO 3: VERIFICACIÓN DE CONEXIÓN
-   - La URL final que ejecutará tu chatbot será:
-     https://eemqyrysdgasfjlitads.supabase.co/functions/v1/gemini-chat
-   - El código en `docs/chatbot.js` ya está apuntando exactamente a esa dirección.
+4. PASO 4: CONFIGURACIÓN DE VERIFICACIÓN JWT
+   - En "Project Settings" -> "Edge Functions", desactiva la opción "Verify JWT" para la función `gemini-chat` (o en la configuración de la función deshabilita Enforce JWT / Verify JWT).
+
+5. URL DE LA EDGE FUNCTION QUE CONECTA CON EL CHATBOT:
+   https://eemqyrysdgasfjlitads.supabase.co/functions/v1/gemini-chat
 
 ====================================================================
