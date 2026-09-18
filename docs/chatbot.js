@@ -108,13 +108,33 @@
 
         /* Header */
         .mt-bot-header {
-            padding: 18px 20px;
+            padding: 16px 20px;
             background: linear-gradient(135deg, #ff9533 0%, #f97316 100%);
             color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: space-between;
             box-shadow: 0 4px 15px rgba(249, 115, 22, 0.2);
+        }
+        .mt-bot-banner {
+            height: 110px;
+            background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-bottom: 1px solid rgba(255, 149, 51, 0.15);
+            flex-shrink: 0;
+        }
+        body.dark-mode .mt-bot-banner {
+            background: linear-gradient(180deg, #242832 0%, #181b22 100%);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+        #mt-window-canvas {
+            width: 100px;
+            height: 100px;
+            background: transparent !important;
+            pointer-events: none;
         }
         .mt-bot-profile {
             display: flex;
@@ -444,12 +464,12 @@
             <div class="mt-bot-header">
                 <div class="mt-bot-profile">
                     <div class="mt-bot-avatar">
-                        <i class="fa-solid fa-robot"></i>
+                        <i class="fa-solid fa-sparkles"></i>
                     </div>
                     <div>
-                        <div class="mt-bot-title">Menutech AI</div>
+                        <div class="mt-bot-title">Asistente IA</div>
                         <div class="mt-bot-sub">
-                            <span class="mt-bot-sub-dot"></span> Online • Gemini Powered
+                            <span class="mt-bot-sub-dot"></span> En línea
                         </div>
                     </div>
                 </div>
@@ -461,6 +481,10 @@
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
+            </div>
+
+            <div class="mt-bot-banner">
+                <canvas id="mt-window-canvas"></canvas>
             </div>
 
             <div class="mt-bot-messages" id="mt-bot-messages">
@@ -525,19 +549,19 @@
 
     // --- 3D CANVAS rendering STRICTLY 'assets/menutechbot.gltf' ---
     function init3DModel() {
-        const canvas = document.getElementById('mt-bot-canvas');
-        if (!canvas) return;
+        const triggerCanvas = document.getElementById('mt-bot-canvas');
+        const windowCanvas = document.getElementById('mt-window-canvas');
 
-        function loadThreeAndRender() {
-            if (typeof THREE === 'undefined') return;
+        function setupCanvasRenderer(targetCanvas, size = 80, scaleFactor = 0.9) {
+            if (!targetCanvas || typeof THREE === 'undefined') return;
 
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-            renderer.setSize(80, 80);
+            const renderer = new THREE.WebGLRenderer({ canvas: targetCanvas, antialias: true, alpha: true });
+            renderer.setSize(size, size);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1.3);
             scene.add(ambientLight);
 
             const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -548,7 +572,6 @@
 
             let botMesh = null;
 
-            // Load GLTF strictly (100% transparent until loaded)
             if (typeof THREE.GLTFLoader !== 'undefined') {
                 const loader = new THREE.GLTFLoader();
                 loader.load(
@@ -558,17 +581,14 @@
                         const box = new THREE.Box3().setFromObject(botMesh);
                         const center = box.getCenter(new THREE.Vector3());
                         botMesh.position.sub(center);
-                        botMesh.scale.set(0.9, 0.9, 0.9);
+                        botMesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
                         scene.add(botMesh);
                     },
                     undefined,
-                    (err) => {
-                        // Completely transparent when file is missing
-                    }
+                    () => {}
                 );
             }
 
-            // Animation Loop
             let clock = new THREE.Clock();
             function animate() {
                 requestAnimationFrame(animate);
@@ -582,19 +602,24 @@
             animate();
         }
 
+        function loadThreeAndRenderAll() {
+            if (triggerCanvas) setupCanvasRenderer(triggerCanvas, 80, 0.9);
+            if (windowCanvas) setupCanvasRenderer(windowCanvas, 100, 1.15);
+        }
+
         if (typeof THREE === 'undefined') {
             const script3 = document.createElement('script');
             script3.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
             script3.onload = () => {
                 const scriptGltf = document.createElement('script');
                 scriptGltf.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
-                scriptGltf.onload = loadThreeAndRender;
-                scriptGltf.onerror = loadThreeAndRender;
+                scriptGltf.onload = loadThreeAndRenderAll;
+                scriptGltf.onerror = loadThreeAndRenderAll;
                 document.head.appendChild(scriptGltf);
             };
             document.head.appendChild(script3);
         } else {
-            loadThreeAndRender();
+            loadThreeAndRenderAll();
         }
     }
 
