@@ -1,7 +1,7 @@
 /**
  * Menutech AI Chatbot Widget (menutechbot.gltf & Gemini Edge Function)
  * Features:
- * - 3D Floating Canvas displaying strictly 'assets/img/menutechbot.gltf' with smooth 3D rotation (100% transparent container)
+ * - 3D Floating Canvas displaying strictly 'assets/menutechbot.gltf' with smooth 3D rotation (100% transparent container)
  * - Professional responsive chat interface (glassmorphism UI, light/dark mode compatible)
  * - Text-To-Speech (Bot Voice) with toggle button
  * - Speech-To-Text (Voice Input / Microphone) via Web Speech API
@@ -17,7 +17,7 @@
     const CONFIG = {
         EDGE_FUNCTION_URL: "https://eemqyrysdgasfjlitads.supabase.co/functions/v1/gemini-chat",
         SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY",
-        MODEL_URL: "assets/img/menutechbot.gltf"
+        MODEL_URL: "assets/menutechbot.gltf"
     };
 
     // Dynamically inject FontAwesome if missing
@@ -523,7 +523,7 @@
     const attachRemove = document.getElementById('mt-attach-remove');
     const dropZone = document.getElementById('mt-drop-zone');
 
-    // --- 3D CANVAS rendering STRICTLY 'assets/img/menutechbot.gltf' ---
+    // --- 3D CANVAS rendering STRICTLY 'assets/menutechbot.gltf' ---
     function init3DModel() {
         const canvas = document.getElementById('mt-bot-canvas');
         if (!canvas) return;
