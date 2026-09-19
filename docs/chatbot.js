@@ -56,8 +56,8 @@
 
         /* 3D Trigger Widget - Completely transparent container */
         #mt-bot-trigger {
-            width: 85px;
-            height: 85px;
+            width: 170px;
+            height: 170px;
             border-radius: 50%;
             background: transparent !important;
             box-shadow: none !important;
@@ -73,8 +73,8 @@
             transform: scale(1.08) translateY(-4px);
         }
         .mt-trigger-mv {
-            width: 85px;
-            height: 85px;
+            width: 170px;
+            height: 170px;
             border-radius: 50%;
             pointer-events: auto;
             --poster-color: transparent;
@@ -276,11 +276,35 @@
             object-fit: cover;
             border: 2px solid rgba(255, 149, 51, 0.3);
         }
+        .mt-msg-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 4px;
+            padding: 0 4px;
+            gap: 8px;
+        }
         .mt-msg-time {
             font-size: 0.65rem;
             color: #94a3b8;
-            margin-top: 4px;
-            padding: 0 4px;
+        }
+        .mt-msg-copy-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.75rem;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: color 0.2s, background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .mt-msg-copy-btn:hover {
+            color: #ff9533;
+            background: rgba(255, 149, 51, 0.1);
         }
 
         /* Loading Indicator */
@@ -315,27 +339,33 @@
         .mt-drop-zone {
             position: absolute;
             inset: 0;
-            background: rgba(255, 149, 51, 0.92);
+            background: rgba(255, 149, 51, 0.95);
             color: #ffffff;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 12px;
-            z-index: 10;
+            z-index: 100;
             border: 3px dashed #ffffff;
             border-radius: 20px;
             margin: 12px;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease;
+            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.4);
         }
         .mt-drop-zone.active {
             opacity: 1;
             pointer-events: auto;
         }
         .mt-drop-zone i {
-            font-size: 2.5rem;
+            font-size: 3rem;
+            animation: mtBounce 1s infinite alternate;
+        }
+        @keyframes mtBounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-8px); }
         }
 
         .hidden {
@@ -513,7 +543,7 @@
             <div class="mt-bot-messages" id="mt-bot-messages">
                 <div class="mt-drop-zone" id="mt-drop-zone">
                     <i class="fa-solid fa-cloud-arrow-up"></i>
-                    <span style="font-weight:700;">Drop Image Here</span>
+                    <span style="font-weight:700; font-size:1.1rem;">Suelta tu imagen aquí</span>
                 </div>
             </div>
 
@@ -695,7 +725,10 @@
                 return;
             }
 
-            const reply = data.reply || data.message || "Sin respuesta del servidor.";
+            let reply = data.reply || data.message || "Sin respuesta del servidor.";
+
+            // Clean reply client-side as safety fallback
+            reply = sanitizeReply(reply);
 
             chatHistory.push({ role: "user", text: payloadPrompt });
             chatHistory.push({ role: "model", text: reply });
@@ -739,8 +772,38 @@
 
         msgDiv.innerHTML = `
             <div class="mt-msg-bubble">${formatted}</div>
-            <div class="mt-msg-time">${time}</div>
+            <div class="mt-msg-footer">
+                <span class="mt-msg-time">${time}</span>
+                <button class="mt-msg-copy-btn" title="Copiar mensaje">
+                    <i class="fa-regular fa-copy"></i>
+                </button>
+            </div>
         `;
+
+        const copyBtn = msgDiv.querySelector('.mt-msg-copy-btn');
+        if (copyBtn) {
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(text).then(() => {
+                    copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span style="font-size:0.65rem;">¡Copiado!</span>';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+                    }, 2000);
+                }).catch(() => {
+                    // Fallback using execCommand if clipboard API fails
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span style="font-size:0.65rem;">¡Copiado!</span>';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+                    }, 2000);
+                });
+            };
+        }
+
         messagesContainer.appendChild(msgDiv);
         scrollToBottom();
     }
@@ -766,6 +829,41 @@
 
     function scrollToBottom() {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function sanitizeReply(text) {
+        if (!text) return "";
+        let cleaned = text;
+
+        // Remove bullet checklist reasoning
+        cleaned = cleaned.replace(/^\s*\*.*?\?.*$/gm, "");
+        cleaned = cleaned.replace(/^\s*\*.*?\b(Yes|No|Si|No)\b.*$/gm, "");
+
+        const lines = cleaned.split("\n").map(l => l.trim()).filter(l => {
+            if (!l) return false;
+            if (l.startsWith("*") && (l.includes("?") || l.includes("Yes") || l.includes("No"))) return false;
+            if (l.toLowerCase().includes("the user said") || l.toLowerCase().includes("plan:")) return false;
+            return true;
+        });
+
+        if (lines.length > 0) {
+            cleaned = lines.join(" ");
+        }
+
+        const doubleQuoteMatches = cleaned.match(/"([^"]+)"/g);
+        if (doubleQuoteMatches && doubleQuoteMatches.length > 0) {
+            const extracted = doubleQuoteMatches.map(m => m.replace(/^"|"$/g, "").trim());
+            cleaned = extracted[extracted.length - 1] || cleaned;
+        } else {
+            cleaned = cleaned.replace(/^["'«»“]+|["'«»”]+$/g, "").trim();
+        }
+
+        const sentences = cleaned.split(/(?<=[.!?])\s+/);
+        if (sentences.length >= 2 && sentences[0] === sentences[1]) {
+            cleaned = sentences[0];
+        }
+
+        return cleaned.trim();
     }
 
     function escapeHtml(str) {
@@ -838,20 +936,37 @@
     };
     attachRemove.onclick = clearImageAttachment;
 
-    windowEl.addEventListener('dragover', (e) => {
+    let dragCounter = 0;
+
+    windowEl.addEventListener('dragenter', (e) => {
         e.preventDefault();
-        dropZone.classList.add('active');
+        if (e.dataTransfer.types && Array.from(e.dataTransfer.types).includes('Files')) {
+            dragCounter++;
+            dropZone.classList.add('active');
+        }
     });
 
-    dropZone.addEventListener('dragleave', (e) => {
+    windowEl.addEventListener('dragover', (e) => {
         e.preventDefault();
-        dropZone.classList.remove('active');
+        if (e.dataTransfer.types && Array.from(e.dataTransfer.types).includes('Files')) {
+            dropZone.classList.add('active');
+        }
+    });
+
+    windowEl.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter <= 0) {
+            dragCounter = 0;
+            dropZone.classList.remove('active');
+        }
     });
 
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
+        dragCounter = 0;
         dropZone.classList.remove('active');
-        if (e.dataTransfer.files.length > 0) {
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
             handleFile(e.dataTransfer.files[0]);
         }
     });
