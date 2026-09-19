@@ -6,7 +6,7 @@
  * - Text-To-Speech (Bot Voice) with toggle button
  * - Speech-To-Text (Voice Input / Microphone) via Web Speech API
  * - Image Upload & Drag-and-Drop multimodal attachments
- * - Supabase Edge Function integration
+ * - Supabase Edge Function integration with Session Context & CRUD dispatch
  */
 
 (function () {
@@ -40,12 +40,12 @@
     const style = document.createElement('style');
     style.id = 'menutech-chatbot-styles';
     style.textContent = `
-        /* Chatbot Container Root */
+        /* Chatbot Container Root - Extreme Z-Index to guarantee rendering on top of all GLTF/canvas layers */
         #mt-bot-root {
             position: fixed;
             bottom: 24px;
             right: 24px;
-            z-index: 999999;
+            z-index: 2147483647 !important;
             font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
             pointer-events: none;
         }
@@ -68,6 +68,7 @@
             justify-content: center;
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             user-select: none;
+            z-index: 2147483647 !important;
         }
         #mt-bot-trigger:hover {
             transform: scale(1.08) translateY(-4px);
@@ -90,12 +91,12 @@
             max-width: calc(100vw - 32px);
             height: 580px;
             max-height: calc(100vh - 120px);
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.5);
             border-radius: 28px;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 149, 51, 0.15);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 149, 51, 0.25);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -103,9 +104,10 @@
             transform: translateY(20px) scale(0.95);
             pointer-events: none;
             transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 2147483647 !important;
         }
         body.dark-mode #mt-bot-window {
-            background: rgba(28, 31, 38, 0.95);
+            background: rgba(28, 31, 38, 0.98);
             border-color: rgba(255, 255, 255, 0.1);
             color: #f8fafc;
         }
@@ -124,6 +126,8 @@
             align-items: center;
             justify-content: space-between;
             box-shadow: 0 4px 15px rgba(249, 115, 22, 0.2);
+            position: relative;
+            z-index: 10;
         }
         .mt-bot-banner {
             height: 120px;
@@ -132,6 +136,8 @@
             align-items: center;
             justify-content: center;
             position: relative;
+            z-index: 1;
+            overflow: hidden;
             border-bottom: none;
             flex-shrink: 0;
         }
@@ -218,6 +224,7 @@
             gap: 14px;
             scroll-behavior: smooth;
             position: relative;
+            z-index: 5;
         }
         .mt-bot-messages::-webkit-scrollbar {
             width: 5px;
@@ -380,6 +387,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: relative;
+            z-index: 15;
         }
         body.dark-mode .mt-attach-preview {
             background: #181b20;
@@ -412,7 +421,7 @@
             font-size: 0.9rem;
         }
 
-        /* Footer / Input Area */
+        /* Footer / Input Area - High Z-Index to guarantee write bar is always above canvas/GLTF models */
         .mt-bot-footer {
             padding: 12px 16px;
             background: #ffffff;
@@ -420,6 +429,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            position: relative;
+            z-index: 20;
         }
         body.dark-mode .mt-bot-footer {
             background: #1c1f26;
@@ -610,6 +621,55 @@
     const attachRemove = document.getElementById('mt-attach-remove');
     const dropZone = document.getElementById('mt-drop-zone');
 
+    // --- SESSION CONTEXT EXTRACTOR ---
+    async function getUserSession() {
+        try {
+            // Check window.supabase if present
+            if (window.supabase && window.supabase.auth) {
+                const { data: { session } } = await window.supabase.auth.getSession();
+                if (session && session.user) {
+                    const user = session.user;
+                    let profile = null;
+                    try {
+                        const { data } = await window.supabase.from('profiles').select('*').eq('id', user.id).single();
+                        profile = data;
+                    } catch (e) {}
+                    return {
+                        id: user.id,
+                        email: user.email,
+                        role: profile ? (profile.role || 'owner') : 'owner',
+                        username: profile ? (profile.username || user.email.split('@')[0]) : user.email.split('@')[0],
+                        domain: profile ? (profile.domain || '') : ''
+                    };
+                }
+            }
+
+            // Fallback: Check localStorage Supabase token
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('supabase.auth.token') || key.startsWith('sb-') && key.endsWith('-auth-token'))) {
+                    const item = localStorage.getItem(key);
+                    if (item) {
+                        const parsed = JSON.parse(item);
+                        const user = parsed?.user || parsed?.currentSession?.user;
+                        if (user) {
+                            return {
+                                id: user.id,
+                                email: user.email,
+                                role: user.user_metadata?.role || 'owner',
+                                username: user.user_metadata?.username || user.email.split('@')[0],
+                                domain: user.user_metadata?.domain || ''
+                            };
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn("Error resolving user session context:", err);
+        }
+        return null;
+    }
+
     // --- VOICE RECOGNITION (Speech To Text) ---
     function initSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -698,6 +758,7 @@
         clearImageAttachment();
 
         const typingEl = appendTypingIndicator();
+        const session = await getUserSession();
 
         try {
             const res = await fetch(CONFIG.EDGE_FUNCTION_URL, {
@@ -711,7 +772,8 @@
                     prompt: payloadPrompt,
                     message: payloadPrompt,
                     history: chatHistory,
-                    image: payloadImage
+                    image: payloadImage,
+                    userSession: session
                 })
             });
 
@@ -736,6 +798,11 @@
 
             appendBotMessage(reply);
             speakText(reply);
+
+            // Dispatch global event if menu was modified
+            if (data.menuUpdated || data.actionPerformed) {
+                window.dispatchEvent(new CustomEvent('menutech-menu-updated', { detail: data }));
+            }
 
         } catch (err) {
             removeTypingIndicator(typingEl);
