@@ -490,6 +490,10 @@
             checkSession();
         });
 
+        window.addEventListener('menutech-menu-updated', () => {
+            loadMenu();
+        });
+
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
             if (!session) { location.href = "index.html"; return; }
@@ -1046,5 +1050,6 @@
             btn.textContent = "SAVE CHANGES";
         }
     </script>
+    <script src="chatbot.js"></script>
 </body>
 </html>
