@@ -492,11 +492,22 @@
             checkSession();
         });
 
-        window.addEventListener('menutech-menu-updated', (e) => {
-            if (e && e.detail && e.detail.targetUserId && typeof window.switchContext === 'function') {
-                window.switchContext(e.detail.targetUserId);
+        window.addEventListener('menutech-menu-updated', async (e) => {
+            const targetId = e && e.detail && e.detail.targetUserId;
+            if (targetId) {
+                if (activeOwnerId === targetId) {
+                    await loadMenu();
+                } else if (typeof window.switchContext === 'function') {
+                    await window.switchContext(targetId);
+                } else {
+                    activeOwnerId = targetId;
+                    await loadMenu();
+                }
             } else {
-                loadMenu();
+                await loadMenu();
+            }
+            if (typeof window.showToast === 'function') {
+                window.showToast("Menú actualizado en tiempo real por Menutech AI", "success");
             }
         });
 
@@ -540,16 +551,20 @@
 
         window.switchContext = async (ownerId) => {
             const owner = allOwners.find(o => o.id === ownerId);
-            if (!owner) return;
-            activeOwnerId = ownerId; activeDomain = owner.domain;
-            const domainLabel = document.getElementById('header-domain-label');
-            if (domainLabel) domainLabel.textContent = activeDomain || "Workspace";
-            document.getElementById('view-domain-title').textContent = "";
-            document.getElementById('active-project-name').textContent = owner.username || owner.email;
-            document.getElementById('project-info').classList.remove('hidden');
-            renderOwners(allOwners);
-            await loadMenu();
-            updateSubdomainLink(owner);
+            if (owner) {
+                activeOwnerId = ownerId; activeDomain = owner.domain;
+                const domainLabel = document.getElementById('header-domain-label');
+                if (domainLabel) domainLabel.textContent = activeDomain || "Workspace";
+                document.getElementById('view-domain-title').textContent = "";
+                document.getElementById('active-project-name').textContent = owner.username || owner.email;
+                document.getElementById('project-info').classList.remove('hidden');
+                renderOwners(allOwners);
+                await loadMenu();
+                updateSubdomainLink(owner);
+            } else {
+                activeOwnerId = ownerId;
+                await loadMenu();
+            }
         }
 
         function updateSubdomainLink(profile) {
