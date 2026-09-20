@@ -4,6 +4,98 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 
+// --- TYPES & INTERFACES ---
+export interface UserSessionContext {
+  id?: string;
+  role?: string;
+  username?: string;
+  domain?: string;
+  email?: string;
+}
+
+export interface DishVisibility {
+  days: number[];
+  start: string;
+  end: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface DishSize {
+  name: string;
+  price: number;
+}
+
+export interface DishItem {
+  name: string;
+  description?: string;
+  price: number;
+  image?: string;
+  sizes?: DishSize[];
+  toppings?: string[];
+}
+
+export interface MenuCategory {
+  name: string;
+  description?: string;
+  image?: string;
+  visibility?: DishVisibility;
+  dishes: DishItem[];
+}
+
+export interface ToppingItem {
+  name: string;
+  price: number;
+}
+
+export interface ToppingGroup {
+  id: string;
+  name: string;
+  type: 'optional' | 'mandatory';
+  min: number;
+  max: number;
+  items: ToppingItem[];
+}
+
+export interface MenuConfig {
+  categories: MenuCategory[];
+  toppings: ToppingGroup[];
+}
+
+export interface MenuRecord {
+  id?: string;
+  user_id: string;
+  domain: string;
+  slug: string;
+  menu_style: string;
+  cover_url: string;
+  cover_type: string;
+  config: MenuConfig;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ToolExecutionResult {
+  success: boolean;
+  message: string;
+  targetUserId?: string;
+  actionPerformed?: string;
+}
+
+export interface ChatHistoryItem {
+  role: 'user' | 'model' | 'assistant';
+  text?: string;
+  content?: string;
+}
+
+export interface RequestPayload {
+  prompt?: string;
+  message?: string;
+  history?: ChatHistoryItem[];
+  image?: { mimeType: string; data: string } | null;
+  userSession?: UserSessionContext | null;
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -93,7 +185,7 @@ const TOOLS_DECLARATIONS = [
   }
 ];
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -113,8 +205,9 @@ serve(async (req) => {
       );
     }
 
-    const { prompt, message, history = [], image, userSession = null } = await req.json();
-    const userMessage = prompt || message || "";
+    const payloadBody: RequestPayload = await req.json().catch(() => ({}));
+    const { prompt, message, history = [], image, userSession = null } = payloadBody;
+    const userMessage = (prompt || message || "").trim();
 
     if (!userMessage && !image) {
       return new Response(
@@ -123,8 +216,8 @@ serve(async (req) => {
       );
     }
 
-    // Identify user role from profiles table
-    let userId = userSession?.id || null;
+    // Identify user role and session parameters from DB
+    let userId: string | null = userSession?.id || null;
     let userRole = (userSession?.role || 'owner').trim().toLowerCase();
     let username = userSession?.username || '';
     let userDomain = userSession?.domain || '';
@@ -155,9 +248,9 @@ serve(async (req) => {
       );
     }
 
-    // Role safety guard for OWNER trying to access other accounts
+    // Role safety guard for OWNER trying to edit another account
     if (isOwner && (lowerUserMsg.includes("cuenta de") || lowerUserMsg.includes("ve a la cuenta") || lowerUserMsg.includes("entra a la cuenta"))) {
-      const currentUsername = (userSession?.username || '').toLowerCase();
+      const currentUsername = (username || userSession?.username || '').toLowerCase();
       if (currentUsername && !lowerUserMsg.includes(currentUsername)) {
         return new Response(
           JSON.stringify({ reply: "Como usuario propietario de tu cuenta, solo tienes permisos para modificar el menú de tu propia cuenta. No es posible acceder o editar los menús de otros clientes." }),
@@ -166,7 +259,7 @@ serve(async (req) => {
       }
     }
 
-    // Persistent Target Account Resolver across history
+    // Persistent Target Account Resolver across chat history
     let lastMentionedAccount = "";
     if (Array.isArray(history)) {
       for (let i = history.length - 1; i >= 0; i--) {
@@ -196,7 +289,6 @@ serve(async (req) => {
           .select('id, username, domain, email');
 
         if (profiles && profiles.length > 0) {
-          // Exact or clean substring match
           const cleanSearch = searchTerm.replace(/^(la|el|los|las)\s+/i, "").trim();
           const match = profiles.find((p: any) => {
             const u = (p.username || '').toLowerCase();
@@ -213,27 +305,26 @@ serve(async (req) => {
         }
       }
 
-      // Fallback for admin if logged in
       if (userId) {
         return { targetId: userId, accountName: username || 'tu cuenta', domain: userDomain || 'undetermined' };
       }
       return null;
     }
 
-    async function getOrCreateMenu(targetId: string, defaultDomain: string = '') {
+    async function getOrCreateMenu(targetId: string, defaultDomain: string = ''): Promise<MenuRecord> {
       const { data: existingMenu } = await supabase
         .from('menutech_menus')
         .select('*')
         .eq('user_id', targetId)
         .maybeSingle();
 
-      if (existingMenu) return existingMenu;
+      if (existingMenu) return existingMenu as MenuRecord;
 
       const { data: prof } = await supabase.from('profiles').select('domain, username').eq('id', targetId).maybeSingle();
       const domain = prof?.domain || defaultDomain || 'undetermined';
       const slug = (prof?.domain || prof?.username || 'restaurant').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
-      const newMenu = {
+      const newMenu: MenuRecord = {
         user_id: targetId,
         domain: domain,
         slug: slug,
@@ -244,11 +335,11 @@ serve(async (req) => {
       };
 
       const { data: inserted } = await supabase.from('menutech_menus').insert(newMenu).select().single();
-      return inserted || newMenu;
+      return (inserted || newMenu) as MenuRecord;
     }
 
     // CRUD Executor for Gemini Function Calls
-    async function executeFunctionCall(name: string, args: any) {
+    async function executeFunctionCall(name: string, args: Record<string, any>): Promise<ToolExecutionResult> {
       console.log(`Executing tool function: ${name}`, args);
 
       if (name === "search_account") {
@@ -259,6 +350,7 @@ serve(async (req) => {
           return {
             success: true,
             targetUserId: resolved.targetId,
+            actionPerformed: 'search_account',
             message: `He seleccionado la cuenta de **${resolved.accountName}**. Tiene ${catCount} categoría(s) en su menú activo.`
           };
         } else {
@@ -274,13 +366,13 @@ serve(async (req) => {
         if (!resolved) return { success: false, message: "No se especificó o encontró la cuenta a editar." };
 
         const menu = await getOrCreateMenu(resolved.targetId, resolved.domain);
-        const config = menu.config || { categories: [], toppings: [] };
+        const config: MenuConfig = menu.config || { categories: [], toppings: [] };
         if (!config.categories) config.categories = [];
 
         const catName = (args.category_name || '').trim();
         if (!catName) return { success: false, message: "Nombre de categoría inválido." };
 
-        const exists = config.categories.some((c: any) => c.name.toLowerCase() === catName.toLowerCase());
+        const exists = config.categories.some((c: MenuCategory) => c.name.toLowerCase() === catName.toLowerCase());
         if (!exists) {
           config.categories.push({
             name: catName,
@@ -290,7 +382,7 @@ serve(async (req) => {
             dishes: []
           });
 
-          await supabase.from('menutech_menus').upsert({
+          const { error } = await supabase.from('menutech_menus').upsert({
             user_id: resolved.targetId,
             domain: menu.domain || 'undetermined',
             slug: menu.slug || 'restaurant',
@@ -300,15 +392,22 @@ serve(async (req) => {
             config: config
           }, { onConflict: 'user_id' });
 
+          if (error) {
+            console.error("Error updating DB in create_category:", error);
+            return { success: false, message: `Error en base de datos: ${error.message}` };
+          }
+
           return {
             success: true,
             targetUserId: resolved.targetId,
+            actionPerformed: 'create_category',
             message: `Categoría **"${catName}"** creada con éxito en la cuenta de ${resolved.accountName}.`
           };
         } else {
           return {
             success: true,
             targetUserId: resolved.targetId,
+            actionPerformed: 'create_category',
             message: `La categoría **"${catName}"** ya existe en la cuenta de ${resolved.accountName}.`
           };
         }
@@ -319,7 +418,7 @@ serve(async (req) => {
         if (!resolved) return { success: false, message: "No se especificó la cuenta a editar." };
 
         const menu = await getOrCreateMenu(resolved.targetId, resolved.domain);
-        const config = menu.config || { categories: [], toppings: [] };
+        const config: MenuConfig = menu.config || { categories: [], toppings: [] };
         if (!config.categories) config.categories = [];
 
         const dishName = (args.dish_name || '').trim();
@@ -340,7 +439,7 @@ serve(async (req) => {
         }
 
         let catObj = targetCatName
-          ? config.categories.find((c: any) => c.name.toLowerCase() === targetCatName.toLowerCase())
+          ? config.categories.find((c: MenuCategory) => c.name.toLowerCase() === targetCatName.toLowerCase())
           : config.categories[config.categories.length - 1];
 
         if (!catObj) {
@@ -364,7 +463,7 @@ serve(async (req) => {
           toppings: []
         });
 
-        await supabase.from('menutech_menus').upsert({
+        const { error } = await supabase.from('menutech_menus').upsert({
           user_id: resolved.targetId,
           domain: menu.domain || 'undetermined',
           slug: menu.slug || 'restaurant',
@@ -374,9 +473,15 @@ serve(async (req) => {
           config: config
         }, { onConflict: 'user_id' });
 
+        if (error) {
+          console.error("Error updating DB in add_dish:", error);
+          return { success: false, message: `Error en base de datos: ${error.message}` };
+        }
+
         return {
           success: true,
           targetUserId: resolved.targetId,
+          actionPerformed: 'add_dish',
           message: `Platillo **"${dishName}"** ($${price}) agregado a la categoría **"${catObj.name}"** en ${resolved.accountName}.`
         };
       }
@@ -386,13 +491,13 @@ serve(async (req) => {
         if (!resolved) return { success: false, message: "Cuenta no encontrada." };
 
         const menu = await getOrCreateMenu(resolved.targetId, resolved.domain);
-        const config = menu.config || { categories: [], toppings: [] };
+        const config: MenuConfig = menu.config || { categories: [], toppings: [] };
         const dishName = (args.dish_name || '').trim();
         const newPrice = typeof args.new_price === 'number' ? args.new_price : parseFloat(args.new_price || 0) || 0;
 
         let updated = false;
-        (config.categories || []).forEach((cat: any) => {
-          (cat.dishes || []).forEach((dish: any) => {
+        (config.categories || []).forEach((cat: MenuCategory) => {
+          (cat.dishes || []).forEach((dish: DishItem) => {
             if (dish.name.toLowerCase().includes(dishName.toLowerCase()) || dishName.toLowerCase().includes(dish.name.toLowerCase())) {
               dish.price = newPrice;
               updated = true;
@@ -401,7 +506,7 @@ serve(async (req) => {
         });
 
         if (updated) {
-          await supabase.from('menutech_menus').upsert({
+          const { error } = await supabase.from('menutech_menus').upsert({
             user_id: resolved.targetId,
             domain: menu.domain || 'undetermined',
             slug: menu.slug || 'restaurant',
@@ -411,9 +516,15 @@ serve(async (req) => {
             config: config
           }, { onConflict: 'user_id' });
 
+          if (error) {
+            console.error("Error updating DB in update_price:", error);
+            return { success: false, message: `Error en base de datos: ${error.message}` };
+          }
+
           return {
             success: true,
             targetUserId: resolved.targetId,
+            actionPerformed: 'update_price',
             message: `Precio de **"${dishName}"** actualizado a **$${newPrice}** en ${resolved.accountName}.`
           };
         } else {
@@ -429,20 +540,20 @@ serve(async (req) => {
         if (!resolved) return { success: false, message: "Cuenta no encontrada." };
 
         const menu = await getOrCreateMenu(resolved.targetId, resolved.domain);
-        const config = menu.config || { categories: [], toppings: [] };
+        const config: MenuConfig = menu.config || { categories: [], toppings: [] };
         const dishName = (args.dish_name || '').trim();
 
         let removed = false;
-        (config.categories || []).forEach((cat: any) => {
+        (config.categories || []).forEach((cat: MenuCategory) => {
           if (cat.dishes) {
             const initialLen = cat.dishes.length;
-            cat.dishes = cat.dishes.filter((d: any) => !d.name.toLowerCase().includes(dishName.toLowerCase()));
+            cat.dishes = cat.dishes.filter((d: DishItem) => !d.name.toLowerCase().includes(dishName.toLowerCase()));
             if (cat.dishes.length < initialLen) removed = true;
           }
         });
 
         if (removed) {
-          await supabase.from('menutech_menus').upsert({
+          const { error } = await supabase.from('menutech_menus').upsert({
             user_id: resolved.targetId,
             domain: menu.domain || 'undetermined',
             slug: menu.slug || 'restaurant',
@@ -452,9 +563,15 @@ serve(async (req) => {
             config: config
           }, { onConflict: 'user_id' });
 
+          if (error) {
+            console.error("Error updating DB in delete_dish:", error);
+            return { success: false, message: `Error en base de datos: ${error.message}` };
+          }
+
           return {
             success: true,
             targetUserId: resolved.targetId,
+            actionPerformed: 'delete_dish',
             message: `Platillo **"${dishName}"** eliminado del menú de ${resolved.accountName}.`
           };
         } else {
@@ -573,13 +690,17 @@ serve(async (req) => {
     // Check for Tool Function Calls returned by Gemini
     let executedResults: string[] = [];
     let menuUpdated = false;
-    let targetUserIdUpdated = null;
+    let targetUserIdUpdated: string | null = null;
+    let actionPerformed: string | null = null;
 
     for (const part of candidateParts) {
       if (part.functionCall) {
         const { name, args } = part.functionCall;
         const result = await executeFunctionCall(name, args || {});
-        if (result.success) menuUpdated = true;
+        if (result.success) {
+          menuUpdated = true;
+          if (result.actionPerformed) actionPerformed = result.actionPerformed;
+        }
         if (result.targetUserId) targetUserIdUpdated = result.targetUserId;
         executedResults.push(result.message);
       }
@@ -595,6 +716,7 @@ serve(async (req) => {
           const res = await executeFunctionCall("search_account", { account_name: targetSearch });
           if (res.message) executedResults.push(res.message);
           if (res.targetUserId) targetUserIdUpdated = res.targetUserId;
+          actionPerformed = 'search_account';
           menuUpdated = true;
         }
       }
@@ -606,6 +728,7 @@ serve(async (req) => {
           const res = await executeFunctionCall("create_category", { category_name: catMatch[1].trim() });
           if (res.message) executedResults.push(res.message);
           if (res.targetUserId) targetUserIdUpdated = res.targetUserId;
+          actionPerformed = 'create_category';
           menuUpdated = true;
         }
       }
@@ -622,6 +745,7 @@ serve(async (req) => {
               const res = await executeFunctionCall("add_dish", { dish_name: nameClean, price: price });
               if (res.message) executedResults.push(res.message);
               if (res.targetUserId) targetUserIdUpdated = res.targetUserId;
+              actionPerformed = 'add_dish';
               menuUpdated = true;
             }
           }
@@ -663,7 +787,8 @@ serve(async (req) => {
       JSON.stringify({
         reply: finalReply,
         menuUpdated: menuUpdated,
-        targetUserId: targetUserIdUpdated
+        targetUserId: targetUserIdUpdated,
+        actionPerformed: actionPerformed
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
