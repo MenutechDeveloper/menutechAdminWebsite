@@ -55,11 +55,28 @@ serve(async (req) => {
       );
     }
 
-    // Determine current user details & role
-    const userRole = (userSession?.role || 'owner').trim().toLowerCase();
-    const isOwner = userRole === 'owner';
-    const userId = userSession?.id || null;
-    const userDomain = userSession?.domain || '';
+    // Determine current user details & role from database profile when possible
+    let userId = userSession?.id || null;
+    let userRole = (userSession?.role || 'owner').trim().toLowerCase();
+    let username = userSession?.username || '';
+    let userDomain = userSession?.domain || '';
+
+    if (userId) {
+      const { data: dbProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (dbProfile) {
+        if (dbProfile.role) userRole = dbProfile.role.trim().toLowerCase();
+        if (dbProfile.username) username = dbProfile.username;
+        if (dbProfile.domain) userDomain = dbProfile.domain;
+      }
+    }
+
+    const nonOwnerRoles = ['admin', 'developer', 'cs', 'admincs', 'admindesign', 'design', 'retention'];
+    const isOwner = !nonOwnerRoles.includes(userRole) && userRole !== 'admin';
 
     // Fetch Learned Knowledge Base Context from menutech_knowledge table
     let learnedKnowledgeText = "";
@@ -121,7 +138,7 @@ serve(async (req) => {
     }
 
     // Construct prompt context with session metadata
-    let sessionInfoText = `\nDATOS DEL USUARIO ACTUAL EN SESIÓN:\n- ID: ${userId || 'No identificado'}\n- Rol: ${userRole.toUpperCase()}\n- Nombre: ${userSession?.username || 'Usuario'}\n- Dominio: ${userDomain || 'Sin dominio'}`;
+    let sessionInfoText = `\nDATOS DEL USUARIO ACTUAL EN SESIÓN:\n- ID: ${userId || 'No identificado'}\n- Rol: ${userRole.toUpperCase()}\n- Nombre: ${username || userSession?.username || 'Usuario'}\n- Dominio: ${userDomain || 'Sin dominio'}`;
 
     const systemInstructionCombined = SYSTEM_INSTRUCTION_BASE + sessionInfoText + learnedKnowledgeText;
 
