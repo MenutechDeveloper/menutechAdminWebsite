@@ -609,6 +609,168 @@
     let isTtsEnabled = true;
     let recognition = null;
     let isListening = false;
+    let activeClientTarget = null; // { targetId, accountName, domain }
+
+    async function processClientSideIntent(text, session) {
+        if (!window.supabase) return null;
+        const lower = text.toLowerCase().trim();
+        const sb = window.supabase;
+        const nonOwnerRoles = ['admin', 'developer', 'cs', 'admincs', 'admindesign', 'design', 'retention'];
+        const userRole = (session?.role || 'owner').toLowerCase();
+        const isOwner = !nonOwnerRoles.includes(userRole) && userRole !== 'admin';
+
+        async function resolveTarget(term) {
+            if (isOwner) {
+                if (!session?.id) return null;
+                return { targetId: session.id, accountName: session.username || 'tu cuenta', domain: session.domain || '' };
+            }
+            if (term) {
+                const { data: profiles } = await sb.from('profiles').select('id, username, domain, email');
+                if (profiles && profiles.length > 0) {
+                    const cleanTerm = term.toLowerCase().replace(/^(la|el|los|las)\s+/i, '').trim();
+                    const match = profiles.find(p =>
+                        (p.username || '').toLowerCase().includes(cleanTerm) ||
+                        cleanTerm.includes((p.username || '').toLowerCase()) ||
+                        (p.domain || '').toLowerCase().includes(cleanTerm) ||
+                        cleanTerm.includes((p.domain || '').toLowerCase())
+                    );
+                    if (match) {
+                        return { targetId: match.id, accountName: match.username || match.domain || match.email, domain: match.domain || '' };
+                    }
+                }
+            }
+            if (activeClientTarget) return activeClientTarget;
+            if (session?.id) return { targetId: session.id, accountName: session.username || 'tu cuenta', domain: session.domain || '' };
+            return null;
+        }
+
+        async function getOrCreateMenu(targetId, domain) {
+            const { data: existing } = await sb.from('menutech_menus').select('*').eq('user_id', targetId).maybeSingle();
+            if (existing) return existing;
+
+            const { data: prof } = await sb.from('profiles').select('domain, username').eq('id', targetId).maybeSingle();
+            const d = prof?.domain || domain || 'undetermined';
+            const slug = (prof?.domain || prof?.username || 'restaurant').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+            const newMenu = {
+                user_id: targetId,
+                domain: d,
+                slug: slug,
+                menu_style: 'mode2',
+                cover_url: '',
+                cover_type: 'image',
+                config: { categories: [], toppings: [] }
+            };
+            const { data: inserted } = await sb.from('menutech_menus').insert(newMenu).select().single();
+            return inserted || newMenu;
+        }
+
+        // Search Account command
+        if (!isOwner && (lower.includes("cuenta de") || lower.includes("buscar cuenta") || lower.includes("ve a la cuenta"))) {
+            const term = text.replace(/.*(cuenta de|buscar cuenta|ve a la cuenta)\s*/i, "").split(/[\n,]/)[0].trim();
+            const resolved = await resolveTarget(term);
+            if (resolved) {
+                activeClientTarget = resolved;
+                const menu = await getOrCreateMenu(resolved.targetId, resolved.domain);
+                const catCount = menu.config?.categories?.length || 0;
+                return {
+                    reply: `He seleccionado la cuenta de **${resolved.accountName}**. Tiene ${catCount} categoría(s) activa(s). ¿Qué deseas agregar o modificar?`,
+                    targetUserId: resolved.targetId,
+                    menuUpdated: true
+                };
+            }
+        }
+
+        // Add Category and/or Dishes command
+        if (lower.includes("categoria") || lower.includes("categoría") || lower.includes("platillo") || lower.includes("platillos") || lower.includes("agrega") || lower.includes("crea")) {
+            let accTerm = "";
+            const accMatch = text.match(/(?:cuenta de|en la cuenta de)\s+([a-zA-Z0-9\s-]+)/i);
+            if (accMatch) accTerm = accMatch[1].trim();
+
+            const resolved = await resolveTarget(accTerm);
+            if (resolved) {
+                activeClientTarget = resolved;
+                const menu = await getOrCreateMenu(resolved.targetId, resolved.domain);
+                const config = menu.config || { categories: [], toppings: [] };
+                if (!config.categories) config.categories = [];
+
+                let actionsDone = [];
+
+                let catName = "";
+                const catMatch = text.match(/(?:categoria|categoría)\s+(?:llamada\s+)?["']?([^"'\n\.$,]+)["']?/i);
+                if (catMatch && catMatch[1]) {
+                    catName = catMatch[1].trim();
+                    const exists = config.categories.some(c => c.name.toLowerCase() === catName.toLowerCase());
+                    if (!exists) {
+                        config.categories.push({
+                            name: catName,
+                            description: '',
+                            image: '',
+                            visibility: { days: [0, 1, 2, 3, 4, 5, 6], start: '00:00', end: '23:59', startDate: '', endDate: '' },
+                            dishes: []
+                        });
+                        actionsDone.push(`categoría **"${catName}"**`);
+                    }
+                }
+
+                const numMatch = text.match(/(\d+)\s+platillos/i);
+                let countToCreate = numMatch ? parseInt(numMatch[1]) : 0;
+
+                let targetCat = catName
+                    ? config.categories.find(c => c.name.toLowerCase() === catName.toLowerCase())
+                    : config.categories[config.categories.length - 1];
+
+                if (!targetCat && countToCreate > 0) {
+                    targetCat = { name: 'General', description: '', image: '', visibility: { days: [0,1,2,3,4,5,6], start: '00:00', end: '23:59', startDate:'', endDate:'' }, dishes: [] };
+                    config.categories.push(targetCat);
+                }
+
+                if (targetCat) {
+                    if (!targetCat.dishes) targetCat.dishes = [];
+                    if (countToCreate > 0) {
+                        const baseDishes = [
+                            { name: "Platillo Especial 1", price: 120, description: "Deliciosa opción recomendada" },
+                            { name: "Platillo Especial 2", price: 150, description: "Opción gourmet preparada al momento" },
+                            { name: "Platillo Especial 3", price: 180, description: "Especialidad de la casa" },
+                            { name: "Platillo Especial 4", price: 210, description: "Selección del chef" }
+                        ];
+                        for (let i = 0; i < countToCreate; i++) {
+                            const d = baseDishes[i % baseDishes.length];
+                            targetCat.dishes.push({
+                                name: d.name,
+                                description: d.description,
+                                price: d.price,
+                                image: '',
+                                sizes: [],
+                                toppings: []
+                            });
+                        }
+                        actionsDone.push(`${countToCreate} platillos en **"${targetCat.name}"**`);
+                    }
+                }
+
+                if (actionsDone.length > 0) {
+                    await sb.from('menutech_menus').upsert({
+                        user_id: resolved.targetId,
+                        domain: menu.domain || 'undetermined',
+                        slug: menu.slug || 'restaurant',
+                        menu_style: menu.menu_style || 'mode2',
+                        cover_url: menu.cover_url || '',
+                        cover_type: menu.cover_type || 'image',
+                        config: config
+                    }, { onConflict: 'user_id' });
+
+                    return {
+                        reply: `¡Listo! He agregado ${actionsDone.join(" y ")} en la cuenta de **${resolved.accountName}**.`,
+                        targetUserId: resolved.targetId,
+                        menuUpdated: true
+                    };
+                }
+            }
+        }
+
+        return null;
+    }
 
     // --- DOM ELEMENTS ---
     const triggerBtn = document.getElementById('mt-bot-trigger');
@@ -767,6 +929,22 @@
         const session = await getUserSession();
 
         try {
+            // Process direct client-side execution when available
+            const clientIntentResult = await processClientSideIntent(payloadPrompt, session);
+            if (clientIntentResult) {
+                removeTypingIndicator(typingEl);
+                const reply = clientIntentResult.reply;
+                chatHistory.push({ role: "user", text: payloadPrompt });
+                chatHistory.push({ role: "model", text: reply });
+                if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
+
+                appendBotMessage(reply);
+                speakText(reply);
+
+                window.dispatchEvent(new CustomEvent('menutech-menu-updated', { detail: clientIntentResult }));
+                return;
+            }
+
             const res = await fetch(CONFIG.EDGE_FUNCTION_URL, {
                 method: "POST",
                 headers: {
