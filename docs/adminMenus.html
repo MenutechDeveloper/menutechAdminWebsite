@@ -485,13 +485,19 @@
             setTimeout(() => toast.remove(), 6000);
         };
 
+        window.supabase = sb;
+
         document.addEventListener('DOMContentLoaded', async () => {
             initTheme(); initEvents();
             checkSession();
         });
 
-        window.addEventListener('menutech-menu-updated', () => {
-            loadMenu();
+        window.addEventListener('menutech-menu-updated', (e) => {
+            if (e && e.detail && e.detail.targetUserId && typeof window.switchContext === 'function') {
+                window.switchContext(e.detail.targetUserId);
+            } else {
+                loadMenu();
+            }
         });
 
         async function checkSession() {
