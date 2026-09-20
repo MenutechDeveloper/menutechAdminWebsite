@@ -68,7 +68,7 @@
             justify-content: center;
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             user-select: none;
-            z-index: 2147483647 !important;
+            z-index: 10 !important;
         }
         #mt-bot-trigger:hover {
             transform: scale(1.08) translateY(-4px);
@@ -82,10 +82,10 @@
             background-color: transparent !important;
         }
 
-        /* Floating Chat Window */
+        /* Floating Chat Window - Rendered strictly on top of trigger when active */
         #mt-bot-window {
             position: absolute;
-            bottom: 96px;
+            bottom: 20px;
             right: 0;
             width: 380px;
             max-width: calc(100vw - 32px);
@@ -102,9 +102,15 @@
             overflow: hidden;
             opacity: 0;
             transform: translateY(20px) scale(0.95);
-            pointer-events: none;
+            pointer-events: none !important;
             transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 2147483647 !important;
+            z-index: 200 !important;
+        }
+        #mt-bot-window * {
+            pointer-events: none;
+        }
+        #mt-bot-window.active * {
+            pointer-events: auto;
         }
         body.dark-mode #mt-bot-window {
             background: rgba(28, 31, 38, 0.98);
