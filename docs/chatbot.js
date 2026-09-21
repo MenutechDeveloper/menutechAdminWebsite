@@ -594,7 +594,7 @@
                 Hola, ¿hay algo que deba aprender hoy?
             </div>
             <div class="mt-bubble-link">
-                👉 Haz clic aquí para ir a Aprender
+                Haz click aqui
             </div>
             <div class="mt-bubble-dots">
                 <div class="mt-bubble-dot dot-1"></div>
