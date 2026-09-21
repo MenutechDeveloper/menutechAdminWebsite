@@ -108,25 +108,46 @@
         body.dark-mode .sun-icon { display: none; }
         body.dark-mode .moon-icon { display: block; }
 
+        /* Premium User Pill */
         #user-display-pill {
-            background: var(--card);
-            backdrop-filter: blur(20px);
-            padding: 8px 24px;
-            border-radius: 40px;
-            border: 1.5px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            cursor: pointer;
-            position: relative;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            min-width: 180px;
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); min-width: 220px; justify-content: flex-start;
         }
-        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
+
+        #user-display-pill.admin-glow {
+            background: linear-gradient(135deg, #bf9533 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf9533 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
+
+        #user-display-pill.dev-glow {
+            background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
+
+        #user-display-pill.owner-glow {
+            background: #000;
+            background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 20%, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 80%, rgba(255,255,255,0.1) 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.owner-glow #user-name, #user-display-pill.owner-glow #user-role-label { color: #fff !important; }
+
+        #user-display-pill #user-name, #user-display-pill #user-role-label { color: var(--text); transition: color 0.3s; }
+
+        @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
         .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
         #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
-        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; }
+        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .pill-menu { position: absolute; top: calc(100% + 12px); right: 0; background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2); opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000; }
+        #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .pill-menu-item { padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none; }
+        .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
+        .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
 
         /* Main Container 3-Column Split (Left: Upload Form, Center: GLTF Bot, Right: Filter/List CRUD) */
         .container {
@@ -659,11 +680,15 @@
                 <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                 <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </div>
-            <div id="user-display-pill">
-                <i class="fa-solid fa-graduation-cap" style="color: var(--orange);"></i>
+            <div id="user-display-pill" class="hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <div class="pill-info">
-                    <div id="user-name">Menutech AI</div>
-                    <div id="user-role-label">Aprender</div>
+                    <div id="user-name">&nbsp;</div>
+                    <div id="user-role-label">&nbsp;</div>
+                </div>
+                <div class="pill-menu">
+                    <a href="index.html" class="pill-menu-item">Home</a>
+                    <div class="pill-menu-item danger" onclick="logout()">Logout</div>
                 </div>
             </div>
         </div>
@@ -696,11 +721,11 @@
                 <div id="form-faq" class="tab-content">
                     <div class="form-group">
                         <label>Pregunta (FAQ)</label>
-                        <input type="text" id="faq-question" placeholder="Ej: ¿Cuáles son sus horarios?">
+                        <input type="text" id="faq-question">
                     </div>
                     <div class="form-group">
                         <label>Respuesta</label>
-                        <textarea id="faq-answer" placeholder="Ej: Atendemos de 12:00 PM a 10:00 PM."></textarea>
+                        <textarea id="faq-answer"></textarea>
                     </div>
                     <button class="btn-submit" id="btn-save-faq">
                         <i class="fa-solid fa-floppy-disk"></i> Guardar Pregunta
@@ -711,7 +736,7 @@
                 <div id="form-document" class="tab-content" style="display: none;">
                     <div class="form-group">
                         <label>Título del Documento</label>
-                        <input type="text" id="doc-title" placeholder="Ej: Menú Completo o Políticas">
+                        <input type="text" id="doc-title">
                     </div>
 
                     <div class="file-upload-area" id="doc-file-zone">
@@ -723,7 +748,7 @@
 
                     <div class="form-group">
                         <label>Contenido del Documento</label>
-                        <textarea id="doc-content" placeholder="Escribe o pega el contenido aquí..."></textarea>
+                        <textarea id="doc-content"></textarea>
                     </div>
                     <button class="btn-submit" id="btn-save-doc">
                         <i class="fa-solid fa-floppy-disk"></i> Guardar Documento
@@ -734,11 +759,11 @@
                 <div id="form-sheet" class="tab-content" style="display: none;">
                     <div class="form-group">
                         <label>Nombre de la Tabla / Sheet</label>
-                        <input type="text" id="sheet-title" placeholder="Ej: Precios o Inventario">
+                        <input type="text" id="sheet-title">
                     </div>
                     <div class="form-group">
                         <label>Datos Tabulares (CSV o Columna: Valor)</label>
-                        <textarea id="sheet-content" placeholder="Platillo, Precio&#10;Pizza Pepperoni, $12"></textarea>
+                        <textarea id="sheet-content"></textarea>
                     </div>
                     <button class="btn-submit" id="btn-save-sheet">
                         <i class="fa-solid fa-floppy-disk"></i> Guardar Sheet
@@ -772,7 +797,7 @@
                 </model-viewer>
 
                 <p class="bot-caption">
-                    Menutech AI procesa tu información para responder a tus clientes.
+                    Menutech AI procesa tu información para responder cualquier duda
                 </p>
             </div>
 
@@ -796,7 +821,7 @@
 
                     <div class="search-box" style="margin-bottom: 16px;">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="search-input" placeholder="Buscar por nombre o texto...">
+                        <input type="text" id="search-input">
                     </div>
 
                     <div class="knowledge-list" id="knowledge-list">
@@ -814,7 +839,7 @@
                     </div>
 
                     <div class="ai-test-box">
-                        <input type="text" id="test-query-input" placeholder="Haz una pregunta a la IA...">
+                        <input type="text" id="test-query-input">
                         <button class="btn-submit" id="btn-ask-ai">
                             <i class="fa-solid fa-paper-plane"></i> Preguntar
                         </button>
@@ -885,7 +910,7 @@
         let knowledgeData = [];
         let activeFilter = 'all';
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             initTheme();
             initTabs();
             initForms();
@@ -894,7 +919,42 @@
             initSearchAndFilter();
             initAiTest();
             initModalControls();
+            await checkSession();
         });
+
+        async function checkSession() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (session) {
+                const user = session.user;
+                const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+                const pill = document.getElementById('user-display-pill');
+                const nameEl = document.getElementById('user-name');
+                const roleEl = document.getElementById('user-role-label');
+
+                if (profile) {
+                    const role = (profile.role || 'user').trim().toUpperCase();
+                    nameEl.textContent = profile.username || user.email.split('@')[0];
+                    roleEl.textContent = profile.role || 'user';
+
+                    if (role === 'ADMIN') pill.classList.add('admin-glow');
+                    else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
+                    else pill.classList.add('owner-glow');
+                } else {
+                    nameEl.textContent = user.email.split('@')[0];
+                    roleEl.textContent = 'user';
+                    pill.classList.add('owner-glow');
+                }
+
+                pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
+                document.addEventListener('click', () => pill.classList.remove('active'));
+                pill.classList.remove('hidden');
+            }
+        }
+
+        window.logout = async () => {
+            await sb.auth.signOut();
+            window.location.href = 'index.html';
+        };
 
         function initTheme() {
             const toggle = document.getElementById('theme-toggle');

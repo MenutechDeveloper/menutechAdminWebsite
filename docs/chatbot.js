@@ -503,6 +503,75 @@
             transform: scale(1.05);
         }
 
+        /* Admin Thought Bubble above trigger */
+        #mt-admin-thought-bubble {
+            position: absolute;
+            bottom: 175px;
+            right: 15px;
+            width: 230px;
+            background: linear-gradient(135deg, #ff9533 0%, #f97316 100%);
+            color: #ffffff;
+            padding: 14px 16px;
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(249, 115, 22, 0.4);
+            cursor: pointer;
+            z-index: 15;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            pointer-events: auto;
+            text-align: center;
+            animation: mtFloatBubble 3s ease-in-out infinite;
+        }
+        #mt-admin-thought-bubble.hidden {
+            opacity: 0;
+            transform: translateY(10px) scale(0.9);
+            pointer-events: none !important;
+        }
+        #mt-admin-thought-bubble:hover {
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 16px 35px rgba(249, 115, 22, 0.5);
+        }
+        .mt-bubble-text {
+            font-size: 0.82rem;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+        .mt-bubble-link {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            background: rgba(255, 255, 255, 0.25);
+            padding: 4px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: background 0.2s;
+        }
+        #mt-admin-thought-bubble:hover .mt-bubble-link {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .mt-bubble-dots {
+            position: absolute;
+            bottom: -16px;
+            right: 35px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .mt-bubble-dot {
+            background: #f97316;
+            border-radius: 50%;
+            box-shadow: 0 4px 8px rgba(249, 115, 22, 0.3);
+        }
+        .mt-bubble-dot.dot-1 { width: 10px; height: 10px; }
+        .mt-bubble-dot.dot-2 { width: 7px; height: 7px; opacity: 0.8; }
+        .mt-bubble-dot.dot-3 { width: 4px; height: 4px; opacity: 0.6; }
+
+        @keyframes mtFloatBubble {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
         /* Mobile Responsive */
         @media (max-width: 480px) {
             #mt-bot-window {
@@ -520,6 +589,20 @@
     const botRoot = document.createElement('div');
     botRoot.id = 'mt-bot-root';
     botRoot.innerHTML = `
+        <div id="mt-admin-thought-bubble" class="hidden" title="Ir a Aprender IA">
+            <div class="mt-bubble-text" id="mt-bubble-msg">
+                Hola, ¿hay algo que deba aprender hoy?
+            </div>
+            <div class="mt-bubble-link">
+                👉 Haz clic aquí para ir a Aprender
+            </div>
+            <div class="mt-bubble-dots">
+                <div class="mt-bubble-dot dot-1"></div>
+                <div class="mt-bubble-dot dot-2"></div>
+                <div class="mt-bubble-dot dot-3"></div>
+            </div>
+        </div>
+
         <div id="mt-bot-window">
             <div class="mt-bot-header">
                 <div class="mt-bot-profile">
@@ -1147,10 +1230,57 @@
         fileInput.value = '';
     }
 
+    // --- ADMIN THOUGHT BUBBLE PERIODIC TRIGGER ---
+    async function initAdminThoughtBubble() {
+        const session = await getUserSession();
+        if (!session) return;
+        const role = (session.role || '').toUpperCase();
+        if (role === 'ADMIN' || role === 'DEVELOPER') {
+            const adminName = session.username || session.email.split('@')[0];
+            const bubbleEl = document.getElementById('mt-admin-thought-bubble');
+            const msgEl = document.getElementById('mt-bubble-msg');
+            if (msgEl) {
+                msgEl.textContent = `Hola ${adminName}, ¿hay algo que deba aprender hoy?`;
+            }
+            if (bubbleEl) {
+                bubbleEl.onclick = (e) => {
+                    e.stopPropagation();
+                    window.location.href = 'https://menutech.io/learn';
+                };
+
+                let isVisible = false;
+                function toggleBubble() {
+                    if (windowEl.classList.contains('active')) {
+                        bubbleEl.classList.add('hidden');
+                        isVisible = false;
+                        return;
+                    }
+                    isVisible = !isVisible;
+                    if (isVisible) {
+                        bubbleEl.classList.remove('hidden');
+                    } else {
+                        bubbleEl.classList.add('hidden');
+                    }
+                }
+
+                setTimeout(() => {
+                    if (!windowEl.classList.contains('active')) {
+                        bubbleEl.classList.remove('hidden');
+                        isVisible = true;
+                    }
+                }, 3000);
+
+                setInterval(toggleBubble, 12000);
+            }
+        }
+    }
+
     // --- EVENT LISTENERS ---
     triggerBtn.onclick = () => {
         windowEl.classList.toggle('active');
         if (windowEl.classList.contains('active')) {
+            const bubbleEl = document.getElementById('mt-admin-thought-bubble');
+            if (bubbleEl) bubbleEl.classList.add('hidden');
             inputEl.focus();
         }
     };
@@ -1223,5 +1353,6 @@
     });
 
     initSpeechRecognition();
+    initAdminThoughtBubble();
 
 })();
