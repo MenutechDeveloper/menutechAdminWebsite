@@ -1230,7 +1230,7 @@
         fileInput.value = '';
     }
 
-    // --- ADMIN THOUGHT BUBBLE PERIODIC TRIGGER ---
+    // --- ADMIN THOUGHT BUBBLE TRIGGER ---
     async function initAdminThoughtBubble() {
         const session = await getUserSession();
         if (!session) return;
@@ -1239,6 +1239,8 @@
             const adminName = session.username || session.email.split('@')[0];
             const bubbleEl = document.getElementById('mt-admin-thought-bubble');
             const msgEl = document.getElementById('mt-bubble-msg');
+            const triggerEl = document.getElementById('mt-bot-trigger');
+
             if (msgEl) {
                 msgEl.textContent = `Hola ${adminName}, ¿hay algo que deba aprender hoy?`;
             }
@@ -1248,42 +1250,70 @@
                     window.location.href = 'https://menutech.io/learn';
                 };
 
-                let isVisible = false;
-                function toggleBubble() {
-                    if (windowEl.classList.contains('active')) {
+                let hideTimer = null;
+
+                function showBubble() {
+                    if (windowEl.classList.contains('active')) return;
+                    bubbleEl.classList.remove('hidden');
+                    if (hideTimer) clearTimeout(hideTimer);
+                    hideTimer = setTimeout(() => {
                         bubbleEl.classList.add('hidden');
-                        isVisible = false;
-                        return;
-                    }
-                    isVisible = !isVisible;
-                    if (isVisible) {
-                        bubbleEl.classList.remove('hidden');
-                    } else {
-                        bubbleEl.classList.add('hidden');
-                    }
+                    }, 6000);
                 }
 
-                setTimeout(() => {
-                    if (!windowEl.classList.contains('active')) {
-                        bubbleEl.classList.remove('hidden');
-                        isVisible = true;
-                    }
-                }, 3000);
+                function hideBubble() {
+                    if (hideTimer) clearTimeout(hideTimer);
+                    bubbleEl.classList.add('hidden');
+                }
 
-                setInterval(toggleBubble, 12000);
+                // Show on page load, auto-hide after 6s if ignored
+                setTimeout(showBubble, 1000);
+
+                // Show on hover over GLTF or bubble, hide on leave
+                if (triggerEl) {
+                    triggerEl.addEventListener('mouseenter', showBubble);
+                    triggerEl.addEventListener('mouseleave', hideBubble);
+                }
+                bubbleEl.addEventListener('mouseenter', () => {
+                    if (hideTimer) clearTimeout(hideTimer);
+                    bubbleEl.classList.remove('hidden');
+                });
+                bubbleEl.addEventListener('mouseleave', hideBubble);
             }
         }
     }
 
     // --- EVENT LISTENERS ---
-    triggerBtn.onclick = () => {
+    let startX = 0, startY = 0, isDraggingGLTF = false;
+
+    triggerBtn.addEventListener('pointerdown', (e) => {
+        startX = e.clientX;
+        startY = e.clientY;
+        isDraggingGLTF = false;
+    });
+
+    triggerBtn.addEventListener('pointermove', (e) => {
+        const dx = Math.abs(e.clientX - startX);
+        const dy = Math.abs(e.clientY - startY);
+        if (dx > 5 || dy > 5) {
+            isDraggingGLTF = true;
+        }
+    });
+
+    triggerBtn.addEventListener('click', (e) => {
+        if (isDraggingGLTF) {
+            e.stopPropagation();
+            e.preventDefault();
+            isDraggingGLTF = false;
+            return;
+        }
         windowEl.classList.toggle('active');
         if (windowEl.classList.contains('active')) {
             const bubbleEl = document.getElementById('mt-admin-thought-bubble');
             if (bubbleEl) bubbleEl.classList.add('hidden');
             inputEl.focus();
         }
-    };
+    });
 
     closeBtn.onclick = () => {
         windowEl.classList.remove('active');
