@@ -875,46 +875,62 @@
     // --- SESSION CONTEXT EXTRACTOR ---
     async function getUserSession() {
         try {
-            // Check window.supabase if present
+            let userId = null;
+            let email = null;
+            let metaRole = null;
+            let username = null;
+            let domain = null;
+
             if (window.supabase && window.supabase.auth) {
                 const { data: { session } } = await window.supabase.auth.getSession();
                 if (session && session.user) {
-                    const user = session.user;
-                    let profile = null;
-                    try {
-                        const { data } = await window.supabase.from('profiles').select('*').eq('id', user.id).single();
-                        profile = data;
-                    } catch (e) {}
-                    return {
-                        id: user.id,
-                        email: user.email,
-                        role: profile ? (profile.role || 'owner') : 'owner',
-                        username: profile ? (profile.username || user.email.split('@')[0]) : user.email.split('@')[0],
-                        domain: profile ? (profile.domain || '') : ''
-                    };
+                    userId = session.user.id;
+                    email = session.user.email;
                 }
             }
 
-            // Fallback: Check localStorage Supabase token
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && (key.includes('supabase.auth.token') || key.startsWith('sb-') && key.endsWith('-auth-token'))) {
-                    const item = localStorage.getItem(key);
-                    if (item) {
-                        const parsed = JSON.parse(item);
-                        const user = parsed?.user || parsed?.currentSession?.user;
-                        if (user) {
-                            return {
-                                id: user.id,
-                                email: user.email,
-                                role: user.user_metadata?.role || 'owner',
-                                username: user.user_metadata?.username || user.email.split('@')[0],
-                                domain: user.user_metadata?.domain || ''
-                            };
+            if (!userId) {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.includes('supabase.auth.token') || (key.startsWith('sb-') && key.endsWith('-auth-token')))) {
+                        const item = localStorage.getItem(key);
+                        if (item) {
+                            const parsed = JSON.parse(item);
+                            const user = parsed?.user || parsed?.currentSession?.user;
+                            if (user) {
+                                userId = user.id;
+                                email = user.email;
+                                metaRole = user.user_metadata?.role;
+                                username = user.user_metadata?.username;
+                                domain = user.user_metadata?.domain;
+                            }
                         }
                     }
                 }
             }
+
+            if (!userId) return null;
+
+            // Fetch actual user profile directly from Supabase 'profiles' table
+            let dbProfile = null;
+            if (window.supabase) {
+                try {
+                    const { data } = await window.supabase.from('profiles').select('*').eq('id', userId).single();
+                    dbProfile = data;
+                } catch (e) {}
+            }
+
+            const resolvedRole = (dbProfile?.role || metaRole || 'owner').trim();
+            const resolvedUsername = dbProfile?.username || username || (email ? email.split('@')[0] : 'usuario');
+            const resolvedDomain = dbProfile?.domain || domain || '';
+
+            return {
+                id: userId,
+                email: email,
+                role: resolvedRole,
+                username: resolvedUsername,
+                domain: resolvedDomain
+            };
         } catch (err) {
             console.warn("Error resolving user session context:", err);
         }
