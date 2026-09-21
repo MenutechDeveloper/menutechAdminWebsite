@@ -911,9 +911,26 @@
 
             if (!userId) return null;
 
-            // Fetch actual user profile directly from Supabase 'profiles' table
+            // Fetch actual user profile directly from Supabase 'profiles' table via REST API
             let dbProfile = null;
-            if (window.supabase) {
+            try {
+                const res = await fetch(`https://eemqyrysdgasfjlitads.supabase.co/rest/v1/profiles?id=eq.${userId}&select=*`, {
+                    headers: {
+                        "apikey": CONFIG.SUPABASE_ANON_KEY,
+                        "Authorization": `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+                    }
+                });
+                if (res.ok) {
+                    const profiles = await res.json();
+                    if (profiles && profiles.length > 0) {
+                        dbProfile = profiles[0];
+                    }
+                }
+            } catch (e) {
+                console.warn("Error fetching profile via REST:", e);
+            }
+
+            if (!dbProfile && window.supabase) {
                 try {
                     const { data } = await window.supabase.from('profiles').select('*').eq('id', userId).single();
                     dbProfile = data;
