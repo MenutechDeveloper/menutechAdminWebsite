@@ -1235,7 +1235,7 @@
         const session = await getUserSession();
         if (!session) return;
         const role = (session.role || '').toUpperCase();
-        if (role === 'ADMIN' || role === 'DEVELOPER') {
+        if (role === 'ADMIN') {
             const adminName = session.username || session.email.split('@')[0];
             const bubbleEl = document.getElementById('mt-admin-thought-bubble');
             const msgEl = document.getElementById('mt-bubble-msg');
