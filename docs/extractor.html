@@ -412,7 +412,7 @@
                 {
                     name: "Directo",
                     fetch: async (u) => {
-                        const res = await fetchWithTimeout(u, { headers: { 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' } }, 4000);
+                        const res = await fetchWithTimeout(u, { headers: { 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' } }, 5000);
                         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
                         return await res.text();
                     }
@@ -420,7 +420,7 @@
                 {
                     name: "AllOrigins Raw",
                     fetch: async (u) => {
-                        const res = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&_=${Date.now()}`, {}, 6000);
+                        const res = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&_=${Date.now()}`, {}, 8000);
                         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
                         return await res.text();
                     }
@@ -428,7 +428,7 @@
                 {
                     name: "AllOrigins Get",
                     fetch: async (u) => {
-                        const res = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(u)}&_=${Date.now()}`, {}, 6000);
+                        const res = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(u)}&_=${Date.now()}`, {}, 8000);
                         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
                         const text = await res.text();
                         try {
@@ -441,17 +441,9 @@
                     }
                 },
                 {
-                    name: "CorsProxy.org",
-                    fetch: async (u) => {
-                        const res = await fetchWithTimeout(`https://corsproxy.org/?${encodeURIComponent(u)}`, {}, 6000);
-                        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
-                        return await res.text();
-                    }
-                },
-                {
                     name: "CodeTabs",
                     fetch: async (u) => {
-                        const res = await fetchWithTimeout(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, {}, 6000);
+                        const res = await fetchWithTimeout(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, {}, 8000);
                         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
                         return await res.text();
                     }
@@ -461,7 +453,7 @@
             let errors = [];
             for (let i = 0; i < proxies.length; i++) {
                 const proxy = proxies[i];
-                updateProgress(20 + i * 12, i === 0 ? "Intentando acceso directo..." : `Probando conexión alternativa (${proxy.name})...`);
+                updateProgress(20 + i * 15, i === 0 ? "Intentando acceso directo..." : `Probando conexión alternativa (${proxy.name})...`);
                 try {
                     const html = await proxy.fetch(targetUrl);
                     if (html && html.trim().length > 100 && !html.includes("Server-side requests are not allowed")) {
@@ -481,39 +473,56 @@
         async function fetchAndParseDigitalMenuApi(ruid, sourceUrl) {
             const rawTargets = [
                 `https://www.menu-technology.com/api/restaurant/${ruid}`,
-                `https://www.foodbooking.com/api/restaurant/${ruid}`
+                `https://www.foodbooking.com/api/restaurant/${ruid}`,
+                `https://api.foodbooking.com/api/restaurant/${ruid}`
             ];
 
-            // Build list of proxy URLs for each endpoint
-            const endpoints = [];
+            // Build list of fetch strategies
+            const strategies = [];
             rawTargets.forEach(target => {
-                endpoints.push(target); // Try direct fetch first
-                endpoints.push(`https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`);
-                endpoints.push(`https://api.allorigins.win/get?url=${encodeURIComponent(target)}`);
-                endpoints.push(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(target)}`);
+                // Direct fetch (works if browser allows or no CORS headers required)
+                strategies.push(async () => {
+                    const res = await fetchWithTimeout(target, {}, 5000);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return await res.json();
+                });
+
+                // AllOrigins RAW
+                strategies.push(async () => {
+                    const res = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(target)}&_=${Date.now()}`, {}, 8000);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const text = await res.text();
+                    return JSON.parse(text);
+                });
+
+                // AllOrigins GET
+                strategies.push(async () => {
+                    const res = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(target)}&_=${Date.now()}`, {}, 8000);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    return typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
+                });
+
+                // CodeTabs
+                strategies.push(async () => {
+                    const res = await fetchWithTimeout(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(target)}`, {}, 8000);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const text = await res.text();
+                    return JSON.parse(text);
+                });
             });
 
             let data = null;
-            for (const ep of endpoints) {
+            for (let i = 0; i < strategies.length; i++) {
                 try {
-                    const res = await fetchWithTimeout(ep, {}, 6000);
-                    if (res.ok) {
-                        const text = await res.text();
-                        let json = null;
-                        try {
-                            json = JSON.parse(text);
-                            // AllOrigins GET returns { contents: "..." }
-                            if (json && typeof json.contents === 'string') {
-                                json = JSON.parse(json.contents);
-                            }
-                        } catch (e) {}
-
-                        if (json && (json.menu || json.name)) {
-                            data = json;
-                            break;
-                        }
+                    const json = await strategies[i]();
+                    if (json && (json.menu || json.name || json.categories)) {
+                        data = json;
+                        break;
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.warn(`Digital menu API strategy ${i + 1} failed:`, e.message);
+                }
             }
 
             if (!data) return false;
