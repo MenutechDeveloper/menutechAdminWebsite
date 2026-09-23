@@ -349,12 +349,15 @@
             updateProgress(10, "Analizando URL y preparando conexión...");
 
             try {
-                // Check if target URL is a digital ordering menu with restaurant_uid or ruid parameter
-                const urlObj = new URL(targetUrl);
-                const ruid = urlObj.searchParams.get('restaurant_uid') || urlObj.searchParams.get('ruid');
+                // Check if target URL has restaurant_uid or ruid directly in query params
+                let ruid = null;
+                try {
+                    const urlObj = new URL(targetUrl);
+                    ruid = urlObj.searchParams.get('restaurant_uid') || urlObj.searchParams.get('ruid');
+                } catch (e) {}
 
                 if (ruid) {
-                    updateProgress(40, "Detectado menú digital. Consultando API de platillos...");
+                    updateProgress(40, "Detectado identificador de menú digital. Consultando API...");
                     const apiHandled = await fetchAndParseDigitalMenuApi(ruid, targetUrl);
                     if (apiHandled) {
                         updateProgress(90, "Organizando menú e imágenes...");
@@ -366,8 +369,9 @@
                     }
                 }
 
+                // Scrape HTML content via proxies
                 const htmlContent = await fetchHtmlWithProxies(targetUrl);
-                updateProgress(50, "Procesando código y buscando datos estructurados...");
+                updateProgress(50, "Procesando código y buscando datos del negocio...");
 
                 await parseRestaurantData(htmlContent, targetUrl);
 
@@ -414,25 +418,9 @@
                     }
                 },
                 {
-                    name: "Cors.sh",
-                    fetch: async (u) => {
-                        const res = await fetchWithTimeout(`https://proxy.cors.sh/${u}`, {}, 5000);
-                        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
-                        return await res.text();
-                    }
-                },
-                {
                     name: "AllOrigins Raw",
                     fetch: async (u) => {
-                        const res = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&_=${Date.now()}`, {}, 5000);
-                        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
-                        return await res.text();
-                    }
-                },
-                {
-                    name: "CorsProxy.org",
-                    fetch: async (u) => {
-                        const res = await fetchWithTimeout(`https://corsproxy.org/?${encodeURIComponent(u)}`, {}, 5000);
+                        const res = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&_=${Date.now()}`, {}, 6000);
                         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
                         return await res.text();
                     }
@@ -440,7 +428,7 @@
                 {
                     name: "AllOrigins Get",
                     fetch: async (u) => {
-                        const res = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(u)}&_=${Date.now()}`, {}, 5000);
+                        const res = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(u)}&_=${Date.now()}`, {}, 6000);
                         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
                         const text = await res.text();
                         try {
@@ -453,9 +441,17 @@
                     }
                 },
                 {
+                    name: "CorsProxy.org",
+                    fetch: async (u) => {
+                        const res = await fetchWithTimeout(`https://corsproxy.org/?${encodeURIComponent(u)}`, {}, 6000);
+                        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
+                        return await res.text();
+                    }
+                },
+                {
                     name: "CodeTabs",
                     fetch: async (u) => {
-                        const res = await fetchWithTimeout(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, {}, 5000);
+                        const res = await fetchWithTimeout(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, {}, 6000);
                         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
                         return await res.text();
                     }
@@ -483,19 +479,35 @@
 
         // --- Fetch & Parse Digital Ordering API ---
         async function fetchAndParseDigitalMenuApi(ruid, sourceUrl) {
-            const apiEndpoints = [
+            const rawTargets = [
                 `https://www.menu-technology.com/api/restaurant/${ruid}`,
-                `https://www.foodbooking.com/api/restaurant/${ruid}`,
-                `https://proxy.cors.sh/https://www.menu-technology.com/api/restaurant/${ruid}`,
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://www.menu-technology.com/api/restaurant/${ruid}`)}`
+                `https://www.foodbooking.com/api/restaurant/${ruid}`
             ];
 
+            // Build list of proxy URLs for each endpoint
+            const endpoints = [];
+            rawTargets.forEach(target => {
+                endpoints.push(target); // Try direct fetch first
+                endpoints.push(`https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`);
+                endpoints.push(`https://api.allorigins.win/get?url=${encodeURIComponent(target)}`);
+                endpoints.push(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(target)}`);
+            });
+
             let data = null;
-            for (const ep of apiEndpoints) {
+            for (const ep of endpoints) {
                 try {
                     const res = await fetchWithTimeout(ep, {}, 6000);
                     if (res.ok) {
-                        const json = await res.json();
+                        const text = await res.text();
+                        let json = null;
+                        try {
+                            json = JSON.parse(text);
+                            // AllOrigins GET returns { contents: "..." }
+                            if (json && typeof json.contents === 'string') {
+                                json = JSON.parse(json.contents);
+                            }
+                        } catch (e) {}
+
                         if (json && (json.menu || json.name)) {
                             data = json;
                             break;
@@ -509,14 +521,13 @@
             const restaurant = {
                 name: data.name || "Restaurante Digital",
                 address: [data.street, data.city, data.zipcode, data.country_code].filter(Boolean).join(', '),
-                phone: data.phone || data.telephone || "",
+                phone: data.phone || data.telephone || (Array.isArray(data.phones) && data.phones[0]) || "",
                 hours: "",
                 websiteUrl: sourceUrl
             };
 
             // Format opening hours if available
             if (Array.isArray(data.opening_hours) && data.opening_hours.length > 0) {
-                const daysMap = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
                 const hoursList = data.opening_hours.map(oh => {
                     const startH = String(Math.floor(oh.begin_minute / 60)).padStart(2, '0');
                     const startM = String(oh.begin_minute % 60).padStart(2, '0');
@@ -533,6 +544,7 @@
             const cdnBase = data.cdn_base_path || "https://www.fbgcdn.com/pictures/";
             const menuObj = data.menu || data;
             const categoriesList = menuObj.categories || [];
+            const picturesObj = data.pictures || {};
 
             categoriesList.forEach(cat => {
                 const catName = cat.name || "Menú General";
@@ -540,12 +552,25 @@
                 items.forEach(it => {
                     if (it && it.name) {
                         let imgUrl = "";
-                        if (it.picture_id && data.pictures) {
-                            const picObj = Object.values(data.pictures).find(p => p.picture_id === it.picture_id || p.id === it.picture_id);
-                            if (picObj && picObj.filename) {
-                                imgUrl = `${cdnBase}${picObj.filename}`;
-                                imageSet.add(imgUrl);
+
+                        // 1. Try finding picture in picturesObj by key or entity_id/picture_id
+                        if (picturesObj) {
+                            const pKey = `menu_item-${it.id}`;
+                            const pKeySmall = `menu_item_small-${it.id}`;
+                            const picItem = picturesObj[pKey] || picturesObj[pKeySmall];
+
+                            if (picItem && picItem.filename) {
+                                imgUrl = `${cdnBase}${picItem.filename}`;
+                            } else if (it.picture_id) {
+                                const found = Object.values(picturesObj).find(p => p.picture_id === it.picture_id || p.id === it.picture_id);
+                                if (found && found.filename) {
+                                    imgUrl = `${cdnBase}${found.filename}`;
+                                }
                             }
+                        }
+
+                        if (imgUrl) {
+                            imageSet.add(imgUrl);
                         }
 
                         let priceText = "";
@@ -553,12 +578,38 @@
                             priceText = `$${parseFloat(it.price).toFixed(2)}`;
                         }
 
+                        // Extract sizes if present
+                        const sizes = [];
+                        if (Array.isArray(it.sizes) && it.sizes.length > 0) {
+                            it.sizes.forEach(s => {
+                                if (s && s.name) {
+                                    const sPrice = s.price !== undefined ? ` ($${parseFloat(s.price).toFixed(2)})` : '';
+                                    sizes.push(`${s.name}${sPrice}`);
+                                }
+                            });
+                        }
+
+                        // Extract option groups/extras if present
+                        const extras = [];
+                        if (Array.isArray(it.groups) && it.groups.length > 0) {
+                            it.groups.forEach(g => {
+                                if (g && g.name) {
+                                    const opts = (g.options || []).map(o => o.name).filter(Boolean).slice(0, 4);
+                                    if (opts.length > 0) {
+                                        extras.push(`${g.name}: ${opts.join(', ')}`);
+                                    } else {
+                                        extras.push(g.name);
+                                    }
+                                }
+                            });
+                        }
+
                         const dish = {
                             name: it.name,
                             description: it.description || "",
                             price: priceText,
-                            sizes: [],
-                            extras: [],
+                            sizes: sizes,
+                            extras: extras,
                             image: imgUrl
                         };
 
@@ -581,10 +632,19 @@
                 }
             });
 
+            // Merge with existing extracted restaurant details if already present
+            if (window.extractedData && window.extractedData.restaurant) {
+                const ex = window.extractedData.restaurant;
+                if (!restaurant.name || restaurant.name === "Restaurante Digital") restaurant.name = ex.name || restaurant.name;
+                if (!restaurant.address) restaurant.address = ex.address || "";
+                if (!restaurant.phone) restaurant.phone = ex.phone || "";
+                if (!restaurant.hours) restaurant.hours = ex.hours || "";
+            }
+
             window.extractedData = {
                 restaurant: restaurant,
                 categories: categories,
-                allImages: Array.from(imageSet)
+                allImages: Array.from(new Set([...(window.extractedData?.allImages || []), ...imageSet]))
             };
 
             return true;
@@ -619,8 +679,17 @@
                 } catch (e) {}
             });
 
-            // 2. Check for window.MENU_TECH_STATE or Menutech custom tags
-            processMenutechState(htmlContent, doc, restaurant, categoryMap, imageSet);
+            // 2. Check for window.MENU_TECH_STATE or Menutech custom tags / embedded RUID
+            const extractedRuid = processMenutechState(htmlContent, doc, restaurant, categoryMap, imageSet);
+
+            // If an embedded ruid was found on the web page, fetch the complete digital menu API!
+            if (extractedRuid) {
+                updateProgress(65, "Encontrado menú digital vinculado. Obteniendo lista completa de platillos...");
+                const apiHandled = await fetchAndParseDigitalMenuApi(extractedRuid, sourceUrl);
+                if (apiHandled && window.extractedData.categories.length > 0) {
+                    return; // Successfully fetched full digital menu
+                }
+            }
 
             // 3. Check for __NEXT_DATA__ or inline JSON state (DoorDash, Toast, UberEats, etc)
             const nextDataScript = doc.querySelector('script#__NEXT_DATA__');
@@ -631,10 +700,10 @@
                 } catch (e) {}
             }
 
-            // 3. Fallback to Meta Tags (OpenGraph, Microdata) for Restaurant Info if missing
+            // 4. Fallback to Meta Tags (OpenGraph, Microdata) for Restaurant Info if missing
             if (!restaurant.name) {
                 const ogTitle = doc.querySelector('meta[property="og:title"]')?.content || doc.querySelector('title')?.textContent;
-                if (ogTitle) restaurant.name = ogTitle.split('|')[0].split('-')[0].trim();
+                if (ogTitle) restaurant.name = ogTitle.split('|')[0].split('-')[0].split('–')[0].trim();
             }
 
             if (!restaurant.address) {
@@ -663,7 +732,7 @@
                 if (hoursEl) restaurant.hours = hoursEl.textContent.replace(/\s+/g, ' ').trim();
             }
 
-            // 4. DOM Heuristic Parsing if categories/dishes are empty or partial
+            // 5. DOM Heuristic Parsing if categories/dishes are empty or partial
             if (categoryMap.size === 0) {
                 processDomHeuristics(doc, categoryMap, imageSet, sourceUrl);
             }
@@ -685,11 +754,14 @@
 
         // --- Menutech State Processor ---
         function processMenutechState(htmlContent, doc, restaurant, categoryMap, imageSet) {
+            let foundRuid = null;
+
             // Check for window.MENU_TECH_STATE script
             const stateMatch = htmlContent.match(/window\.MENU_TECH_STATE\s*=\s*(\{[\s\S]*?\});/);
             if (stateMatch) {
                 try {
                     const state = JSON.parse(stateMatch[1]);
+                    if (state.ruid) foundRuid = state.ruid;
                     if (state.info) {
                         if (!restaurant.address && state.info.address) restaurant.address = state.info.address;
                         if (!restaurant.phone && state.info.phone) restaurant.phone = state.info.phone;
@@ -709,11 +781,20 @@
             }
 
             // Check for custom elements like <menutech-orders> or <menutech-reservations>
-            const ordersTag = doc.querySelector('menutech-orders, menutech-platform-orders');
+            const ordersTag = doc.querySelector('menutech-orders, menutech-platform-orders, [data-glf-ruid]');
             if (ordersTag) {
+                foundRuid = foundRuid || ordersTag.getAttribute('ruid') || ordersTag.getAttribute('data-glf-ruid');
                 const title = ordersTag.getAttribute('restaurant-name') || ordersTag.getAttribute('title');
                 if (title && !restaurant.name) restaurant.name = title;
             }
+
+            // Check script tags or HTML string for embedded ruid / restaurant_uid pattern
+            if (!foundRuid) {
+                const ruidMatch = htmlContent.match(/(?:ruid|restaurant_uid)["']?\s*[:=]\s*["']?([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
+                if (ruidMatch) foundRuid = ruidMatch[1];
+            }
+
+            return foundRuid;
         }
 
         // --- JSON-LD Processor ---
