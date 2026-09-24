@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../models/order_model.dart';
 import '../services/supabase_service.dart';
+import '../widgets/chatbot_widget.dart';
 import 'order_detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   OrderModel? _selectedOrder;
+  final Set<String> _notifiedOrderIds = {};
 
   @override
   void initState() {
@@ -82,6 +84,21 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           final pendingCount = allOrders.where((o) => o.status == 'pending').length;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _updateAlertSound(pendingCount > 0);
+
+            // Notify chatbot widget of new pending orders or status changes
+            for (var order in allOrders) {
+              if (order.status == 'pending' && !_notifiedOrderIds.contains(order.id)) {
+                _notifiedOrderIds.add(order.id);
+                ChatbotWidget.notifyNewOrder({
+                  'id': order.id,
+                  'customerName': order.customerName,
+                  'totalAmount': order.totalAmount,
+                  'status': order.status,
+                });
+              } else if (order.status != 'pending' && _notifiedOrderIds.contains(order.id)) {
+                ChatbotWidget.notifyOrderUpdated(order.id, order.status);
+              }
+            }
           });
 
           return LayoutBuilder(

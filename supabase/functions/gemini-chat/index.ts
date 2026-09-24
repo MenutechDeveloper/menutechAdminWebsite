@@ -88,6 +88,20 @@ export interface ChatHistoryItem {
   content?: string;
 }
 
+export interface OrderAlertEvent {
+  id: string;
+  customerName: string;
+  totalAmount?: number;
+  status: string;
+  createdAt?: string;
+}
+
+export interface PrinterAlertEvent {
+  ip: string;
+  name?: string;
+  status: 'connected' | 'disconnected';
+}
+
 export interface RequestPayload {
   prompt?: string;
   message?: string;
@@ -113,7 +127,10 @@ REGLAS ABSOLUTAS E INVIOLABLES:
 6. REGLA DE SEGURIDAD DE ELIMINACIÓN: ESTÁ ESTRICTAMENTE PROHIBIDO ELIMINAR TODO EL MENÚ O BORRAR TODAS LAS CATEGORÍAS DE GOLPE. Si el usuario te pide borrado masivo, debes negarte educadamente.
 7. CONTROL DE ACCESO SEGÚN EL ROL DEL USUARIO:
    - Si el usuario es 'OWNER': Solo puede modificar su propia cuenta. Si intenta editar la cuenta de otro cliente, debes indicarle que no tiene permisos.
-   - Si el usuario es 'ADMIN', 'DEVELOPER', 'CS', 'ADMINCS', etc.: Tiene permisos globales para buscar cualquier restaurante y editar su menú.`;
+   - Si el usuario es 'ADMIN', 'DEVELOPER', 'CS', 'ADMINCS', etc.: Tiene permisos globales para buscar cualquier restaurante y editar su menú.
+8. NOTIFICACIONES EN TIEMPO REAL Y ALERTAS DE VOZ:
+   - Notificación de nuevas órdenes y recordatorios dinámicos en inglés nativo de EE. UU.
+   - Confirmación de impresoras térmicas conectadas y detectadas con éxito en la red local.`;
 
 const TOOLS_DECLARATIONS = [
   {
