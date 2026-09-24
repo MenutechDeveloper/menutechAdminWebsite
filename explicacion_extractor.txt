@@ -1,0 +1,27 @@
+====================================================================
+¿POR QUÉ EL EXTRACTOR YA NO MUESTRA TODOS LOS PLATILLOS DE UN LINK?
+====================================================================
+
+1. NO SE TE ACABARON LOS CRÉDITOS:
+   El extractor funciona directamente desde tu navegador mediante scripts de
+   conexión y servicios intermediarios gratuitos. No existe un límite de créditos.
+
+2. RAZONES PRINCIPALES POR LAS QUE FALLA EN ALGUNOS LINKS:
+   • Servidores Intermediarios (Proxies) Bloqueados: Para poder leer sitios
+     web externos desde el navegador se usan servidores CORS intermediarios.
+     Si el sitio web del restaurante o el servidor intermediario está saturado
+     o bloqueado por protección anti-bot (Cloudflare), la lectura se interrumpe.
+   • Páginas Dinámicas (JavaScript / React): Muchos menús modernos cargan los
+     platillos dinámicamente con JavaScript después de cargar la página o al
+     hacer scroll/clic.
+   • Pestañas y Acordeones Ocultos: Sitios que ocultan categorías en pestañas
+     que requieren clic del usuario no envían los platillos en el HTML inicial.
+   • Cambios en la Estructura Web del Restaurante: Si el restaurante modificó
+     el diseño o formato de su menú web, el lector automático deja de reconocer
+     los nombres y precios en las posiciones antiguas.
+
+3. MEJORAS REALIZADAS EN EXTRACTOR.HTML:
+   • Se agregaron nuevos servidores alternativos de respaldo (Proxies CORS).
+   • Se ampliaron las reglas de búsqueda interna para extraer datos ocultos
+     en scripts de páginas dinámicas (__NUXT__, __INITIAL_STATE__, etc.).
+====================================================================

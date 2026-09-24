@@ -418,6 +418,14 @@
                     }
                 },
                 {
+                    name: "CorsProxy.io",
+                    fetch: async (u) => {
+                        const res = await fetchWithTimeout(`https://corsproxy.io/?${encodeURIComponent(u)}`, {}, 8000);
+                        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
+                        return await res.text();
+                    }
+                },
+                {
                     name: "AllOrigins Raw",
                     fetch: async (u) => {
                         const res = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&_=${Date.now()}`, {}, 8000);
@@ -444,6 +452,14 @@
                     name: "CodeTabs",
                     fetch: async (u) => {
                         const res = await fetchWithTimeout(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, {}, 8000);
+                        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
+                        return await res.text();
+                    }
+                },
+                {
+                    name: "ThingProxy",
+                    fetch: async (u) => {
+                        const res = await fetchWithTimeout(`https://thingproxy.freeboard.io/fetch/${u}`, {}, 8000);
                         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
                         return await res.text();
                     }
@@ -700,7 +716,7 @@
                 }
             }
 
-            // 3. Check for __NEXT_DATA__ or inline JSON state (DoorDash, Toast, UberEats, etc)
+            // 3. Check for __NEXT_DATA__ or inline JSON state (DoorDash, Toast, UberEats, Nuxt, etc)
             const nextDataScript = doc.querySelector('script#__NEXT_DATA__');
             if (nextDataScript) {
                 try {
@@ -708,6 +724,21 @@
                     processNextData(nextData, restaurant, categoryMap, imageSet);
                 } catch (e) {}
             }
+
+            // Scan all script tags for embedded JSON state objects (e.g., __NUXT__, __INITIAL_STATE__, window.__PRELOADED_STATE__)
+            const allScripts = doc.querySelectorAll('script:not([src])');
+            allScripts.forEach(script => {
+                const text = script.textContent;
+                if (text && (text.includes('menu') || text.includes('categories') || text.includes('dishes') || text.includes('items'))) {
+                    const jsonMatches = text.match(/(?:window\.__[A-Z0-9_]+\s*=\s*|\b(?:state|initialState|preloadedState)\s*=\s*)(\{[\s\S]*?\});?/i);
+                    if (jsonMatches && jsonMatches[1]) {
+                        try {
+                            const parsed = JSON.parse(jsonMatches[1]);
+                            processNextData(parsed, restaurant, categoryMap, imageSet);
+                        } catch (e) {}
+                    }
+                }
+            });
 
             // 4. Fallback to Meta Tags (OpenGraph, Microdata) for Restaurant Info if missing
             if (!restaurant.name) {
