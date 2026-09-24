@@ -1015,17 +1015,21 @@
     }
 
     // --- TEXT TO SPEECH (Bot Voice Output) ---
-    function speakText(text) {
+    function speakText(text, lang = 'es-ES') {
         if (!isTtsEnabled || !('speechSynthesis' in window)) return;
-        window.speechSynthesis.cancel();
+        try {
+            window.speechSynthesis.cancel();
 
-        const cleanText = text.replace(/[*#_`]/g, '');
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.lang = 'es-ES';
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
+            const cleanText = text.replace(/[*#_`]/g, '');
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.lang = lang;
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
 
-        window.speechSynthesis.speak(utterance);
+            window.speechSynthesis.speak(utterance);
+        } catch (e) {
+            console.warn("Speech synthesis error:", e);
+        }
     }
 
     // --- CHAT LOGIC & SEND MESSAGE ---
@@ -1263,6 +1267,160 @@
         fileInput.value = '';
     }
 
+    // --- THOUGHT BUBBLE & NOTIFICATION ENGINE ---
+    let thoughtBubbleHideTimer = null;
+
+    function showThoughtBubble(htmlContent, durationMs = 8000, lang = null, actionCallback = null) {
+        const bubbleEl = document.getElementById('mt-admin-thought-bubble');
+        const msgEl = document.getElementById('mt-bubble-msg');
+
+        if (!bubbleEl || !msgEl) return;
+        if (windowEl && windowEl.classList.contains('active')) return;
+
+        msgEl.innerHTML = htmlContent;
+        bubbleEl.classList.remove('hidden');
+
+        if (actionCallback) {
+            bubbleEl.onclick = (e) => {
+                e.stopPropagation();
+                actionCallback();
+            };
+        } else {
+            bubbleEl.onclick = (e) => {
+                e.stopPropagation();
+                windowEl.classList.add('active');
+                bubbleEl.classList.add('hidden');
+                notifyFlutterStateChange(true);
+            };
+        }
+
+        if (lang) {
+            const plainText = msgEl.textContent || msgEl.innerText || '';
+            speakText(plainText, lang);
+        }
+
+        if (thoughtBubbleHideTimer) clearTimeout(thoughtBubbleHideTimer);
+        if (durationMs > 0) {
+            thoughtBubbleHideTimer = setTimeout(() => {
+                bubbleEl.classList.add('hidden');
+            }, durationMs);
+        }
+    }
+
+    // --- REALTIME DYNAMIC ORDER REMINDERS & PRINTER EVENTS ---
+    const activeOrderReminders = {};
+
+    function clearOrderReminderTimers(orderId) {
+        if (activeOrderReminders[orderId]) {
+            const record = activeOrderReminders[orderId];
+            if (record.timers) {
+                record.timers.forEach(t => clearTimeout(t));
+            }
+            if (record.periodicTimer) {
+                clearTimeout(record.periodicTimer);
+            }
+            delete activeOrderReminders[orderId];
+        }
+    }
+
+    function handleNewOrderAlert(orderData) {
+        if (!orderData || !orderData.id) return;
+
+        const orderId = orderData.id;
+        const customerName = orderData.customerName || orderData.customer_name || 'a customer';
+        const status = (orderData.status || 'pending').toLowerCase();
+
+        if (status !== 'pending') {
+            clearOrderReminderTimers(orderId);
+            return;
+        }
+
+        clearOrderReminderTimers(orderId);
+
+        const record = {
+            order: orderData,
+            timers: [],
+            periodicTimer: null
+        };
+        activeOrderReminders[orderId] = record;
+
+        // 1st Notification (Immediate upon arrival - Native US English voice):
+        const initialMsg = "You've got a new order!";
+        showThoughtBubble(`🛍️ <b>${initialMsg}</b><br><small>From ${escapeHtml(customerName)}</small>`, 7000, 'en-US');
+
+        // 2nd Notification (Dynamic delay ~25 - 38 seconds):
+        const delay1 = 25000 + Math.floor(Math.random() * 13000);
+        const timer1 = setTimeout(() => {
+            if (activeOrderReminders[orderId]) {
+                const reminderMsg = `Hey! You've got an order from ${customerName}, don't miss it!`;
+                showThoughtBubble(`⏰ <b>${reminderMsg}</b>`, 8000, 'en-US');
+            }
+        }, delay1);
+        record.timers.push(timer1);
+
+        // 3rd Notification (Dynamic delay ~35 - 50 seconds after delay1):
+        const delay2 = delay1 + 35000 + Math.floor(Math.random() * 15000);
+        const timer2 = setTimeout(() => {
+            if (activeOrderReminders[orderId]) {
+                const reminderMsg2 = "Hello? Is anyone there?";
+                showThoughtBubble(`🙋‍♂️ <b>${reminderMsg2}</b><br><small>Order from ${escapeHtml(customerName)} is pending</small>`, 8000, 'en-US');
+
+                schedulePeriodicReminders(orderId, customerName);
+            }
+        }, delay2);
+        record.timers.push(timer2);
+    }
+
+    function schedulePeriodicReminders(orderId, customerName) {
+        if (!activeOrderReminders[orderId]) return;
+
+        const periodicPhrases = [
+            `Hello? Is anybody there? Don't forget your pending order!`,
+            `Hey! You still have a pending order from ${customerName}!`,
+            `Friendly reminder: ${customerName}'s order is waiting for you!`,
+            `Hello? Is anyone there? Please check your pending orders!`
+        ];
+
+        let index = 0;
+
+        function triggerNext() {
+            if (!activeOrderReminders[orderId]) return;
+            const phrase = periodicPhrases[index % periodicPhrases.length];
+            index++;
+            showThoughtBubble(`🔔 <b>${phrase}</b>`, 8000, 'en-US');
+
+            const nextDelay = 40000 + Math.floor(Math.random() * 25000);
+            activeOrderReminders[orderId].periodicTimer = setTimeout(triggerNext, nextDelay);
+        }
+
+        const firstInterval = 40000 + Math.floor(Math.random() * 25000);
+        activeOrderReminders[orderId].periodicTimer = setTimeout(triggerNext, firstInterval);
+    }
+
+    function handleOrderUpdatedAlert(orderId, status) {
+        if (!orderId) return;
+        const st = (status || '').toLowerCase();
+        if (st !== 'pending') {
+            clearOrderReminderTimers(orderId);
+        }
+    }
+
+    function handlePrinterConnectedAlert(printerData) {
+        const printerName = printerData?.name || printerData?.ip || 'Printer';
+        const msg = `Printer connected successfully!`;
+        showThoughtBubble(`🖨️ <b>${msg}</b><br><small>${escapeHtml(printerName)}</small>`, 7000, 'en-US');
+    }
+
+    function notifyFlutterStateChange(isOpen) {
+        if (window.FlutterChatbotChannel && window.FlutterChatbotChannel.postMessage) {
+            try {
+                window.FlutterChatbotChannel.postMessage(JSON.stringify({
+                    event: isOpen ? 'chat_opened' : 'chat_closed'
+                }));
+            } catch (e) {}
+        }
+    }
+
     // --- ADMIN THOUGHT BUBBLE TRIGGER ---
     async function initAdminThoughtBubble() {
         const session = await getUserSession();
@@ -1341,16 +1499,19 @@
             return;
         }
         windowEl.classList.toggle('active');
-        if (windowEl.classList.contains('active')) {
+        const isActive = windowEl.classList.contains('active');
+        if (isActive) {
             const bubbleEl = document.getElementById('mt-admin-thought-bubble');
             if (bubbleEl) bubbleEl.classList.add('hidden');
             inputEl.focus();
         }
+        notifyFlutterStateChange(isActive);
     });
 
     closeBtn.onclick = () => {
         windowEl.classList.remove('active');
         window.speechSynthesis.cancel();
+        notifyFlutterStateChange(false);
     };
 
     ttsToggleBtn.onclick = () => {
@@ -1417,5 +1578,35 @@
 
     initSpeechRecognition();
     initAdminThoughtBubble();
+
+    // --- GLOBAL EVENT LISTENERS & PUBLIC API EXPORT ---
+    window.addEventListener('menutech-new-order', (e) => {
+        if (e.detail) handleNewOrderAlert(e.detail);
+    });
+
+    window.addEventListener('menutech-order-updated', (e) => {
+        if (e.detail) {
+            const id = e.detail.orderId || e.detail.id;
+            const status = e.detail.status;
+            handleOrderUpdatedAlert(id, status);
+        }
+    });
+
+    window.addEventListener('menutech-printer-connected', (e) => {
+        handlePrinterConnectedAlert(e.detail);
+    });
+
+    window.MenutechBot = {
+        showThoughtBubble: showThoughtBubble,
+        speakText: speakText,
+        handleNewOrder: handleNewOrderAlert,
+        handleOrderUpdated: handleOrderUpdatedAlert,
+        handlePrinterConnected: handlePrinterConnectedAlert,
+        toggleChat: function() {
+            windowEl.classList.toggle('active');
+            const isActive = windowEl.classList.contains('active');
+            notifyFlutterStateChange(isActive);
+        }
+    };
 
 })();

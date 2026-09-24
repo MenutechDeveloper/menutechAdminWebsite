@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/print_service.dart';
+import '../widgets/chatbot_widget.dart';
 
 class PrinterSettingsScreen extends StatefulWidget {
   const PrinterSettingsScreen({super.key});
@@ -245,6 +246,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> with Sing
             if (success) {
               await _printService.savePrinterIp(ip);
               await _loadPrinters();
+              ChatbotWidget.notifyPrinterConnected(ip, name);
               if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -538,6 +540,10 @@ class _ConfigurePrinterScreenState extends State<ConfigurePrinterScreen> {
       _isTesting = false;
       _testStatus = success ? "success" : "failed";
     });
+
+    if (success) {
+      ChatbotWidget.notifyPrinterConnected(ip, _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null);
+    }
   }
 
   Future<void> _save() async {
