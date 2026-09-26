@@ -1079,7 +1079,7 @@
                     </div>
 
                     <div class="search-box" style="margin-bottom: 16px;">
-                        <input type="text" id="search-input" placeholder="Buscar conocimiento...">
+                        <input type="text" id="search-input">
                     </div>
 
                     <div class="knowledge-list" id="knowledge-list">
@@ -1097,7 +1097,7 @@
                     </div>
 
                     <div class="ai-test-box">
-                        <input type="text" id="test-query-input" placeholder="Escribe tu consulta de prueba...">
+                        <input type="text" id="test-query-input">
                         <button class="btn-submit" id="btn-ask-ai">Preguntar</button>
                     </div>
 
@@ -1119,7 +1119,7 @@
 
             <div class="card-panel">
                 <div class="search-box" style="margin-bottom: 16px;">
-                    <input type="text" id="search-auto-input" placeholder="Buscar algoritmo por nombre o regla...">
+                    <input type="text" id="search-auto-input">
                 </div>
 
                 <div class="knowledge-list" id="automations-list" style="max-height: 650px;">
@@ -1137,7 +1137,7 @@
                 <div style="display: flex; align-items: center; gap: 16px;">
                     <button class="btn-secondary" id="btn-close-algo-canvas" style="padding: 8px 16px;">Volver</button>
                     <input type="hidden" id="auto-editing-id" value="">
-                    <input type="text" id="auto-name" placeholder="Nombre del Algoritmo..." style="font-family:'Outfit',sans-serif; font-size:1.2rem; font-weight:800; border:none; background:transparent; outline:none; width:350px;">
+                    <input type="text" id="auto-name" style="font-family:'Outfit',sans-serif; font-size:1.2rem; font-weight:800; border:none; background:transparent; outline:none; width:350px;">
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <button class="btn-submit" id="btn-save-automation" style="width: auto; padding: 10px 24px;">Guardar Algoritmo</button>
@@ -1719,7 +1719,7 @@
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
                             <label>Instrucción / Condición</label>
-                            <textarea class="block-field-rule" placeholder="Ej: Consultar ventas del mes. Si es menor a 100 dólares, verificar gallery.html...">${initialData.ruleText || ''}</textarea>
+                            <textarea class="block-field-rule">${initialData.ruleText || ''}</textarea>
                         </div>
                     `;
                 } else if (type === 'action') {
@@ -1727,7 +1727,7 @@
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Instrucciones de Respuesta para Menutech IA</label>
-                            <textarea class="block-field-ia" placeholder="Ej: Dile al usuario que sus ventas son bajas y ofrécele subir imágenes a su galería por él...">${initialData.iaText || ''}</textarea>
+                            <textarea class="block-field-ia">${initialData.iaText || ''}</textarea>
                         </div>
                     `;
                 } else if (type === 'event') {
@@ -1735,7 +1735,7 @@
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Nombre del Evento</label>
-                            <input type="text" class="block-field-event" placeholder="Ej: ventas_bajas_alert" value="${initialData.eventName || ''}">
+                            <input type="text" class="block-field-event" value="${initialData.eventName || ''}">
                         </div>
                     `;
                 }
