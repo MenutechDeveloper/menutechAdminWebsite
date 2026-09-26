@@ -1137,9 +1137,19 @@
                 <div style="display: flex; align-items: center; gap: 16px;">
                     <button class="btn-secondary" id="btn-close-algo-canvas" style="padding: 8px 16px;">Volver</button>
                     <input type="hidden" id="auto-editing-id" value="">
-                    <input type="text" id="auto-name" style="font-family:'Outfit',sans-serif; font-size:1.2rem; font-weight:800; border:none; background:transparent; outline:none; width:350px;">
+                    <input type="text" id="auto-name" style="font-family:'Outfit',sans-serif; font-size:1.2rem; font-weight:800; border:none; background:transparent; outline:none; width:300px;" placeholder="Nombre del Algoritmo">
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 700; color: var(--text-dim);">
+                        <span>Frecuencia / Cron:</span>
+                        <select id="auto-schedule-interval" class="form-control" style="width: auto; padding: 6px 12px; font-size: 0.85rem; margin-bottom: 0;">
+                            <option value="0">En Demanda (Manual/Webhook)</option>
+                            <option value="15">Cada 15 minutos</option>
+                            <option value="60">Cada hora</option>
+                            <option value="1440" selected>Cada 24 horas (Diario / Cron)</option>
+                            <option value="10080">Cada semana</option>
+                        </select>
+                    </div>
                     <button class="btn-submit" id="btn-save-automation" style="width: auto; padding: 10px 24px;">Guardar Algoritmo</button>
                 </div>
             </div>
@@ -1211,9 +1221,12 @@
     <!-- Modal TypeScript View / Dry Run -->
     <div class="modal-overlay" id="code-modal">
         <div class="modal-card">
-            <div class="modal-header">
-                <h3 id="code-modal-title">Código TypeScript Generado</h3>
-                <button class="btn-close-modal" id="btn-close-code-modal"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between;">
+                <h3 id="code-modal-title" style="margin-bottom:0;">Código TypeScript Generado</h3>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button class="btn-secondary" id="btn-copy-code" style="padding: 6px 14px; font-size: 0.8rem;">Copiar Código</button>
+                    <button class="btn-close-modal" id="btn-close-code-modal"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
             <pre class="code-view" id="code-modal-content"></pre>
         </div>
@@ -1847,6 +1860,7 @@
             saveAutoBtn.onclick = async () => {
                 const editingId = document.getElementById('auto-editing-id').value;
                 const name = document.getElementById('auto-name').value.trim() || "Nuevo Algoritmo";
+                const scheduleInterval = parseInt(document.getElementById('auto-schedule-interval').value || "0", 10);
 
                 const cards = workspace.querySelectorAll('.automation-block-card');
                 if (cards.length === 0) {
@@ -1881,7 +1895,7 @@
                     created_at: new Date().toISOString()
                 };
 
-                const generatedTsCode = generateDeterministicTypeScript(configJSON);
+                const generatedTsCode = generateDeterministicTypeScript(configJSON, scheduleInterval);
 
                 try {
                     if (editingId) {
@@ -1891,6 +1905,7 @@
                                 name: name,
                                 config: configJSON,
                                 generated_code: generatedTsCode,
+                                schedule_interval_minutes: scheduleInterval,
                                 gemini_enabled: isGeminiEnabled,
                                 status: 'active'
                             })
@@ -1906,6 +1921,7 @@
                                 status: 'active',
                                 config: configJSON,
                                 generated_code: generatedTsCode,
+                                schedule_interval_minutes: scheduleInterval,
                                 gemini_enabled: isGeminiEnabled
                             }]);
 
@@ -1925,6 +1941,8 @@
         function resetAutomationForm() {
             document.getElementById('auto-editing-id').value = '';
             document.getElementById('auto-name').value = '';
+            const scheduleSelect = document.getElementById('auto-schedule-interval');
+            if (scheduleSelect) scheduleSelect.value = "1440";
             const workspace = document.getElementById('canvas-blocks-workspace');
             if (workspace) {
                 workspace.innerHTML = `
@@ -1935,35 +1953,116 @@
             }
         }
 
-        function generateDeterministicTypeScript(config) {
+        function generateDeterministicTypeScript(config, scheduleIntervalMinutes = 1440) {
+            const slug = (config.name || "algoritmo")
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-+|-+$/g, "") || "algoritmo";
+
+            let cronString = "Manual / En Demanda";
+            if (scheduleIntervalMinutes === 15) cronString = "Cada 15 Minutos (*/15 * * * *)";
+            else if (scheduleIntervalMinutes === 60) cronString = "Cada Hora (0 * * * *)";
+            else if (scheduleIntervalMinutes === 1440) cronString = "Diario / Cada 24 Horas (0 0 * * *)";
+            else if (scheduleIntervalMinutes === 10080) cronString = "Semanal (0 0 * * 0)";
+
             const blocksJson = JSON.stringify(config.blocks || [], null, 2);
-            return `// Generated Supabase Edge Function for Algorithm: ${config.name}
+
+            return `// ==============================================================================
+// SUPABASE EDGE FUNCTION: ${config.name}
+// RUTA SUGERIDA: supabase/functions/${slug}/index.ts
+// FRECUENCIA DE EJECUCIÓN / CRON: ${cronString}
+// ==============================================================================
+// INSTRUCCIONES DE DESPLIEGUE MANUAL EN SUPABASE:
+// 1. En tu proyecto local con Supabase CLI, crea la carpeta:
+//    mkdir -p supabase/functions/${slug}
+// 2. Guarda este archivo como:
+//    supabase/functions/${slug}/index.ts
+// 3. Despliega la función ejecutando:
+//    supabase functions deploy ${slug} --no-verify-jwt
+// ==============================================================================
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 serve(async (req: Request) => {
+  // Manejo de Preflight CORS
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const blocks = ${blocksJson};
+    const scheduleIntervalMinutes = ${scheduleIntervalMinutes};
 
-    const result = {
-      algorithm: "${config.name}",
-      processedAt: new Date().toISOString(),
+    // Lógica determinista de ejecución según los bloques configurados
+    let processedRecords = 0;
+    let eventsGenerated = 0;
+    const executionDetails: any[] = [];
+
+    for (const block of blocks) {
+      if (block.type === 'source' && block.sourceId) {
+        // Cargar fuente de datos desde menutech_knowledge
+        const { data: sourceData } = await supabase
+          .from('menutech_knowledge')
+          .select('*')
+          .eq('id', block.sourceId)
+          .single();
+
+        executionDetails.push({
+          block: 'source',
+          sourceId: block.sourceId,
+          title: sourceData?.title || 'Fuente cargada',
+          contentLength: sourceData?.content?.length || 0
+        });
+      } else if (block.type === 'rule') {
+        executionDetails.push({
+          block: 'rule',
+          rule: block.ruleText
+        });
+      } else if (block.type === 'action') {
+        executionDetails.push({
+          block: 'action',
+          iaInstruction: block.iaText
+        });
+      } else if (block.type === 'event') {
+        eventsGenerated++;
+        executionDetails.push({
+          block: 'event',
+          eventName: block.eventName
+        });
+      }
+    }
+
+    const responsePayload = {
+      success: true,
+      algorithmName: "${config.name}",
+      functionSlug: "${slug}",
+      scheduleIntervalMinutes,
+      executedAt: new Date().toISOString(),
       blocksExecuted: blocks.length,
-      blocks: blocks
+      eventsGenerated,
+      details: executionDetails
     };
 
-    return new Response(JSON.stringify({ success: true, result }), {
-      headers: { "Content-Type": "application/json" }
+    return new Response(JSON.stringify(responsePayload), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   } catch (err: any) {
     return new Response(JSON.stringify({ success: false, error: err.message }), {
       status: 500,
-      headers: { "Content-Type": "application/json" }
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
 });`;
@@ -2054,6 +2153,19 @@ serve(async (req: Request) => {
             modal.classList.add('active');
         };
 
+        const btnCopyCode = document.getElementById('btn-copy-code');
+        if (btnCopyCode) {
+            btnCopyCode.onclick = () => {
+                const codeText = document.getElementById('code-modal-content').textContent;
+                if (!codeText) return;
+                navigator.clipboard.writeText(codeText).then(() => {
+                    showToast("Código copiado al portapapeles.", "success");
+                }).catch(() => {
+                    showToast("No se pudo copiar automáticamente.", "error");
+                });
+            };
+        }
+
         window.viewAutomationCode = (id) => {
             const item = automationsData.find(a => a.id === id);
             if (!item) return;
@@ -2073,6 +2185,11 @@ serve(async (req: Request) => {
 
             document.getElementById('auto-editing-id').value = item.id;
             document.getElementById('auto-name').value = item.name;
+
+            const scheduleSelect = document.getElementById('auto-schedule-interval');
+            if (scheduleSelect) {
+                scheduleSelect.value = (item.schedule_interval_minutes || 1440).toString();
+            }
 
             const cfg = item.config || {};
             if (Array.isArray(cfg.blocks)) {
