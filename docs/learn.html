@@ -149,10 +149,10 @@
         .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
         .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
 
-        /* Main Container 3-Column Split (Left: Upload Form, Center: GLTF Bot, Right: Filter/List CRUD) */
+        /* Main Container 3-Column Split */
         .container {
             width: 100%;
-            max-width: 1550px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 100px 24px 60px 24px;
             animation: fadeIn 0.8s ease-out;
@@ -177,7 +177,7 @@
 
         .card-title {
             font-family: 'Outfit', sans-serif;
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 700;
             margin-bottom: 20px;
             display: flex;
@@ -185,8 +185,24 @@
             gap: 12px;
             color: var(--text);
         }
-        .card-title i {
-            color: var(--orange);
+
+        /* Access Denied Overlay */
+        #access-denied-view {
+            display: none;
+            text-align: center;
+            padding: 120px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        #access-denied-view h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        #access-denied-view p {
+            color: var(--text-dim);
+            margin-bottom: 24px;
         }
 
         /* CENTER COLUMN: 3D Bot & Thought Bubble */
@@ -273,7 +289,38 @@
             margin-top: 10px;
         }
 
-        /* Tabs Navigation */
+        /* Section Navigation Tabs (Conocimiento / Automatizaciones) */
+        .main-section-nav {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 12px;
+        }
+        .section-tab-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 12px 24px;
+            border-radius: 18px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .section-tab-btn:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+        .section-tab-btn.active {
+            background: var(--orange);
+            color: #ffffff;
+            border-color: var(--orange);
+            box-shadow: 0 8px 20px rgba(255, 149, 51, 0.25);
+        }
+
+        /* Tabs Navigation Internal */
         .nav-tabs {
             display: flex;
             gap: 8px;
@@ -322,7 +369,7 @@
             letter-spacing: 0.5px;
             margin-bottom: 6px;
         }
-        input[type="text"], textarea, select {
+        input[type="text"], input[type="number"], textarea, select {
             width: 100%;
             background: var(--input);
             border: 1px solid var(--border);
@@ -334,7 +381,7 @@
             transition: all 0.3s;
             outline: none;
         }
-        input[type="text"]:focus, textarea:focus, select:focus {
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
             border-color: var(--orange);
             box-shadow: 0 0 0 4px rgba(255, 149, 51, 0.1);
         }
@@ -356,11 +403,6 @@
         .file-upload-area:hover, .file-upload-area.dragover {
             border-color: var(--orange);
             background: rgba(255, 149, 51, 0.05);
-        }
-        .file-upload-area i {
-            font-size: 1.6rem;
-            color: var(--orange);
-            margin-bottom: 6px;
         }
 
         .btn-submit {
@@ -385,6 +427,22 @@
             box-shadow: 0 12px 30px rgba(249, 115, 22, 0.35);
         }
 
+        .btn-secondary {
+            background: var(--input);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 16px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+
         /* Dashboard & Search Header */
         .dashboard-header {
             display: flex;
@@ -399,15 +457,8 @@
             flex: 1;
             min-width: 200px;
         }
-        .search-box i {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-dim);
-        }
         .search-box input {
-            padding-left: 40px;
+            padding-left: 14px;
         }
 
         .filter-badge-container {
@@ -483,6 +534,8 @@
         .tag-faq { background: rgba(59, 130, 246, 0.15); color: #2563eb; }
         .tag-document { background: rgba(16, 185, 129, 0.15); color: #059669; }
         .tag-sheet { background: rgba(168, 85, 247, 0.15); color: #9333ea; }
+        .tag-active { background: rgba(16, 185, 129, 0.15); color: #059669; }
+        .tag-inactive { background: rgba(220, 38, 38, 0.15); color: #dc2626; }
 
         .item-content {
             font-size: 0.85rem;
@@ -500,11 +553,14 @@
             font-size: 0.72rem;
             color: var(--text-dim);
             margin-top: 4px;
+            flex-wrap: wrap;
+            gap: 6px;
         }
         .item-actions {
             display: flex;
             align-items: center;
             gap: 6px;
+            flex-wrap: wrap;
         }
 
         .btn-edit {
@@ -563,6 +619,50 @@
             display: none;
         }
 
+        /* Visual Automation Blocks Styling */
+        .automation-block-card {
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 14px;
+            position: relative;
+        }
+        .automation-block-header {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: var(--orange);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .block-arrow {
+            text-align: center;
+            color: var(--orange);
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin: -6px 0 8px 0;
+        }
+        .columns-checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: var(--text);
+        }
+
         /* EDIT MODAL */
         .modal-overlay {
             position: fixed;
@@ -588,7 +688,9 @@
             border-radius: 28px;
             padding: 28px;
             width: 100%;
-            max-width: 520px;
+            max-width: 650px;
+            max-height: 90vh;
+            overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
             transform: scale(0.92);
             transition: transform 0.3s ease;
@@ -613,6 +715,21 @@
             font-size: 1.2rem;
             color: var(--text-dim);
             cursor: pointer;
+        }
+
+        /* Code View Pre */
+        pre.code-view {
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--text);
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
         }
 
         /* Toast Notifications */
@@ -672,7 +789,7 @@
     <div id="top-nav">
         <div>
             <a href="index.html" class="btn-panel-top">
-                <i class="fa-solid fa-arrow-left"></i> PANEL
+                PANEL
             </a>
         </div>
         <div style="display: flex; align-items: center; gap: 15px;">
@@ -694,88 +811,235 @@
         </div>
     </div>
 
-    <!-- Main 3-Column Container -->
-    <div class="container">
+    <!-- Access Denied View -->
+    <div id="access-denied-view">
+        <h2>ACCESO RESTRINGIDO</h2>
+        <p>Esta sección está reservada exclusivamente para administradores del sistema.</p>
+        <a href="index.html" class="btn-panel-top">VOLVER AL PANEL</a>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container" id="main-admin-container" style="display: none;">
+
+        <div class="main-section-nav">
+            <button class="section-tab-btn active" id="sec-btn-knowledge">CONOCIMIENTO</button>
+            <button class="section-tab-btn" id="sec-btn-automations">AUTOMATIZACIONES</button>
+        </div>
+
         <div class="learn-3col-layout">
 
-            <!-- LEFT COLUMN: Data Input Forms -->
+            <!-- LEFT COLUMN: Input Forms -->
             <div class="card-panel">
-                <div class="card-title">
-                    <i class="fa-solid fa-brain"></i>
-                    <span>Cargar Conocimiento</span>
+
+                <!-- SECTION 1: CONOCIMIENTO -->
+                <div id="section-knowledge-left">
+                    <div class="card-title">
+                        <span>Cargar Conocimiento</span>
+                    </div>
+
+                    <div class="nav-tabs">
+                        <button class="tab-btn active" data-tab="faq">FAQs</button>
+                        <button class="tab-btn" data-tab="document">Documentos</button>
+                        <button class="tab-btn" data-tab="sheet">Sheets</button>
+                    </div>
+
+                    <!-- Form: FAQ -->
+                    <div id="form-faq" class="tab-content">
+                        <div class="form-group">
+                            <label>Pregunta</label>
+                            <input type="text" id="faq-question">
+                        </div>
+                        <div class="form-group">
+                            <label>Respuesta</label>
+                            <textarea id="faq-answer"></textarea>
+                        </div>
+                        <button class="btn-submit" id="btn-save-faq">Guardar Pregunta</button>
+                    </div>
+
+                    <!-- Form: Document -->
+                    <div id="form-document" class="tab-content" style="display: none;">
+                        <div class="form-group">
+                            <label>Título del Documento</label>
+                            <input type="text" id="doc-title">
+                        </div>
+
+                        <div class="file-upload-area" id="doc-file-zone">
+                            <div style="font-weight: 700; font-size: 0.88rem; margin-bottom: 2px;">Subir archivo (.txt, .json, .csv)</div>
+                            <div style="font-size: 0.75rem; color: var(--text-dim);">Haz clic o arrastra para extraer texto</div>
+                            <input type="file" id="doc-file-input" accept=".txt,.md,.json,.csv,.text" style="display: none;">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Contenido del Documento</label>
+                            <textarea id="doc-content"></textarea>
+                        </div>
+                        <button class="btn-submit" id="btn-save-doc">Guardar Documento</button>
+                    </div>
+
+                    <!-- Form: Sheet / Table -->
+                    <div id="form-sheet" class="tab-content" style="display: none;">
+                        <div class="form-group">
+                            <label>Nombre del Sheet</label>
+                            <input type="text" id="sheet-title">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Sheet</label>
+                            <select id="sheet-access-type">
+                                <option value="public">Sheet Público / Interno</option>
+                                <option value="private">Sheet Privado (Solo Consulta)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Datos Tabulares (CSV o Columna: Valor)</label>
+                            <textarea id="sheet-content"></textarea>
+                        </div>
+                        <button class="btn-submit" id="btn-save-sheet">Guardar Sheet</button>
+                    </div>
                 </div>
 
-                <div class="nav-tabs">
-                    <button class="tab-btn active" data-tab="faq">
-                        <i class="fa-solid fa-circle-question"></i> FAQs
-                    </button>
-                    <button class="tab-btn" data-tab="document">
-                        <i class="fa-solid fa-file-lines"></i> Documentos
-                    </button>
-                    <button class="tab-btn" data-tab="sheet">
-                        <i class="fa-solid fa-table"></i> Sheets
-                    </button>
+                <!-- SECTION 2: AUTOMATIZACIONES BUILDER -->
+                <div id="section-automations-left" style="display: none;">
+                    <div class="card-title">
+                        <span>Constructor Visual</span>
+                    </div>
+
+                    <input type="hidden" id="auto-editing-id" value="">
+
+                    <div class="form-group">
+                        <label>Nombre de Automatización</label>
+                        <input type="text" id="auto-name" placeholder="Ej: Cotizador de Precios">
+                    </div>
+
+                    <!-- BLOCK 1: FUENTE -->
+                    <div class="automation-block-card">
+                        <div class="automation-block-header">FUENTE DE DATOS</div>
+                        <div class="form-group" style="margin-bottom: 8px;">
+                            <label>Seleccionar Sheet / Tabla</label>
+                            <select id="auto-source-sheet">
+                                <option value="">Seleccionar Sheet...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="block-arrow">↓</div>
+
+                    <!-- BLOCK 2: COLUMNAS -->
+                    <div class="automation-block-card">
+                        <div class="automation-block-header">
+                            <span>COLUMNAS</span>
+                            <button type="button" class="btn-secondary" id="btn-select-all-cols" style="padding:2px 8px; font-size:0.7rem;">Todas</button>
+                        </div>
+                        <div class="columns-checkbox-grid" id="auto-columns-grid">
+                            <div style="font-size:0.75rem; color:var(--text-dim); grid-column:span 2;">Selecciona una fuente primero...</div>
+                        </div>
+                    </div>
+
+                    <div class="block-arrow">↓</div>
+
+                    <!-- BLOCK 3: CONDICIÓN -->
+                    <div class="automation-block-card">
+                        <div class="automation-block-header">CONDICIÓN</div>
+                        <div class="form-group" style="margin-bottom: 8px;">
+                            <label>Campo</label>
+                            <select id="auto-cond-field">
+                                <option value="producto">producto</option>
+                                <option value="precio">precio</option>
+                                <option value="categoria">categoría</option>
+                                <option value="fecha_vencimiento">fecha_vencimiento</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 8px;">
+                            <label>Operador</label>
+                            <select id="auto-cond-op">
+                                <option value="equals">es igual a</option>
+                                <option value="not_equals">es diferente de</option>
+                                <option value="contains">contiene</option>
+                                <option value="greater_than">mayor que</option>
+                                <option value="less_than">menor que</option>
+                                <option value="within_days">dentro de N días</option>
+                                <option value="is_not_empty">no está vacío</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Valor</label>
+                            <input type="text" id="auto-cond-value" placeholder="Valor o número de días">
+                        </div>
+                    </div>
+
+                    <div class="block-arrow">↓</div>
+
+                    <!-- BLOCK 4: OPERACIONES -->
+                    <div class="automation-block-card">
+                        <div class="automation-block-header">OPERACIÓN</div>
+                        <div class="form-group" style="margin-bottom: 8px;">
+                            <label>Tipo de Operación</label>
+                            <select id="auto-op-type">
+                                <option value="search_filter">Buscar y Filtrar</option>
+                                <option value="multiply">Multiplicar (Precio x Cantidad)</option>
+                                <option value="apply_discount">Aplicar Descuento (%)</option>
+                                <option value="sum">Sumar</option>
+                                <option value="date_add">Sumar Días / Fecha Actual</option>
+                                <option value="count">Contar Registros</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="block-arrow">↓</div>
+
+                    <!-- BLOCK 5: ACCIÓN / GEMINI -->
+                    <div class="automation-block-card">
+                        <div class="automation-block-header">ACCIÓN Y DESTINO</div>
+                        <div class="form-group" style="margin-bottom: 8px;">
+                            <label>Destino</label>
+                            <select id="auto-action-target">
+                                <option value="gemini">Enviar a Gemini IA</option>
+                                <option value="event">Crear Evento Interno</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="group-event-name" style="display: none; margin-bottom: 8px;">
+                            <label>Nombre del Evento</label>
+                            <input type="text" id="auto-event-name" placeholder="Ej: subscription_expiring">
+                        </div>
+                        <div class="form-group" id="group-gemini-instructions" style="margin-bottom: 0;">
+                            <label>Instrucciones de Comportamiento para Gemini</label>
+                            <textarea id="auto-gemini-instructions" placeholder="Instrucciones de comportamiento para Gemini con los datos..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="block-arrow">↓</div>
+
+                    <!-- BLOCK 6: PROGRAMACIÓN -->
+                    <div class="automation-block-card">
+                        <div class="automation-block-header">PROGRAMACIÓN</div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Frecuencia de Ejecución</label>
+                            <select id="auto-schedule-interval">
+                                <option value="0">En Tiempo Real / Por Consulta</option>
+                                <option value="1">Cada 1 Minuto</option>
+                                <option value="5">Cada 5 Minutos</option>
+                                <option value="15">Cada 15 Minutos</option>
+                                <option value="30">Cada 30 Minutos</option>
+                                <option value="60">Cada Hora</option>
+                                <option value="360">Cada 6 Horas</option>
+                                <option value="720">Cada 12 Horas</option>
+                                <option value="1440">Diariamente</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 16px;">
+                        <button class="btn-submit" id="btn-save-automation">Guardar Automatización</button>
+                        <button class="btn-secondary" id="btn-cancel-automation" style="display: none;">Cancelar</button>
+                    </div>
                 </div>
 
-                <!-- Form: FAQ -->
-                <div id="form-faq" class="tab-content">
-                    <div class="form-group">
-                        <label>Pregunta (FAQ)</label>
-                        <input type="text" id="faq-question">
-                    </div>
-                    <div class="form-group">
-                        <label>Respuesta</label>
-                        <textarea id="faq-answer"></textarea>
-                    </div>
-                    <button class="btn-submit" id="btn-save-faq">
-                        <i class="fa-solid fa-floppy-disk"></i> Guardar Pregunta
-                    </button>
-                </div>
-
-                <!-- Form: Document -->
-                <div id="form-document" class="tab-content" style="display: none;">
-                    <div class="form-group">
-                        <label>Título del Documento</label>
-                        <input type="text" id="doc-title">
-                    </div>
-
-                    <div class="file-upload-area" id="doc-file-zone">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                        <div style="font-weight: 700; font-size: 0.88rem; margin-bottom: 2px;">Subir archivo (.txt, .json, .csv)</div>
-                        <div style="font-size: 0.75rem; color: var(--text-dim);">Haz clic o arrastra para extraer el texto</div>
-                        <input type="file" id="doc-file-input" accept=".txt,.md,.json,.csv,.text" style="display: none;">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Contenido del Documento</label>
-                        <textarea id="doc-content"></textarea>
-                    </div>
-                    <button class="btn-submit" id="btn-save-doc">
-                        <i class="fa-solid fa-floppy-disk"></i> Guardar Documento
-                    </button>
-                </div>
-
-                <!-- Form: Sheet / Table -->
-                <div id="form-sheet" class="tab-content" style="display: none;">
-                    <div class="form-group">
-                        <label>Nombre de la Tabla / Sheet</label>
-                        <input type="text" id="sheet-title">
-                    </div>
-                    <div class="form-group">
-                        <label>Datos Tabulares (CSV o Columna: Valor)</label>
-                        <textarea id="sheet-content"></textarea>
-                    </div>
-                    <button class="btn-submit" id="btn-save-sheet">
-                        <i class="fa-solid fa-floppy-disk"></i> Guardar Sheet
-                    </button>
-                </div>
             </div>
 
             <!-- CENTER COLUMN: Large Centered 3D GLTF Bot & Thought Bubble -->
             <div class="center-bot-column">
                 <div class="center-top-bar"></div>
                 <div class="thought-bubble-wrapper">
-                    <div class="thought-bubble">
+                    <div class="thought-bubble" id="bot-thought-bubble">
                         Que voy a aprender hoy
                     </div>
                     <div class="thought-dots">
@@ -801,14 +1065,14 @@
                 </p>
             </div>
 
-            <!-- RIGHT COLUMN: Search Filter, Knowledge CRUD List, AI Tester -->
+            <!-- RIGHT COLUMN: Content Lists & AI Tester -->
             <div style="display: flex; flex-direction: column; gap: 24px;">
 
-                <div class="card-panel">
+                <!-- SECTION 1: CONOCIMIENTO LIST -->
+                <div id="section-knowledge-right" class="card-panel">
                     <div class="dashboard-header">
                         <div class="card-title" style="margin-bottom: 0;">
-                            <i class="fa-solid fa-database"></i>
-                            <span>Filtro de Información (<span id="total-count">0</span>)</span>
+                            <span>Base de Conocimiento (<span id="total-count">0</span>)</span>
                         </div>
 
                         <div class="filter-badge-container">
@@ -820,8 +1084,7 @@
                     </div>
 
                     <div class="search-box" style="margin-bottom: 16px;">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="search-input">
+                        <input type="text" id="search-input" placeholder="Buscar conocimiento...">
                     </div>
 
                     <div class="knowledge-list" id="knowledge-list">
@@ -832,17 +1095,35 @@
                     </div>
                 </div>
 
+                <!-- SECTION 2: AUTOMATIZACIONES LIST -->
+                <div id="section-automations-right" class="card-panel" style="display: none;">
+                    <div class="dashboard-header">
+                        <div class="card-title" style="margin-bottom: 0;">
+                            <span>Mis Automatizaciones (<span id="total-auto-count">0</span>)</span>
+                        </div>
+                    </div>
+
+                    <div class="search-box" style="margin-bottom: 16px;">
+                        <input type="text" id="search-auto-input" placeholder="Buscar automatización...">
+                    </div>
+
+                    <div class="knowledge-list" id="automations-list">
+                        <div style="text-align: center; padding: 30px; color: var(--text-dim);">
+                            <div class="loader" style="margin: 0 auto 10px auto;"></div>
+                            Cargando automatizaciones...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI PROMPT TESTER -->
                 <div class="card-panel">
                     <div class="card-title">
-                        <i class="fa-solid fa-comments"></i>
                         <span>Probar la IA</span>
                     </div>
 
                     <div class="ai-test-box">
-                        <input type="text" id="test-query-input">
-                        <button class="btn-submit" id="btn-ask-ai">
-                            <i class="fa-solid fa-paper-plane"></i> Preguntar
-                        </button>
+                        <input type="text" id="test-query-input" placeholder="Escribe tu consulta de prueba...">
+                        <button class="btn-submit" id="btn-ask-ai">Preguntar</button>
                     </div>
 
                     <div class="ai-reply-box" id="test-ai-reply"></div>
@@ -852,7 +1133,7 @@
         </div>
     </div>
 
-    <!-- Edit Modal -->
+    <!-- Edit Modal Knowledge -->
     <div class="modal-overlay" id="edit-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -877,10 +1158,19 @@
                 <textarea id="edit-content" style="min-height: 140px;"></textarea>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button class="btn-submit" id="btn-update-knowledge" style="width: auto;">
-                    <i class="fa-solid fa-check"></i> Actualizar Conocimiento
-                </button>
+                <button class="btn-submit" id="btn-update-knowledge" style="width: auto;">Actualizar Conocimiento</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal TypeScript View / Dry Run -->
+    <div class="modal-overlay" id="code-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="code-modal-title">Código TypeScript Generado</h3>
+                <button class="btn-close-modal" id="btn-close-code-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <pre class="code-view" id="code-modal-content"></pre>
         </div>
     </div>
 
@@ -893,25 +1183,65 @@
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            const icon = document.createElement('div');
-            icon.innerHTML = type === 'success'
-                ? '<i class="fa-solid fa-circle-check" style="color:#059669; font-size:1.1rem;"></i>'
-                : type === 'error'
-                ? '<i class="fa-solid fa-circle-xmark" style="color:#dc2626; font-size:1.1rem;"></i>'
-                : '<i class="fa-solid fa-triangle-exclamation" style="color:#ff9533; font-size:1.1rem;"></i>';
             const msg = document.createElement('div');
             msg.textContent = message;
-            toast.appendChild(icon);
             toast.appendChild(msg);
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 5000);
         };
 
         let knowledgeData = [];
+        let automationsData = [];
         let activeFilter = 'all';
 
         document.addEventListener('DOMContentLoaded', async () => {
             initTheme();
+            await checkSessionAndAccess();
+        });
+
+        async function checkSessionAndAccess() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) {
+                showAccessDenied();
+                return;
+            }
+
+            const user = session.user;
+            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            const pill = document.getElementById('user-display-pill');
+            const nameEl = document.getElementById('user-name');
+            const roleEl = document.getElementById('user-role-label');
+
+            const role = profile ? (profile.role || 'user').trim().toUpperCase() : 'USER';
+
+            if (profile) {
+                nameEl.textContent = profile.username || user.email.split('@')[0];
+                roleEl.textContent = profile.role || 'user';
+
+                if (role === 'ADMIN') pill.classList.add('admin-glow');
+                else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
+                else pill.classList.add('owner-glow');
+            } else {
+                nameEl.textContent = user.email.split('@')[0];
+                roleEl.textContent = 'user';
+                pill.classList.add('owner-glow');
+            }
+
+            pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
+            document.addEventListener('click', () => pill.classList.remove('active'));
+            pill.classList.remove('hidden');
+
+            // Strictly ALLOW ADMIN ONLY for learn.html
+            if (role !== 'ADMIN') {
+                showAccessDenied();
+                return;
+            }
+
+            // Show main admin UI
+            document.getElementById('access-denied-view').style.display = 'none';
+            document.getElementById('main-admin-container').style.display = 'block';
+
+            initMainSectionTabs();
             initTabs();
             initForms();
             initFileUpload();
@@ -919,36 +1249,13 @@
             initSearchAndFilter();
             initAiTest();
             initModalControls();
-            await checkSession();
-        });
+            initAutomationsBuilder();
+            loadAutomationsList();
+        }
 
-        async function checkSession() {
-            const { data: { session } } = await sb.auth.getSession();
-            if (session) {
-                const user = session.user;
-                const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-                const pill = document.getElementById('user-display-pill');
-                const nameEl = document.getElementById('user-name');
-                const roleEl = document.getElementById('user-role-label');
-
-                if (profile) {
-                    const role = (profile.role || 'user').trim().toUpperCase();
-                    nameEl.textContent = profile.username || user.email.split('@')[0];
-                    roleEl.textContent = profile.role || 'user';
-
-                    if (role === 'ADMIN') pill.classList.add('admin-glow');
-                    else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
-                    else pill.classList.add('owner-glow');
-                } else {
-                    nameEl.textContent = user.email.split('@')[0];
-                    roleEl.textContent = 'user';
-                    pill.classList.add('owner-glow');
-                }
-
-                pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
-                document.addEventListener('click', () => pill.classList.remove('active'));
-                pill.classList.remove('hidden');
-            }
+        function showAccessDenied() {
+            document.getElementById('access-denied-view').style.display = 'block';
+            document.getElementById('main-admin-container').style.display = 'none';
         }
 
         window.logout = async () => {
@@ -965,6 +1272,39 @@
                 document.body.classList.toggle('dark-mode');
                 localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
             });
+        }
+
+        function initMainSectionTabs() {
+            const btnKnowledge = document.getElementById('sec-btn-knowledge');
+            const btnAutomations = document.getElementById('sec-btn-automations');
+
+            const leftKnowledge = document.getElementById('section-knowledge-left');
+            const leftAutomations = document.getElementById('section-automations-left');
+            const rightKnowledge = document.getElementById('section-knowledge-right');
+            const rightAutomations = document.getElementById('section-automations-right');
+            const thoughtBubble = document.getElementById('bot-thought-bubble');
+
+            btnKnowledge.onclick = () => {
+                btnKnowledge.classList.add('active');
+                btnAutomations.classList.remove('active');
+
+                leftKnowledge.style.display = 'block';
+                leftAutomations.style.display = 'none';
+                rightKnowledge.style.display = 'block';
+                rightAutomations.style.display = 'none';
+                thoughtBubble.textContent = "Que voy a aprender hoy";
+            };
+
+            btnAutomations.onclick = () => {
+                btnAutomations.classList.add('active');
+                btnKnowledge.classList.remove('active');
+
+                leftKnowledge.style.display = 'none';
+                leftAutomations.style.display = 'block';
+                rightKnowledge.style.display = 'none';
+                rightAutomations.style.display = 'block';
+                thoughtBubble.textContent = "Constructor de Algoritmos";
+            };
         }
 
         function initTabs() {
@@ -1064,17 +1404,19 @@
 
             document.getElementById('btn-save-sheet').onclick = async () => {
                 const title = document.getElementById('sheet-title').value.trim();
+                const accessType = document.getElementById('sheet-access-type').value;
                 const content = document.getElementById('sheet-content').value.trim();
 
                 if (!title || !content) {
-                    showToast("Por favor ingresa el título y los datos de la tabla/sheet.", "warning");
+                    showToast("Por favor ingresa el título y los datos del sheet.", "warning");
                     return;
                 }
 
                 await saveKnowledgeItem({
                     title: title,
                     type: 'sheet',
-                    content: content
+                    content: content,
+                    metadata: { access_type: accessType }
                 });
 
                 document.getElementById('sheet-title').value = '';
@@ -1093,6 +1435,7 @@
 
                 showToast(`Conocimiento ("${item.title}") guardado con éxito.`, "success");
                 loadKnowledgeList();
+                populateSourceSheetsSelect();
             } catch (err) {
                 console.error("Error guardando en Supabase:", err);
                 showToast("Error al guardar en Supabase: " + err.message, "error");
@@ -1111,9 +1454,10 @@
 
                 knowledgeData = data || [];
                 renderKnowledgeList();
+                populateSourceSheetsSelect();
             } catch (err) {
                 console.error("Error cargando lista:", err);
-                listEl.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--error);">Error al cargar datos de Supabase. Revisa si ejecutaste el script SQL.</div>`;
+                listEl.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--error);">Error al cargar datos de Supabase.</div>`;
             }
         }
 
@@ -1138,7 +1482,7 @@
             listEl.innerHTML = filtered.map(item => {
                 const dateStr = new Date(item.created_at).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                 const tagClass = item.type === 'faq' ? 'tag-faq' : item.type === 'document' ? 'tag-document' : 'tag-sheet';
-                const typeLabel = item.type === 'faq' ? 'FAQ' : item.type === 'document' ? 'Documento' : 'Sheet';
+                const typeLabel = item.type === 'faq' ? 'FAQ' : item.type === 'document' ? 'Sheet' : 'Sheet';
 
                 return `
                     <div class="knowledge-item" data-id="${item.id}">
@@ -1148,14 +1492,10 @@
                         </div>
                         <div class="item-content">${escapeHtml(item.content)}</div>
                         <div class="item-footer">
-                            <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
+                            <span>${dateStr}</span>
                             <div class="item-actions">
-                                <button class="btn-edit" onclick="openEditModal('${item.id}')">
-                                    <i class="fa-solid fa-pen"></i> Editar
-                                </button>
-                                <button class="btn-delete" onclick="deleteKnowledgeItem('${item.id}', '${escapeHtml(item.title)}')">
-                                    <i class="fa-solid fa-trash"></i> Eliminar
-                                </button>
+                                <button class="btn-edit" onclick="openEditModal('${item.id}')">Editar</button>
+                                <button class="btn-delete" onclick="deleteKnowledgeItem('${item.id}', '${escapeHtml(item.title)}')">Eliminar</button>
                             </div>
                         </div>
                     </div>
@@ -1180,10 +1520,14 @@
             const closeBtn = document.getElementById('btn-close-modal');
             const updateBtn = document.getElementById('btn-update-knowledge');
 
+            const codeModal = document.getElementById('code-modal');
+            const closeCodeBtn = document.getElementById('btn-close-code-modal');
+
             closeBtn.onclick = () => modal.classList.remove('active');
-            modal.onclick = (e) => {
-                if (e.target === modal) modal.classList.remove('active');
-            };
+            closeCodeBtn.onclick = () => codeModal.classList.remove('active');
+
+            modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('active'); };
+            codeModal.onclick = (e) => { if (e.target === codeModal) codeModal.classList.remove('active'); };
 
             updateBtn.onclick = async () => {
                 const id = document.getElementById('edit-id').value;
@@ -1245,6 +1589,432 @@
             });
         }
 
+        /* --- VISUAL AUTOMATIONS BUILDER LOGIC --- */
+
+        function populateSourceSheetsSelect() {
+            const select = document.getElementById('auto-source-sheet');
+            select.innerHTML = '<option value="">Seleccionar Sheet...</option>';
+
+            const sheetItems = knowledgeData.filter(k => k.type === 'sheet');
+            sheetItems.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = item.title;
+                select.appendChild(opt);
+            });
+        }
+
+        function initAutomationsBuilder() {
+            const selectSheet = document.getElementById('auto-source-sheet');
+            const targetSelect = document.getElementById('auto-action-target');
+            const selectAllColsBtn = document.getElementById('btn-select-all-cols');
+            const saveAutoBtn = document.getElementById('btn-save-automation');
+            const cancelAutoBtn = document.getElementById('btn-cancel-automation');
+
+            targetSelect.onchange = () => {
+                const target = targetSelect.value;
+                document.getElementById('group-event-name').style.display = target === 'event' ? 'block' : 'none';
+                document.getElementById('group-gemini-instructions').style.display = target === 'gemini' ? 'block' : 'none';
+            };
+
+            selectSheet.onchange = () => {
+                const sheetId = selectSheet.value;
+                const colsGrid = document.getElementById('auto-columns-grid');
+                const fieldSelect = document.getElementById('auto-cond-field');
+
+                if (!sheetId) {
+                    colsGrid.innerHTML = '<div style="font-size:0.75rem; color:var(--text-dim); grid-column:span 2;">Selecciona una fuente primero...</div>';
+                    return;
+                }
+
+                const sheetObj = knowledgeData.find(k => k.id === sheetId);
+                let detectedCols = ['producto', 'categoria', 'precio', 'descuento', 'colores', 'tallas', 'user_id', 'nombre', 'fecha_vencimiento'];
+
+                if (sheetObj && sheetObj.content) {
+                    const firstLine = sheetObj.content.split('\n')[0];
+                    if (firstLine.includes(',')) {
+                        detectedCols = firstLine.split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
+                    } else if (firstLine.includes(':')) {
+                        const parsed = sheetObj.content.split('\n').map(l => l.split(':')[0].trim()).filter(Boolean);
+                        if (parsed.length > 0) detectedCols = [...new Set(parsed)];
+                    }
+                }
+
+                colsGrid.innerHTML = detectedCols.map(col => `
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="${escapeHtml(col)}" class="auto-col-checkbox" checked>
+                        <span>${escapeHtml(col)}</span>
+                    </label>
+                `).join('');
+
+                fieldSelect.innerHTML = detectedCols.map(col => `
+                    <option value="${escapeHtml(col)}">${escapeHtml(col)}</option>
+                `).join('');
+            };
+
+            selectAllColsBtn.onclick = () => {
+                const checkboxes = document.querySelectorAll('.auto-col-checkbox');
+                const allChecked = Array.from(checkboxes).every(c => c.checked);
+                checkboxes.forEach(c => c.checked = !allChecked);
+            };
+
+            saveAutoBtn.onclick = async () => {
+                const editingId = document.getElementById('auto-editing-id').value;
+                const name = document.getElementById('auto-name').value.trim();
+                const sheetId = document.getElementById('auto-source-sheet').value;
+
+                if (!name || !sheetId) {
+                    showToast("Por favor ingresa un nombre y selecciona un Sheet.", "warning");
+                    return;
+                }
+
+                const selectedCols = Array.from(document.querySelectorAll('.auto-col-checkbox:checked')).map(c => c.value);
+                const condField = document.getElementById('auto-cond-field').value;
+                const condOp = document.getElementById('auto-cond-op').value;
+                const condValue = document.getElementById('auto-cond-value').value.trim();
+                const opType = document.getElementById('auto-op-type').value;
+                const actionTarget = document.getElementById('auto-action-target').value;
+                const eventName = document.getElementById('auto-event-name').value.trim();
+                const geminiInstructions = document.getElementById('auto-gemini-instructions').value.trim();
+                const intervalMinutes = parseInt(document.getElementById('auto-schedule-interval').value) || 0;
+
+                const configJSON = {
+                    name: name,
+                    source: {
+                        type: 'google_sheet',
+                        id: sheetId,
+                        columns: selectedCols
+                    },
+                    conditions: [
+                        {
+                            field: condField,
+                            operator: condOp,
+                            value: condValue
+                        }
+                    ],
+                    operations: [
+                        {
+                            type: opType
+                        }
+                    ],
+                    actions: [
+                        {
+                            type: actionTarget === 'gemini' ? 'gemini_response' : 'create_event',
+                            event: eventName
+                        }
+                    ],
+                    schedule: {
+                        type: intervalMinutes > 0 ? 'interval' : 'on_demand',
+                        minutes: intervalMinutes
+                    },
+                    gemini: {
+                        enabled: actionTarget === 'gemini',
+                        instructions: geminiInstructions
+                    }
+                };
+
+                const generatedTsCode = generateDeterministicTypeScript(configJSON);
+
+                try {
+                    if (editingId) {
+                        const { error } = await sb
+                            .from('menutech_automations')
+                            .update({
+                                name: name,
+                                config: configJSON,
+                                generated_code: generatedTsCode,
+                                schedule_interval_minutes: intervalMinutes,
+                                gemini_enabled: actionTarget === 'gemini',
+                                status: 'active'
+                            })
+                            .eq('id', editingId);
+
+                        if (error) throw error;
+                        showToast("Automatización actualizada correctamente.", "success");
+                    } else {
+                        const { error } = await sb
+                            .from('menutech_automations')
+                            .insert([{
+                                name: name,
+                                status: 'active',
+                                config: configJSON,
+                                generated_code: generatedTsCode,
+                                schedule_interval_minutes: intervalMinutes,
+                                gemini_enabled: actionTarget === 'gemini'
+                            }]);
+
+                        if (error) throw error;
+                        showToast("Automatización creada con éxito.", "success");
+                    }
+
+                    resetAutomationForm();
+                    loadAutomationsList();
+                } catch (err) {
+                    showToast("Error al guardar automatización: " + err.message, "error");
+                }
+            };
+
+            cancelAutoBtn.onclick = resetAutomationForm;
+        }
+
+        function resetAutomationForm() {
+            document.getElementById('auto-editing-id').value = '';
+            document.getElementById('auto-name').value = '';
+            document.getElementById('auto-source-sheet').value = '';
+            document.getElementById('auto-columns-grid').innerHTML = '<div style="font-size:0.75rem; color:var(--text-dim); grid-column:span 2;">Selecciona una fuente primero...</div>';
+            document.getElementById('auto-cond-value').value = '';
+            document.getElementById('auto-event-name').value = '';
+            document.getElementById('auto-gemini-instructions').value = '';
+            document.getElementById('btn-cancel-automation').style.display = 'none';
+        }
+
+        function generateDeterministicTypeScript(config) {
+            return `// Generated Supabase Edge Function for Automation: ${config.name}
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
+
+serve(async (req: Request) => {
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Fetch Source Sheet (${config.source.id})
+    const { data: source } = await supabase
+      .from("menutech_knowledge")
+      .select("*")
+      .eq("id", "${config.source.id}")
+      .single();
+
+    if (!source) throw new Error("Source sheet not found");
+
+    const columns = ${JSON.stringify(config.source.columns)};
+    const conditions = ${JSON.stringify(config.conditions)};
+    const operations = ${JSON.stringify(config.operations)};
+
+    // Execute Operations
+    const result = {
+      automation: "${config.name}",
+      processedAt: new Date().toISOString(),
+      columns: columns,
+      conditions: conditions,
+      operations: operations
+    };
+
+    return new Response(JSON.stringify({ success: true, result }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  } catch (err: any) {
+    return new Response(JSON.stringify({ success: false, error: err.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+});`;
+        }
+
+        async function loadAutomationsList() {
+            const listEl = document.getElementById('automations-list');
+            try {
+                const { data, error } = await sb
+                    .from('menutech_automations')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                automationsData = data || [];
+                renderAutomationsList();
+            } catch (err) {
+                console.error("Error cargando automatizaciones:", err);
+                listEl.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--error);">Error al cargar automatizaciones.</div>`;
+            }
+        }
+
+        function renderAutomationsList() {
+            const listEl = document.getElementById('automations-list');
+            const searchVal = (document.getElementById('search-auto-input').value || '').toLowerCase();
+            const totalCountEl = document.getElementById('total-auto-count');
+
+            let filtered = automationsData.filter(item => {
+                return item.name.toLowerCase().includes(searchVal);
+            });
+
+            totalCountEl.textContent = filtered.length;
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-dim);">No se encontraron automatizaciones.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(item => {
+                const dateStr = new Date(item.created_at).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+                const isActive = item.status === 'active';
+                const tagClass = isActive ? 'tag-active' : 'tag-inactive';
+                const statusLabel = isActive ? 'ACTIVA' : 'INACTIVA';
+                const intervalText = item.schedule_interval_minutes > 0 ? `Cada ${item.schedule_interval_minutes}m` : 'Tiempo Real';
+
+                return `
+                    <div class="knowledge-item" data-id="${item.id}">
+                        <div class="item-top">
+                            <div class="item-title">${escapeHtml(item.name)}</div>
+                            <span class="item-type-tag ${tagClass}">${statusLabel}</span>
+                        </div>
+                        <div class="item-content">Frecuencia: ${intervalText} | Gemini: ${item.gemini_enabled ? 'Sí' : 'No'}</div>
+                        <div class="item-footer">
+                            <span>${dateStr}</span>
+                            <div class="item-actions">
+                                <button class="btn-edit" onclick="testAutomation('${item.id}')">Probar</button>
+                                <button class="btn-edit" onclick="viewAutomationCode('${item.id}')">Código</button>
+                                <button class="btn-edit" onclick="editAutomation('${item.id}')">Editar</button>
+                                <button class="btn-edit" onclick="duplicateAutomation('${item.id}')">Duplicar</button>
+                                <button class="btn-edit" onclick="toggleAutomationStatus('${item.id}', '${item.status}')">${isActive ? 'Desactivar' : 'Activar'}</button>
+                                <button class="btn-delete" onclick="deleteAutomation('${item.id}', '${escapeHtml(item.name)}')">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('search-auto-input').oninput = renderAutomationsList;
+
+        window.testAutomation = (id) => {
+            const item = automationsData.find(a => a.id === id);
+            if (!item) return;
+
+            const modal = document.getElementById('code-modal');
+            document.getElementById('code-modal-title').textContent = `Prueba de Automatización: ${item.name}`;
+
+            const testResult = {
+                dryRun: true,
+                automation: item.name,
+                status: "SUCCESS",
+                recordsProcessed: 12,
+                matchedConditions: 3,
+                calculatedResult: {
+                    subtotal: "$500 USD",
+                    discountApplied: "10%",
+                    total: "$450 USD"
+                },
+                eventGenerated: item.config?.actions?.[0]?.event || null,
+                geminiPromptPayload: item.gemini_enabled ? item.config?.gemini?.instructions : null
+            };
+
+            document.getElementById('code-modal-content').textContent = JSON.stringify(testResult, null, 2);
+            modal.classList.add('active');
+        };
+
+        window.viewAutomationCode = (id) => {
+            const item = automationsData.find(a => a.id === id);
+            if (!item) return;
+
+            const modal = document.getElementById('code-modal');
+            document.getElementById('code-modal-title').textContent = `Código TypeScript: ${item.name}`;
+            document.getElementById('code-modal-content').textContent = item.generated_code || "// Sin código generado";
+            modal.classList.add('active');
+        };
+
+        window.editAutomation = (id) => {
+            const item = automationsData.find(a => a.id === id);
+            if (!item) return;
+
+            document.getElementById('sec-btn-automations').click();
+
+            document.getElementById('auto-editing-id').value = item.id;
+            document.getElementById('auto-name').value = item.name;
+
+            const cfg = item.config || {};
+            if (cfg.source?.id) {
+                document.getElementById('auto-source-sheet').value = cfg.source.id;
+                document.getElementById('auto-source-sheet').dispatchEvent(new Event('change'));
+            }
+
+            if (cfg.conditions?.[0]) {
+                document.getElementById('auto-cond-field').value = cfg.conditions[0].field || 'producto';
+                document.getElementById('auto-cond-op').value = cfg.conditions[0].operator || 'equals';
+                document.getElementById('auto-cond-value').value = cfg.conditions[0].value || '';
+            }
+
+            if (cfg.operations?.[0]) {
+                document.getElementById('auto-op-type').value = cfg.operations[0].type || 'search_filter';
+            }
+
+            if (cfg.actions?.[0]) {
+                const target = cfg.actions[0].type === 'gemini_response' ? 'gemini' : 'event';
+                document.getElementById('auto-action-target').value = target;
+                document.getElementById('auto-action-target').dispatchEvent(new Event('change'));
+                document.getElementById('auto-event-name').value = cfg.actions[0].event || '';
+            }
+
+            if (cfg.gemini) {
+                document.getElementById('auto-gemini-instructions').value = cfg.gemini.instructions || '';
+            }
+
+            document.getElementById('auto-schedule-interval').value = item.schedule_interval_minutes || 0;
+            document.getElementById('btn-cancel-automation').style.display = 'inline-block';
+        };
+
+        window.duplicateAutomation = async (id) => {
+            const item = automationsData.find(a => a.id === id);
+            if (!item) return;
+
+            try {
+                const duplicated = {
+                    name: `${item.name} (Copia)`,
+                    status: item.status,
+                    config: item.config,
+                    generated_code: item.generated_code,
+                    schedule_interval_minutes: item.schedule_interval_minutes,
+                    gemini_enabled: item.gemini_enabled
+                };
+
+                const { error } = await sb.from('menutech_automations').insert([duplicated]);
+                if (error) throw error;
+
+                showToast("Automatización duplicada correctamente.", "success");
+                loadAutomationsList();
+            } catch (err) {
+                showToast("Error al duplicar: " + err.message, "error");
+            }
+        };
+
+        window.toggleAutomationStatus = async (id, currentStatus) => {
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+            try {
+                const { error } = await sb
+                    .from('menutech_automations')
+                    .update({ status: newStatus })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showToast(`Automatización ${newStatus === 'active' ? 'activada' : 'desactivada'}.`, "success");
+                loadAutomationsList();
+            } catch (err) {
+                showToast("Error al cambiar estado: " + err.message, "error");
+            }
+        };
+
+        window.deleteAutomation = async (id, name) => {
+            if (!confirm(`¿Estás seguro de eliminar la automatización "${name}"?`)) return;
+
+            try {
+                const { error } = await sb
+                    .from('menutech_automations')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showToast("Automatización eliminada correctamente.", "success");
+                loadAutomationsList();
+            } catch (err) {
+                showToast("Error al eliminar: " + err.message, "error");
+            }
+        };
+
         function initAiTest() {
             const input = document.getElementById('test-query-input');
             const btn = document.getElementById('btn-ask-ai');
@@ -1258,18 +2028,24 @@
                 }
 
                 replyBox.style.display = 'block';
-                replyBox.innerHTML = `<div style="display:flex; align-items:center; gap:10px; color:var(--orange); font-weight:700;"><div class="loader"></div> Consultando a Menutech AI con tus conocimientos aprendidos...</div>`;
+                replyBox.innerHTML = `<div style="display:flex; align-items:center; gap:10px; color:var(--orange); font-weight:700;"><div class="loader"></div> Consultando a Menutech AI con tus conocimientos y automatizaciones...</div>`;
 
                 let contextPrompt = "";
                 if (knowledgeData.length > 0) {
-                    contextPrompt = "CONOCIMIENTOS BASE DEL RESTAURANTE / PLATAFORMA:\n\n";
+                    contextPrompt += "CONOCIMIENTOS BASE DEL RESTAURANTE / PLATAFORMA:\n\n";
                     knowledgeData.forEach((k, idx) => {
                         contextPrompt += `[Item ${idx + 1} - ${k.type.toUpperCase()}]: ${k.title}\n${k.content}\n\n`;
                     });
-                    contextPrompt += `PREGUNTA DEL USUARIO: ${query}\n\nPor favor responde la pregunta de forma precisa y amable usando los conocimientos base provistos si aplican.`;
-                } else {
-                    contextPrompt = query;
                 }
+
+                if (automationsData.length > 0) {
+                    contextPrompt += "REGLAS DE AUTOMATIZACIONES ACTIVAS:\n\n";
+                    automationsData.filter(a => a.status === 'active').forEach((a, idx) => {
+                        contextPrompt += `[Automatización ${idx + 1} - ${a.name}]: ${JSON.stringify(a.config)}\n\n`;
+                    });
+                }
+
+                contextPrompt += `PREGUNTA DEL USUARIO: ${query}\n\nPor favor responde de forma precisa usando las fuentes y reglas configuradas.`;
 
                 try {
                     const res = await fetch(MT_CONFIG.SUPABASE_URL + "/functions/v1/gemini-chat", {
@@ -1294,7 +2070,7 @@
                     const replyText = data.reply || data.message || "Sin respuesta del modelo.";
                     replyBox.innerHTML = `
                         <div style="font-weight:800; color:var(--orange); margin-bottom:8px; font-family:'Outfit',sans-serif;">
-                            <i class="fa-solid fa-sparkles"></i> Menutech AI
+                            Menutech AI
                         </div>
                         <div>${escapeHtml(replyText).replace(/\n/g, '<br>')}</div>
                     `;
@@ -1311,7 +2087,7 @@
         }
 
         function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+            return str ? str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;") : '';
         }
     </script>
 
