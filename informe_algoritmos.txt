@@ -1,0 +1,18 @@
+DIAGNÓSTICO SECCIÓN ALGORITMOS (learn.html):
+
+1. ¿HACE LO QUE DEBE HACER ACTUAMENTE?
+NO del todo. Actualmente los algoritmos solo se guardan como registros JSON y texto de código TypeScript en la tabla `public.menutech_automations`. NO se despliegan automáticamente ni se ejecutan como Edge Functions reales en Supabase.
+
+2. ¿DÓNDE SE GUARDAN LAS EDGE FUNCTIONS GENERADAS?
+- En la base de datos: En la columna `generated_code` de la tabla `menutech_automations`.
+- En Supabase Edge Functions: NO se suben a Supabase. Para que existan como Edge Functions reales, tendrían que desplegarse mediante CLI de Supabase (`supabase functions deploy`) o mediante una API/Webhook externa de CI/CD.
+
+3. ¿CÓMO SE EJECUTAN / FRECUENCIA / CRON / TRIGGERS?
+- No hay programador (Cron / pg_cron) configurado en Supabase ni en el frontend para ejecutar las funciones automáticamente 1 vez al día o cada x tiempo.
+- No existe interfaz para configurar programaciones de tiempo (frecuencia diaria/horaria).
+- La IA solo lee la configuración JSON como contexto cuando el usuario chatea en el entorno de pruebas (`gemini-chat`).
+
+4. ¿QUÉ FALTA POR AGREGAR?
+- Trigger / Cron Jobs (pg_cron en Supabase) para ejecutar tareas programadas (ej: revisar cuentas por vencer 1 vez al día).
+- Mecanismo de despliegue real de Edge Functions o un Runner / Worker en Supabase que lea `menutech_automations` y ejecute las reglas activas de forma programada.
+- Configuración de disparadores (Eventos HTTP, Webhooks o Tareas Programadas Cron).
