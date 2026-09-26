@@ -602,7 +602,7 @@ serve(async (req: Request) => {
       return { success: false, message: "Función desconocida." };
     }
 
-    // Fetch Learned Knowledge Base Context
+    // Fetch Learned Knowledge Base Context & Active Automations Rules
     let learnedKnowledgeText = "";
     try {
       const { data: knowledgeList } = await supabase
@@ -614,8 +614,18 @@ serve(async (req: Request) => {
         learnedKnowledgeText = "\n\nCONOCIMIENTOS APRENDIDOS DE LA PLATAFORMA (MENUTECH KNOWLEDGE):\n" +
           knowledgeList.map((k: any) => `-[${k.type.toUpperCase()}] ${k.title}: ${k.content}`).join("\n");
       }
+
+      const { data: automationsList } = await supabase
+        .from('menutech_automations')
+        .select('name, config, gemini_enabled')
+        .eq('status', 'active');
+
+      if (automationsList && automationsList.length > 0) {
+        learnedKnowledgeText += "\n\nREGLAS DE AUTOMATIZACIONES Y ALGORITMOS ACTIVOS:\n" +
+          automationsList.map((a: any) => `-[AUTOMATIZACIÓN: ${a.name}]: ${JSON.stringify(a.config)}`).join("\n");
+      }
     } catch (e) {
-      console.warn("Error fetching learned knowledge:", e);
+      console.warn("Error fetching learned knowledge or automations:", e);
     }
 
     // 1. Discover available Gemini models
