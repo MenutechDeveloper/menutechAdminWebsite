@@ -320,6 +320,21 @@
             box-shadow: 0 8px 20px rgba(255, 149, 51, 0.25);
         }
 
+        /* Full Width Container Layout for Algoritmos */
+        .container.algoritmos-mode {
+            max-width: 100% !important;
+            padding-left: 32px;
+            padding-right: 32px;
+        }
+
+        .algoritmos-grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            align-items: start;
+            width: 100%;
+        }
+
         /* Tabs Navigation Internal */
         .nav-tabs {
             display: flex;
@@ -627,6 +642,16 @@
             padding: 16px;
             margin-bottom: 14px;
             position: relative;
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .automation-block-card:active {
+            cursor: grabbing;
+        }
+        .automation-block-card.dragging {
+            opacity: 0.5;
+            border-style: dashed;
+            border-color: var(--orange);
         }
         .automation-block-header {
             font-family: 'Outfit', sans-serif;
@@ -823,15 +848,14 @@
 
         <div class="main-section-nav">
             <button class="section-tab-btn active" id="sec-btn-knowledge">CONOCIMIENTO</button>
-            <button class="section-tab-btn" id="sec-btn-automations">AUTOMATIZACIONES</button>
+            <button class="section-tab-btn" id="sec-btn-automations">ALGORITMOS</button>
         </div>
 
-        <div class="learn-3col-layout">
+        <!-- 3-Column Layout for Knowledge -->
+        <div class="learn-3col-layout" id="view-knowledge-layout">
 
             <!-- LEFT COLUMN: Input Forms -->
             <div class="card-panel">
-
-                <!-- SECTION 1: CONOCIMIENTO -->
                 <div id="section-knowledge-left">
                     <div class="card-title">
                         <span>Cargar Conocimiento</span>
@@ -896,143 +920,6 @@
                         <button class="btn-submit" id="btn-save-sheet">Guardar Sheet</button>
                     </div>
                 </div>
-
-                <!-- SECTION 2: AUTOMATIZACIONES BUILDER -->
-                <div id="section-automations-left" style="display: none;">
-                    <div class="card-title">
-                        <span>Constructor Visual</span>
-                    </div>
-
-                    <input type="hidden" id="auto-editing-id" value="">
-
-                    <div class="form-group">
-                        <label>Nombre de Automatización</label>
-                        <input type="text" id="auto-name" placeholder="Ej: Cotizador de Precios">
-                    </div>
-
-                    <!-- BLOCK 1: FUENTE -->
-                    <div class="automation-block-card">
-                        <div class="automation-block-header">FUENTE DE DATOS</div>
-                        <div class="form-group" style="margin-bottom: 8px;">
-                            <label>Seleccionar Sheet / Tabla</label>
-                            <select id="auto-source-sheet">
-                                <option value="">Seleccionar Sheet...</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="block-arrow">↓</div>
-
-                    <!-- BLOCK 2: COLUMNAS -->
-                    <div class="automation-block-card">
-                        <div class="automation-block-header">
-                            <span>COLUMNAS</span>
-                            <button type="button" class="btn-secondary" id="btn-select-all-cols" style="padding:2px 8px; font-size:0.7rem;">Todas</button>
-                        </div>
-                        <div class="columns-checkbox-grid" id="auto-columns-grid">
-                            <div style="font-size:0.75rem; color:var(--text-dim); grid-column:span 2;">Selecciona una fuente primero...</div>
-                        </div>
-                    </div>
-
-                    <div class="block-arrow">↓</div>
-
-                    <!-- BLOCK 3: CONDICIÓN -->
-                    <div class="automation-block-card">
-                        <div class="automation-block-header">CONDICIÓN</div>
-                        <div class="form-group" style="margin-bottom: 8px;">
-                            <label>Campo</label>
-                            <select id="auto-cond-field">
-                                <option value="producto">producto</option>
-                                <option value="precio">precio</option>
-                                <option value="categoria">categoría</option>
-                                <option value="fecha_vencimiento">fecha_vencimiento</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin-bottom: 8px;">
-                            <label>Operador</label>
-                            <select id="auto-cond-op">
-                                <option value="equals">es igual a</option>
-                                <option value="not_equals">es diferente de</option>
-                                <option value="contains">contiene</option>
-                                <option value="greater_than">mayor que</option>
-                                <option value="less_than">menor que</option>
-                                <option value="within_days">dentro de N días</option>
-                                <option value="is_not_empty">no está vacío</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label>Valor</label>
-                            <input type="text" id="auto-cond-value" placeholder="Valor o número de días">
-                        </div>
-                    </div>
-
-                    <div class="block-arrow">↓</div>
-
-                    <!-- BLOCK 4: OPERACIONES -->
-                    <div class="automation-block-card">
-                        <div class="automation-block-header">OPERACIÓN</div>
-                        <div class="form-group" style="margin-bottom: 8px;">
-                            <label>Tipo de Operación</label>
-                            <select id="auto-op-type">
-                                <option value="search_filter">Buscar y Filtrar</option>
-                                <option value="multiply">Multiplicar (Precio x Cantidad)</option>
-                                <option value="apply_discount">Aplicar Descuento (%)</option>
-                                <option value="sum">Sumar</option>
-                                <option value="date_add">Sumar Días / Fecha Actual</option>
-                                <option value="count">Contar Registros</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="block-arrow">↓</div>
-
-                    <!-- BLOCK 5: ACCIÓN / GEMINI -->
-                    <div class="automation-block-card">
-                        <div class="automation-block-header">ACCIÓN Y DESTINO</div>
-                        <div class="form-group" style="margin-bottom: 8px;">
-                            <label>Destino</label>
-                            <select id="auto-action-target">
-                                <option value="gemini">Enviar a Gemini IA</option>
-                                <option value="event">Crear Evento Interno</option>
-                            </select>
-                        </div>
-                        <div class="form-group" id="group-event-name" style="display: none; margin-bottom: 8px;">
-                            <label>Nombre del Evento</label>
-                            <input type="text" id="auto-event-name" placeholder="Ej: subscription_expiring">
-                        </div>
-                        <div class="form-group" id="group-gemini-instructions" style="margin-bottom: 0;">
-                            <label>Instrucciones de Comportamiento para Gemini</label>
-                            <textarea id="auto-gemini-instructions" placeholder="Instrucciones de comportamiento para Gemini con los datos..."></textarea>
-                        </div>
-                    </div>
-
-                    <div class="block-arrow">↓</div>
-
-                    <!-- BLOCK 6: PROGRAMACIÓN -->
-                    <div class="automation-block-card">
-                        <div class="automation-block-header">PROGRAMACIÓN</div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label>Frecuencia de Ejecución</label>
-                            <select id="auto-schedule-interval">
-                                <option value="0">En Tiempo Real / Por Consulta</option>
-                                <option value="1">Cada 1 Minuto</option>
-                                <option value="5">Cada 5 Minutos</option>
-                                <option value="15">Cada 15 Minutos</option>
-                                <option value="30">Cada 30 Minutos</option>
-                                <option value="60">Cada Hora</option>
-                                <option value="360">Cada 6 Horas</option>
-                                <option value="720">Cada 12 Horas</option>
-                                <option value="1440">Diariamente</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; margin-top: 16px;">
-                        <button class="btn-submit" id="btn-save-automation">Guardar Automatización</button>
-                        <button class="btn-secondary" id="btn-cancel-automation" style="display: none;">Cancelar</button>
-                    </div>
-                </div>
-
             </div>
 
             <!-- CENTER COLUMN: Large Centered 3D GLTF Bot & Thought Bubble -->
@@ -1065,10 +952,8 @@
                 </p>
             </div>
 
-            <!-- RIGHT COLUMN: Content Lists & AI Tester -->
+            <!-- RIGHT COLUMN: Knowledge List & AI Tester -->
             <div style="display: flex; flex-direction: column; gap: 24px;">
-
-                <!-- SECTION 1: CONOCIMIENTO LIST -->
                 <div id="section-knowledge-right" class="card-panel">
                     <div class="dashboard-header">
                         <div class="card-title" style="margin-bottom: 0;">
@@ -1095,26 +980,6 @@
                     </div>
                 </div>
 
-                <!-- SECTION 2: AUTOMATIZACIONES LIST -->
-                <div id="section-automations-right" class="card-panel" style="display: none;">
-                    <div class="dashboard-header">
-                        <div class="card-title" style="margin-bottom: 0;">
-                            <span>Mis Automatizaciones (<span id="total-auto-count">0</span>)</span>
-                        </div>
-                    </div>
-
-                    <div class="search-box" style="margin-bottom: 16px;">
-                        <input type="text" id="search-auto-input" placeholder="Buscar automatización...">
-                    </div>
-
-                    <div class="knowledge-list" id="automations-list">
-                        <div style="text-align: center; padding: 30px; color: var(--text-dim);">
-                            <div class="loader" style="margin: 0 auto 10px auto;"></div>
-                            Cargando automatizaciones...
-                        </div>
-                    </div>
-                </div>
-
                 <!-- AI PROMPT TESTER -->
                 <div class="card-panel">
                     <div class="card-title">
@@ -1128,7 +993,174 @@
 
                     <div class="ai-reply-box" id="test-ai-reply"></div>
                 </div>
+            </div>
+        </div>
 
+        <!-- Full Width Grid Layout for Algoritmos -->
+        <div class="algoritmos-grid-layout" id="view-algoritmos-layout" style="display: none;">
+            <!-- LEFT: Builder -->
+            <div class="card-panel">
+                <div class="card-title" style="justify-content: space-between;">
+                    <span>Constructor Visual</span>
+                    <button type="button" class="btn-secondary" id="btn-add-dynamic-block" style="font-size:0.8rem;">+ Agregar Bloque</button>
+                </div>
+
+                <input type="hidden" id="auto-editing-id" value="">
+
+                <div class="form-group">
+                    <label>Nombre del Algoritmo</label>
+                    <input type="text" id="auto-name" placeholder="Ej: Cotizador Personalizado">
+                </div>
+
+                <!-- BLOCK 1: FUENTE -->
+                <div class="automation-block-card">
+                    <div class="automation-block-header">FUENTE DE DATOS</div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label>Seleccionar Conocimiento / Tabla</label>
+                        <select id="auto-source-sheet">
+                            <option value="">Seleccionar Fuente...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="block-arrow">↓</div>
+
+                <!-- BLOCK 2: COLUMNAS DINÁMICAS -->
+                <div class="automation-block-card">
+                    <div class="automation-block-header">
+                        <span>COLUMNAS</span>
+                        <button type="button" class="btn-secondary" id="btn-select-all-cols" style="padding:2px 8px; font-size:0.7rem;">Todas</button>
+                    </div>
+                    <div class="columns-checkbox-grid" id="auto-columns-grid">
+                        <div style="font-size:0.75rem; color:var(--text-dim); grid-column:span 2;">Selecciona una fuente o escribe campos abajo...</div>
+                    </div>
+                    <div class="form-group" style="margin-top: 10px; margin-bottom: 0;">
+                        <label>O Escribe Campos Personalizados (separados por coma)</label>
+                        <input type="text" id="auto-custom-cols" placeholder="Ej: cliente, total, estado">
+                    </div>
+                </div>
+
+                <div class="block-arrow">↓</div>
+
+                <!-- DYNAMIC CUSTOM BLOCKS CONTAINER -->
+                <div id="dynamic-blocks-container">
+                    <!-- BLOCK 3: CONDICIÓN -->
+                    <div class="automation-block-card" data-block-type="condition">
+                        <div class="automation-block-header">
+                            <span>CONDICIÓN</span>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 8px;">
+                            <label>Campo / Variable</label>
+                            <input type="text" id="auto-cond-field" placeholder="Escribe el nombre del campo">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 8px;">
+                            <label>Operador</label>
+                            <select id="auto-cond-op">
+                                <option value="equals">es igual a</option>
+                                <option value="not_equals">es diferente de</option>
+                                <option value="contains">contiene</option>
+                                <option value="greater_than">mayor que</option>
+                                <option value="less_than">menor que</option>
+                                <option value="within_days">dentro de N días</option>
+                                <option value="is_not_empty">no está vacío</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Valor de Comparación</label>
+                            <input type="text" id="auto-cond-value" placeholder="Valor objetivo">
+                        </div>
+                    </div>
+
+                    <div class="block-arrow">↓</div>
+
+                    <!-- BLOCK 4: OPERACIÓN -->
+                    <div class="automation-block-card" data-block-type="operation">
+                        <div class="automation-block-header">OPERACIÓN O CÁLCULO</div>
+                        <div class="form-group" style="margin-bottom: 8px;">
+                            <label>Tipo de Operación</label>
+                            <select id="auto-op-type">
+                                <option value="search_filter">Buscar y Filtrar</option>
+                                <option value="multiply">Multiplicar Val1 x Val2</option>
+                                <option value="apply_discount">Aplicar Descuento</option>
+                                <option value="sum">Sumar Valores</option>
+                                <option value="date_add">Sumar Tiempo / Comparar Fechas</option>
+                                <option value="custom_logic">Lógica Personalizada</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Detalle / Fórmula Personalizada</label>
+                            <input type="text" id="auto-op-detail" placeholder="Ej: Multiplicar precio por cantidad y restar descuento">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="block-arrow">↓</div>
+
+                <!-- BLOCK 5: ACCIÓN / MENUTECH IA -->
+                <div class="automation-block-card">
+                    <div class="automation-block-header">ACCIÓN Y REACCIÓN</div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label>Destino de la Reacción</label>
+                        <select id="auto-action-target">
+                            <option value="gemini">Enviar a Menutech IA</option>
+                            <option value="event">Crear Evento Interno</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="group-event-name" style="display: none; margin-bottom: 8px;">
+                        <label>Nombre del Evento</label>
+                        <input type="text" id="auto-event-name" placeholder="Ej: recordatorio_pago_owner">
+                    </div>
+                    <div class="form-group" id="group-gemini-instructions" style="margin-bottom: 0;">
+                        <label>Instrucciones para Menutech IA</label>
+                        <textarea id="auto-gemini-instructions" placeholder="Escribe detalladamente cómo Menutech IA debe reaccionar ante esta situación..."></textarea>
+                    </div>
+                </div>
+
+                <div class="block-arrow">↓</div>
+
+                <!-- BLOCK 6: PROGRAMACIÓN -->
+                <div class="automation-block-card">
+                    <div class="automation-block-header">PROGRAMACIÓN</div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Frecuencia de Ejecución</label>
+                        <select id="auto-schedule-interval">
+                            <option value="0">En Tiempo Real / Por Consulta</option>
+                            <option value="1">Cada 1 Minuto</option>
+                            <option value="5">Cada 5 Minutos</option>
+                            <option value="15">Cada 15 Minutos</option>
+                            <option value="30">Cada 30 Minutos</option>
+                            <option value="60">Cada Hora</option>
+                            <option value="360">Cada 6 Horas</option>
+                            <option value="720">Cada 12 Horas</option>
+                            <option value="1440">Diariamente</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 16px;">
+                    <button class="btn-submit" id="btn-save-automation">Guardar Algoritmo</button>
+                    <button class="btn-secondary" id="btn-cancel-automation" style="display: none;">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- RIGHT: Mis Algoritmos List -->
+            <div class="card-panel">
+                <div class="dashboard-header">
+                    <div class="card-title" style="margin-bottom: 0;">
+                        <span>Mis Algoritmos (<span id="total-auto-count">0</span>)</span>
+                    </div>
+                </div>
+
+                <div class="search-box" style="margin-bottom: 16px;">
+                    <input type="text" id="search-auto-input" placeholder="Buscar algoritmo...">
+                </div>
+
+                <div class="knowledge-list" id="automations-list" style="max-height: 700px;">
+                    <div style="text-align: center; padding: 30px; color: var(--text-dim);">
+                        <div class="loader" style="margin: 0 auto 10px auto;"></div>
+                        Cargando algoritmos...
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1278,32 +1310,26 @@
             const btnKnowledge = document.getElementById('sec-btn-knowledge');
             const btnAutomations = document.getElementById('sec-btn-automations');
 
-            const leftKnowledge = document.getElementById('section-knowledge-left');
-            const leftAutomations = document.getElementById('section-automations-left');
-            const rightKnowledge = document.getElementById('section-knowledge-right');
-            const rightAutomations = document.getElementById('section-automations-right');
-            const thoughtBubble = document.getElementById('bot-thought-bubble');
+            const container = document.getElementById('main-admin-container');
+            const knowledgeLayout = document.getElementById('view-knowledge-layout');
+            const algoritmosLayout = document.getElementById('view-algoritmos-layout');
 
             btnKnowledge.onclick = () => {
                 btnKnowledge.classList.add('active');
                 btnAutomations.classList.remove('active');
 
-                leftKnowledge.style.display = 'block';
-                leftAutomations.style.display = 'none';
-                rightKnowledge.style.display = 'block';
-                rightAutomations.style.display = 'none';
-                thoughtBubble.textContent = "Que voy a aprender hoy";
+                container.classList.remove('algoritmos-mode');
+                knowledgeLayout.style.display = 'grid';
+                algoritmosLayout.style.display = 'none';
             };
 
             btnAutomations.onclick = () => {
                 btnAutomations.classList.add('active');
                 btnKnowledge.classList.remove('active');
 
-                leftKnowledge.style.display = 'none';
-                leftAutomations.style.display = 'block';
-                rightKnowledge.style.display = 'none';
-                rightAutomations.style.display = 'block';
-                thoughtBubble.textContent = "Constructor de Algoritmos";
+                container.classList.add('algoritmos-mode');
+                knowledgeLayout.style.display = 'none';
+                algoritmosLayout.style.display = 'grid';
             };
         }
 
@@ -1593,13 +1619,12 @@
 
         function populateSourceSheetsSelect() {
             const select = document.getElementById('auto-source-sheet');
-            select.innerHTML = '<option value="">Seleccionar Sheet...</option>';
+            select.innerHTML = '<option value="">Seleccionar Fuente...</option>';
 
-            const sheetItems = knowledgeData.filter(k => k.type === 'sheet');
-            sheetItems.forEach(item => {
+            knowledgeData.forEach(item => {
                 const opt = document.createElement('option');
                 opt.value = item.id;
-                opt.textContent = item.title;
+                opt.textContent = `[${item.type.toUpperCase()}] ${item.title}`;
                 select.appendChild(opt);
             });
         }
@@ -1608,6 +1633,7 @@
             const selectSheet = document.getElementById('auto-source-sheet');
             const targetSelect = document.getElementById('auto-action-target');
             const selectAllColsBtn = document.getElementById('btn-select-all-cols');
+            const addDynamicBlockBtn = document.getElementById('btn-add-dynamic-block');
             const saveAutoBtn = document.getElementById('btn-save-automation');
             const cancelAutoBtn = document.getElementById('btn-cancel-automation');
 
@@ -1618,26 +1644,35 @@
             };
 
             selectSheet.onchange = () => {
-                const sheetId = selectSheet.value;
+                const sourceId = selectSheet.value;
                 const colsGrid = document.getElementById('auto-columns-grid');
-                const fieldSelect = document.getElementById('auto-cond-field');
 
-                if (!sheetId) {
+                if (!sourceId) {
                     colsGrid.innerHTML = '<div style="font-size:0.75rem; color:var(--text-dim); grid-column:span 2;">Selecciona una fuente primero...</div>';
                     return;
                 }
 
-                const sheetObj = knowledgeData.find(k => k.id === sheetId);
-                let detectedCols = ['producto', 'categoria', 'precio', 'descuento', 'colores', 'tallas', 'user_id', 'nombre', 'fecha_vencimiento'];
+                const sourceObj = knowledgeData.find(k => k.id === sourceId);
+                let detectedCols = [];
 
-                if (sheetObj && sheetObj.content) {
-                    const firstLine = sheetObj.content.split('\n')[0];
+                if (sourceObj && sourceObj.content) {
+                    const lines = sourceObj.content.split('\n');
+                    const firstLine = lines[0] || '';
                     if (firstLine.includes(',')) {
                         detectedCols = firstLine.split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
-                    } else if (firstLine.includes(':')) {
-                        const parsed = sheetObj.content.split('\n').map(l => l.split(':')[0].trim()).filter(Boolean);
-                        if (parsed.length > 0) detectedCols = [...new Set(parsed)];
+                    } else {
+                        lines.forEach(l => {
+                            if (l.includes(':')) {
+                                const key = l.split(':')[0].trim();
+                                if (key && !detectedCols.includes(key)) detectedCols.push(key);
+                            }
+                        });
                     }
+                }
+
+                if (detectedCols.length === 0) {
+                    colsGrid.innerHTML = '<div style="font-size:0.75rem; color:var(--text-dim); grid-column:span 2;">Escribe los campos manualmente en la casilla inferior.</div>';
+                    return;
                 }
 
                 colsGrid.innerHTML = detectedCols.map(col => `
@@ -1645,10 +1680,6 @@
                         <input type="checkbox" value="${escapeHtml(col)}" class="auto-col-checkbox" checked>
                         <span>${escapeHtml(col)}</span>
                     </label>
-                `).join('');
-
-                fieldSelect.innerHTML = detectedCols.map(col => `
-                    <option value="${escapeHtml(col)}">${escapeHtml(col)}</option>
                 `).join('');
             };
 
@@ -1658,31 +1689,134 @@
                 checkboxes.forEach(c => c.checked = !allChecked);
             };
 
+            function initDragAndDrop() {
+                const container = document.getElementById('dynamic-blocks-container');
+                if (!container) return;
+
+                let draggedItem = null;
+
+                container.addEventListener('dragstart', (e) => {
+                    const card = e.target.closest('.automation-block-card');
+                    if (card) {
+                        draggedItem = card;
+                        card.classList.add('dragging');
+                    }
+                });
+
+                container.addEventListener('dragend', (e) => {
+                    const card = e.target.closest('.automation-block-card');
+                    if (card) {
+                        card.classList.remove('dragging');
+                        draggedItem = null;
+                    }
+                });
+
+                container.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    const afterElement = getDragAfterElement(container, e.clientY);
+                    if (draggedItem) {
+                        if (afterElement == null) {
+                            container.appendChild(draggedItem);
+                        } else {
+                            container.insertBefore(draggedItem, afterElement);
+                        }
+                    }
+                });
+            }
+
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('.automation-block-card:not(.dragging)')];
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+
+            addDynamicBlockBtn.onclick = () => {
+                const container = document.getElementById('dynamic-blocks-container');
+
+                const blockDiv = document.createElement('div');
+                blockDiv.className = 'automation-block-card';
+                blockDiv.setAttribute('draggable', 'true');
+                blockDiv.style.borderColor = 'var(--orange)';
+                blockDiv.innerHTML = `
+                    <div class="automation-block-header">
+                        <span><i class="fa-solid fa-grip-vertical" style="margin-right:6px; cursor:grab;"></i> REGLA / EVENTO PERSONALIZADO</span>
+                        <button type="button" class="btn-delete" onclick="this.closest('.automation-block-card').remove()" style="padding:2px 6px;">Eliminar</button>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label>Título de Regla o Evento</label>
+                        <input type="text" class="dyn-rule-title" placeholder="Ej: Verificar Saldo de Cliente">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label>Condición o Trigger</label>
+                        <input type="text" class="dyn-rule-trigger" placeholder="Ej: saldo es menor que 0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Acción Requerida</label>
+                        <input type="text" class="dyn-rule-action" placeholder="Ej: Notificar al closer y suspender servicio">
+                    </div>
+                `;
+
+                const arrowDiv = document.createElement('div');
+                arrowDiv.className = 'block-arrow';
+                arrowDiv.textContent = '↓';
+
+                container.appendChild(arrowDiv);
+                container.appendChild(blockDiv);
+                initDragAndDrop();
+            };
+            initDragAndDrop();
+
             saveAutoBtn.onclick = async () => {
                 const editingId = document.getElementById('auto-editing-id').value;
                 const name = document.getElementById('auto-name').value.trim();
-                const sheetId = document.getElementById('auto-source-sheet').value;
+                const sourceId = document.getElementById('auto-source-sheet').value;
 
-                if (!name || !sheetId) {
-                    showToast("Por favor ingresa un nombre y selecciona un Sheet.", "warning");
+                if (!name) {
+                    showToast("Por favor ingresa un nombre para el algoritmo.", "warning");
                     return;
                 }
 
                 const selectedCols = Array.from(document.querySelectorAll('.auto-col-checkbox:checked')).map(c => c.value);
-                const condField = document.getElementById('auto-cond-field').value;
+                const customColsText = document.getElementById('auto-custom-cols').value.trim();
+                if (customColsText) {
+                    customColsText.split(',').forEach(c => {
+                        const trimmed = c.trim();
+                        if (trimmed && !selectedCols.includes(trimmed)) selectedCols.push(trimmed);
+                    });
+                }
+
+                const condField = document.getElementById('auto-cond-field').value.trim();
                 const condOp = document.getElementById('auto-cond-op').value;
                 const condValue = document.getElementById('auto-cond-value').value.trim();
                 const opType = document.getElementById('auto-op-type').value;
+                const opDetail = document.getElementById('auto-op-detail').value.trim();
                 const actionTarget = document.getElementById('auto-action-target').value;
                 const eventName = document.getElementById('auto-event-name').value.trim();
                 const geminiInstructions = document.getElementById('auto-gemini-instructions').value.trim();
                 const intervalMinutes = parseInt(document.getElementById('auto-schedule-interval').value) || 0;
 
+                // Collect custom dynamic blocks
+                const dynamicRules = [];
+                document.querySelectorAll('#dynamic-blocks-container .automation-block-card').forEach(card => {
+                    const title = card.querySelector('.dyn-rule-title')?.value.trim();
+                    const trigger = card.querySelector('.dyn-rule-trigger')?.value.trim();
+                    const action = card.querySelector('.dyn-rule-action')?.value.trim();
+                    if (title || trigger || action) {
+                        dynamicRules.push({ title, trigger, action });
+                    }
+                });
+
                 const configJSON = {
                     name: name,
                     source: {
-                        type: 'google_sheet',
-                        id: sheetId,
+                        id: sourceId,
                         columns: selectedCols
                     },
                     conditions: [
@@ -1694,9 +1828,11 @@
                     ],
                     operations: [
                         {
-                            type: opType
+                            type: opType,
+                            detail: opDetail
                         }
                     ],
+                    dynamicRules: dynamicRules,
                     actions: [
                         {
                             type: actionTarget === 'gemini' ? 'gemini_response' : 'create_event',
@@ -1730,7 +1866,7 @@
                             .eq('id', editingId);
 
                         if (error) throw error;
-                        showToast("Automatización actualizada correctamente.", "success");
+                        showToast("Algoritmo actualizado correctamente.", "success");
                     } else {
                         const { error } = await sb
                             .from('menutech_automations')
@@ -1744,13 +1880,13 @@
                             }]);
 
                         if (error) throw error;
-                        showToast("Automatización creada con éxito.", "success");
+                        showToast("Algoritmo creado con éxito.", "success");
                     }
 
                     resetAutomationForm();
                     loadAutomationsList();
                 } catch (err) {
-                    showToast("Error al guardar automatización: " + err.message, "error");
+                    showToast("Error al guardar algoritmo: " + err.message, "error");
                 }
             };
 
@@ -1761,8 +1897,11 @@
             document.getElementById('auto-editing-id').value = '';
             document.getElementById('auto-name').value = '';
             document.getElementById('auto-source-sheet').value = '';
-            document.getElementById('auto-columns-grid').innerHTML = '<div style="font-size:0.75rem; color:var(--text-dim); grid-column:span 2;">Selecciona una fuente primero...</div>';
+            document.getElementById('auto-columns-grid').innerHTML = '<div style="font-size:0.75rem; color:var(--text-dim); grid-column:span 2;">Selecciona una fuente o escribe campos abajo...</div>';
+            document.getElementById('auto-custom-cols').value = '';
+            document.getElementById('auto-cond-field').value = '';
             document.getElementById('auto-cond-value').value = '';
+            document.getElementById('auto-op-detail').value = '';
             document.getElementById('auto-event-name').value = '';
             document.getElementById('auto-gemini-instructions').value = '';
             document.getElementById('btn-cancel-automation').style.display = 'none';
