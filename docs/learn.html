@@ -327,12 +327,122 @@
             padding-right: 32px;
         }
 
-        .algoritmos-grid-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 32px;
-            align-items: start;
+        .algoritmos-main-container {
             width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .algoritmos-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 20px 28px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.04);
+        }
+
+        .btn-create-algo {
+            background: linear-gradient(135deg, #ff9533 0%, #f97316 100%);
+            color: #ffffff;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 18px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(249, 115, 22, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-create-algo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(249, 115, 22, 0.4);
+        }
+
+        /* Fullscreen Canvas Modal for Algorithm Constructor */
+        .algo-canvas-modal {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 15000;
+            display: none;
+            flex-direction: column;
+            padding: 20px 32px;
+            overflow: hidden;
+        }
+        .algo-canvas-modal.active {
+            display: flex;
+        }
+
+        .algo-canvas-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .algo-canvas-body {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+            flex: 1;
+            height: calc(100vh - 120px);
+            overflow: hidden;
+        }
+
+        .algo-palette-sidebar {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            overflow-y: auto;
+        }
+
+        .palette-item {
+            background: var(--input);
+            border: 1.5px dashed var(--orange);
+            border-radius: 16px;
+            padding: 14px;
+            cursor: grab;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--text);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .palette-item:hover {
+            background: rgba(255, 149, 51, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .algo-workspace-canvas {
+            background: var(--card);
+            border: 2px dashed var(--border);
+            border-radius: 28px;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-height: 100%;
+        }
+        .algo-workspace-canvas.dragover {
+            border-color: var(--orange);
+            background: rgba(255, 149, 51, 0.03);
         }
 
         /* Tabs Navigation Internal */
@@ -996,169 +1106,72 @@
             </div>
         </div>
 
-        <!-- Full Width Grid Layout for Algoritmos -->
-        <div class="algoritmos-grid-layout" id="view-algoritmos-layout" style="display: none;">
-            <!-- LEFT: Builder -->
-            <div class="card-panel">
-                <div class="card-title" style="justify-content: space-between;">
-                    <span>Constructor Visual</span>
-                    <button type="button" class="btn-secondary" id="btn-add-dynamic-block" style="font-size:0.8rem;">+ Agregar Bloque</button>
+        <!-- Full Width View for Algoritmos -->
+        <div class="algoritmos-main-container" id="view-algoritmos-layout" style="display: none;">
+            <div class="algoritmos-header-bar">
+                <div class="card-title" style="margin-bottom:0;">
+                    <span>Mis Algoritmos (<span id="total-auto-count">0</span>)</span>
                 </div>
-
-                <input type="hidden" id="auto-editing-id" value="">
-
-                <div class="form-group">
-                    <label>Nombre del Algoritmo</label>
-                    <input type="text" id="auto-name" placeholder="Ej: Cotizador Personalizado">
-                </div>
-
-                <!-- BLOCK 1: FUENTE -->
-                <div class="automation-block-card">
-                    <div class="automation-block-header">FUENTE DE DATOS</div>
-                    <div class="form-group" style="margin-bottom: 8px;">
-                        <label>Seleccionar Conocimiento / Tabla</label>
-                        <select id="auto-source-sheet">
-                            <option value="">Seleccionar Fuente...</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="block-arrow">↓</div>
-
-                <!-- BLOCK 2: COLUMNAS DINÁMICAS -->
-                <div class="automation-block-card">
-                    <div class="automation-block-header">
-                        <span>COLUMNAS</span>
-                        <button type="button" class="btn-secondary" id="btn-select-all-cols" style="padding:2px 8px; font-size:0.7rem;">Todas</button>
-                    </div>
-                    <div class="columns-checkbox-grid" id="auto-columns-grid">
-                        <div style="font-size:0.75rem; color:var(--text-dim); grid-column:span 2;">Selecciona una fuente o escribe campos abajo...</div>
-                    </div>
-                    <div class="form-group" style="margin-top: 10px; margin-bottom: 0;">
-                        <label>O Escribe Campos Personalizados (separados por coma)</label>
-                        <input type="text" id="auto-custom-cols" placeholder="Ej: cliente, total, estado">
-                    </div>
-                </div>
-
-                <div class="block-arrow">↓</div>
-
-                <!-- DYNAMIC CUSTOM BLOCKS CONTAINER -->
-                <div id="dynamic-blocks-container">
-                    <!-- BLOCK 3: CONDICIÓN -->
-                    <div class="automation-block-card" data-block-type="condition">
-                        <div class="automation-block-header">
-                            <span>CONDICIÓN</span>
-                        </div>
-                        <div class="form-group" style="margin-bottom: 8px;">
-                            <label>Campo / Variable</label>
-                            <input type="text" id="auto-cond-field" placeholder="Escribe el nombre del campo">
-                        </div>
-                        <div class="form-group" style="margin-bottom: 8px;">
-                            <label>Operador</label>
-                            <select id="auto-cond-op">
-                                <option value="equals">es igual a</option>
-                                <option value="not_equals">es diferente de</option>
-                                <option value="contains">contiene</option>
-                                <option value="greater_than">mayor que</option>
-                                <option value="less_than">menor que</option>
-                                <option value="within_days">dentro de N días</option>
-                                <option value="is_not_empty">no está vacío</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label>Valor de Comparación</label>
-                            <input type="text" id="auto-cond-value" placeholder="Valor objetivo">
-                        </div>
-                    </div>
-
-                    <div class="block-arrow">↓</div>
-
-                    <!-- BLOCK 4: OPERACIÓN -->
-                    <div class="automation-block-card" data-block-type="operation">
-                        <div class="automation-block-header">OPERACIÓN O CÁLCULO</div>
-                        <div class="form-group" style="margin-bottom: 8px;">
-                            <label>Tipo de Operación</label>
-                            <select id="auto-op-type">
-                                <option value="search_filter">Buscar y Filtrar</option>
-                                <option value="multiply">Multiplicar Val1 x Val2</option>
-                                <option value="apply_discount">Aplicar Descuento</option>
-                                <option value="sum">Sumar Valores</option>
-                                <option value="date_add">Sumar Tiempo / Comparar Fechas</option>
-                                <option value="custom_logic">Lógica Personalizada</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label>Detalle / Fórmula Personalizada</label>
-                            <input type="text" id="auto-op-detail" placeholder="Ej: Multiplicar precio por cantidad y restar descuento">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="block-arrow">↓</div>
-
-                <!-- BLOCK 5: ACCIÓN / MENUTECH IA -->
-                <div class="automation-block-card">
-                    <div class="automation-block-header">ACCIÓN Y REACCIÓN</div>
-                    <div class="form-group" style="margin-bottom: 8px;">
-                        <label>Destino de la Reacción</label>
-                        <select id="auto-action-target">
-                            <option value="gemini">Enviar a Menutech IA</option>
-                            <option value="event">Crear Evento Interno</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="group-event-name" style="display: none; margin-bottom: 8px;">
-                        <label>Nombre del Evento</label>
-                        <input type="text" id="auto-event-name" placeholder="Ej: recordatorio_pago_owner">
-                    </div>
-                    <div class="form-group" id="group-gemini-instructions" style="margin-bottom: 0;">
-                        <label>Instrucciones para Menutech IA</label>
-                        <textarea id="auto-gemini-instructions" placeholder="Escribe detalladamente cómo Menutech IA debe reaccionar ante esta situación..."></textarea>
-                    </div>
-                </div>
-
-                <div class="block-arrow">↓</div>
-
-                <!-- BLOCK 6: PROGRAMACIÓN -->
-                <div class="automation-block-card">
-                    <div class="automation-block-header">PROGRAMACIÓN</div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>Frecuencia de Ejecución</label>
-                        <select id="auto-schedule-interval">
-                            <option value="0">En Tiempo Real / Por Consulta</option>
-                            <option value="1">Cada 1 Minuto</option>
-                            <option value="5">Cada 5 Minutos</option>
-                            <option value="15">Cada 15 Minutos</option>
-                            <option value="30">Cada 30 Minutos</option>
-                            <option value="60">Cada Hora</option>
-                            <option value="360">Cada 6 Horas</option>
-                            <option value="720">Cada 12 Horas</option>
-                            <option value="1440">Diariamente</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 16px;">
-                    <button class="btn-submit" id="btn-save-automation">Guardar Algoritmo</button>
-                    <button class="btn-secondary" id="btn-cancel-automation" style="display: none;">Cancelar</button>
-                </div>
+                <button class="btn-create-algo" id="btn-open-algo-canvas">
+                    + Crear Algoritmo
+                </button>
             </div>
 
-            <!-- RIGHT: Mis Algoritmos List -->
             <div class="card-panel">
-                <div class="dashboard-header">
-                    <div class="card-title" style="margin-bottom: 0;">
-                        <span>Mis Algoritmos (<span id="total-auto-count">0</span>)</span>
-                    </div>
-                </div>
-
                 <div class="search-box" style="margin-bottom: 16px;">
-                    <input type="text" id="search-auto-input" placeholder="Buscar algoritmo...">
+                    <input type="text" id="search-auto-input" placeholder="Buscar algoritmo por nombre o regla...">
                 </div>
 
-                <div class="knowledge-list" id="automations-list" style="max-height: 700px;">
+                <div class="knowledge-list" id="automations-list" style="max-height: 650px;">
                     <div style="text-align: center; padding: 30px; color: var(--text-dim);">
                         <div class="loader" style="margin: 0 auto 10px auto;"></div>
                         Cargando algoritmos...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full-Screen Interactive Canvas Modal for Algoritmo Builder -->
+        <div class="algo-canvas-modal" id="modal-algoritmo-canvas">
+            <div class="algo-canvas-topbar">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <button class="btn-secondary" id="btn-close-algo-canvas" style="padding: 8px 16px;">Volver</button>
+                    <input type="hidden" id="auto-editing-id" value="">
+                    <input type="text" id="auto-name" placeholder="Nombre del Algoritmo..." style="font-family:'Outfit',sans-serif; font-size:1.2rem; font-weight:800; border:none; background:transparent; outline:none; width:350px;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="btn-submit" id="btn-save-automation" style="width: auto; padding: 10px 24px;">Guardar Algoritmo</button>
+                </div>
+            </div>
+
+            <div class="algo-canvas-body">
+                <!-- PALETTE SIDEBAR -->
+                <div class="algo-palette-sidebar">
+                    <div style="font-family:'Outfit',sans-serif; font-weight:800; font-size:0.85rem; color:var(--orange); text-transform:uppercase; margin-bottom:4px;">
+                        Bloques Disponibles
+                    </div>
+
+                    <div class="palette-item" draggable="true" data-type="source">
+                        <span>Fuente de Datos</span>
+                    </div>
+
+                    <div class="palette-item" draggable="true" data-type="rule">
+                        <span>Instrucción / Regla</span>
+                    </div>
+
+                    <div class="palette-item" draggable="true" data-type="action">
+                        <span>Reacción Menutech IA</span>
+                    </div>
+
+                    <div class="palette-item" draggable="true" data-type="event">
+                        <span>Evento Interno</span>
+                    </div>
+                </div>
+
+                <!-- CANVAS WORKSPACE -->
+                <div class="algo-workspace-canvas" id="canvas-blocks-workspace">
+                    <div id="canvas-empty-state" style="text-align: center; padding: 60px 20px; color: var(--text-dim);">
+                        Arrastra o haz clic en los bloques de la izquierda para comenzar a construir el algoritmo
                     </div>
                 </div>
             </div>
@@ -1508,7 +1521,7 @@
             listEl.innerHTML = filtered.map(item => {
                 const dateStr = new Date(item.created_at).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                 const tagClass = item.type === 'faq' ? 'tag-faq' : item.type === 'document' ? 'tag-document' : 'tag-sheet';
-                const typeLabel = item.type === 'faq' ? 'FAQ' : item.type === 'document' ? 'Sheet' : 'Sheet';
+                const typeLabel = item.type === 'faq' ? 'FAQ' : item.type === 'document' ? 'Documento' : 'Sheet';
 
                 return `
                     <div class="knowledge-item" data-id="${item.id}">
@@ -1619,6 +1632,7 @@
 
         function populateSourceSheetsSelect() {
             const select = document.getElementById('auto-source-sheet');
+            if (!select) return;
             select.innerHTML = '<option value="">Seleccionar Fuente...</option>';
 
             knowledgeData.forEach(item => {
@@ -1630,25 +1644,171 @@
         }
 
         function initAutomationsBuilder() {
-            const selectSheet = document.getElementById('auto-source-sheet');
-            const targetSelect = document.getElementById('auto-action-target');
-            const selectAllColsBtn = document.getElementById('btn-select-all-cols');
-            const addDynamicBlockBtn = document.getElementById('btn-add-dynamic-block');
+            const btnOpenCanvas = document.getElementById('btn-open-algo-canvas');
+            const btnCloseCanvas = document.getElementById('btn-close-algo-canvas');
+            const canvasModal = document.getElementById('modal-algoritmo-canvas');
+            const workspace = document.getElementById('canvas-blocks-workspace');
+            const emptyState = document.getElementById('canvas-empty-state');
             const saveAutoBtn = document.getElementById('btn-save-automation');
-            const cancelAutoBtn = document.getElementById('btn-cancel-automation');
 
-            targetSelect.onchange = () => {
-                const target = targetSelect.value;
-                document.getElementById('group-event-name').style.display = target === 'event' ? 'block' : 'none';
-                document.getElementById('group-gemini-instructions').style.display = target === 'gemini' ? 'block' : 'none';
+            btnOpenCanvas.onclick = () => {
+                resetAutomationForm();
+                canvasModal.classList.add('active');
             };
 
-            selectSheet.onchange = () => {
-                const sourceId = selectSheet.value;
-                const colsGrid = document.getElementById('auto-columns-grid');
+            btnCloseCanvas.onclick = () => {
+                canvasModal.classList.remove('active');
+            };
 
+            // Palette item click & drag handlers
+            document.querySelectorAll('.palette-item').forEach(item => {
+                item.onclick = () => {
+                    const type = item.getAttribute('data-type');
+                    addCanvasBlock(type);
+                };
+
+                item.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('block-type', item.getAttribute('data-type'));
+                });
+            });
+
+            workspace.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                workspace.classList.add('dragover');
+            });
+
+            workspace.addEventListener('dragleave', () => {
+                workspace.classList.remove('dragover');
+            });
+
+            workspace.addEventListener('drop', (e) => {
+                e.preventDefault();
+                workspace.classList.remove('dragover');
+                const blockType = e.dataTransfer.getData('block-type');
+                if (blockType) {
+                    addCanvasBlock(blockType);
+                }
+            });
+
+            window.addCanvasBlock = (type, initialData = {}) => {
+                if (emptyState) emptyState.style.display = 'none';
+
+                const blockCard = document.createElement('div');
+                blockCard.className = 'automation-block-card';
+                blockCard.setAttribute('draggable', 'true');
+                blockCard.setAttribute('data-block-type', type);
+
+                let headerTitle = "BLOQUE DE ALGORITMO";
+                let innerHtml = "";
+
+                if (type === 'source') {
+                    headerTitle = "FUENTE DE DATOS";
+                    const opts = knowledgeData.map(k => `<option value="${k.id}" ${initialData.sourceId === k.id ? 'selected' : ''}>[${k.type.toUpperCase()}] ${escapeHtml(k.title)}</option>`).join('');
+                    innerHtml = `
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label>Seleccionar Fuente</label>
+                            <select class="block-field-source" onchange="renderBlockColumns(this)">
+                                <option value="">Seleccionar Fuente...</option>
+                                ${opts}
+                            </select>
+                        </div>
+                        <div class="block-columns-container"></div>
+                    `;
+                } else if (type === 'rule') {
+                    headerTitle = "INSTRUCCIÓN / REGLA";
+                    innerHtml = `
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label>Instrucción / Condición</label>
+                            <textarea class="block-field-rule" placeholder="Ej: Consultar ventas del mes. Si es menor a 100 dólares, verificar gallery.html...">${initialData.ruleText || ''}</textarea>
+                        </div>
+                    `;
+                } else if (type === 'action') {
+                    headerTitle = "REACCIÓN MENUTECH IA";
+                    innerHtml = `
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Instrucciones de Respuesta para Menutech IA</label>
+                            <textarea class="block-field-ia" placeholder="Ej: Dile al usuario que sus ventas son bajas y ofrécele subir imágenes a su galería por él...">${initialData.iaText || ''}</textarea>
+                        </div>
+                    `;
+                } else if (type === 'event') {
+                    headerTitle = "EVENTO INTERNO";
+                    innerHtml = `
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Nombre del Evento</label>
+                            <input type="text" class="block-field-event" placeholder="Ej: ventas_bajas_alert" value="${initialData.eventName || ''}">
+                        </div>
+                    `;
+                }
+
+                blockCard.innerHTML = `
+                    <div class="automation-block-header">
+                        <span><i class="fa-solid fa-grip-vertical" style="margin-right:6px; cursor:grab;"></i> ${headerTitle}</span>
+                        <button type="button" class="btn-delete" onclick="removeCanvasBlock(this)">Eliminar</button>
+                    </div>
+                    ${innerHtml}
+                `;
+
+                workspace.appendChild(blockCard);
+                if (type === 'source' && initialData.sourceId) {
+                    const sel = blockCard.querySelector('.block-field-source');
+                    if (sel) renderBlockColumns(sel);
+                }
+                initCanvasDragReorder();
+            };
+
+            window.initCanvasDragReorder = () => {
+                let draggedCard = null;
+
+                workspace.querySelectorAll('.automation-block-card').forEach(card => {
+                    card.addEventListener('dragstart', (e) => {
+                        draggedCard = card;
+                        card.classList.add('dragging');
+                    });
+
+                    card.addEventListener('dragend', () => {
+                        card.classList.remove('dragging');
+                        draggedCard = null;
+                    });
+                });
+
+                workspace.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (!draggedCard) return;
+                    const afterElement = getCanvasDragAfterElement(workspace, e.clientY);
+                    if (afterElement == null) {
+                        workspace.appendChild(draggedCard);
+                    } else {
+                        workspace.insertBefore(draggedCard, afterElement);
+                    }
+                });
+            };
+
+            function getCanvasDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('.automation-block-card:not(.dragging)')];
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+
+            window.removeCanvasBlock = (btn) => {
+                const card = btn.closest('.automation-block-card');
+                if (card) card.remove();
+                if (workspace.querySelectorAll('.automation-block-card').length === 0) {
+                    if (emptyState) emptyState.style.display = 'block';
+                }
+            };
+
+            window.renderBlockColumns = (selectEl) => {
+                const sourceId = selectEl.value;
+                const container = selectEl.closest('.automation-block-card').querySelector('.block-columns-container');
                 if (!sourceId) {
-                    colsGrid.innerHTML = '<div style="font-size:0.75rem; color:var(--text-dim); grid-column:span 2;">Selecciona una fuente primero...</div>';
+                    container.innerHTML = '';
                     return;
                 }
 
@@ -1670,183 +1830,55 @@
                     }
                 }
 
-                if (detectedCols.length === 0) {
-                    colsGrid.innerHTML = '<div style="font-size:0.75rem; color:var(--text-dim); grid-column:span 2;">Escribe los campos manualmente en la casilla inferior.</div>';
-                    return;
+                if (detectedCols.length > 0) {
+                    container.innerHTML = `
+                        <div class="form-group" style="margin-top:8px; margin-bottom:0;">
+                            <label>Columnas Detectadas</label>
+                            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                                ${detectedCols.map(col => `<span class="filter-badge active" style="font-size:0.7rem;">${escapeHtml(col)}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `<div style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">Sin columnas tabulares detectadas.</div>`;
                 }
-
-                colsGrid.innerHTML = detectedCols.map(col => `
-                    <label class="checkbox-item">
-                        <input type="checkbox" value="${escapeHtml(col)}" class="auto-col-checkbox" checked>
-                        <span>${escapeHtml(col)}</span>
-                    </label>
-                `).join('');
             };
-
-            selectAllColsBtn.onclick = () => {
-                const checkboxes = document.querySelectorAll('.auto-col-checkbox');
-                const allChecked = Array.from(checkboxes).every(c => c.checked);
-                checkboxes.forEach(c => c.checked = !allChecked);
-            };
-
-            function initDragAndDrop() {
-                const container = document.getElementById('dynamic-blocks-container');
-                if (!container) return;
-
-                let draggedItem = null;
-
-                container.addEventListener('dragstart', (e) => {
-                    const card = e.target.closest('.automation-block-card');
-                    if (card) {
-                        draggedItem = card;
-                        card.classList.add('dragging');
-                    }
-                });
-
-                container.addEventListener('dragend', (e) => {
-                    const card = e.target.closest('.automation-block-card');
-                    if (card) {
-                        card.classList.remove('dragging');
-                        draggedItem = null;
-                    }
-                });
-
-                container.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    const afterElement = getDragAfterElement(container, e.clientY);
-                    if (draggedItem) {
-                        if (afterElement == null) {
-                            container.appendChild(draggedItem);
-                        } else {
-                            container.insertBefore(draggedItem, afterElement);
-                        }
-                    }
-                });
-            }
-
-            function getDragAfterElement(container, y) {
-                const draggableElements = [...container.querySelectorAll('.automation-block-card:not(.dragging)')];
-                return draggableElements.reduce((closest, child) => {
-                    const box = child.getBoundingClientRect();
-                    const offset = y - box.top - box.height / 2;
-                    if (offset < 0 && offset > closest.offset) {
-                        return { offset: offset, element: child };
-                    } else {
-                        return closest;
-                    }
-                }, { offset: Number.NEGATIVE_INFINITY }).element;
-            }
-
-            addDynamicBlockBtn.onclick = () => {
-                const container = document.getElementById('dynamic-blocks-container');
-
-                const blockDiv = document.createElement('div');
-                blockDiv.className = 'automation-block-card';
-                blockDiv.setAttribute('draggable', 'true');
-                blockDiv.style.borderColor = 'var(--orange)';
-                blockDiv.innerHTML = `
-                    <div class="automation-block-header">
-                        <span><i class="fa-solid fa-grip-vertical" style="margin-right:6px; cursor:grab;"></i> REGLA / EVENTO PERSONALIZADO</span>
-                        <button type="button" class="btn-delete" onclick="this.closest('.automation-block-card').remove()" style="padding:2px 6px;">Eliminar</button>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 8px;">
-                        <label>Título de Regla o Evento</label>
-                        <input type="text" class="dyn-rule-title" placeholder="Ej: Verificar Saldo de Cliente">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 8px;">
-                        <label>Condición o Trigger</label>
-                        <input type="text" class="dyn-rule-trigger" placeholder="Ej: saldo es menor que 0">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>Acción Requerida</label>
-                        <input type="text" class="dyn-rule-action" placeholder="Ej: Notificar al closer y suspender servicio">
-                    </div>
-                `;
-
-                const arrowDiv = document.createElement('div');
-                arrowDiv.className = 'block-arrow';
-                arrowDiv.textContent = '↓';
-
-                container.appendChild(arrowDiv);
-                container.appendChild(blockDiv);
-                initDragAndDrop();
-            };
-            initDragAndDrop();
 
             saveAutoBtn.onclick = async () => {
                 const editingId = document.getElementById('auto-editing-id').value;
-                const name = document.getElementById('auto-name').value.trim();
-                const sourceId = document.getElementById('auto-source-sheet').value;
+                const name = document.getElementById('auto-name').value.trim() || "Nuevo Algoritmo";
 
-                if (!name) {
-                    showToast("Por favor ingresa un nombre para el algoritmo.", "warning");
+                const cards = workspace.querySelectorAll('.automation-block-card');
+                if (cards.length === 0) {
+                    showToast("Agrega al menos un bloque para guardar el algoritmo.", "warning");
                     return;
                 }
 
-                const selectedCols = Array.from(document.querySelectorAll('.auto-col-checkbox:checked')).map(c => c.value);
-                const customColsText = document.getElementById('auto-custom-cols').value.trim();
-                if (customColsText) {
-                    customColsText.split(',').forEach(c => {
-                        const trimmed = c.trim();
-                        if (trimmed && !selectedCols.includes(trimmed)) selectedCols.push(trimmed);
-                    });
-                }
+                const blocksData = [];
+                let isGeminiEnabled = false;
 
-                const condField = document.getElementById('auto-cond-field').value.trim();
-                const condOp = document.getElementById('auto-cond-op').value;
-                const condValue = document.getElementById('auto-cond-value').value.trim();
-                const opType = document.getElementById('auto-op-type').value;
-                const opDetail = document.getElementById('auto-op-detail').value.trim();
-                const actionTarget = document.getElementById('auto-action-target').value;
-                const eventName = document.getElementById('auto-event-name').value.trim();
-                const geminiInstructions = document.getElementById('auto-gemini-instructions').value.trim();
-                const intervalMinutes = parseInt(document.getElementById('auto-schedule-interval').value) || 0;
-
-                // Collect custom dynamic blocks
-                const dynamicRules = [];
-                document.querySelectorAll('#dynamic-blocks-container .automation-block-card').forEach(card => {
-                    const title = card.querySelector('.dyn-rule-title')?.value.trim();
-                    const trigger = card.querySelector('.dyn-rule-trigger')?.value.trim();
-                    const action = card.querySelector('.dyn-rule-action')?.value.trim();
-                    if (title || trigger || action) {
-                        dynamicRules.push({ title, trigger, action });
+                cards.forEach(card => {
+                    const bType = card.getAttribute('data-block-type');
+                    if (bType === 'source') {
+                        const sourceId = card.querySelector('.block-field-source')?.value || null;
+                        blocksData.push({ type: 'source', sourceId });
+                    } else if (bType === 'rule') {
+                        const ruleText = card.querySelector('.block-field-rule')?.value || '';
+                        blocksData.push({ type: 'rule', ruleText });
+                    } else if (bType === 'action') {
+                        const iaText = card.querySelector('.block-field-ia')?.value || '';
+                        blocksData.push({ type: 'action', iaText });
+                        isGeminiEnabled = true;
+                    } else if (bType === 'event') {
+                        const eventName = card.querySelector('.block-field-event')?.value || '';
+                        blocksData.push({ type: 'event', eventName });
                     }
                 });
 
                 const configJSON = {
                     name: name,
-                    source: {
-                        id: sourceId,
-                        columns: selectedCols
-                    },
-                    conditions: [
-                        {
-                            field: condField,
-                            operator: condOp,
-                            value: condValue
-                        }
-                    ],
-                    operations: [
-                        {
-                            type: opType,
-                            detail: opDetail
-                        }
-                    ],
-                    dynamicRules: dynamicRules,
-                    actions: [
-                        {
-                            type: actionTarget === 'gemini' ? 'gemini_response' : 'create_event',
-                            event: eventName
-                        }
-                    ],
-                    schedule: {
-                        type: intervalMinutes > 0 ? 'interval' : 'on_demand',
-                        minutes: intervalMinutes
-                    },
-                    gemini: {
-                        enabled: actionTarget === 'gemini',
-                        instructions: geminiInstructions
-                    }
+                    blocks: blocksData,
+                    created_at: new Date().toISOString()
                 };
 
                 const generatedTsCode = generateDeterministicTypeScript(configJSON);
@@ -1859,8 +1891,7 @@
                                 name: name,
                                 config: configJSON,
                                 generated_code: generatedTsCode,
-                                schedule_interval_minutes: intervalMinutes,
-                                gemini_enabled: actionTarget === 'gemini',
+                                gemini_enabled: isGeminiEnabled,
                                 status: 'active'
                             })
                             .eq('id', editingId);
@@ -1875,40 +1906,38 @@
                                 status: 'active',
                                 config: configJSON,
                                 generated_code: generatedTsCode,
-                                schedule_interval_minutes: intervalMinutes,
-                                gemini_enabled: actionTarget === 'gemini'
+                                gemini_enabled: isGeminiEnabled
                             }]);
 
                         if (error) throw error;
                         showToast("Algoritmo creado con éxito.", "success");
                     }
 
+                    canvasModal.classList.remove('active');
                     resetAutomationForm();
                     loadAutomationsList();
                 } catch (err) {
                     showToast("Error al guardar algoritmo: " + err.message, "error");
                 }
             };
-
-            cancelAutoBtn.onclick = resetAutomationForm;
         }
 
         function resetAutomationForm() {
             document.getElementById('auto-editing-id').value = '';
             document.getElementById('auto-name').value = '';
-            document.getElementById('auto-source-sheet').value = '';
-            document.getElementById('auto-columns-grid').innerHTML = '<div style="font-size:0.75rem; color:var(--text-dim); grid-column:span 2;">Selecciona una fuente o escribe campos abajo...</div>';
-            document.getElementById('auto-custom-cols').value = '';
-            document.getElementById('auto-cond-field').value = '';
-            document.getElementById('auto-cond-value').value = '';
-            document.getElementById('auto-op-detail').value = '';
-            document.getElementById('auto-event-name').value = '';
-            document.getElementById('auto-gemini-instructions').value = '';
-            document.getElementById('btn-cancel-automation').style.display = 'none';
+            const workspace = document.getElementById('canvas-blocks-workspace');
+            if (workspace) {
+                workspace.innerHTML = `
+                    <div id="canvas-empty-state" style="text-align: center; padding: 60px 20px; color: var(--text-dim);">
+                        Arrastra o haz clic en los bloques de la izquierda para comenzar a construir el algoritmo
+                    </div>
+                `;
+            }
         }
 
         function generateDeterministicTypeScript(config) {
-            return `// Generated Supabase Edge Function for Automation: ${config.name}
+            const blocksJson = JSON.stringify(config.blocks || [], null, 2);
+            return `// Generated Supabase Edge Function for Algorithm: ${config.name}
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 
@@ -1919,26 +1948,13 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Fetch Source Sheet (${config.source.id})
-    const { data: source } = await supabase
-      .from("menutech_knowledge")
-      .select("*")
-      .eq("id", "${config.source.id}")
-      .single();
+    const blocks = ${blocksJson};
 
-    if (!source) throw new Error("Source sheet not found");
-
-    const columns = ${JSON.stringify(config.source.columns)};
-    const conditions = ${JSON.stringify(config.conditions)};
-    const operations = ${JSON.stringify(config.operations)};
-
-    // Execute Operations
     const result = {
-      automation: "${config.name}",
+      algorithm: "${config.name}",
       processedAt: new Date().toISOString(),
-      columns: columns,
-      conditions: conditions,
-      operations: operations
+      blocksExecuted: blocks.length,
+      blocks: blocks
     };
 
     return new Response(JSON.stringify({ success: true, result }), {
@@ -2024,21 +2040,14 @@ serve(async (req: Request) => {
             if (!item) return;
 
             const modal = document.getElementById('code-modal');
-            document.getElementById('code-modal-title').textContent = `Prueba de Automatización: ${item.name}`;
+            document.getElementById('code-modal-title').textContent = `Prueba de Algoritmo: ${item.name}`;
 
             const testResult = {
                 dryRun: true,
-                automation: item.name,
+                algorithm: item.name,
                 status: "SUCCESS",
-                recordsProcessed: 12,
-                matchedConditions: 3,
-                calculatedResult: {
-                    subtotal: "$500 USD",
-                    discountApplied: "10%",
-                    total: "$450 USD"
-                },
-                eventGenerated: item.config?.actions?.[0]?.event || null,
-                geminiPromptPayload: item.gemini_enabled ? item.config?.gemini?.instructions : null
+                blocksCount: item.config?.blocks?.length || 0,
+                configuredBlocks: item.config?.blocks || []
             };
 
             document.getElementById('code-modal-content').textContent = JSON.stringify(testResult, null, 2);
@@ -2060,39 +2069,19 @@ serve(async (req: Request) => {
             if (!item) return;
 
             document.getElementById('sec-btn-automations').click();
+            resetAutomationForm();
 
             document.getElementById('auto-editing-id').value = item.id;
             document.getElementById('auto-name').value = item.name;
 
             const cfg = item.config || {};
-            if (cfg.source?.id) {
-                document.getElementById('auto-source-sheet').value = cfg.source.id;
-                document.getElementById('auto-source-sheet').dispatchEvent(new Event('change'));
+            if (Array.isArray(cfg.blocks)) {
+                cfg.blocks.forEach(b => {
+                    addCanvasBlock(b.type, b);
+                });
             }
 
-            if (cfg.conditions?.[0]) {
-                document.getElementById('auto-cond-field').value = cfg.conditions[0].field || 'producto';
-                document.getElementById('auto-cond-op').value = cfg.conditions[0].operator || 'equals';
-                document.getElementById('auto-cond-value').value = cfg.conditions[0].value || '';
-            }
-
-            if (cfg.operations?.[0]) {
-                document.getElementById('auto-op-type').value = cfg.operations[0].type || 'search_filter';
-            }
-
-            if (cfg.actions?.[0]) {
-                const target = cfg.actions[0].type === 'gemini_response' ? 'gemini' : 'event';
-                document.getElementById('auto-action-target').value = target;
-                document.getElementById('auto-action-target').dispatchEvent(new Event('change'));
-                document.getElementById('auto-event-name').value = cfg.actions[0].event || '';
-            }
-
-            if (cfg.gemini) {
-                document.getElementById('auto-gemini-instructions').value = cfg.gemini.instructions || '';
-            }
-
-            document.getElementById('auto-schedule-interval').value = item.schedule_interval_minutes || 0;
-            document.getElementById('btn-cancel-automation').style.display = 'inline-block';
+            document.getElementById('modal-algoritmo-canvas').classList.add('active');
         };
 
         window.duplicateAutomation = async (id) => {
