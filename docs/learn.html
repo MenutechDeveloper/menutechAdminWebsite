@@ -1140,10 +1140,6 @@
                     <input type="text" id="auto-name" style="font-family:'Outfit',sans-serif; font-size:1.2rem; font-weight:800; border:none; background:transparent; outline:none; width:300px;" placeholder="Nombre del Algoritmo">
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 700; color: var(--text-dim);">
-                        <span>Frecuencia / Cron:</span>
-                        <input type="text" id="auto-schedule-interval" class="form-control" style="width: 180px; padding: 6px 12px; font-size: 0.85rem; margin-bottom: 0;" placeholder="Ej: 3 minutos, 1 anio">
-                    </div>
                     <button class="btn-submit" id="btn-save-automation" style="width: auto; padding: 10px 24px;">Guardar Algoritmo</button>
                 </div>
             </div>
@@ -1854,9 +1850,6 @@
             saveAutoBtn.onclick = async () => {
                 const editingId = document.getElementById('auto-editing-id').value;
                 const name = document.getElementById('auto-name').value.trim() || "Nuevo Algoritmo";
-                const scheduleIntervalRaw = (document.getElementById('auto-schedule-interval').value || '').trim() || "Cada 24 horas";
-                const scheduleIntervalNum = parseInt(scheduleIntervalRaw, 10);
-                const scheduleInterval = isNaN(scheduleIntervalNum) ? 1440 : scheduleIntervalNum;
 
                 const cards = workspace.querySelectorAll('.automation-block-card');
                 if (cards.length === 0) {
@@ -1888,11 +1881,10 @@
                 const configJSON = {
                     name: name,
                     blocks: blocksData,
-                    schedule_interval: scheduleIntervalRaw,
                     created_at: new Date().toISOString()
                 };
 
-                const generatedTsCode = generateDeterministicTypeScript(configJSON, scheduleIntervalRaw);
+                const generatedTsCode = generateDeterministicTypeScript(configJSON);
 
                 try {
                     if (editingId) {
@@ -1902,7 +1894,6 @@
                                 name: name,
                                 config: configJSON,
                                 generated_code: generatedTsCode,
-                                schedule_interval_minutes: scheduleInterval,
                                 gemini_enabled: isGeminiEnabled,
                                 status: 'active'
                             })
@@ -1918,7 +1909,6 @@
                                 status: 'active',
                                 config: configJSON,
                                 generated_code: generatedTsCode,
-                                schedule_interval_minutes: scheduleInterval,
                                 gemini_enabled: isGeminiEnabled
                             }]);
 
@@ -1938,8 +1928,6 @@
         function resetAutomationForm() {
             document.getElementById('auto-editing-id').value = '';
             document.getElementById('auto-name').value = '';
-            const scheduleInput = document.getElementById('auto-schedule-interval');
-            if (scheduleInput) scheduleInput.value = "Cada 24 horas";
             const workspace = document.getElementById('canvas-blocks-workspace');
             if (workspace) {
                 workspace.innerHTML = `
@@ -1950,7 +1938,7 @@
             }
         }
 
-        function generateDeterministicTypeScript(config, scheduleIntervalStr = "Cada 24 horas") {
+        function generateDeterministicTypeScript(config) {
             const slug = (config.name || "algoritmo")
                 .toLowerCase()
                 .normalize("NFD")
@@ -1958,22 +1946,23 @@
                 .replace(/[^a-z0-9]+/g, "-")
                 .replace(/^-+|-+$/g, "") || "algoritmo";
 
-            const cronString = String(scheduleIntervalStr || "Cada 24 horas");
             const blocksJson = JSON.stringify(config.blocks || [], null, 2);
 
             return `// ==============================================================================
 // SUPABASE EDGE FUNCTION: ${config.name}
-// NOMBRE DE LA FUNCIÓN EN SUPABASE: ${slug}
+// NOMBRE EXACTO DE LA FUNCIÓN EN SUPABASE: ${slug}
 // RUTA SUGERIDA: supabase/functions/${slug}/index.ts
-// FRECUENCIA DE EJECUCIÓN / CRON: ${cronString}
+// SECRET REQUERIDO EN SUPABASE: GEMINI_API_KEY
 // ==============================================================================
-// INSTRUCCIONES DE DESPLIEGUE MANUAL EN SUPABASE:
-// 1. En tu proyecto local con Supabase CLI, crea la carpeta:
-//    mkdir -p supabase/functions/${slug}
-// 2. Guarda este archivo como:
-//    supabase/functions/${slug}/index.ts
-// 3. Despliega la función ejecutando:
+// INSTRUCCIONES DE CREACIÓN Y DESPLIEGUE EN SUPABASE:
+// 1. En la consola web de Supabase, crea una Edge Function con el nombre exacto:
+//    ${slug}
+// 2. O desde tu terminal local usando Supabase CLI:
+//    supabase functions new ${slug}
+// 3. Copia y pega este código en index.ts y guarda los cambios.
+// 4. Despliega la función ejecutando:
 //    supabase functions deploy ${slug} --no-verify-jwt
+// 5. El Cron o programación periódica se configura directamente en el panel de Supabase.
 // ==============================================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -1985,7 +1974,6 @@ const corsHeaders = {
 };
 
 serve(async (req: Request) => {
-  // Manejo de Preflight CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -1993,13 +1981,11 @@ serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY") || "";
+
     const supabase = createClient(supabaseUrl, supabaseKey);
-
     const blocks = ${blocksJson};
-    const scheduleInterval = ${JSON.stringify(cronString)};
 
-    // Lógica determinista de ejecución según los bloques configurados
-    let processedRecords = 0;
     let eventsGenerated = 0;
     const executionDetails: any[] = [];
 
@@ -2024,9 +2010,29 @@ serve(async (req: Request) => {
           rule: block.ruleText
         });
       } else if (block.type === 'action') {
+        let aiResult = "";
+        if (geminiApiKey) {
+          try {
+            const geminiRes = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\${geminiApiKey}\`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: block.iaText }] }]
+              })
+            });
+            const geminiData = await geminiRes.json();
+            aiResult = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "Procesado con exito";
+          } catch (e: any) {
+            aiResult = "Error al invocar Gemini: " + e.message;
+          }
+        } else {
+          aiResult = "GEMINI_API_KEY no configurado en Secrets";
+        }
+
         executionDetails.push({
           block: 'action',
-          iaInstruction: block.iaText
+          iaInstruction: block.iaText,
+          aiResponse: aiResult
         });
       } else if (block.type === 'event') {
         eventsGenerated++;
@@ -2041,7 +2047,6 @@ serve(async (req: Request) => {
       success: true,
       algorithmName: "${config.name}",
       functionSlug: "${slug}",
-      scheduleInterval,
       executedAt: new Date().toISOString(),
       blocksExecuted: blocks.length,
       eventsGenerated,
@@ -2100,7 +2105,7 @@ serve(async (req: Request) => {
                 const isActive = item.status === 'active';
                 const tagClass = isActive ? 'tag-active' : 'tag-inactive';
                 const statusLabel = isActive ? 'ACTIVA' : 'INACTIVA';
-                const intervalText = item.config?.schedule_interval || (item.schedule_interval_minutes ? `Cada ${item.schedule_interval_minutes}m` : 'Cada 24 horas');
+                const blockCount = item.config?.blocks?.length || 0;
 
                 return `
                     <div class="knowledge-item" data-id="${item.id}">
@@ -2108,7 +2113,7 @@ serve(async (req: Request) => {
                             <div class="item-title">${escapeHtml(item.name)}</div>
                             <span class="item-type-tag ${tagClass}">${statusLabel}</span>
                         </div>
-                        <div class="item-content">Frecuencia: ${intervalText} | Gemini: ${item.gemini_enabled ? 'Sí' : 'No'}</div>
+                        <div class="item-content">Bloques: ${blockCount} | Gemini: ${item.gemini_enabled ? 'Sí' : 'No'}</div>
                         <div class="item-footer">
                             <span>${dateStr}</span>
                             <div class="item-actions">
@@ -2178,11 +2183,6 @@ serve(async (req: Request) => {
 
             document.getElementById('auto-editing-id').value = item.id;
             document.getElementById('auto-name').value = item.name;
-
-            const scheduleInput = document.getElementById('auto-schedule-interval');
-            if (scheduleInput) {
-                scheduleInput.value = item.config?.schedule_interval || (item.schedule_interval_minutes ? `${item.schedule_interval_minutes} minutos` : 'Cada 24 horas');
-            }
 
             const cfg = item.config || {};
             if (Array.isArray(cfg.blocks)) {
