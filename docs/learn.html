@@ -1142,13 +1142,7 @@
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 700; color: var(--text-dim);">
                         <span>Frecuencia / Cron:</span>
-                        <select id="auto-schedule-interval" class="form-control" style="width: auto; padding: 6px 12px; font-size: 0.85rem; margin-bottom: 0;">
-                            <option value="0">En Demanda (Manual/Webhook)</option>
-                            <option value="15">Cada 15 minutos</option>
-                            <option value="60">Cada hora</option>
-                            <option value="1440" selected>Cada 24 horas (Diario / Cron)</option>
-                            <option value="10080">Cada semana</option>
-                        </select>
+                        <input type="text" id="auto-schedule-interval" class="form-control" style="width: 180px; padding: 6px 12px; font-size: 0.85rem; margin-bottom: 0;" placeholder="Ej: 3 minutos, 1 anio">
                     </div>
                     <button class="btn-submit" id="btn-save-automation" style="width: auto; padding: 10px 24px;">Guardar Algoritmo</button>
                 </div>
@@ -1860,7 +1854,9 @@
             saveAutoBtn.onclick = async () => {
                 const editingId = document.getElementById('auto-editing-id').value;
                 const name = document.getElementById('auto-name').value.trim() || "Nuevo Algoritmo";
-                const scheduleInterval = parseInt(document.getElementById('auto-schedule-interval').value || "0", 10);
+                const scheduleIntervalRaw = (document.getElementById('auto-schedule-interval').value || '').trim() || "Cada 24 horas";
+                const scheduleIntervalNum = parseInt(scheduleIntervalRaw, 10);
+                const scheduleInterval = isNaN(scheduleIntervalNum) ? 1440 : scheduleIntervalNum;
 
                 const cards = workspace.querySelectorAll('.automation-block-card');
                 if (cards.length === 0) {
@@ -1892,10 +1888,11 @@
                 const configJSON = {
                     name: name,
                     blocks: blocksData,
+                    schedule_interval: scheduleIntervalRaw,
                     created_at: new Date().toISOString()
                 };
 
-                const generatedTsCode = generateDeterministicTypeScript(configJSON, scheduleInterval);
+                const generatedTsCode = generateDeterministicTypeScript(configJSON, scheduleIntervalRaw);
 
                 try {
                     if (editingId) {
@@ -1941,8 +1938,8 @@
         function resetAutomationForm() {
             document.getElementById('auto-editing-id').value = '';
             document.getElementById('auto-name').value = '';
-            const scheduleSelect = document.getElementById('auto-schedule-interval');
-            if (scheduleSelect) scheduleSelect.value = "1440";
+            const scheduleInput = document.getElementById('auto-schedule-interval');
+            if (scheduleInput) scheduleInput.value = "Cada 24 horas";
             const workspace = document.getElementById('canvas-blocks-workspace');
             if (workspace) {
                 workspace.innerHTML = `
@@ -1953,7 +1950,7 @@
             }
         }
 
-        function generateDeterministicTypeScript(config, scheduleIntervalMinutes = 1440) {
+        function generateDeterministicTypeScript(config, scheduleIntervalStr = "Cada 24 horas") {
             const slug = (config.name || "algoritmo")
                 .toLowerCase()
                 .normalize("NFD")
@@ -1961,16 +1958,12 @@
                 .replace(/[^a-z0-9]+/g, "-")
                 .replace(/^-+|-+$/g, "") || "algoritmo";
 
-            let cronString = "Manual / En Demanda";
-            if (scheduleIntervalMinutes === 15) cronString = "Cada 15 Minutos (*/15 * * * *)";
-            else if (scheduleIntervalMinutes === 60) cronString = "Cada Hora (0 * * * *)";
-            else if (scheduleIntervalMinutes === 1440) cronString = "Diario / Cada 24 Horas (0 0 * * *)";
-            else if (scheduleIntervalMinutes === 10080) cronString = "Semanal (0 0 * * 0)";
-
+            const cronString = String(scheduleIntervalStr || "Cada 24 horas");
             const blocksJson = JSON.stringify(config.blocks || [], null, 2);
 
             return `// ==============================================================================
 // SUPABASE EDGE FUNCTION: ${config.name}
+// NOMBRE DE LA FUNCIÓN EN SUPABASE: ${slug}
 // RUTA SUGERIDA: supabase/functions/${slug}/index.ts
 // FRECUENCIA DE EJECUCIÓN / CRON: ${cronString}
 // ==============================================================================
@@ -2003,7 +1996,7 @@ serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const blocks = ${blocksJson};
-    const scheduleIntervalMinutes = ${scheduleIntervalMinutes};
+    const scheduleInterval = ${JSON.stringify(cronString)};
 
     // Lógica determinista de ejecución según los bloques configurados
     let processedRecords = 0;
@@ -2048,7 +2041,7 @@ serve(async (req: Request) => {
       success: true,
       algorithmName: "${config.name}",
       functionSlug: "${slug}",
-      scheduleIntervalMinutes,
+      scheduleInterval,
       executedAt: new Date().toISOString(),
       blocksExecuted: blocks.length,
       eventsGenerated,
@@ -2107,7 +2100,7 @@ serve(async (req: Request) => {
                 const isActive = item.status === 'active';
                 const tagClass = isActive ? 'tag-active' : 'tag-inactive';
                 const statusLabel = isActive ? 'ACTIVA' : 'INACTIVA';
-                const intervalText = item.schedule_interval_minutes > 0 ? `Cada ${item.schedule_interval_minutes}m` : 'Tiempo Real';
+                const intervalText = item.config?.schedule_interval || (item.schedule_interval_minutes ? `Cada ${item.schedule_interval_minutes}m` : 'Cada 24 horas');
 
                 return `
                     <div class="knowledge-item" data-id="${item.id}">
@@ -2186,9 +2179,9 @@ serve(async (req: Request) => {
             document.getElementById('auto-editing-id').value = item.id;
             document.getElementById('auto-name').value = item.name;
 
-            const scheduleSelect = document.getElementById('auto-schedule-interval');
-            if (scheduleSelect) {
-                scheduleSelect.value = (item.schedule_interval_minutes || 1440).toString();
+            const scheduleInput = document.getElementById('auto-schedule-interval');
+            if (scheduleInput) {
+                scheduleInput.value = item.config?.schedule_interval || (item.schedule_interval_minutes ? `${item.schedule_interval_minutes} minutos` : 'Cada 24 horas');
             }
 
             const cfg = item.config || {};
