@@ -1020,10 +1020,6 @@
                             <label>Link</label>
                             <input type="text" id="sheet-link">
                         </div>
-                        <div class="form-group">
-                            <label>Descripcion</label>
-                            <textarea id="sheet-description"></textarea>
-                        </div>
                         <button class="btn-submit" id="btn-save-sheet">Guardar Sheet</button>
                     </div>
                 </div>
@@ -1148,32 +1144,20 @@
                         Bloques Disponibles
                     </div>
 
-                    <div class="palette-item" draggable="true" data-type="source">
-                        <span>Fuente de Datos</span>
+                    <div class="palette-item" draggable="true" data-type="datos">
+                        <span>1. DATOS</span>
                     </div>
 
-                    <div class="palette-item" draggable="true" data-type="query">
-                        <span>Consulta de Datos</span>
+                    <div class="palette-item" draggable="true" data-type="condiciones">
+                        <span>2. CONDICIONES</span>
                     </div>
 
-                    <div class="palette-item" draggable="true" data-type="calc">
-                        <span>Cálculo / Operación</span>
+                    <div class="palette-item" draggable="true" data-type="gemini">
+                        <span>3. GEMINI</span>
                     </div>
 
-                    <div class="palette-item" draggable="true" data-type="rule">
-                        <span>Instrucción / Regla</span>
-                    </div>
-
-                    <div class="palette-item" draggable="true" data-type="responder">
-                        <span>Responder (Guía)</span>
-                    </div>
-
-                    <div class="palette-item" draggable="true" data-type="action">
-                        <span>Reacción Menutech IA</span>
-                    </div>
-
-                    <div class="palette-item" draggable="true" data-type="event">
-                        <span>Evento Interno</span>
+                    <div class="palette-item" draggable="true" data-type="acciones">
+                        <span>4. ACCIONES</span>
                     </div>
                 </div>
 
@@ -1458,7 +1442,6 @@
             document.getElementById('btn-save-sheet').onclick = async () => {
                 const title = document.getElementById('sheet-title').value.trim();
                 const link = document.getElementById('sheet-link').value.trim();
-                const description = document.getElementById('sheet-description').value.trim();
 
                 if (!title) {
                     showToast("Por favor ingresa el título del sheet.", "warning");
@@ -1468,7 +1451,7 @@
                 await saveKnowledgeItem({
                     title: title,
                     type: 'sheet',
-                    content: description || (link ? `Google Sheet: ${link}` : 'Google Sheet'),
+                    content: link ? `Google Sheet: ${link}` : 'Google Sheet',
                     link: link,
                     columns: [],
                     metadata: { link: link }
@@ -1476,7 +1459,6 @@
 
                 document.getElementById('sheet-title').value = '';
                 document.getElementById('sheet-link').value = '';
-                document.getElementById('sheet-description').value = '';
             };
         }
 
@@ -1723,12 +1705,12 @@
                 let headerTitle = "BLOQUE DE ALGORITMO";
                 let innerHtml = "";
 
-                if (type === 'source') {
-                    headerTitle = "FUENTE DE DATOS";
-                    const opts = knowledgeData.map(k => `<option value="${k.id}" ${initialData.sourceId === k.id ? 'selected' : ''}>[${k.type.toUpperCase()}] ${escapeHtml(k.title)}</option>`).join('');
+                if (type === 'datos' || type === 'source') {
+                    headerTitle = "BLOQUE 1: DATOS";
+                    const opts = knowledgeData.map(k => `<option value="${k.id}" ${(initialData.sourceId === k.id || initialData.sheetId === k.id) ? 'selected' : ''}>[${k.type.toUpperCase()}] ${escapeHtml(k.title)}</option>`).join('');
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Seleccionar Fuente</label>
+                            <label>Google Sheet / Fuente de Datos</label>
                             <select class="block-field-source" onchange="renderBlockColumns(this)">
                                 <option value="">Seleccionar Fuente...</option>
                                 ${opts}
@@ -1736,69 +1718,92 @@
                         </div>
                         <div class="block-columns-container"></div>
                     `;
-                } else if (type === 'query') {
-                    headerTitle = "CONSULTA DE DATOS";
+                } else if (type === 'condiciones' || type === 'query' || type === 'rule') {
+                    headerTitle = "BLOQUE 2: CONDICIONES";
+                    const op = initialData.operator || 'eq';
+                    const logic = initialData.logicConnector || 'AND';
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Campo / Columna a Consultar</label>
-                            <input type="text" class="block-field-query-col" value="${escapeHtml(initialData.queryCol || '')}">
-                        </div>
-                        <div class="form-group" style="margin-bottom:0;">
-                            <label>Criterio / Clave de Búsqueda</label>
-                            <input type="text" class="block-field-query-val" value="${escapeHtml(initialData.queryVal || '')}">
-                        </div>
-                    `;
-                } else if (type === 'calc') {
-                    headerTitle = "CÁLCULO / OPERACIÓN";
-                    const operationType = initialData.calcType || 'discount';
-                    innerHtml = `
-                        <div class="form-group" style="margin-bottom:8px;">
-                            <label>Tipo de Operación</label>
-                            <select class="block-field-calc-type">
-                                <option value="discount" ${operationType === 'discount' ? 'selected' : ''}>Aplicar Descuento (%)</option>
-                                <option value="formula" ${operationType === 'formula' ? 'selected' : ''}>Fórmula Aritmética Libre</option>
-                                <option value="sum" ${operationType === 'sum' ? 'selected' : ''}>Sumar Columnas</option>
+                            <label>Conector Lógico</label>
+                            <select class="block-field-logic">
+                                <option value="AND" ${logic === 'AND' ? 'selected' : ''}>AND (Y)</option>
+                                <option value="OR" ${logic === 'OR' ? 'selected' : ''}>OR (O)</option>
                             </select>
                         </div>
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Columna(s) Afectada(s)</label>
-                            <input type="text" class="block-field-calc-cols" value="${escapeHtml(initialData.calcCols || '')}">
+                            <label>Columna</label>
+                            <select class="block-field-cond-col">
+                                <option value="">Cargando columnas...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label>Condición</label>
+                            <select class="block-field-cond-op">
+                                <option value="eq" ${op === 'eq' ? 'selected' : ''}>es igual a</option>
+                                <option value="neq" ${op === 'neq' ? 'selected' : ''}>no es igual a</option>
+                                <option value="contains" ${op === 'contains' ? 'selected' : ''}>contiene</option>
+                                <option value="not_contains" ${op === 'not_contains' ? 'selected' : ''}>no contiene</option>
+                                <option value="gt" ${op === 'gt' ? 'selected' : ''}>es mayor que</option>
+                                <option value="lt" ${op === 'lt' ? 'selected' : ''}>es menor que</option>
+                                <option value="in_days" ${op === 'in_days' ? 'selected' : ''}>está dentro de X días</option>
+                                <option value="out_days" ${op === 'out_days' ? 'selected' : ''}>está fuera de X días</option>
+                                <option value="is_empty" ${op === 'is_empty' ? 'selected' : ''}>está vacío</option>
+                                <option value="is_not_empty" ${op === 'is_not_empty' ? 'selected' : ''}>no está vacío</option>
+                            </select>
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
-                            <label>Fórmula o Valor de Cálculo</label>
-                            <input type="text" class="block-field-calc-formula" value="${escapeHtml(initialData.calcFormula || '')}">
+                            <label>Valor / Parámetro</label>
+                            <input type="text" class="block-field-cond-val" value="${escapeHtml(initialData.condVal || initialData.queryVal || '')}">
                         </div>
                     `;
-                } else if (type === 'rule') {
-                    headerTitle = "INSTRUCCIÓN / REGLA";
+                } else if (type === 'gemini' || type === 'responder' || type === 'calc') {
+                    headerTitle = "BLOQUE 3: GEMINI";
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Instrucción / Condición</label>
-                            <textarea class="block-field-rule">${escapeHtml(initialData.ruleText || '')}</textarea>
+                            <label>Objetivo de Gemini</label>
+                            <input type="text" class="block-field-gemini-goal" value="${escapeHtml(initialData.goal || initialData.responderText || '')}">
+                        </div>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label>Columnas a utilizar</label>
+                            <div class="block-gemini-cols-container" style="display:flex; flex-wrap:wrap; gap:6px;">
+                                <span style="font-size:0.75rem; color:var(--text-dim);">Selecciona una Fuente de Datos para ver las columnas disponibles</span>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label>Qué debe analizar</label>
+                            <textarea class="block-field-gemini-analyze" style="min-height:60px;">${escapeHtml(initialData.analyze || '')}</textarea>
+                        </div>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label>Qué debe generar</label>
+                            <textarea class="block-field-gemini-generate" style="min-height:60px;">${escapeHtml(initialData.generate || '')}</textarea>
+                        </div>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label>Tono o Estilo</label>
+                            <input type="text" class="block-field-gemini-tone" value="${escapeHtml(initialData.tone || '')}">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Instrucciones Adicionales (Opcional)</label>
+                            <textarea class="block-field-gemini-extra" style="min-height:60px;">${escapeHtml(initialData.extra || '')}</textarea>
                         </div>
                     `;
-                } else if (type === 'responder') {
-                    headerTitle = "RESPONDER (GUÍA DE RESPUESTA)";
+                } else if (type === 'acciones' || type === 'action' || type === 'event') {
+                    headerTitle = "BLOQUE 4: ACCIONES";
+                    const actType = initialData.actionType || 'notification';
                     innerHtml = `
-                        <div class="form-group" style="margin-bottom:0;">
-                            <label>Guía Intencionada de Respuesta (Gemini interpretará la intención)</label>
-                            <textarea class="block-field-responder">${escapeHtml(initialData.responderText || '')}</textarea>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label>Acción a Ejecutar</label>
+                            <select class="block-field-action-type">
+                                <option value="notification" ${actType === 'notification' ? 'selected' : ''}>Enviar notificación</option>
+                                <option value="task" ${actType === 'task' ? 'selected' : ''}>Crear tarea</option>
+                                <option value="update_sheet" ${actType === 'update_sheet' ? 'selected' : ''}>Actualizar una columna de Google Sheets</option>
+                                <option value="chatbot" ${actType === 'chatbot' ? 'selected' : ''}>Enviar información al chatbot</option>
+                                <option value="edge_function" ${actType === 'edge_function' ? 'selected' : ''}>Ejecutar otra Edge Function</option>
+                                <option value="save_result" ${actType === 'save_result' ? 'selected' : ''}>Guardar resultado</option>
+                            </select>
                         </div>
-                    `;
-                } else if (type === 'action') {
-                    headerTitle = "REACCIÓN MENUTECH IA";
-                    innerHtml = `
                         <div class="form-group" style="margin-bottom:0;">
-                            <label>Instrucciones de Respuesta para Menutech IA</label>
-                            <textarea class="block-field-ia">${escapeHtml(initialData.iaText || '')}</textarea>
-                        </div>
-                    `;
-                } else if (type === 'event') {
-                    headerTitle = "EVENTO INTERNO";
-                    innerHtml = `
-                        <div class="form-group" style="margin-bottom:0;">
-                            <label>Nombre del Evento</label>
-                            <input type="text" class="block-field-event" value="${escapeHtml(initialData.eventName || '')}">
+                            <label>Detalles / Configuración de la Acción</label>
+                            <textarea class="block-field-action-details">${escapeHtml(initialData.actionDetails || initialData.iaText || '')}</textarea>
                         </div>
                     `;
                 }
@@ -1931,7 +1936,8 @@
                 const sourceId = selectEl.value;
                 const container = selectEl.closest('.automation-block-card').querySelector('.block-columns-container');
                 if (!sourceId) {
-                    container.innerHTML = '';
+                    if (container) container.innerHTML = '';
+                    propagateColumnsToOtherBlocks();
                     return;
                 }
 
@@ -1944,7 +1950,7 @@
                     } else if (sourceObj.metadata && Array.isArray(sourceObj.metadata.columns) && sourceObj.metadata.columns.length > 0) {
                         detectedCols = sourceObj.metadata.columns;
                     } else if (sourceObj.link) {
-                        container.innerHTML = `<div style="font-size:0.75rem; color:var(--orange); margin-top:6px;"><div class="loader" style="display:inline-block; vertical-align:middle; width:12px; height:12px; margin-right:6px;"></div>Obteniendo columnas del Google Sheet...</div>`;
+                        if (container) container.innerHTML = `<div style="font-size:0.75rem; color:var(--orange); margin-top:6px;"><div class="loader" style="display:inline-block; vertical-align:middle; width:12px; height:12px; margin-right:6px;"></div>Obteniendo columnas del Google Sheet...</div>`;
                         detectedCols = await fetchGoogleSheetColumns(sourceObj.link);
                         if (detectedCols.length > 0) {
                             sourceObj.columns = detectedCols;
@@ -1967,29 +1973,82 @@
                     }
                 }
 
-                if (detectedCols.length > 0) {
-                    const badgeHtml = detectedCols.map(col => {
-                        const isSelected = preselectedCols.length === 0 || preselectedCols.includes(col);
-                        const activeClass = isSelected ? 'active' : '';
-                        return `<span class="filter-badge block-col-badge ${activeClass}" data-col="${escapeHtml(col)}" onclick="toggleColBadge(this)" style="font-size:0.7rem; cursor:pointer;">${escapeHtml(col)}</span>`;
-                    }).join('');
+                if (container) {
+                    if (detectedCols.length > 0) {
+                        const badgeHtml = detectedCols.map(col => {
+                            const isSelected = preselectedCols.length === 0 || preselectedCols.includes(col);
+                            const activeClass = isSelected ? 'active' : '';
+                            return `<span class="filter-badge block-col-badge ${activeClass}" data-col="${escapeHtml(col)}" onclick="toggleColBadge(this)" style="font-size:0.7rem; cursor:pointer;">${escapeHtml(col)}</span>`;
+                        }).join('');
 
-                    container.innerHTML = `
-                        <div class="form-group" style="margin-top:8px; margin-bottom:0;">
-                            <label>Columnas Detectadas (${detectedCols.length}) - Haz clic para seleccionar las que se usarán en cálculos/consultas</label>
-                            <div style="display:flex; flex-wrap:wrap; gap:6px;">
-                                ${badgeHtml}
+                        container.innerHTML = `
+                            <div class="form-group" style="margin-top:8px; margin-bottom:0;">
+                                <label>Columnas Detectadas (${detectedCols.length}) - Haz clic para seleccionar las que pasarán a los siguientes bloques</label>
+                                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                                    ${badgeHtml}
+                                </div>
                             </div>
-                        </div>
-                    `;
-                } else {
-                    container.innerHTML = `<div style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">Sin columnas tabulares detectadas.</div>`;
+                        `;
+                    } else {
+                        container.innerHTML = `<div style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">Sin columnas tabulares detectadas.</div>`;
+                    }
                 }
+
+                propagateColumnsToOtherBlocks();
                 autoSuggestAlgorithmName();
             };
 
             window.toggleColBadge = (badge) => {
                 badge.classList.toggle('active');
+                propagateColumnsToOtherBlocks();
+            };
+
+            window.propagateColumnsToOtherBlocks = () => {
+                const workspace = document.getElementById('canvas-blocks-workspace');
+                if (!workspace) return;
+
+                let activeCols = [];
+                const datosCards = workspace.querySelectorAll('.automation-block-card[data-block-type="datos"], .automation-block-card[data-block-type="source"]');
+                datosCards.forEach(card => {
+                    const badges = card.querySelectorAll('.block-col-badge.active');
+                    badges.forEach(b => {
+                        const colName = b.getAttribute('data-col');
+                        if (colName && !activeCols.includes(colName)) activeCols.push(colName);
+                    });
+                });
+
+                // Update CONDICIONES dropdowns
+                const condCards = workspace.querySelectorAll('.automation-block-card[data-block-type="condiciones"], .automation-block-card[data-block-type="query"], .automation-block-card[data-block-type="rule"]');
+                condCards.forEach(card => {
+                    const selectEl = card.querySelector('.block-field-cond-col');
+                    if (selectEl) {
+                        const currVal = selectEl.value;
+                        let opts = '<option value="">-- Seleccionar Columna --</option>';
+                        activeCols.forEach(col => {
+                            opts += `<option value="${escapeHtml(col)}" ${col === currVal ? 'selected' : ''}>${escapeHtml(col)}</option>`;
+                        });
+                        selectEl.innerHTML = opts;
+                    }
+                });
+
+                // Update GEMINI columns checkboxes/badges
+                const geminiCards = workspace.querySelectorAll('.automation-block-card[data-block-type="gemini"], .automation-block-card[data-block-type="responder"], .automation-block-card[data-block-type="calc"]');
+                geminiCards.forEach(card => {
+                    const container = card.querySelector('.block-gemini-cols-container');
+                    if (container) {
+                        if (activeCols.length === 0) {
+                            container.innerHTML = `<span style="font-size:0.75rem; color:var(--text-dim);">Selecciona una Fuente de Datos para ver las columnas disponibles</span>`;
+                        } else {
+                            const currentSelected = Array.from(container.querySelectorAll('.block-col-badge.active')).map(el => el.getAttribute('data-col'));
+                            const badgeHtml = activeCols.map(col => {
+                                const isSelected = currentSelected.length === 0 || currentSelected.includes(col);
+                                const activeClass = isSelected ? 'active' : '';
+                                return `<span class="filter-badge block-col-badge ${activeClass}" data-col="${escapeHtml(col)}" onclick="toggleColBadge(this)" style="font-size:0.7rem; cursor:pointer;">${escapeHtml(col)}</span>`;
+                            }).join('');
+                            container.innerHTML = badgeHtml;
+                        }
+                    }
+                });
             };
 
             window.autoSuggestAlgorithmName = () => {
@@ -2038,33 +2097,29 @@
 
                 cards.forEach(card => {
                     const bType = card.getAttribute('data-block-type');
-                    if (bType === 'source') {
+                    if (bType === 'datos' || bType === 'source') {
                         const sourceId = card.querySelector('.block-field-source')?.value || null;
                         const selectedCols = Array.from(card.querySelectorAll('.block-col-badge.active')).map(el => el.getAttribute('data-col'));
-                        blocksData.push({ type: 'source', sourceId, selectedCols });
-                    } else if (bType === 'query') {
-                        const queryCol = card.querySelector('.block-field-query-col')?.value || '';
-                        const queryVal = card.querySelector('.block-field-query-val')?.value || '';
-                        blocksData.push({ type: 'query', queryCol, queryVal });
-                    } else if (bType === 'calc') {
-                        const calcType = card.querySelector('.block-field-calc-type')?.value || 'discount';
-                        const calcCols = card.querySelector('.block-field-calc-cols')?.value || '';
-                        const calcFormula = card.querySelector('.block-field-calc-formula')?.value || '';
-                        blocksData.push({ type: 'calc', calcType, calcCols, calcFormula });
-                    } else if (bType === 'rule') {
-                        const ruleText = card.querySelector('.block-field-rule')?.value || '';
-                        blocksData.push({ type: 'rule', ruleText });
-                    } else if (bType === 'responder') {
-                        const responderText = card.querySelector('.block-field-responder')?.value || '';
-                        blocksData.push({ type: 'responder', responderText });
+                        blocksData.push({ type: 'datos', sourceId, selectedCols });
+                    } else if (bType === 'condiciones' || bType === 'query' || bType === 'rule') {
+                        const logicConnector = card.querySelector('.block-field-logic')?.value || 'AND';
+                        const condCol = card.querySelector('.block-field-cond-col')?.value || '';
+                        const operator = card.querySelector('.block-field-cond-op')?.value || 'eq';
+                        const condVal = card.querySelector('.block-field-cond-val')?.value || '';
+                        blocksData.push({ type: 'condiciones', logicConnector, condCol, operator, condVal });
+                    } else if (bType === 'gemini' || bType === 'responder' || bType === 'calc') {
+                        const goal = card.querySelector('.block-field-gemini-goal')?.value || '';
+                        const usedCols = Array.from(card.querySelectorAll('.block-gemini-cols-container .block-col-badge.active')).map(el => el.getAttribute('data-col'));
+                        const analyze = card.querySelector('.block-field-gemini-analyze')?.value || '';
+                        const generate = card.querySelector('.block-field-gemini-generate')?.value || '';
+                        const tone = card.querySelector('.block-field-gemini-tone')?.value || '';
+                        const extra = card.querySelector('.block-field-gemini-extra')?.value || '';
+                        blocksData.push({ type: 'gemini', goal, usedCols, analyze, generate, tone, extra });
                         isGeminiEnabled = true;
-                    } else if (bType === 'action') {
-                        const iaText = card.querySelector('.block-field-ia')?.value || '';
-                        blocksData.push({ type: 'action', iaText });
-                        isGeminiEnabled = true;
-                    } else if (bType === 'event') {
-                        const eventName = card.querySelector('.block-field-event')?.value || '';
-                        blocksData.push({ type: 'event', eventName });
+                    } else if (bType === 'acciones' || bType === 'action' || bType === 'event') {
+                        const actionType = card.querySelector('.block-field-action-type')?.value || 'notification';
+                        const actionDetails = card.querySelector('.block-field-action-details')?.value || '';
+                        blocksData.push({ type: 'acciones', actionType, actionDetails });
                     }
                 });
 
@@ -2183,7 +2238,7 @@ serve(async (req: Request) => {
     let eventsTriggered = [];
 
     for (const block of blocks) {
-      if (block.type === 'source' && block.sourceId) {
+      if ((block.type === 'datos' || block.type === 'source') && block.sourceId) {
         const { data: sourceObj } = await supabase
           .from('menutech_knowledge')
           .select('*')
@@ -2200,18 +2255,33 @@ serve(async (req: Request) => {
           if (sourceObj.link) contextDataText += \`LINK: \${sourceObj.link}\\n\`;
           contextDataText += \`CONTENIDO:\\n\${sourceObj.content || ''}\\n\`;
         }
-      } else if (block.type === 'query') {
-        systemInstructions.push(\`INSTRUCCIÓN DE CONSULTA: Buscar en la columna '\${block.queryCol}' el criterio '\${block.queryVal}' para responder con los datos coincidentes.\`);
-      } else if (block.type === 'calc') {
-        systemInstructions.push(\`INSTRUCCIÓN DE CÁLCULO: Realizar la operación '\${block.calcType}' en las columnas [\${block.calcCols}] usando la fórmula/porcentaje '\${block.calcFormula}'. CALCULA LOS VALORES MATEMÁTICOS REALES Y DEVUELVE LOS PRECIOS/RESULTADOS OBTENIDOS. NUNCA REPITAS LA FÓRMULA TEXTUALMENTE.\`);
-      } else if (block.type === 'rule') {
-        systemInstructions.push(\`REGLA DE NEGOCIO: \${block.ruleText}\`);
-      } else if (block.type === 'responder') {
-        systemInstructions.push(\`GUÍA DE RESPUESTA INTENCIONADA: Usa la siguiente guía como orientación intencionada del tono y objetivo de la respuesta: "\${block.responderText}". NO repitas esta guía palabra por palabra, sino genera una respuesta natural adaptada a la consulta del usuario.\`);
-      } else if (block.type === 'action') {
-        systemInstructions.push(\`REACCIÓN DE IA: \${block.iaText}\`);
-      } else if (block.type === 'event') {
-        eventsTriggered.push(block.eventName);
+      } else if (block.type === 'condiciones' || block.type === 'query' || block.type === 'rule') {
+        const opLabel = {
+          eq: 'es igual a',
+          neq: 'no es igual a',
+          contains: 'contiene',
+          not_contains: 'no contiene',
+          gt: 'es mayor que',
+          lt: 'es menor que',
+          in_days: 'está dentro de X días',
+          out_days: 'está fuera de X días',
+          is_empty: 'está vacío',
+          is_not_empty: 'no está vacío'
+        }[block.operator] || block.operator || 'cumple condición';
+
+        systemInstructions.push(\`CONDICIÓN (\${block.logicConnector || 'AND'}): Evaluar si la columna '\${block.condCol || block.queryCol}' \${opLabel} '\${block.condVal || block.queryVal || ''}'.\`);
+      } else if (block.type === 'gemini' || block.type === 'responder' || block.type === 'calc') {
+        let geminiInst = \`CONFIGURACIÓN GEMINI:\\n\`;
+        if (block.goal || block.responderText) geminiInst += \` - Objetivo: \${block.goal || block.responderText}\\n\`;
+        if (Array.isArray(block.usedCols) && block.usedCols.length > 0) geminiInst += \` - Columnas a utilizar: \${block.usedCols.join(', ')}\\n\`;
+        if (block.analyze) geminiInst += \` - Qué analizar: \${block.analyze}\\n\`;
+        if (block.generate) geminiInst += \` - Qué generar: \${block.generate}\\n\`;
+        if (block.tone) geminiInst += \` - Tono / Estilo: \${block.tone}\\n\`;
+        if (block.extra) geminiInst += \` - Instrucciones adicionales: \${block.extra}\\n\`;
+        systemInstructions.push(geminiInst);
+      } else if (block.type === 'acciones' || block.type === 'action' || block.type === 'event') {
+        eventsTriggered.push(block.actionType || block.eventName || 'action');
+        systemInstructions.push(\`ACCIÓN A EJECUTAR TRAS GEMINI: [\${block.actionType || 'notificacion'}] \${block.actionDetails || block.iaText || ''}\`);
       }
     }
 
@@ -2480,21 +2550,22 @@ Tu objetivo es EJECUTAR las operaciones, consultar las columnas correspondientes
                 }
 
                 if (automationsData.length > 0) {
-                    contextPrompt += "--- REGLAS, CONSULTAS Y CÁLCULOS DE AUTOMATIZACIONES ACTIVAS ---\n";
+                    contextPrompt += "--- PROCESOS Y AUTOMATIZACIONES ACTIVAS (DATOS -> CONDICIONES -> GEMINI -> ACCIONES) ---\n";
                     automationsData.filter(a => a.status === 'active').forEach((a, idx) => {
                         contextPrompt += `[Algoritmo ${idx + 1}: ${a.name}]\n`;
                         const blocks = a.config?.blocks || [];
-                        blocks.forEach((b, bIdx) => {
-                            if (b.type === 'query') {
-                                contextPrompt += `  - Consulta: Buscar en columna '${b.queryCol}' el criterio '${b.queryVal}'.\n`;
-                            } else if (b.type === 'calc') {
-                                contextPrompt += `  - CÁLCULO REQUERIDO: Aplicar '${b.calcType}' sobre columnas [${b.calcCols}] usando fórmula/porcentaje '${b.calcFormula}'. CALCULA EL VALOR FINAL.\n`;
-                            } else if (b.type === 'rule') {
-                                contextPrompt += `  - Regla: ${b.ruleText}\n`;
-                            } else if (b.type === 'responder') {
-                                contextPrompt += `  - Guía Intencionada de Respuesta (NO repetir literal): ${b.responderText}\n`;
-                            } else if (b.type === 'action') {
-                                contextPrompt += `  - Reacción: ${b.iaText}\n`;
+                        blocks.forEach((b) => {
+                            if (b.type === 'datos' || b.type === 'source') {
+                                const selected = Array.isArray(b.selectedCols) && b.selectedCols.length > 0 ? b.selectedCols.join(', ') : 'Todas';
+                                contextPrompt += `  - 1. DATOS: Columnas seleccionadas: [${selected}]\n`;
+                            } else if (b.type === 'condiciones' || b.type === 'query' || b.type === 'rule') {
+                                const col = b.condCol || b.queryCol || '';
+                                const val = b.condVal || b.queryVal || '';
+                                contextPrompt += `  - 2. CONDICION (${b.logicConnector || 'AND'}): Columna '${col}' ${b.operator || 'eq'} '${val}'.\n`;
+                            } else if (b.type === 'gemini' || b.type === 'responder' || b.type === 'calc') {
+                                contextPrompt += `  - 3. GEMINI: Objetivo: '${b.goal || b.responderText || ''}', Analizar: '${b.analyze || ''}', Generar: '${b.generate || ''}', Tono: '${b.tone || ''}'.\n`;
+                            } else if (b.type === 'acciones' || b.type === 'action' || b.type === 'event') {
+                                contextPrompt += `  - 4. ACCION: [${b.actionType || 'notificacion'}] ${b.actionDetails || b.iaText || ''}\n`;
                             }
                         });
                         contextPrompt += "\n";
