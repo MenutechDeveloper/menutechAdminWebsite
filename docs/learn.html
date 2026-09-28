@@ -1153,7 +1153,7 @@
                     </div>
 
                     <div class="palette-item" draggable="true" data-type="gemini">
-                        <span>3. GEMINI</span>
+                        <span>3. MENUTECH AI</span>
                     </div>
 
                     <div class="palette-item" draggable="true" data-type="acciones">
@@ -1629,16 +1629,66 @@
 
         /* --- VISUAL AUTOMATIONS BUILDER LOGIC --- */
 
-        function populateSourceSheetsSelect() {
-            const select = document.getElementById('auto-source-sheet');
-            if (!select) return;
-            select.innerHTML = '<option value="">Seleccionar Fuente...</option>';
+        const SYSTEM_HTML_SOURCES = [
+            {
+                id: 'sys_orders_html',
+                type: 'html',
+                title: 'orders.html (Historial de Pedidos, Ventas y Métricas en Supabase)',
+                columns: ['ventas_totales', 'ordenes_hoy', 'id_pedido', 'cliente', 'total_monto', 'estado_pedido', 'fecha_creacion'],
+                content: 'Página de pedidos del sistema. Acceso al historial de ventas, montos por orden, estado de preparación, notificaciones y métricas en Supabase.'
+            },
+            {
+                id: 'sys_extractor_html',
+                type: 'html',
+                title: 'extractor.html (Extractor de Menús, Recomendaciones y Tips de Uso)',
+                columns: ['url_restaurante', 'ruid_detectado', 'platillos_extraidos', 'tipo_menu', 'recomendaciones_uso', 'tips_bot'],
+                content: 'Herramienta de extracción de menús. Recomendaciones, tips de uso para el usuario al ingresar a la página y estructuración de platillos.'
+            },
+            {
+                id: 'sys_admin_menus_html',
+                type: 'html',
+                title: 'adminMenus.html (Gestión de Menús, Categorías y Precios)',
+                columns: ['nombre_platillo', 'categoria', 'precio', 'activo', 'variaciones', 'toppings'],
+                content: 'Módulo de administración de menú digital. Configuración de platillos, precios, tamaños, adicionales y categorías.'
+            },
+            {
+                id: 'sys_shirt_html',
+                type: 'html',
+                title: 'shirt.html (Personalizador y Diseñador 3D de Playeras)',
+                columns: ['proyecto_activo', 'cliente', 'plantilla_svg', 'modelo_3d', 'exportacion_dtf'],
+                content: 'Diseñador 3D de playeras. Configuración de proyectos activos, diseños Fabric.js y exportación DTF.'
+            },
+            {
+                id: 'sys_menu_html',
+                type: 'html',
+                title: 'menu.html (Menú Digital para Clientes y Pedidos Online)',
+                columns: ['slug_restaurante', 'platillos_menu', 'total_cuenta', 'estado_carrito'],
+                content: 'Menú interactivo para clientes. Selección de platillos, cálculo de totales y envío de pedidos.'
+            }
+        ];
 
-            knowledgeData.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.id;
-                opt.textContent = `[${item.type.toUpperCase()}] ${item.title}`;
-                select.appendChild(opt);
+        function populateSourceSheetsSelect(selectEl = null) {
+            const selects = selectEl ? [selectEl] : document.querySelectorAll('.block-field-source');
+            selects.forEach(select => {
+                if (!select) return;
+                const currentVal = select.value;
+                let html = '<option value="">Seleccionar Fuente de Datos...</option>';
+
+                html += '<optgroup label="SISTEMA Y PÁGINAS .HTML">';
+                SYSTEM_HTML_SOURCES.forEach(sys => {
+                    html += `<option value="${sys.id}" ${currentVal === sys.id ? 'selected' : ''}>[.HTML] ${escapeHtml(sys.title)}</option>`;
+                });
+                html += '</optgroup>';
+
+                if (knowledgeData && knowledgeData.length > 0) {
+                    html += '<optgroup label="BASE DE CONOCIMIENTO (FAQs, Docs, Sheets)">';
+                    knowledgeData.forEach(item => {
+                        html += `<option value="${item.id}" ${currentVal === item.id ? 'selected' : ''}>[${item.type.toUpperCase()}] ${escapeHtml(item.title)}</option>`;
+                    });
+                    html += '</optgroup>';
+                }
+
+                select.innerHTML = html;
             });
         }
 
@@ -1707,13 +1757,11 @@
 
                 if (type === 'datos' || type === 'source') {
                     headerTitle = "BLOQUE 1: DATOS";
-                    const opts = knowledgeData.map(k => `<option value="${k.id}" ${(initialData.sourceId === k.id || initialData.sheetId === k.id) ? 'selected' : ''}>[${k.type.toUpperCase()}] ${escapeHtml(k.title)}</option>`).join('');
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Google Sheet / Fuente de Datos</label>
+                            <label>Fuente de Datos (Sheet, FAQs, Docs, Páginas .HTML / Sistema)</label>
                             <select class="block-field-source" onchange="renderBlockColumns(this)">
-                                <option value="">Seleccionar Fuente...</option>
-                                ${opts}
+                                <option value="">Cargando fuentes...</option>
                             </select>
                         </div>
                         <div class="block-columns-container"></div>
@@ -1731,9 +1779,9 @@
                             </select>
                         </div>
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Columna</label>
+                            <label>Campo / Columna</label>
                             <select class="block-field-cond-col">
-                                <option value="">Cargando columnas...</option>
+                                <option value="">Cargando campos de la fuente...</option>
                             </select>
                         </div>
                         <div class="form-group" style="margin-bottom:8px;">
@@ -1757,16 +1805,16 @@
                         </div>
                     `;
                 } else if (type === 'gemini' || type === 'responder' || type === 'calc') {
-                    headerTitle = "BLOQUE 3: GEMINI";
+                    headerTitle = "BLOQUE 3: MENUTECH AI";
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Objetivo de Gemini</label>
+                            <label>Objetivo de Menutech AI</label>
                             <input type="text" class="block-field-gemini-goal" value="${escapeHtml(initialData.goal || initialData.responderText || '')}">
                         </div>
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Columnas a utilizar</label>
+                            <label>Campos Vinculados de la Fuente de Datos</label>
                             <div class="block-gemini-cols-container" style="display:flex; flex-wrap:wrap; gap:6px;">
-                                <span style="font-size:0.75rem; color:var(--text-dim);">Selecciona una Fuente de Datos para ver las columnas disponibles</span>
+                                <span style="font-size:0.75rem; color:var(--text-dim);">Selecciona una Fuente de Datos en el Bloque 1 para ver sus campos vinculados</span>
                             </div>
                         </div>
                         <div class="form-group" style="margin-bottom:8px;">
@@ -1817,9 +1865,15 @@
                 `;
 
                 workspace.appendChild(blockCard);
-                if (type === 'source' && initialData.sourceId) {
+                if (type === 'datos' || type === 'source') {
                     const sel = blockCard.querySelector('.block-field-source');
-                    if (sel) renderBlockColumns(sel, initialData.selectedCols || []);
+                    if (sel) {
+                        populateSourceSheetsSelect(sel);
+                        if (initialData.sourceId || initialData.sheetId) {
+                            sel.value = initialData.sourceId || initialData.sheetId;
+                        }
+                        renderBlockColumns(sel, initialData.selectedCols || []);
+                    }
                 }
                 autoSuggestAlgorithmName();
                 initCanvasDragReorder();
@@ -1934,15 +1988,21 @@
 
             window.renderBlockColumns = async (selectEl, preselectedCols = []) => {
                 const sourceId = selectEl.value;
-                const container = selectEl.closest('.automation-block-card').querySelector('.block-columns-container');
+                const card = selectEl.closest('.automation-block-card');
+                const container = card ? card.querySelector('.block-columns-container') : null;
+
                 if (!sourceId) {
                     if (container) container.innerHTML = '';
                     propagateColumnsToOtherBlocks();
                     return;
                 }
 
-                const sourceObj = knowledgeData.find(k => k.id === sourceId);
                 let detectedCols = [];
+                let sourceObj = SYSTEM_HTML_SOURCES.find(s => s.id === sourceId);
+
+                if (!sourceObj) {
+                    sourceObj = knowledgeData.find(k => k.id === sourceId);
+                }
 
                 if (sourceObj) {
                     if (Array.isArray(sourceObj.columns) && sourceObj.columns.length > 0) {
@@ -1950,7 +2010,7 @@
                     } else if (sourceObj.metadata && Array.isArray(sourceObj.metadata.columns) && sourceObj.metadata.columns.length > 0) {
                         detectedCols = sourceObj.metadata.columns;
                     } else if (sourceObj.link) {
-                        if (container) container.innerHTML = `<div style="font-size:0.75rem; color:var(--orange); margin-top:6px;"><div class="loader" style="display:inline-block; vertical-align:middle; width:12px; height:12px; margin-right:6px;"></div>Obteniendo columnas del Google Sheet...</div>`;
+                        if (container) container.innerHTML = `<div style="font-size:0.75rem; color:var(--orange); margin-top:6px;"><div class="loader" style="display:inline-block; vertical-align:middle; width:12px; height:12px; margin-right:6px;"></div>Obteniendo columnas de Google Sheet...</div>`;
                         detectedCols = await fetchGoogleSheetColumns(sourceObj.link);
                         if (detectedCols.length > 0) {
                             sourceObj.columns = detectedCols;
@@ -1958,17 +2018,23 @@
                     }
 
                     if (detectedCols.length === 0 && sourceObj.content) {
-                        const lines = sourceObj.content.split('\n');
-                        const firstLine = lines[0] || '';
-                        if (firstLine.includes(',')) {
-                            detectedCols = firstLine.split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
+                        if (sourceObj.type === 'faq') {
+                            detectedCols = ['pregunta', 'respuesta'];
+                        } else if (sourceObj.type === 'document') {
+                            detectedCols = ['titulo', 'contenido'];
                         } else {
-                            lines.forEach(l => {
-                                if (l.includes(':')) {
-                                    const key = l.split(':')[0].trim();
-                                    if (key && !detectedCols.includes(key)) detectedCols.push(key);
-                                }
-                            });
+                            const lines = sourceObj.content.split('\n');
+                            const firstLine = lines[0] || '';
+                            if (firstLine.includes(',')) {
+                                detectedCols = firstLine.split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
+                            } else {
+                                lines.forEach(l => {
+                                    if (l.includes(':')) {
+                                        const key = l.split(':')[0].trim();
+                                        if (key && !detectedCols.includes(key)) detectedCols.push(key);
+                                    }
+                                });
+                            }
                         }
                     }
                 }
@@ -1983,14 +2049,14 @@
 
                         container.innerHTML = `
                             <div class="form-group" style="margin-top:8px; margin-bottom:0;">
-                                <label>Columnas Detectadas (${detectedCols.length}) - Haz clic para seleccionar las que pasarán a los siguientes bloques</label>
+                                <label>Campos Detectados (${detectedCols.length}) - Haz clic para seleccionar los que pasarán a los siguientes bloques</label>
                                 <div style="display:flex; flex-wrap:wrap; gap:6px;">
                                     ${badgeHtml}
                                 </div>
                             </div>
                         `;
                     } else {
-                        container.innerHTML = `<div style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">Sin columnas tabulares detectadas.</div>`;
+                        container.innerHTML = `<div style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">Sin campos tabulares detectados.</div>`;
                     }
                 }
 
@@ -2008,8 +2074,14 @@
                 if (!workspace) return;
 
                 let activeCols = [];
+                let selectedSourceObj = null;
+
                 const datosCards = workspace.querySelectorAll('.automation-block-card[data-block-type="datos"], .automation-block-card[data-block-type="source"]');
                 datosCards.forEach(card => {
+                    const sourceId = card.querySelector('.block-field-source')?.value;
+                    if (sourceId) {
+                        selectedSourceObj = SYSTEM_HTML_SOURCES.find(s => s.id === sourceId) || knowledgeData.find(k => k.id === sourceId);
+                    }
                     const badges = card.querySelectorAll('.block-col-badge.active');
                     badges.forEach(b => {
                         const colName = b.getAttribute('data-col');
@@ -2023,7 +2095,7 @@
                     const selectEl = card.querySelector('.block-field-cond-col');
                     if (selectEl) {
                         const currVal = selectEl.value;
-                        let opts = '<option value="">-- Seleccionar Columna --</option>';
+                        let opts = '<option value="">-- Seleccionar Campo --</option>';
                         activeCols.forEach(col => {
                             opts += `<option value="${escapeHtml(col)}" ${col === currVal ? 'selected' : ''}>${escapeHtml(col)}</option>`;
                         });
@@ -2031,21 +2103,34 @@
                     }
                 });
 
-                // Update GEMINI columns checkboxes/badges
+                // Update MENUTECH AI (Bloque 3) columns badges & auto-suggestions
                 const geminiCards = workspace.querySelectorAll('.automation-block-card[data-block-type="gemini"], .automation-block-card[data-block-type="responder"], .automation-block-card[data-block-type="calc"]');
                 geminiCards.forEach(card => {
                     const container = card.querySelector('.block-gemini-cols-container');
                     if (container) {
                         if (activeCols.length === 0) {
-                            container.innerHTML = `<span style="font-size:0.75rem; color:var(--text-dim);">Selecciona una Fuente de Datos para ver las columnas disponibles</span>`;
+                            container.innerHTML = `<span style="font-size:0.75rem; color:var(--text-dim);">Selecciona una Fuente de Datos en el Bloque 1 para ver sus campos vinculados</span>`;
                         } else {
-                            const currentSelected = Array.from(container.querySelectorAll('.block-col-badge.active')).map(el => el.getAttribute('data-col'));
                             const badgeHtml = activeCols.map(col => {
-                                const isSelected = currentSelected.length === 0 || currentSelected.includes(col);
-                                const activeClass = isSelected ? 'active' : '';
-                                return `<span class="filter-badge block-col-badge ${activeClass}" data-col="${escapeHtml(col)}" onclick="toggleColBadge(this)" style="font-size:0.7rem; cursor:pointer;">${escapeHtml(col)}</span>`;
+                                return `<span class="filter-badge block-col-badge active" data-col="${escapeHtml(col)}" style="font-size:0.7rem; cursor:default;">${escapeHtml(col)}</span>`;
                             }).join('');
                             container.innerHTML = badgeHtml;
+                        }
+                    }
+
+                    // Auto-adapt goals if goal is empty and a source was selected
+                    const goalInput = card.querySelector('.block-field-gemini-goal');
+                    if (goalInput && selectedSourceObj && !goalInput.value.trim()) {
+                        if (selectedSourceObj.id === 'sys_orders_html') {
+                            goalInput.value = 'Revisar ventas e historial de pedidos y alertar si las ventas son menores a 100';
+                        } else if (selectedSourceObj.id === 'sys_extractor_html') {
+                            goalInput.value = 'Mostrar recomendaciones y tips de uso del extractor de menús';
+                        } else if (selectedSourceObj.type === 'faq') {
+                            goalInput.value = 'Responder consultas del usuario utilizando la base de FAQs';
+                        } else if (selectedSourceObj.type === 'document') {
+                            goalInput.value = 'Analizar el documento y extraer información clave';
+                        } else {
+                            goalInput.value = `Procesar y analizar ${selectedSourceObj.title}`;
                         }
                     }
                 });
@@ -2199,15 +2284,6 @@
 // RUTA SUGERIDA: supabase/functions/${slug}/index.ts
 // SECRET REQUERIDO EN SUPABASE: GEMINI_API_KEY
 // ==============================================================================
-// INSTRUCCIONES DE CREACIÓN Y DESPLIEGUE EN SUPABASE:
-// 1. En la consola web de Supabase, crea una Edge Function con el nombre exacto:
-//    ${slug}
-// 2. O desde tu terminal local usando Supabase CLI:
-//    supabase functions new ${slug}
-// 3. Copia y pega este código en index.ts y guarda los cambios.
-// 4. Despliega la función ejecutando:
-//    supabase functions deploy ${slug} --no-verify-jwt
-// ==============================================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
@@ -2216,6 +2292,14 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const SYSTEM_HTML_SOURCES = [
+  { id: 'sys_orders_html', title: 'orders.html (Historial de Pedidos, Ventas y Métricas en Supabase)' },
+  { id: 'sys_extractor_html', title: 'extractor.html (Extractor de Menús, Recomendaciones y Tips de Uso)' },
+  { id: 'sys_admin_menus_html', title: 'adminMenus.html (Gestión de Menús, Categorías y Precios)' },
+  { id: 'sys_shirt_html', title: 'shirt.html (Personalizador y Diseñador 3D de Playeras)' },
+  { id: 'sys_menu_html', title: 'menu.html (Menú Digital para Clientes y Pedidos Online)' }
+];
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -2239,11 +2323,15 @@ serve(async (req: Request) => {
 
     for (const block of blocks) {
       if ((block.type === 'datos' || block.type === 'source') && block.sourceId) {
-        const { data: sourceObj } = await supabase
-          .from('menutech_knowledge')
-          .select('*')
-          .eq('id', block.sourceId)
-          .single();
+        let sourceObj = SYSTEM_HTML_SOURCES.find(s => s.id === block.sourceId);
+        if (!sourceObj) {
+          const { data: dbObj } = await supabase
+            .from('menutech_knowledge')
+            .select('*')
+            .eq('id', block.sourceId)
+            .single();
+          sourceObj = dbObj;
+        }
 
         if (sourceObj) {
           let colsStr = Array.isArray(block.selectedCols) && block.selectedCols.length > 0
@@ -2251,9 +2339,17 @@ serve(async (req: Request) => {
             : (Array.isArray(sourceObj.columns) ? sourceObj.columns.join(', ') : 'Todas');
 
           contextDataText += \`\\n--- FUENTE DE DATOS: \${sourceObj.title} ---\\n\`;
-          contextDataText += \`COLUMNAS DISPONIBLES / SELECCIONADAS: \${colsStr}\\n\`;
+          contextDataText += \`CAMPOS SELECCIONADOS: \${colsStr}\\n\`;
           if (sourceObj.link) contextDataText += \`LINK: \${sourceObj.link}\\n\`;
-          contextDataText += \`CONTENIDO:\\n\${sourceObj.content || ''}\\n\`;
+          if (sourceObj.content) contextDataText += \`CONTENIDO / DESCRIPCIÓN:\\n\${sourceObj.content}\\n\`;
+
+          if (block.sourceId === 'sys_orders_html') {
+            const { count, data: orders } = await supabase
+              .from('menutech_tickets')
+              .select('*', { count: 'exact' })
+              .limit(10);
+            contextDataText += \`\\n[DATOS EN TIEMPO REAL SUPABASE ORDERS]: Total pedidos registrados = \${count || 0}\\n\`;
+          }
         }
       } else if (block.type === 'condiciones' || block.type === 'query' || block.type === 'rule') {
         const opLabel = {
@@ -2269,25 +2365,24 @@ serve(async (req: Request) => {
           is_not_empty: 'no está vacío'
         }[block.operator] || block.operator || 'cumple condición';
 
-        systemInstructions.push(\`CONDICIÓN (\${block.logicConnector || 'AND'}): Evaluar si la columna '\${block.condCol || block.queryCol}' \${opLabel} '\${block.condVal || block.queryVal || ''}'.\`);
+        systemInstructions.push(\`CONDICIÓN (\${block.logicConnector || 'AND'}): Evaluar si el campo '\${block.condCol || block.queryCol}' \${opLabel} '\${block.condVal || block.queryVal || ''}'.\`);
       } else if (block.type === 'gemini' || block.type === 'responder' || block.type === 'calc') {
-        let geminiInst = \`CONFIGURACIÓN GEMINI:\\n\`;
-        if (block.goal || block.responderText) geminiInst += \` - Objetivo: \${block.goal || block.responderText}\\n\`;
-        if (Array.isArray(block.usedCols) && block.usedCols.length > 0) geminiInst += \` - Columnas a utilizar: \${block.usedCols.join(', ')}\\n\`;
-        if (block.analyze) geminiInst += \` - Qué analizar: \${block.analyze}\\n\`;
-        if (block.generate) geminiInst += \` - Qué generar: \${block.generate}\\n\`;
-        if (block.tone) geminiInst += \` - Tono / Estilo: \${block.tone}\\n\`;
-        if (block.extra) geminiInst += \` - Instrucciones adicionales: \${block.extra}\\n\`;
-        systemInstructions.push(geminiInst);
+        let aiInst = \`CONFIGURACIÓN MENUTECH AI:\\n\`;
+        if (block.goal || block.responderText) aiInst += \` - Objetivo: \${block.goal || block.responderText}\\n\`;
+        if (block.analyze) aiInst += \` - Qué analizar: \${block.analyze}\\n\`;
+        if (block.generate) aiInst += \` - Qué generar: \${block.generate}\\n\`;
+        if (block.tone) aiInst += \` - Tono / Estilo: \${block.tone}\\n\`;
+        if (block.extra) aiInst += \` - Instrucciones adicionales: \${block.extra}\\n\`;
+        systemInstructions.push(aiInst);
       } else if (block.type === 'acciones' || block.type === 'action' || block.type === 'event') {
         eventsTriggered.push(block.actionType || block.eventName || 'action');
-        systemInstructions.push(\`ACCIÓN A EJECUTAR TRAS GEMINI: [\${block.actionType || 'notificacion'}] \${block.actionDetails || block.iaText || ''}\`);
+        systemInstructions.push(\`ACCIÓN A EJECUTAR TRAS PROCESAMIENTO: [\${block.actionType || 'notificacion'}] \${block.actionDetails || block.iaText || ''}\`);
       }
     }
 
     const aiSystemPrompt = \`Eres Menutech AI, un asistente inteligente de restaurante/plataforma.
-NO repitas de forma literal las instrucciones o reglas de configuración.
-Tu trabajo es EJECUTAR las operaciones, realizar los CÁLCULOS matemáticos reales (descuentos, sumas, precios finales) sobre las fuentes de datos y responder de manera atenta, clara y conversacional.
+NO repitas de forma literal las instrucciones de configuración.
+Tu trabajo es EJECUTAR las operaciones, realizar los CÁLCULOS matemáticos reales sobre las fuentes de datos y responder de manera atenta, clara y conversacional.
 
 \${contextDataText}
 
@@ -2310,7 +2405,7 @@ Procesa la solicitud realizando las consultas y cálculos solicitados. Responde 
       const geminiData = await geminiRes.json();
       reply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "Procesado con éxito.";
     } else {
-      reply = "Ejecutado (Sin GEMINI_API_KEY configurada). Prompt generado:\\n" + aiSystemPrompt;
+      reply = "Ejecutado por Menutech AI (Sin GEMINI_API_KEY configurada). Prompt generado:\\n" + aiSystemPrompt;
     }
 
     return new Response(JSON.stringify({
@@ -2380,7 +2475,7 @@ Procesa la solicitud realizando las consultas y cálculos solicitados. Responde 
                             <div class="item-title">${escapeHtml(item.name)}</div>
                             <span class="item-type-tag ${tagClass}">${statusLabel}</span>
                         </div>
-                        <div class="item-content">Bloques: ${blockCount} | Gemini: ${item.gemini_enabled ? 'Sí' : 'No'}</div>
+                        <div class="item-content">Bloques: ${blockCount} | Menutech AI: ${item.gemini_enabled ? 'Sí' : 'No'}</div>
                         <div class="item-footer">
                             <span>${dateStr}</span>
                             <div class="item-actions">
@@ -2550,20 +2645,20 @@ Tu objetivo es EJECUTAR las operaciones, consultar las columnas correspondientes
                 }
 
                 if (automationsData.length > 0) {
-                    contextPrompt += "--- PROCESOS Y AUTOMATIZACIONES ACTIVAS (DATOS -> CONDICIONES -> GEMINI -> ACCIONES) ---\n";
+                    contextPrompt += "--- PROCESOS Y AUTOMATIZACIONES ACTIVAS (DATOS -> CONDICIONES -> MENUTECH AI -> ACCIONES) ---\n";
                     automationsData.filter(a => a.status === 'active').forEach((a, idx) => {
                         contextPrompt += `[Algoritmo ${idx + 1}: ${a.name}]\n`;
                         const blocks = a.config?.blocks || [];
                         blocks.forEach((b) => {
                             if (b.type === 'datos' || b.type === 'source') {
                                 const selected = Array.isArray(b.selectedCols) && b.selectedCols.length > 0 ? b.selectedCols.join(', ') : 'Todas';
-                                contextPrompt += `  - 1. DATOS: Columnas seleccionadas: [${selected}]\n`;
+                                contextPrompt += `  - 1. DATOS: Campos seleccionados: [${selected}]\n`;
                             } else if (b.type === 'condiciones' || b.type === 'query' || b.type === 'rule') {
                                 const col = b.condCol || b.queryCol || '';
                                 const val = b.condVal || b.queryVal || '';
-                                contextPrompt += `  - 2. CONDICION (${b.logicConnector || 'AND'}): Columna '${col}' ${b.operator || 'eq'} '${val}'.\n`;
+                                contextPrompt += `  - 2. CONDICION (${b.logicConnector || 'AND'}): Campo '${col}' ${b.operator || 'eq'} '${val}'.\n`;
                             } else if (b.type === 'gemini' || b.type === 'responder' || b.type === 'calc') {
-                                contextPrompt += `  - 3. GEMINI: Objetivo: '${b.goal || b.responderText || ''}', Analizar: '${b.analyze || ''}', Generar: '${b.generate || ''}', Tono: '${b.tone || ''}'.\n`;
+                                contextPrompt += `  - 3. MENUTECH AI: Objetivo: '${b.goal || b.responderText || ''}', Analizar: '${b.analyze || ''}', Generar: '${b.generate || ''}', Tono: '${b.tone || ''}'.\n`;
                             } else if (b.type === 'acciones' || b.type === 'action' || b.type === 'event') {
                                 contextPrompt += `  - 4. ACCION: [${b.actionType || 'notificacion'}] ${b.actionDetails || b.iaText || ''}\n`;
                             }
