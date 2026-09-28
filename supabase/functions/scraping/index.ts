@@ -10,23 +10,34 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Helper function to clean minified JS, CSS styles, and useless markup noise
+// Clean minified JS, CSS styles, and markup noise
 function sanitizeHtmlAndRawData(content: any): string {
   if (!content) return "";
   let str = typeof content === "string" ? content : JSON.stringify(content);
 
-  // Strip script and style tags completely along with their contents
+  // Strip script, style, and svg tags completely along with their contents
   str = str.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, " ");
   str = str.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, " ");
   str = str.replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, " ");
 
-  // Remove inline JS code signatures (e.g., function(...), closure_uid, etc.)
+  // Remove inline JS code signatures
   str = str.replace(/function\s*\([^)]*\)\s*\{[^}]*\}/g, " ");
   str = str.replace(/var\s+[a-zA-Z0-9_$]+\s*=\s*function\b/g, " ");
 
   // Collapse multiple whitespaces
   str = str.replace(/\s+/g, " ").trim();
   return str;
+}
+
+// Extract ruid / restaurant_uid from URL
+function extractRuidFromUrl(urlStr: string): string | null {
+  try {
+    const parsed = new URL(urlStr);
+    const ruid = parsed.searchParams.get("restaurant_uid") || parsed.searchParams.get("ruid");
+    if (ruid) return ruid;
+  } catch (_) {}
+  const match = urlStr.match(/(?:restaurant_uid|ruid)=([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
+  return match ? match[1] : null;
 }
 
 serve(async (req: Request) => {
@@ -36,16 +47,20 @@ serve(async (req: Request) => {
 
   try {
     const payload = await req.json().catch(() => ({}));
-    const { url, prompt, mode: reqMode } = payload;
+    let { url, prompt, mode: reqMode } = payload;
 
-    if (!url) {
+    if (!url || typeof url !== "string" || !url.trim()) {
       return new Response(
         JSON.stringify({ error: "Debe proporcionar una URL o término de búsqueda válido." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Auto-detect mode if Google search/maps URL or query
+    url = url.trim();
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url;
+    }
+
     let mode = reqMode || "extract";
     if (url.includes("google.com/search") || url.includes("google.com/maps") || mode === "search") {
       mode = "search";
@@ -53,94 +68,136 @@ serve(async (req: Request) => {
 
     const defaultPrompt = mode === "search"
       ? "Analiza los datos obtenidos de la búsqueda y extrae la información disponible de cada restaurante o negocio encontrado, incluyendo nombre, categoría, dirección, teléfono, sitio web, URL de Google Maps, calificación, número de reseñas, horarios y zona."
-      : "Extrae todos los datos e información relevante disponible de esta página de forma precisa.";
+      : "Extrae todos los platillos, categorías, precios, descripciones, imágenes y datos del restaurante disponibles.";
 
     const userPrompt = prompt && prompt.trim() !== "" ? prompt.trim() : defaultPrompt;
     const geminiApiKey = (Deno.env.get("GEMINI_API_KEY") || "").trim();
     const sgaiApiKey = (Deno.env.get("SGAI_API_KEY") || Deno.env.get("SCRAPEGRAPH_API_KEY") || "").trim();
 
-    // 1. Scrape content using ScrapeGraph AI according to requested mode
     let scrapedData: any = null;
     let sgError: string | null = null;
 
-    try {
-      let sgai: any;
-      if (sgaiApiKey) {
+    // 1. Check if URL contains Menutech / Foodbooking digital menu RUID directly
+    const digitalRuid = extractRuidFromUrl(url);
+    if (digitalRuid) {
+      console.log(`Detected digital ordering RUID: ${digitalRuid}`);
+      const apiEndpoints = [
+        `https://www.menu-technology.com/api/restaurant/${digitalRuid}`,
+        `https://www.foodbooking.com/api/restaurant/${digitalRuid}`,
+      ];
+
+      for (const endpoint of apiEndpoints) {
+        try {
+          const apiRes = await fetch(endpoint, { headers: { "Accept": "application/json" } });
+          if (apiRes.ok) {
+            const menuJson = await apiRes.json();
+            if (menuJson && (menuJson.menu || menuJson.name || menuJson.categories)) {
+              scrapedData = menuJson;
+              console.log("Successfully retrieved digital ordering menu data via API");
+              break;
+            }
+          }
+        } catch (apiErr) {
+          console.warn("Digital menu API fetch failed:", apiErr);
+        }
+      }
+    }
+
+    // 2. Scrape content using ScrapeGraph AI if no digital API data obtained
+    if (!scrapedData && sgaiApiKey) {
+      try {
+        let sgai: any;
         try {
           sgai = typeof ScrapeGraphAI === "function" ? (ScrapeGraphAI as any)({ apiKey: sgaiApiKey }) : new (ScrapeGraphAI as any)({ apiKey: sgaiApiKey });
         } catch (_) {
           sgai = (ScrapeGraphAI as any)({ apiKey: sgaiApiKey });
         }
-      } else {
+
+        if (mode === "search" && typeof sgai.search === "function") {
+          const res = await sgai.search({ prompt: userPrompt, url: url });
+          scrapedData = res?.data || res?.result || res;
+        } else if (mode === "scrape" && typeof sgai.markdownify === "function") {
+          const res = await sgai.markdownify({ url: url });
+          scrapedData = res?.data || res?.result || res;
+        } else if (mode === "crawl" && typeof sgai.crawl === "function") {
+          const res = await sgai.crawl({ url: url, prompt: userPrompt });
+          scrapedData = res?.data || res?.result || res;
+        } else if (typeof sgai.extract === "function") {
+          const res = await sgai.extract({ url: url, prompt: userPrompt });
+          scrapedData = res?.data || res?.result || res;
+        }
+      } catch (err: any) {
+        console.warn("ScrapeGraphAI SDK call failed:", err?.message || err);
+        sgError = err?.message || String(err);
+      }
+
+      // Invalidate scrapedData if ScrapeGraph SDK returned an error response
+      if (scrapedData && (scrapedData.status === "error" || scrapedData.error)) {
+        console.warn("ScrapeGraph SDK returned error status:", scrapedData);
+        sgError = scrapedData.error || scrapedData.status;
+        scrapedData = null;
+      }
+
+      // Fallback REST call to ScrapeGraph AI endpoints if SDK failed
+      if (!scrapedData) {
         try {
-          sgai = typeof ScrapeGraphAI === "function" ? (ScrapeGraphAI as any)() : new (ScrapeGraphAI as any)();
-        } catch (_) {
-          sgai = (ScrapeGraphAI as any)();
+          let endpoint = "https://api.scrapegraphai.com/v1/smartscraper";
+          let bodyPayload: any = { website_url: url, user_prompt: userPrompt };
+
+          if (mode === "search") {
+            endpoint = "https://api.scrapegraphai.com/v1/smartsearch";
+            bodyPayload = { user_prompt: `${userPrompt}. Query/URL: ${url}` };
+          } else if (mode === "scrape") {
+            endpoint = "https://api.scrapegraphai.com/v1/markdownify";
+            bodyPayload = { website_url: url };
+          } else if (mode === "crawl") {
+            endpoint = "https://api.scrapegraphai.com/v1/crawler";
+            bodyPayload = { website_url: url, user_prompt: userPrompt };
+          }
+
+          const sgRes = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "sgai-api-key": sgaiApiKey,
+            },
+            body: JSON.stringify(bodyPayload),
+          });
+
+          if (sgRes.ok) {
+            const sgJson = await sgRes.json();
+            if (sgJson && sgJson.status !== "error" && !sgJson.error) {
+              scrapedData = sgJson.result || sgJson.data || sgJson;
+            } else {
+              console.warn("ScrapeGraph REST returned error object:", sgJson);
+              sgError = JSON.stringify(sgJson);
+            }
+          } else {
+            const errText = await sgRes.text().catch(() => "");
+            console.warn(`ScrapeGraph REST status ${sgRes.status}:`, errText);
+            sgError = `HTTP ${sgRes.status} ${errText}`;
+          }
+        } catch (fErr: any) {
+          console.warn("ScrapeGraph REST fallback failed:", fErr);
         }
-      }
-
-      if (mode === "search" && typeof sgai.search === "function") {
-        const res = await sgai.search({ prompt: userPrompt, url: url });
-        scrapedData = res?.data || res?.result || res;
-      } else if (mode === "scrape" && typeof sgai.markdownify === "function") {
-        const res = await sgai.markdownify({ url: url });
-        scrapedData = res?.data || res?.result || res;
-      } else if (mode === "crawl" && typeof sgai.crawl === "function") {
-        const res = await sgai.crawl({ url: url, prompt: userPrompt });
-        scrapedData = res?.data || res?.result || res;
-      } else if (typeof sgai.extract === "function") {
-        const res = await sgai.extract({ url: url, prompt: userPrompt });
-        scrapedData = res?.data || res?.result || res;
-      }
-    } catch (err: any) {
-      console.warn("ScrapeGraphAI SDK call failed:", err?.message || err);
-      sgError = err?.message || String(err);
-    }
-
-    // Fallback REST call to ScrapeGraph AI if SDK didn't return data and API Key exists
-    if (!scrapedData && sgaiApiKey) {
-      try {
-        let endpoint = "https://api.scrapegraphai.com/v1/smartscraper";
-        let bodyPayload: any = { website_url: url, user_prompt: userPrompt };
-
-        if (mode === "search") {
-          endpoint = "https://api.scrapegraphai.com/v1/smartsearch";
-          bodyPayload = { user_prompt: `${userPrompt}. Target query/URL: ${url}` };
-        } else if (mode === "scrape") {
-          endpoint = "https://api.scrapegraphai.com/v1/markdownify";
-          bodyPayload = { website_url: url };
-        } else if (mode === "crawl") {
-          endpoint = "https://api.scrapegraphai.com/v1/crawler";
-          bodyPayload = { website_url: url, user_prompt: userPrompt };
-        }
-
-        const sgRes = await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "sgai-api-key": sgaiApiKey,
-          },
-          body: JSON.stringify(bodyPayload),
-        });
-
-        if (sgRes.ok) {
-          const sgJson = await sgRes.json();
-          scrapedData = sgJson.result || sgJson.data || sgJson;
-        }
-      } catch (fErr: any) {
-        console.warn("ScrapeGraph REST fallback failed:", fErr);
       }
     }
 
-    // Fallback direct HTML fetch if ScrapeGraph data is unavailable
+    // 3. Direct HTML fetch fallback if ScrapeGraph data is unavailable or errored
     if (!scrapedData && url.startsWith("http")) {
       try {
+        console.log("Attempting direct HTML fetch fallback for:", url);
         const pageRes = await fetch(url, {
-          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+          },
         });
         if (pageRes.ok) {
           const rawHtml = await pageRes.text();
-          scrapedData = { rawHtml: rawHtml };
+          if (rawHtml && rawHtml.length > 100) {
+            scrapedData = { rawHtml: rawHtml };
+          }
         }
       } catch (hErr: any) {
         console.warn("HTML fetch fallback failed:", hErr);
@@ -159,13 +216,13 @@ serve(async (req: Request) => {
     // Clean and sanitize scraped payload before feeding Gemini
     const cleanedTextData = sanitizeHtmlAndRawData(scrapedData);
 
-    // 2. Format with Google Gemini
+    // 4. Format with Google Gemini API
     if (!geminiApiKey) {
       return new Response(
         JSON.stringify({
           data: scrapedData,
           type: "generic",
-          warning: "GEMINI_API_KEY no encontrada. Se devolvieron los datos procesados únicamente por ScrapeGraph AI.",
+          warning: "GEMINI_API_KEY no encontrada. Se devolvieron los datos brutos de la extracción.",
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -195,12 +252,12 @@ ESTRUCTURAS PERMITIDAS SEGÚN EL TIPO DE DATOS ENCONTRADOS:
       "dishes": [
         {
           "name": "Nombre real del platillo",
-          "price": "Precio real",
-          "description": "Descripción real",
-          "image": "URL real de la imagen",
+          "price": "Precio real (ej. $12.50)",
+          "description": "Descripción real del platillo",
+          "image": "URL de la imagen del platillo si está disponible",
           "availability": "Disponibilidad real",
-          "variants": ["Variante 1"],
-          "extras": ["Extra 1"]
+          "variants": ["Tamaños o variantes reales"],
+          "extras": ["Opciones o extras reales"]
         }
       ]
     }
@@ -241,8 +298,8 @@ ESTRUCTURAS PERMITIDAS SEGÚN EL TIPO DE DATOS ENCONTRADOS:
   ]
 }
 
-DATOS SCRAPEADOS REALES A ANALIZAR:
-${cleanedTextData.substring(0, 90000)}`;
+DATOS BRUTOS REALES A ANALIZAR:
+${cleanedTextData.substring(0, 95000)}`;
 
     const geminiPayload = {
       contents: [{ parts: [{ text: geminiSystemPrompt }] }],
@@ -277,9 +334,12 @@ ${cleanedTextData.substring(0, 90000)}`;
             geminiResponseText = candText;
             break;
           }
+        } else {
+          const errText = await gRes.text();
+          console.warn(`Gemini model ${modelName} returned status ${gRes.status}:`, errText);
         }
       } catch (mErr) {
-        console.warn(`Gemini model ${modelName} failed:`, mErr);
+        console.warn(`Gemini model ${modelName} fetch failed:`, mErr);
       }
     }
 
@@ -288,7 +348,7 @@ ${cleanedTextData.substring(0, 90000)}`;
         JSON.stringify({
           data: scrapedData,
           type: "generic",
-          warning: "No se pudo obtener respuesta estructurada de Gemini API. Mostrando datos de ScrapeGraph.",
+          warning: "No se pudo obtener respuesta estructurada de Gemini API. Devolviendo datos extraídos.",
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -306,7 +366,7 @@ ${cleanedTextData.substring(0, 90000)}`;
     try {
       finalStructuredData = JSON.parse(cleanJsonStr);
     } catch (parseErr) {
-      console.warn("Failed to parse Gemini output as JSON, returning formatted generic fallback", parseErr);
+      console.warn("Failed to parse Gemini output as JSON:", parseErr);
       finalStructuredData = {
         type: "generic",
         title: "Resultado de Extracción",
