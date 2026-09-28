@@ -486,7 +486,7 @@
             const wrapper = document.getElementById('results-wrapper');
             display.innerHTML = '';
 
-            const isMenu = data.type === 'menu' || data.categories || data.restaurant;
+            const isMenu = data.type === 'menu' || data.categories || data.restaurant || data.data?.menu || data.menu?.categories;
             const isBusinessList = data.type === 'business_list' || (Array.isArray(data.businesses) && data.businesses.length > 0);
 
             if (isMenu) {
@@ -502,8 +502,8 @@
         }
 
         function renderMenuUI(container, data) {
-            const r = data.restaurant || {};
-            const categories = data.categories || [];
+            const r = data.restaurant || data.menu || {};
+            const categories = data.categories || data.menu?.categories || data.data?.menu?.categories || data.data?.categories || [];
 
             let html = `
                 <div class="info-card">
@@ -550,7 +550,7 @@
                                                 ${d.image ? `<img src="${d.image}" class="dish-img" alt="${d.name}" onerror="this.style.display='none'">` : ''}
                                                 <div class="dish-main-info">
                                                     <div class="dish-name">${d.name || 'Platillo'}</div>
-                                                    <div class="dish-price">${d.price || 'Sin precio'}</div>
+                                                    <div class="dish-price">${d.price ? (typeof d.price === 'number' ? '$' + parseFloat(d.price).toFixed(2) : d.price) : 'Sin precio'}</div>
                                                 </div>
                                             </div>
                                             ${d.description ? `<div class="dish-desc">${d.description}</div>` : ''}
@@ -660,16 +660,17 @@
             text += `DATOS EXTRAÍDOS CON SCRAPEGRAPH AI + GEMINI\n`;
             text += `========================================\n\n`;
 
-            if (data.type === 'menu' || data.restaurant) {
-                const r = data.restaurant || {};
+            const categories = data.categories || data.menu?.categories || data.data?.menu?.categories || [];
+            if (data.type === 'menu' || data.restaurant || categories.length > 0) {
+                const r = data.restaurant || data.menu || {};
                 text += `RESTAURANTE: ${r.name || 'S/N'}\n`;
                 text += `Dirección: ${r.address || 'N/A'}\n`;
                 text += `Teléfono: ${r.phone || 'N/A'}\n`;
                 text += `Horarios: ${r.hours || 'N/A'}\n\n`;
 
-                (data.categories || []).forEach(cat => {
+                categories.forEach(cat => {
                     text += `--- CATEGORÍA: ${(cat.name || 'General').toUpperCase()} ---\n`;
-                    (cat.dishes || []).forEach(d => {
+                    (cat.dishes || cat.items || []).forEach(d => {
                         text += `• ${d.name} - ${d.price || 'S/N'}\n`;
                         if (d.description) text += `  Descripción: ${d.description}\n`;
                         if (d.variants?.length) text += `  Variantes: ${d.variants.join(', ')}\n`;
@@ -711,16 +712,17 @@
             svgContent += `<text x="40" y="${y}" class="title">Reporte de Extracción - Menutech AI</text>`;
             y += 40;
 
-            if (data.type === 'menu' || data.restaurant) {
-                const r = data.restaurant || {};
+            const categories = data.categories || data.menu?.categories || data.data?.menu?.categories || [];
+            if (data.type === 'menu' || data.restaurant || categories.length > 0) {
+                const r = data.restaurant || data.menu || {};
                 svgContent += `<text x="40" y="${y}" class="item-title">Restaurante: ${escapeXml(r.name || 'Menú')}</text>`; y += 25;
                 if (r.address) { svgContent += `<text x="40" y="${y}" class="sub">Dirección: ${escapeXml(r.address)}</text>`; y += 20; }
                 y += 20;
 
-                (data.categories || []).forEach(cat => {
+                categories.forEach(cat => {
                     svgContent += `<text x="40" y="${y}" class="title" style="font-size:20px;">${escapeXml(cat.name)}</text>`; y += 25;
-                    (cat.dishes || []).forEach(d => {
-                        svgContent += `<text x="40" y="${y}" class="item-title">${escapeXml(d.name)} (${escapeXml(d.price)})</text>`; y += 20;
+                    (cat.dishes || cat.items || []).forEach(d => {
+                        svgContent += `<text x="40" y="${y}" class="item-title">${escapeXml(d.name)} (${escapeXml(String(d.price))})</text>`; y += 20;
                         if (d.description) { svgContent += `<text x="40" y="${y}" class="item-desc">${escapeXml(d.description.substring(0, 90))}</text>`; y += 20; }
                     });
                     y += 15;
@@ -748,18 +750,19 @@
             let html = `<div style="max-width:800px; margin:0 auto;">
                 <h1 style="color:#ff9533; border-bottom:2px solid #ff9533; padding-bottom:10px; margin-bottom:20px;">Resultados de Extracción AI</h1>`;
 
-            if (data.type === 'menu' || data.restaurant) {
-                const r = data.restaurant || {};
+            const categories = data.categories || data.menu?.categories || data.data?.menu?.categories || [];
+            if (data.type === 'menu' || data.restaurant || categories.length > 0) {
+                const r = data.restaurant || data.menu || {};
                 html += `
                     <div style="margin-bottom:24px;">
                         <h2>${r.name || 'Restaurante'}</h2>
                         <p><strong>Dirección:</strong> ${r.address || 'N/A'} | <strong>Teléfono:</strong> ${r.phone || 'N/A'}</p>
                     </div>
                 `;
-                (data.categories || []).forEach(cat => {
+                categories.forEach(cat => {
                     html += `<h3 style="color:#ff9533; margin-top:20px;">${cat.name}</h3><ul style="list-style:none; padding:0;">`;
-                    (cat.dishes || []).forEach(d => {
-                        html += `<li style="padding:8px 0; border-bottom:1px solid #eee;"><strong>${d.name}</strong> - ${d.price}<br><span style="font-size:12px; color:#666;">${d.description || ''}</span></li>`;
+                    (cat.dishes || cat.items || []).forEach(d => {
+                        html += `<li style="padding:8px 0; border-bottom:1px solid #eee;"><strong>${d.name}</strong> - ${d.price || ''}<br><span style="font-size:12px; color:#666;">${d.description || ''}</span></li>`;
                     });
                     html += `</ul>`;
                 });
@@ -797,9 +800,10 @@
             if (!data) return;
 
             const imageUrls = [];
-            if (data.categories) {
-                data.categories.forEach(c => {
-                    (c.dishes || []).forEach(d => {
+            const categories = data.categories || data.menu?.categories || data.data?.menu?.categories || [];
+            if (categories.length > 0) {
+                categories.forEach(c => {
+                    (c.dishes || c.items || []).forEach(d => {
                         if (d.image) imageUrls.push(d.image);
                     });
                 });
