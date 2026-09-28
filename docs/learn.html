@@ -1152,8 +1152,20 @@
                         <span>Fuente de Datos</span>
                     </div>
 
+                    <div class="palette-item" draggable="true" data-type="query">
+                        <span>Consulta de Datos</span>
+                    </div>
+
+                    <div class="palette-item" draggable="true" data-type="calc">
+                        <span>Cálculo / Operación</span>
+                    </div>
+
                     <div class="palette-item" draggable="true" data-type="rule">
                         <span>Instrucción / Regla</span>
+                    </div>
+
+                    <div class="palette-item" draggable="true" data-type="responder">
+                        <span>Responder (Guía)</span>
                     </div>
 
                     <div class="palette-item" draggable="true" data-type="action">
@@ -1238,6 +1250,8 @@
         let knowledgeData = [];
         let automationsData = [];
         let activeFilter = 'all';
+
+        window.knowledgeData = knowledgeData;
 
         document.addEventListener('DOMContentLoaded', async () => {
             initTheme();
@@ -1646,6 +1660,7 @@
             });
         }
 
+        window.initAutomationsBuilder = initAutomationsBuilder;
         function initAutomationsBuilder() {
             const btnOpenCanvas = document.getElementById('btn-open-algo-canvas');
             const btnCloseCanvas = document.getElementById('btn-close-algo-canvas');
@@ -1654,20 +1669,24 @@
             const emptyState = document.getElementById('canvas-empty-state');
             const saveAutoBtn = document.getElementById('btn-save-automation');
 
-            btnOpenCanvas.onclick = () => {
-                resetAutomationForm();
-                canvasModal.classList.add('active');
-            };
+            if (btnOpenCanvas) {
+                btnOpenCanvas.onclick = () => {
+                    resetAutomationForm();
+                    canvasModal.classList.add('active');
+                };
+            }
 
-            btnCloseCanvas.onclick = () => {
-                canvasModal.classList.remove('active');
-            };
+            if (btnCloseCanvas) {
+                btnCloseCanvas.onclick = () => {
+                    canvasModal.classList.remove('active');
+                };
+            }
 
             // Palette item click & drag handlers
             document.querySelectorAll('.palette-item').forEach(item => {
                 item.onclick = () => {
                     const type = item.getAttribute('data-type');
-                    addCanvasBlock(type);
+                    if (window.addCanvasBlock) window.addCanvasBlock(type);
                 };
 
                 item.addEventListener('dragstart', (e) => {
@@ -1717,12 +1736,53 @@
                         </div>
                         <div class="block-columns-container"></div>
                     `;
+                } else if (type === 'query') {
+                    headerTitle = "CONSULTA DE DATOS";
+                    innerHtml = `
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label>Campo / Columna a Consultar</label>
+                            <input type="text" class="block-field-query-col" value="${escapeHtml(initialData.queryCol || '')}">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Criterio / Clave de Búsqueda</label>
+                            <input type="text" class="block-field-query-val" value="${escapeHtml(initialData.queryVal || '')}">
+                        </div>
+                    `;
+                } else if (type === 'calc') {
+                    headerTitle = "CÁLCULO / OPERACIÓN";
+                    const operationType = initialData.calcType || 'discount';
+                    innerHtml = `
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label>Tipo de Operación</label>
+                            <select class="block-field-calc-type">
+                                <option value="discount" ${operationType === 'discount' ? 'selected' : ''}>Aplicar Descuento (%)</option>
+                                <option value="formula" ${operationType === 'formula' ? 'selected' : ''}>Fórmula Aritmética Libre</option>
+                                <option value="sum" ${operationType === 'sum' ? 'selected' : ''}>Sumar Columnas</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label>Columna(s) Afectada(s)</label>
+                            <input type="text" class="block-field-calc-cols" value="${escapeHtml(initialData.calcCols || '')}">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Fórmula o Valor de Cálculo</label>
+                            <input type="text" class="block-field-calc-formula" value="${escapeHtml(initialData.calcFormula || '')}">
+                        </div>
+                    `;
                 } else if (type === 'rule') {
                     headerTitle = "INSTRUCCIÓN / REGLA";
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
                             <label>Instrucción / Condición</label>
-                            <textarea class="block-field-rule">${initialData.ruleText || ''}</textarea>
+                            <textarea class="block-field-rule">${escapeHtml(initialData.ruleText || '')}</textarea>
+                        </div>
+                    `;
+                } else if (type === 'responder') {
+                    headerTitle = "RESPONDER (GUÍA DE RESPUESTA)";
+                    innerHtml = `
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Guía Intencionada de Respuesta (Gemini interpretará la intención)</label>
+                            <textarea class="block-field-responder">${escapeHtml(initialData.responderText || '')}</textarea>
                         </div>
                     `;
                 } else if (type === 'action') {
@@ -1730,7 +1790,7 @@
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Instrucciones de Respuesta para Menutech IA</label>
-                            <textarea class="block-field-ia">${initialData.iaText || ''}</textarea>
+                            <textarea class="block-field-ia">${escapeHtml(initialData.iaText || '')}</textarea>
                         </div>
                     `;
                 } else if (type === 'event') {
@@ -1738,7 +1798,7 @@
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Nombre del Evento</label>
-                            <input type="text" class="block-field-event" value="${initialData.eventName || ''}">
+                            <input type="text" class="block-field-event" value="${escapeHtml(initialData.eventName || '')}">
                         </div>
                     `;
                 }
@@ -1754,8 +1814,9 @@
                 workspace.appendChild(blockCard);
                 if (type === 'source' && initialData.sourceId) {
                     const sel = blockCard.querySelector('.block-field-source');
-                    if (sel) renderBlockColumns(sel);
+                    if (sel) renderBlockColumns(sel, initialData.selectedCols || []);
                 }
+                autoSuggestAlgorithmName();
                 initCanvasDragReorder();
             };
 
@@ -1866,7 +1927,7 @@
                 return Array.from(new Set(headers));
             }
 
-            window.renderBlockColumns = async (selectEl) => {
+            window.renderBlockColumns = async (selectEl, preselectedCols = []) => {
                 const sourceId = selectEl.value;
                 const container = selectEl.closest('.automation-block-card').querySelector('.block-columns-container');
                 if (!sourceId) {
@@ -1907,22 +1968,64 @@
                 }
 
                 if (detectedCols.length > 0) {
+                    const badgeHtml = detectedCols.map(col => {
+                        const isSelected = preselectedCols.length === 0 || preselectedCols.includes(col);
+                        const activeClass = isSelected ? 'active' : '';
+                        return `<span class="filter-badge block-col-badge ${activeClass}" data-col="${escapeHtml(col)}" onclick="toggleColBadge(this)" style="font-size:0.7rem; cursor:pointer;">${escapeHtml(col)}</span>`;
+                    }).join('');
+
                     container.innerHTML = `
                         <div class="form-group" style="margin-top:8px; margin-bottom:0;">
-                            <label>Columnas Detectadas (${detectedCols.length})</label>
+                            <label>Columnas Detectadas (${detectedCols.length}) - Haz clic para seleccionar las que se usarán en cálculos/consultas</label>
                             <div style="display:flex; flex-wrap:wrap; gap:6px;">
-                                ${detectedCols.map(col => `<span class="filter-badge active" style="font-size:0.7rem;">${escapeHtml(col)}</span>`).join('')}
+                                ${badgeHtml}
                             </div>
                         </div>
                     `;
                 } else {
                     container.innerHTML = `<div style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">Sin columnas tabulares detectadas.</div>`;
                 }
+                autoSuggestAlgorithmName();
+            };
+
+            window.toggleColBadge = (badge) => {
+                badge.classList.toggle('active');
+            };
+
+            window.autoSuggestAlgorithmName = () => {
+                const nameInput = document.getElementById('auto-name');
+                if (!nameInput || (nameInput.value.trim() !== '' && nameInput.value !== 'Nuevo Algoritmo')) return;
+
+                const cards = workspace.querySelectorAll('.automation-block-card');
+                let suggested = "";
+
+                cards.forEach(card => {
+                    const bType = card.getAttribute('data-block-type');
+                    if (bType === 'source') {
+                        const sourceId = card.querySelector('.block-field-source')?.value;
+                        const sourceObj = knowledgeData.find(k => k.id === sourceId);
+                        if (sourceObj) suggested = `Algoritmo - ${sourceObj.title}`;
+                    }
+                });
+
+                if (!suggested && cards.length > 0) {
+                    const firstType = cards[0].getAttribute('data-block-type');
+                    if (firstType === 'calc') suggested = "Algoritmo de Cálculo y Descuentos";
+                    else if (firstType === 'query') suggested = "Algoritmo de Consulta de Datos";
+                    else if (firstType === 'responder') suggested = "Algoritmo de Respuestas Dinámicas";
+                    else suggested = "Algoritmo Menutech AI";
+                }
+
+                if (suggested) nameInput.value = suggested;
             };
 
             saveAutoBtn.onclick = async () => {
                 const editingId = document.getElementById('auto-editing-id').value;
-                const name = document.getElementById('auto-name').value.trim() || "Nuevo Algoritmo";
+                let name = document.getElementById('auto-name').value.trim();
+                if (!name || name === "Nuevo Algoritmo") {
+                    autoSuggestAlgorithmName();
+                    name = document.getElementById('auto-name').value.trim() || "Algoritmo Menutech AI";
+                }
 
                 const cards = workspace.querySelectorAll('.automation-block-card');
                 if (cards.length === 0) {
@@ -1937,10 +2040,24 @@
                     const bType = card.getAttribute('data-block-type');
                     if (bType === 'source') {
                         const sourceId = card.querySelector('.block-field-source')?.value || null;
-                        blocksData.push({ type: 'source', sourceId });
+                        const selectedCols = Array.from(card.querySelectorAll('.block-col-badge.active')).map(el => el.getAttribute('data-col'));
+                        blocksData.push({ type: 'source', sourceId, selectedCols });
+                    } else if (bType === 'query') {
+                        const queryCol = card.querySelector('.block-field-query-col')?.value || '';
+                        const queryVal = card.querySelector('.block-field-query-val')?.value || '';
+                        blocksData.push({ type: 'query', queryCol, queryVal });
+                    } else if (bType === 'calc') {
+                        const calcType = card.querySelector('.block-field-calc-type')?.value || 'discount';
+                        const calcCols = card.querySelector('.block-field-calc-cols')?.value || '';
+                        const calcFormula = card.querySelector('.block-field-calc-formula')?.value || '';
+                        blocksData.push({ type: 'calc', calcType, calcCols, calcFormula });
                     } else if (bType === 'rule') {
                         const ruleText = card.querySelector('.block-field-rule')?.value || '';
                         blocksData.push({ type: 'rule', ruleText });
+                    } else if (bType === 'responder') {
+                        const responderText = card.querySelector('.block-field-responder')?.value || '';
+                        blocksData.push({ type: 'responder', responderText });
+                        isGeminiEnabled = true;
                     } else if (bType === 'action') {
                         const iaText = card.querySelector('.block-field-ia')?.value || '';
                         blocksData.push({ type: 'action', iaText });
@@ -2035,7 +2152,6 @@
 // 3. Copia y pega este código en index.ts y guarda los cambios.
 // 4. Despliega la función ejecutando:
 //    supabase functions deploy ${slug} --no-verify-jwt
-// 5. El Cron o programación periódica se configura directamente en el panel de Supabase.
 // ==============================================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -2059,74 +2175,82 @@ serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     const blocks = ${blocksJson};
 
-    let eventsGenerated = 0;
-    const executionDetails: any[] = [];
+    const reqBody = await req.json().catch(() => ({}));
+    const userPrompt = reqBody.prompt || reqBody.message || "";
+
+    let contextDataText = "";
+    let systemInstructions = [];
+    let eventsTriggered = [];
 
     for (const block of blocks) {
       if (block.type === 'source' && block.sourceId) {
-        // Cargar fuente de datos desde menutech_knowledge
-        const { data: sourceData } = await supabase
+        const { data: sourceObj } = await supabase
           .from('menutech_knowledge')
           .select('*')
           .eq('id', block.sourceId)
           .single();
 
-        executionDetails.push({
-          block: 'source',
-          sourceId: block.sourceId,
-          title: sourceData?.title || 'Fuente cargada',
-          contentLength: sourceData?.content?.length || 0
-        });
-      } else if (block.type === 'rule') {
-        executionDetails.push({
-          block: 'rule',
-          rule: block.ruleText
-        });
-      } else if (block.type === 'action') {
-        let aiResult = "";
-        if (geminiApiKey) {
-          try {
-            const geminiRes = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\${geminiApiKey}\`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: block.iaText }] }]
-              })
-            });
-            const geminiData = await geminiRes.json();
-            aiResult = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "Procesado con exito";
-          } catch (e: any) {
-            aiResult = "Error al invocar Gemini: " + e.message;
-          }
-        } else {
-          aiResult = "GEMINI_API_KEY no configurado en Secrets";
-        }
+        if (sourceObj) {
+          let colsStr = Array.isArray(block.selectedCols) && block.selectedCols.length > 0
+            ? block.selectedCols.join(', ')
+            : (Array.isArray(sourceObj.columns) ? sourceObj.columns.join(', ') : 'Todas');
 
-        executionDetails.push({
-          block: 'action',
-          iaInstruction: block.iaText,
-          aiResponse: aiResult
-        });
+          contextDataText += \`\\n--- FUENTE DE DATOS: \${sourceObj.title} ---\\n\`;
+          contextDataText += \`COLUMNAS DISPONIBLES / SELECCIONADAS: \${colsStr}\\n\`;
+          if (sourceObj.link) contextDataText += \`LINK: \${sourceObj.link}\\n\`;
+          contextDataText += \`CONTENIDO:\\n\${sourceObj.content || ''}\\n\`;
+        }
+      } else if (block.type === 'query') {
+        systemInstructions.push(\`INSTRUCCIÓN DE CONSULTA: Buscar en la columna '\${block.queryCol}' el criterio '\${block.queryVal}' para responder con los datos coincidentes.\`);
+      } else if (block.type === 'calc') {
+        systemInstructions.push(\`INSTRUCCIÓN DE CÁLCULO: Realizar la operación '\${block.calcType}' en las columnas [\${block.calcCols}] usando la fórmula/porcentaje '\${block.calcFormula}'. CALCULA LOS VALORES MATEMÁTICOS REALES Y DEVUELVE LOS PRECIOS/RESULTADOS OBTENIDOS. NUNCA REPITAS LA FÓRMULA TEXTUALMENTE.\`);
+      } else if (block.type === 'rule') {
+        systemInstructions.push(\`REGLA DE NEGOCIO: \${block.ruleText}\`);
+      } else if (block.type === 'responder') {
+        systemInstructions.push(\`GUÍA DE RESPUESTA INTENCIONADA: Usa la siguiente guía como orientación intencionada del tono y objetivo de la respuesta: "\${block.responderText}". NO repitas esta guía palabra por palabra, sino genera una respuesta natural adaptada a la consulta del usuario.\`);
+      } else if (block.type === 'action') {
+        systemInstructions.push(\`REACCIÓN DE IA: \${block.iaText}\`);
       } else if (block.type === 'event') {
-        eventsGenerated++;
-        executionDetails.push({
-          block: 'event',
-          eventName: block.eventName
-        });
+        eventsTriggered.push(block.eventName);
       }
     }
 
-    const responsePayload = {
+    const aiSystemPrompt = \`Eres Menutech AI, un asistente inteligente de restaurante/plataforma.
+NO repitas de forma literal las instrucciones o reglas de configuración.
+Tu trabajo es EJECUTAR las operaciones, realizar los CÁLCULOS matemáticos reales (descuentos, sumas, precios finales) sobre las fuentes de datos y responder de manera atenta, clara y conversacional.
+
+\${contextDataText}
+
+REGLAS DE EJECUCIÓN Y CÁLCULO:
+\${systemInstructions.map((inst, i) => \`\${i + 1}. \${inst}\`).join('\\n')}
+
+MENSAJE DEL USUARIO: "\${userPrompt}"
+
+Procesa la solicitud realizando las consultas y cálculos solicitados. Responde al usuario en un tono amable, profesional y natural:\`;
+
+    let reply = "";
+    if (geminiApiKey) {
+      const geminiRes = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\${geminiApiKey}\`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: aiSystemPrompt }] }]
+        })
+      });
+      const geminiData = await geminiRes.json();
+      reply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "Procesado con éxito.";
+    } else {
+      reply = "Ejecutado (Sin GEMINI_API_KEY configurada). Prompt generado:\\n" + aiSystemPrompt;
+    }
+
+    return new Response(JSON.stringify({
       success: true,
       algorithmName: "${config.name}",
       functionSlug: "${slug}",
-      executedAt: new Date().toISOString(),
-      blocksExecuted: blocks.length,
-      eventsGenerated,
-      details: executionDetails
-    };
-
-    return new Response(JSON.stringify(responsePayload), {
+      reply,
+      eventsTriggered,
+      executedAt: new Date().toISOString()
+    }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
@@ -2341,22 +2465,43 @@ serve(async (req: Request) => {
                 replyBox.style.display = 'block';
                 replyBox.innerHTML = `<div style="display:flex; align-items:center; gap:10px; color:var(--orange); font-weight:700;"><div class="loader"></div> Consultando a Menutech AI con tus conocimientos y automatizaciones...</div>`;
 
-                let contextPrompt = "";
+                let contextPrompt = `Eres Menutech AI, un asistente inteligente.
+IMPORTANTE: NO repitas ni imprimas las instrucciones o fórmulas de configuración de forma literal.
+Tu objetivo es EJECUTAR las operaciones, consultar las columnas correspondientes de las tablas/Sheets, realizar los CÁLCULOS matemáticos reales (descuentos, porcentajes, sumas) y responder de forma amable y conversacional.
+
+`;
+
                 if (knowledgeData.length > 0) {
-                    contextPrompt += "CONOCIMIENTOS BASE DEL RESTAURANTE / PLATAFORMA:\n\n";
+                    contextPrompt += "--- FUENTES DE DATOS Y TABLAS DISPONIBLES ---\n";
                     knowledgeData.forEach((k, idx) => {
-                        contextPrompt += `[Item ${idx + 1} - ${k.type.toUpperCase()}]: ${k.title}\n${k.content}\n\n`;
+                        const colsStr = Array.isArray(k.columns) && k.columns.length > 0 ? k.columns.join(', ') : 'Todas';
+                        contextPrompt += `[Fuente ${idx + 1} - ${k.type.toUpperCase()}]: ${k.title}\nColumnas: ${colsStr}\nLink: ${k.link || 'N/A'}\nContenido:\n${k.content}\n\n`;
                     });
                 }
 
                 if (automationsData.length > 0) {
-                    contextPrompt += "REGLAS DE AUTOMATIZACIONES ACTIVAS:\n\n";
+                    contextPrompt += "--- REGLAS, CONSULTAS Y CÁLCULOS DE AUTOMATIZACIONES ACTIVAS ---\n";
                     automationsData.filter(a => a.status === 'active').forEach((a, idx) => {
-                        contextPrompt += `[Automatización ${idx + 1} - ${a.name}]: ${JSON.stringify(a.config)}\n\n`;
+                        contextPrompt += `[Algoritmo ${idx + 1}: ${a.name}]\n`;
+                        const blocks = a.config?.blocks || [];
+                        blocks.forEach((b, bIdx) => {
+                            if (b.type === 'query') {
+                                contextPrompt += `  - Consulta: Buscar en columna '${b.queryCol}' el criterio '${b.queryVal}'.\n`;
+                            } else if (b.type === 'calc') {
+                                contextPrompt += `  - CÁLCULO REQUERIDO: Aplicar '${b.calcType}' sobre columnas [${b.calcCols}] usando fórmula/porcentaje '${b.calcFormula}'. CALCULA EL VALOR FINAL.\n`;
+                            } else if (b.type === 'rule') {
+                                contextPrompt += `  - Regla: ${b.ruleText}\n`;
+                            } else if (b.type === 'responder') {
+                                contextPrompt += `  - Guía Intencionada de Respuesta (NO repetir literal): ${b.responderText}\n`;
+                            } else if (b.type === 'action') {
+                                contextPrompt += `  - Reacción: ${b.iaText}\n`;
+                            }
+                        });
+                        contextPrompt += "\n";
                     });
                 }
 
-                contextPrompt += `PREGUNTA DEL USUARIO: ${query}\n\nPor favor responde de forma precisa usando las fuentes y reglas configuradas.`;
+                contextPrompt += `MENSAJE DEL USUARIO: "${query}"\n\nEjecuta los cálculos y consultas correspondientes y genera la respuesta final conversacional:`;
 
                 try {
                     const res = await fetch(MT_CONFIG.SUPABASE_URL + "/functions/v1/gemini-chat", {
