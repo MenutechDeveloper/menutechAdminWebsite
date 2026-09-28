@@ -7,10 +7,16 @@ CREATE TABLE IF NOT EXISTS public.menutech_knowledge (
     title TEXT NOT NULL,
     type TEXT NOT NULL CHECK (type IN ('faq', 'document', 'sheet')),
     content TEXT NOT NULL,
+    link TEXT DEFAULT '',
+    columns JSONB DEFAULT '[]'::jsonb,
     metadata JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Alter table statements for existing deployments
+ALTER TABLE public.menutech_knowledge ADD COLUMN IF NOT EXISTS link TEXT DEFAULT '';
+ALTER TABLE public.menutech_knowledge ADD COLUMN IF NOT EXISTS columns JSONB DEFAULT '[]'::jsonb;
 
 -- Index for efficient querying by type or creation time
 CREATE INDEX IF NOT EXISTS idx_menutech_knowledge_type ON public.menutech_knowledge (type);

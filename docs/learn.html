@@ -1013,19 +1013,16 @@
                     <!-- Form: Sheet / Table -->
                     <div id="form-sheet" class="tab-content" style="display: none;">
                         <div class="form-group">
-                            <label>Nombre del Sheet</label>
+                            <label>Titulo</label>
                             <input type="text" id="sheet-title">
                         </div>
                         <div class="form-group">
-                            <label>Tipo de Sheet</label>
-                            <select id="sheet-access-type">
-                                <option value="public">Sheet Público / Interno</option>
-                                <option value="private">Sheet Privado (Solo Consulta)</option>
-                            </select>
+                            <label>Link</label>
+                            <input type="text" id="sheet-link">
                         </div>
                         <div class="form-group">
-                            <label>Datos Tabulares (CSV o Columna: Valor)</label>
-                            <textarea id="sheet-content"></textarea>
+                            <label>Descripcion</label>
+                            <textarea id="sheet-description"></textarea>
                         </div>
                         <button class="btn-submit" id="btn-save-sheet">Guardar Sheet</button>
                     </div>
@@ -1446,23 +1443,37 @@
 
             document.getElementById('btn-save-sheet').onclick = async () => {
                 const title = document.getElementById('sheet-title').value.trim();
-                const accessType = document.getElementById('sheet-access-type').value;
-                const content = document.getElementById('sheet-content').value.trim();
+                const link = document.getElementById('sheet-link').value.trim();
+                const description = document.getElementById('sheet-description').value.trim();
 
-                if (!title || !content) {
-                    showToast("Por favor ingresa el título y los datos del sheet.", "warning");
+                if (!title) {
+                    showToast("Por favor ingresa el título del sheet.", "warning");
                     return;
+                }
+
+                let extractedColumns = [];
+                if (link) {
+                    showToast("Extrayendo columnas del Google Sheet...", "warning");
+                    extractedColumns = await fetchGoogleSheetColumns(link);
+                    if (extractedColumns.length > 0) {
+                        showToast(`Se detectaron ${extractedColumns.length} columnas en el Google Sheet.`, "success");
+                    } else {
+                        showToast("No se pudieron extraer columnas automáticamente, pero el enlace se guardó correctamente.", "warning");
+                    }
                 }
 
                 await saveKnowledgeItem({
                     title: title,
                     type: 'sheet',
-                    content: content,
-                    metadata: { access_type: accessType }
+                    content: description || (link ? `Google Sheet: ${link}` : 'Google Sheet'),
+                    link: link,
+                    columns: extractedColumns,
+                    metadata: { columns: extractedColumns, link: link }
                 });
 
                 document.getElementById('sheet-title').value = '';
-                document.getElementById('sheet-content').value = '';
+                document.getElementById('sheet-link').value = '';
+                document.getElementById('sheet-description').value = '';
             };
         }
 
@@ -1807,7 +1818,66 @@
                 }
             };
 
-            window.renderBlockColumns = (selectEl) => {
+            async function fetchGoogleSheetColumns(urlStr) {
+                if (!urlStr) return [];
+                let cols = [];
+                try {
+                    const sheetIdMatch = urlStr.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                    if (!sheetIdMatch) return [];
+                    const sheetId = sheetIdMatch[1];
+
+                    let gid = '0';
+                    const gidMatch = urlStr.match(/[?&]gid=([0-9]+)/);
+                    if (gidMatch) gid = gidMatch[1];
+
+                    const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
+                    const exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+                    const htmlUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/htmlview`;
+
+                    const text = await tryFetchText(exportUrl) || await tryFetchText(gvizUrl) || await tryFetchText(htmlUrl);
+                    if (text) {
+                        if (text.includes(',') || text.includes('\t') || text.includes('\n')) {
+                            cols = parseColumnsFromCsvText(text);
+                        }
+                        if (cols.length === 0 && text.includes('<table')) {
+                            cols = parseColumnsFromHtmlTable(text);
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Could not extract Google Sheet columns:", e);
+                }
+                return cols;
+            }
+
+            async function tryFetchText(targetUrl) {
+                const fetchPromises = [
+                    fetch(targetUrl).then(r => r.ok ? r.text() : null).catch(() => null),
+                    fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`).then(r => r.ok ? r.text() : null).catch(() => null),
+                    fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`).then(r => r.ok ? r.text() : null).catch(() => null)
+                ];
+                for (const p of fetchPromises) {
+                    const res = await p;
+                    if (res && res.trim().length > 0) return res;
+                }
+                return null;
+            }
+
+            function parseColumnsFromCsvText(csvText) {
+                const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
+                if (lines.length === 0) return [];
+                const headerLine = lines[0];
+                const items = headerLine.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/);
+                return items.map(col => col.replace(/^["']|["']$/g, '').trim()).filter(c => c.length > 0);
+            }
+
+            function parseColumnsFromHtmlTable(htmlText) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                const headers = Array.from(doc.querySelectorAll('th, tr:first-child td')).map(el => el.textContent.trim()).filter(t => t.length > 0);
+                return Array.from(new Set(headers));
+            }
+
+            window.renderBlockColumns = async (selectEl) => {
                 const sourceId = selectEl.value;
                 const container = selectEl.closest('.automation-block-card').querySelector('.block-columns-container');
                 if (!sourceId) {
@@ -1818,25 +1888,39 @@
                 const sourceObj = knowledgeData.find(k => k.id === sourceId);
                 let detectedCols = [];
 
-                if (sourceObj && sourceObj.content) {
-                    const lines = sourceObj.content.split('\n');
-                    const firstLine = lines[0] || '';
-                    if (firstLine.includes(',')) {
-                        detectedCols = firstLine.split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
-                    } else {
-                        lines.forEach(l => {
-                            if (l.includes(':')) {
-                                const key = l.split(':')[0].trim();
-                                if (key && !detectedCols.includes(key)) detectedCols.push(key);
-                            }
-                        });
+                if (sourceObj) {
+                    if (Array.isArray(sourceObj.columns) && sourceObj.columns.length > 0) {
+                        detectedCols = sourceObj.columns;
+                    } else if (sourceObj.metadata && Array.isArray(sourceObj.metadata.columns) && sourceObj.metadata.columns.length > 0) {
+                        detectedCols = sourceObj.metadata.columns;
+                    } else if (sourceObj.link) {
+                        container.innerHTML = `<div style="font-size:0.75rem; color:var(--orange); margin-top:6px;"><div class="loader" style="display:inline-block; vertical-align:middle; width:12px; height:12px; margin-right:6px;"></div>Obteniendo columnas del Google Sheet...</div>`;
+                        detectedCols = await fetchGoogleSheetColumns(sourceObj.link);
+                        if (detectedCols.length > 0) {
+                            sourceObj.columns = detectedCols;
+                        }
+                    }
+
+                    if (detectedCols.length === 0 && sourceObj.content) {
+                        const lines = sourceObj.content.split('\n');
+                        const firstLine = lines[0] || '';
+                        if (firstLine.includes(',')) {
+                            detectedCols = firstLine.split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
+                        } else {
+                            lines.forEach(l => {
+                                if (l.includes(':')) {
+                                    const key = l.split(':')[0].trim();
+                                    if (key && !detectedCols.includes(key)) detectedCols.push(key);
+                                }
+                            });
+                        }
                     }
                 }
 
                 if (detectedCols.length > 0) {
                     container.innerHTML = `
                         <div class="form-group" style="margin-top:8px; margin-bottom:0;">
-                            <label>Columnas Detectadas</label>
+                            <label>Columnas Detectadas (${detectedCols.length})</label>
                             <div style="display:flex; flex-wrap:wrap; gap:6px;">
                                 ${detectedCols.map(col => `<span class="filter-badge active" style="font-size:0.7rem;">${escapeHtml(col)}</span>`).join('')}
                             </div>
