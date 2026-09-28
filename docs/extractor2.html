@@ -7,6 +7,10 @@
     <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
     <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
 
+    <!-- Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
 
@@ -103,13 +107,13 @@
 
         .export-actions { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn-export {
-            background: var(--input); border: 1.5px solid var(--border); color: var(--text); padding: 12px 22px;
-            border-radius: 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.3s;
-            display: inline-flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif;
+            background: var(--input); border: 1.5px solid var(--border); color: var(--text); padding: 10px 18px;
+            border-radius: 14px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.3s;
+            display: inline-flex; align-items: center; gap: 8px; font-family: inherit;
         }
         .btn-export:hover { border-color: var(--orange); color: var(--orange); transform: translateY(-2px); }
-        .btn-export.primary { background: var(--orange); color: #fff; border-color: var(--orange); box-shadow: 0 6px 20px rgba(255,149,51,0.25); }
-        .btn-export.primary:hover { filter: brightness(1.1); color: #fff; }
+        .btn-export.primary { background: var(--orange); color: #000; border-color: var(--orange); font-weight: 800; }
+        .btn-export.primary:hover { filter: brightness(1.1); color: #000; }
 
         /* General Info Card */
         .info-card {
@@ -244,7 +248,7 @@
         <div class="extractor-card">
             <div class="form-fields-container">
                 <div class="field-group">
-                    <label for="target-url">URL del Sitio Web</label>
+                    <label for="target-url">URL del Sitio Web o Google Maps</label>
                     <div class="input-wrapper">
                         <input type="url" id="target-url" placeholder="https://ejemplo.com/menu" autocomplete="off">
                     </div>
@@ -253,7 +257,7 @@
                 <div class="field-group">
                     <label for="target-prompt">Instrucción de Extracción</label>
                     <div class="input-wrapper">
-                        <textarea id="target-prompt" placeholder="Extrae todos los platillos con nombre, precio, descripción, imagen y categoría"></textarea>
+                        <textarea id="target-prompt" placeholder="Entra en cada negocio que aparece ahí y extrae: nombre, categoría, dirección, teléfono, sitio web, calificación, número de reseñas y horarios."></textarea>
                     </div>
                 </div>
 
@@ -276,11 +280,23 @@
         <!-- Results Display -->
         <div id="results-wrapper">
             <div class="section-header">
-                <h2>Resultados Estructurados</h2>
+                <h2>Resultados Extraídos</h2>
                 <div class="export-actions">
-                    <button class="btn-export primary" onclick="openJsonModal()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-                        Ver JSON
+                    <button class="btn-export" onclick="exportTXT()">
+                        Exportar TXT
+                    </button>
+                    <button class="btn-export" onclick="openJsonModal()">
+                        Exportar JSON
+                    </button>
+                    <button class="btn-export" onclick="exportSVG()">
+                        Exportar SVG
+                    </button>
+                    <button class="btn-export primary" onclick="exportPDF()">
+                        Exportar PDF
+                    </button>
+                    <button class="btn-export" id="btn-download-images" onclick="downloadImagesZip()" style="border-color: var(--orange); color: var(--orange);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Descargar Imágenes (ZIP)
                     </button>
                 </div>
             </div>
@@ -290,6 +306,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Hidden Export Container for PDF / SVG Rendering -->
+    <div id="export-printable-container" style="display: none; background: #fff; color: #000; padding: 40px; font-family: 'Plus Jakarta Sans', sans-serif;"></div>
 
     <!-- JSON Inspector Modal -->
     <div class="modal-overlay" id="json-modal">
@@ -570,11 +589,257 @@
         }
 
         function renderGenericUI(container, data) {
-            container.innerHTML = `
-                <div class="generic-card">
-                    <pre class="json-pre">${JSON.stringify(data, null, 2)}</pre>
-                </div>
-            `;
+            let items = [];
+            if (Array.isArray(data.data)) items = data.data;
+            else if (data.data && typeof data.data === 'object') items = [data.data];
+
+            if (items.length > 0) {
+                let html = `<div class="business-grid">`;
+                items.forEach((it, idx) => {
+                    html += `
+                        <div class="business-card">
+                            <div>
+                                <div class="business-name">${it.title || it.name || `Elemento ${idx + 1}`}</div>
+                                <div class="business-details" style="margin-top: 10px;">
+                                    ${it.description ? `<div>${it.description}</div>` : ''}
+                                    ${it.category ? `<div><strong>Categoría:</strong> ${it.category}</div>` : ''}
+                                    ${it.price ? `<div><strong>Precio:</strong> ${it.price}</div>` : ''}
+                                </div>
+                            </div>
+                            ${it.url ? `<div class="business-links"><a href="${it.url}" target="_blank" class="btn-link web">Ver Enlace</a></div>` : ''}
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = `
+                    <div class="generic-card">
+                        <pre class="json-pre">${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        /* --- Export Functions (TXT, JSON, SVG, PDF, ZIP) --- */
+
+        window.exportTXT = () => {
+            const data = window.lastExtractedJson;
+            if (!data) return;
+
+            let text = `========================================\n`;
+            text += `DATOS EXTRAÍDOS CON SCRAPEGRAPH AI + GEMINI\n`;
+            text += `========================================\n\n`;
+
+            if (data.type === 'menu' || data.restaurant) {
+                const r = data.restaurant || {};
+                text += `RESTAURANTE: ${r.name || 'S/N'}\n`;
+                text += `Dirección: ${r.address || 'N/A'}\n`;
+                text += `Teléfono: ${r.phone || 'N/A'}\n`;
+                text += `Horarios: ${r.hours || 'N/A'}\n\n`;
+
+                (data.categories || []).forEach(cat => {
+                    text += `--- CATEGORÍA: ${(cat.name || 'General').toUpperCase()} ---\n`;
+                    (cat.dishes || []).forEach(d => {
+                        text += `• ${d.name} - ${d.price || 'S/N'}\n`;
+                        if (d.description) text += `  Descripción: ${d.description}\n`;
+                        if (d.variants?.length) text += `  Variantes: ${d.variants.join(', ')}\n`;
+                        if (d.extras?.length) text += `  Extras: ${d.extras.join(', ')}\n`;
+                    });
+                    text += `\n`;
+                });
+            } else if (data.type === 'business_list' || data.businesses) {
+                (data.businesses || []).forEach((b, idx) => {
+                    text += `[NEGOCIO ${idx + 1}]: ${b.name}\n`;
+                    text += `Categoría: ${b.category || 'N/A'}\n`;
+                    text += `Dirección: ${b.address || 'N/A'}\n`;
+                    text += `Teléfono: ${b.phone || 'N/A'}\n`;
+                    text += `Sitio Web: ${b.websiteUrl || 'N/A'}\n`;
+                    text += `Google Maps: ${b.googleMapsUrl || 'N/A'}\n`;
+                    text += `Calificación: ${b.rating || 'N/A'} (${b.reviewsCount || 0} reseñas)\n\n`;
+                });
+            } else {
+                text += JSON.stringify(data, null, 2);
+            }
+
+            downloadBlob(text, 'extraccion_datos.txt', 'text/plain;charset=utf-8');
+        };
+
+        window.exportSVG = () => {
+            const data = window.lastExtractedJson;
+            if (!data) return;
+
+            let y = 60;
+            const width = 800;
+            let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} 2000" width="${width}" style="background-color:#ffffff; font-family:sans-serif; color:#1a1c1e;">`;
+            svgContent += `<style>
+                .title { font-size: 26px; font-weight: bold; fill: #ff9533; }
+                .sub { font-size: 14px; fill: #4a5568; }
+                .item-title { font-size: 18px; font-weight: bold; fill: #1a1c1e; }
+                .item-desc { font-size: 13px; fill: #4a5568; }
+            </style>`;
+
+            svgContent += `<text x="40" y="${y}" class="title">Reporte de Extracción - Menutech AI</text>`;
+            y += 40;
+
+            if (data.type === 'menu' || data.restaurant) {
+                const r = data.restaurant || {};
+                svgContent += `<text x="40" y="${y}" class="item-title">Restaurante: ${escapeXml(r.name || 'Menú')}</text>`; y += 25;
+                if (r.address) { svgContent += `<text x="40" y="${y}" class="sub">Dirección: ${escapeXml(r.address)}</text>`; y += 20; }
+                y += 20;
+
+                (data.categories || []).forEach(cat => {
+                    svgContent += `<text x="40" y="${y}" class="title" style="font-size:20px;">${escapeXml(cat.name)}</text>`; y += 25;
+                    (cat.dishes || []).forEach(d => {
+                        svgContent += `<text x="40" y="${y}" class="item-title">${escapeXml(d.name)} (${escapeXml(d.price)})</text>`; y += 20;
+                        if (d.description) { svgContent += `<text x="40" y="${y}" class="item-desc">${escapeXml(d.description.substring(0, 90))}</text>`; y += 20; }
+                    });
+                    y += 15;
+                });
+            } else if (data.type === 'business_list' || data.businesses) {
+                (data.businesses || []).forEach((b, idx) => {
+                    svgContent += `<text x="40" y="${y}" class="item-title">${idx + 1}. ${escapeXml(b.name)}</text>`; y += 20;
+                    if (b.address) { svgContent += `<text x="40" y="${y}" class="item-desc">Dirección: ${escapeXml(b.address)}</text>`; y += 18; }
+                    if (b.phone) { svgContent += `<text x="40" y="${y}" class="item-desc">Tel: ${escapeXml(b.phone)}</text>`; y += 18; }
+                    y += 15;
+                });
+            }
+
+            svgContent += `</svg>`;
+            downloadBlob(svgContent, 'extraccion_datos.svg', 'image/svg+xml');
+        };
+
+        window.exportPDF = () => {
+            const data = window.lastExtractedJson;
+            if (!data) return;
+
+            const container = document.getElementById('export-printable-container');
+            container.style.display = 'block';
+
+            let html = `<div style="max-width:800px; margin:0 auto;">
+                <h1 style="color:#ff9533; border-bottom:2px solid #ff9533; padding-bottom:10px; margin-bottom:20px;">Resultados de Extracción AI</h1>`;
+
+            if (data.type === 'menu' || data.restaurant) {
+                const r = data.restaurant || {};
+                html += `
+                    <div style="margin-bottom:24px;">
+                        <h2>${r.name || 'Restaurante'}</h2>
+                        <p><strong>Dirección:</strong> ${r.address || 'N/A'} | <strong>Teléfono:</strong> ${r.phone || 'N/A'}</p>
+                    </div>
+                `;
+                (data.categories || []).forEach(cat => {
+                    html += `<h3 style="color:#ff9533; margin-top:20px;">${cat.name}</h3><ul style="list-style:none; padding:0;">`;
+                    (cat.dishes || []).forEach(d => {
+                        html += `<li style="padding:8px 0; border-bottom:1px solid #eee;"><strong>${d.name}</strong> - ${d.price}<br><span style="font-size:12px; color:#666;">${d.description || ''}</span></li>`;
+                    });
+                    html += `</ul>`;
+                });
+            } else if (data.type === 'business_list' || data.businesses) {
+                (data.businesses || []).forEach(b => {
+                    html += `
+                        <div style="border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:12px;">
+                            <h3 style="margin:0 0 6px 0;">${b.name} <span style="font-size:12px; color:#ff9533;">(${b.category || ''})</span></h3>
+                            <p style="margin:2px 0; font-size:13px;"><strong>Dirección:</strong> ${b.address || 'N/A'}</p>
+                            <p style="margin:2px 0; font-size:13px;"><strong>Teléfono:</strong> ${b.phone || 'N/A'} | <strong>Calificación:</strong> ${b.rating || 'N/A'}</p>
+                            <p style="margin:2px 0; font-size:13px;"><strong>Sitio Web:</strong> ${b.websiteUrl || 'N/A'}</p>
+                        </div>
+                    `;
+                });
+            }
+
+            html += `</div>`;
+            container.innerHTML = html;
+
+            const opt = {
+                margin: 0.5,
+                filename: 'extraccion_datos.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(container).save().then(() => {
+                container.style.display = 'none';
+            });
+        };
+
+        window.downloadImagesZip = async () => {
+            const data = window.lastExtractedJson;
+            if (!data) return;
+
+            const imageUrls = [];
+            if (data.categories) {
+                data.categories.forEach(c => {
+                    (c.dishes || []).forEach(d => {
+                        if (d.image) imageUrls.push(d.image);
+                    });
+                });
+            }
+
+            if (imageUrls.length === 0) {
+                showToast("No se encontraron URLs de imágenes en los datos extraídos.", "warning");
+                return;
+            }
+
+            const btn = document.getElementById('btn-download-images');
+            const oldText = btn.innerHTML;
+            btn.innerHTML = `<span class="loader-spin"></span> Creando ZIP...`;
+            btn.disabled = true;
+
+            try {
+                const zip = new JSZip();
+                const folder = zip.folder("imagenes_extraidas");
+                let count = 0;
+
+                for (let i = 0; i < imageUrls.length; i++) {
+                    try {
+                        const imgRes = await fetch(imageUrls[i]);
+                        if (imgRes.ok) {
+                            const blob = await imgRes.blob();
+                            folder.file(`imagen_${i + 1}.jpg`, blob);
+                            count++;
+                        }
+                    } catch (e) {}
+                }
+
+                if (count > 0) {
+                    const content = await zip.generateAsync({ type: "blob" });
+                    downloadBlob(content, "imagenes_extraidas.zip", "application/zip");
+                    showToast(`ZIP generado con ${count} imágenes.`, "success");
+                } else {
+                    showToast("No se pudieron descargar las imágenes por restricciones CORS.", "warning");
+                }
+            } catch (err) {
+                showToast("Error al generar el archivo ZIP: " + err.message, "error");
+            } finally {
+                btn.innerHTML = oldText;
+                btn.disabled = false;
+            }
+        };
+
+        function downloadBlob(content, fileName, mimeType) {
+            const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function escapeXml(unsafe) {
+            if (!unsafe) return "";
+            return unsafe.replace(/[<>&'"]/g, (c) => {
+                switch (c) {
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '&': return '&amp;';
+                    case '\'': return '&apos;';
+                    case '"': return '&quot;';
+                }
+            });
         }
 
         window.openJsonModal = () => {
