@@ -1,0 +1,38 @@
+===============================================================================
+EXPLICACIÓN TÉCNICA: ¿POR QUÉ SE GENERA ESTE RESULTADO Y CÓMO SOLUCIONARLO?
+===============================================================================
+
+1. CAUSA RAÍZ DEL PROBLEMA (ANÁLISIS DEL HTML RECIBIDO):
+-------------------------------------------------------------------------------
+El código HTML que recibiste:
+`<!DOCTYPE html><html lang="en"><head><title>Google Search</title>... <noscript>... Please click here if you are not redirected within a few seconds. ...`
+
+NO ES un error de tu interfaz ni de la Edge Function. Es una respuesta de BLOQUEO ANTI-BOT DE GOOGLE (Google Bot Challenge / CAPTCHA Interstitial).
+
+¿Qué ocurrió exactamente?
+a) Cuando envías un enlace directo de Google Search o Google Maps (`google.com/search?q=restaurantes+en+san+diego`), Google detecta la IP del servidor en la nube (Supabase / Deno Deploy) y la ausencia de cookies de sesión humanas.
+b) Google responde en milisegundos (< 1 segundo) entregando una página estática con un script de verificación JavaScript (`closure_dynamic_button`, `sgs_ss`, `sendBeacon`) para comprobar si el cliente es un navegador real.
+c) Como el scraper HTTP sin proxy residencial ni JS stealth no ejecuta los desafíos interactivos de Google, la respuesta obtenida de la red es únicamente esa página de desafío anti-bot.
+d) Al pasar esa página de bloqueo a Gemini API, Gemini analiza el HTML y solo encuentra código JavaScript ofuscado y ningún dato de restaurantes ni negocios reales.
+
+-------------------------------------------------------------------------------
+2. ¿POR QUÉ OCURRE Y POR QUÉ ES TAN RÁPIDO?
+-------------------------------------------------------------------------------
+- Las IPs de los servidores de Supabase/Cloudflare son data centers conocidos. Google bloquea inmediatamente las consultas automatizadas a sus motor de búsqueda y Google Maps desde data centers.
+- Si no hay una API Key de ScrapeGraph AI activa con rotación de Proxies Residenciales (`SGAI_API_KEY` / `SCRAPEGRAPH_API_KEY` en los Secrets de Supabase), o si la cuota de la API no está configurada para renderizado headless con JS stealth, el scraper cae al fallback de HTTP fetch directo, el cual Google rechaza en 0.2 segundos.
+
+-------------------------------------------------------------------------------
+3. CÓMO LO VAMOS A SOLUCIONAR:
+-------------------------------------------------------------------------------
+
+A) CONFIGURACIÓN DE SECRET EN SUPABASE (SCRAPEGRAPH AI KEY):
+   - Se debe registrar e ingresar una API Key válida de ScrapeGraph AI en el dashboard de Supabase (Secret: `SGAI_API_KEY` o `SCRAPEGRAPH_API_KEY`).
+   - ScrapeGraph AI utiliza navegadores Headless remotos con rotación de Proxies Residenciales y desofuscación de antibots que pueden resolver los desafíos de Google Search / Google Maps.
+
+B) FILTRADO Y DETECCIÓN DE PÁGINAS DE BLOQUEO EN LA EDGE FUNCTION:
+   - La Edge Function (`supabase/functions/scraping/index.ts`) detectará cuando la respuesta obtenida sea un bloqueo anti-bot de Google o Cloudflare (`title>Google Search</title>`, `Please click here if you are not redirected`, `captcha`).
+   - Si detecta un bloqueo anti-bot, detendrá el procesamiento antes de llamar a Gemini para evitar devolver basura o estructuras vacías, notificando claramente al usuario la necesidad de usar una API Key con proxy residencial o un enlace directo del sitio web del restaurante.
+
+C) RECOMENDACIÓN DE USO PARA MEJORES RESULTADOS:
+   - Para Menús: Usar directamente la URL del sitio web o carta digital del restaurante (ej. `https://restaurante.com/menu`), la cual no tiene bloqueos anti-bot de Google.
+   - Para Búsquedas de Negocios en Google: Seleccionar el modo "Buscar / Search" con la API Key de ScrapeGraph AI configurada, la cual invoca el endpoint `smartsearch` / `Search` con scraping mediante proxies residenciales.
