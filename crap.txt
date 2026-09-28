@@ -1,0 +1,11 @@
+Configuración de Secrets en Supabase para la Edge Function (scraping):
+
+1. ScrapeGraph AI:
+   Nombre del Secret: SGAI_API_KEY  (o SCRAPEGRAPH_API_KEY)
+   Comando Supabase CLI:
+   supabase secrets set SGAI_API_KEY="tu_api_key_de_scrapegraph"
+
+2. Google Gemini:
+   Nombre del Secret: GEMINI_API_KEY
+   Comando Supabase CLI:
+   supabase secrets set GEMINI_API_KEY="tu_api_key_de_gemini"
