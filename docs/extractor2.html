@@ -160,6 +160,26 @@
         .dish-price { font-weight: 800; font-size: 0.9rem; color: var(--orange); font-family: 'Outfit', sans-serif; }
         .dish-desc { font-size: 0.8rem; color: var(--text-dim); line-height: 1.4; margin-top: 6px; }
 
+        .copyable {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1.5px solid transparent;
+            border-radius: 8px;
+            padding: 2px 6px;
+            margin: -2px -6px;
+            display: inline-block;
+            max-width: 100%;
+        }
+        .copyable:hover {
+            border-color: var(--orange);
+            background: rgba(255, 149, 51, 0.05);
+        }
+        .copyable.copied {
+            border-color: var(--success) !important;
+            box-shadow: 0 0 0 1px var(--success);
+            background: rgba(5, 150, 105, 0.08);
+        }
+
         .dish-meta { font-size: 0.75rem; border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
         .dish-meta-item { display: flex; gap: 6px; flex-wrap: wrap; }
         .meta-tag { background: var(--card); border: 1px solid var(--border); padding: 2px 8px; border-radius: 8px; color: var(--text-dim); font-size: 0.7rem; font-weight: 600; }
@@ -258,8 +278,8 @@
         <div class="extractor-card">
             <!-- Mode Selection Tabs -->
             <div class="mode-selector" id="mode-selector">
-                <button class="mode-btn active" data-mode="search" onclick="selectMode('search')">Buscar / Search</button>
-                <button class="mode-btn" data-mode="extract" onclick="selectMode('extract')">Extraer / Extract</button>
+                <button class="mode-btn active" data-mode="search" onclick="selectMode('search')">Google Maps</button>
+                <button class="mode-btn" data-mode="extract" onclick="selectMode('extract')">Menus</button>
                 <button class="mode-btn" data-mode="scrape" onclick="selectMode('scrape')">Scrape Markdown</button>
                 <button class="mode-btn" data-mode="crawl" onclick="selectMode('crawl')">Rastrear / Crawl</button>
             </div>
@@ -359,6 +379,18 @@
             toast.appendChild(msg);
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 5000);
+        };
+
+        window.copyElementText = (el) => {
+            const textToCopy = el.getAttribute('data-copy-text') || el.innerText || el.textContent;
+            if (!textToCopy) return;
+
+            navigator.clipboard.writeText(textToCopy.trim()).then(() => {
+                el.classList.add('copied');
+                showToast(`Copiado: "${textToCopy.trim().substring(0, 30)}${textToCopy.trim().length > 30 ? '...' : ''}"`, 'success');
+            }).catch(err => {
+                showToast("Error al copiar text: " + err, 'error');
+            });
         };
 
         window.selectMode = (mode) => {
@@ -509,19 +541,19 @@
                 <div class="info-card">
                     <div class="info-field">
                         <label>Restaurante</label>
-                        <div class="${!r.name ? 'empty' : ''}">${r.name || 'No especificado'}</div>
+                        <div class="${!r.name ? 'empty' : 'copyable'}" ${r.name ? 'onclick="copyElementText(this)"' : ''}>${r.name || 'No especificado'}</div>
                     </div>
                     <div class="info-field">
                         <label>Dirección</label>
-                        <div class="${!r.address ? 'empty' : ''}">${r.address || 'No especificada'}</div>
+                        <div class="${!r.address ? 'empty' : 'copyable'}" ${r.address ? 'onclick="copyElementText(this)"' : ''}>${r.address || 'No especificada'}</div>
                     </div>
                     <div class="info-field">
                         <label>Teléfono</label>
-                        <div class="${!r.phone ? 'empty' : ''}">${r.phone || 'No especificado'}</div>
+                        <div class="${!r.phone ? 'empty' : 'copyable'}" ${r.phone ? 'onclick="copyElementText(this)"' : ''}>${r.phone || 'No especificado'}</div>
                     </div>
                     <div class="info-field">
                         <label>Horarios</label>
-                        <div class="${!r.hours ? 'empty' : ''}">${r.hours || 'No especificados'}</div>
+                        <div class="${!r.hours ? 'empty' : 'copyable'}" ${r.hours ? 'onclick="copyElementText(this)"' : ''}>${r.hours || 'No especificados'}</div>
                     </div>
                 </div>
             `;
@@ -549,17 +581,17 @@
                                             <div class="dish-header">
                                                 ${d.image ? `<img src="${d.image}" class="dish-img" alt="${d.name}" onerror="this.style.display='none'">` : ''}
                                                 <div class="dish-main-info">
-                                                    <div class="dish-name">${d.name || 'Platillo'}</div>
-                                                    <div class="dish-price">${d.price ? (typeof d.price === 'number' ? '$' + parseFloat(d.price).toFixed(2) : d.price) : 'Sin precio'}</div>
+                                                    <div class="dish-name copyable" onclick="copyElementText(this)">${d.name || 'Platillo'}</div>
+                                                    <div class="dish-price copyable" onclick="copyElementText(this)">${d.price ? (typeof d.price === 'number' ? '$' + parseFloat(d.price).toFixed(2) : d.price) : 'Sin precio'}</div>
                                                 </div>
                                             </div>
-                                            ${d.description ? `<div class="dish-desc">${d.description}</div>` : ''}
+                                            ${d.description ? `<div class="dish-desc copyable" onclick="copyElementText(this)">${d.description}</div>` : ''}
                                         </div>
                                         ${(d.variants?.length || d.extras?.length || d.availability) ? `
                                             <div class="dish-meta">
-                                                ${d.availability ? `<div class="dish-meta-item"><strong>Estado:</strong> <span class="meta-tag">${d.availability}</span></div>` : ''}
-                                                ${d.variants?.length ? `<div class="dish-meta-item"><strong>Variantes:</strong> ${d.variants.map(v => `<span class="meta-tag">${v}</span>`).join('')}</div>` : ''}
-                                                ${d.extras?.length ? `<div class="dish-meta-item"><strong>Extras:</strong> ${d.extras.map(e => `<span class="meta-tag">${e}</span>`).join('')}</div>` : ''}
+                                                ${d.availability ? `<div class="dish-meta-item"><strong>Estado:</strong> <span class="meta-tag copyable" onclick="copyElementText(this)">${d.availability}</span></div>` : ''}
+                                                ${d.variants?.length ? `<div class="dish-meta-item"><strong>Variantes:</strong> ${d.variants.map(v => `<span class="meta-tag copyable" onclick="copyElementText(this)">${v}</span>`).join('')}</div>` : ''}
+                                                ${d.extras?.length ? `<div class="dish-meta-item"><strong>Extras:</strong> ${d.extras.map(e => `<span class="meta-tag copyable" onclick="copyElementText(this)">${e}</span>`).join('')}</div>` : ''}
                                             </div>
                                         ` : ''}
                                     </div>
@@ -591,15 +623,15 @@
                 html += `
                     <div class="business-card">
                         <div>
-                            <div class="business-name">${b.name || 'Negocio'}</div>
-                            ${b.category ? `<span class="business-category-tag">${b.category}</span>` : ''}
+                            <div class="business-name copyable" onclick="copyElementText(this)">${b.name || 'Negocio'}</div>
+                            ${b.category ? `<span class="business-category-tag copyable" onclick="copyElementText(this)">${b.category}</span>` : ''}
 
                             <div class="business-details" style="margin-top: 14px;">
-                                ${b.address ? `<div><strong>Dirección:</strong> <span>${b.address}</span></div>` : ''}
-                                ${b.phone ? `<div><strong>Teléfono:</strong> <span>${b.phone}</span></div>` : ''}
-                                ${b.rating ? `<div><strong>Calificación:</strong> <span>⭐ ${b.rating} ${b.reviewsCount ? '(' + b.reviewsCount + ' reseñas)' : ''}</span></div>` : ''}
-                                ${b.hours ? `<div><strong>Horario:</strong> <span>${b.hours}</span></div>` : ''}
-                                ${b.zone ? `<div><strong>Zona:</strong> <span>${b.zone}</span></div>` : ''}
+                                ${b.address ? `<div><strong>Dirección:</strong> <span class="copyable" onclick="copyElementText(this)">${b.address}</span></div>` : ''}
+                                ${b.phone ? `<div><strong>Teléfono:</strong> <span class="copyable" onclick="copyElementText(this)">${b.phone}</span></div>` : ''}
+                                ${b.rating ? `<div><strong>Calificación:</strong> <span class="copyable" onclick="copyElementText(this)">⭐ ${b.rating} ${b.reviewsCount ? '(' + b.reviewsCount + ' reseñas)' : ''}</span></div>` : ''}
+                                ${b.hours ? `<div><strong>Horario:</strong> <span class="copyable" onclick="copyElementText(this)">${b.hours}</span></div>` : ''}
+                                ${b.zone ? `<div><strong>Zona:</strong> <span class="copyable" onclick="copyElementText(this)">${b.zone}</span></div>` : ''}
                             </div>
                         </div>
 
@@ -628,11 +660,11 @@
                     html += `
                         <div class="business-card">
                             <div>
-                                ${titleText ? `<div class="business-name">${titleText}</div>` : ''}
+                                ${titleText ? `<div class="business-name copyable" onclick="copyElementText(this)">${titleText}</div>` : ''}
                                 <div class="business-details" style="margin-top: 10px;">
-                                    ${it.description ? `<div>${it.description}</div>` : ''}
-                                    ${it.category ? `<div><strong>Categoría:</strong> ${it.category}</div>` : ''}
-                                    ${it.price ? `<div><strong>Precio:</strong> ${it.price}</div>` : ''}
+                                    ${it.description ? `<div class="copyable" onclick="copyElementText(this)">${it.description}</div>` : ''}
+                                    ${it.category ? `<div><strong>Categoría:</strong> <span class="copyable" onclick="copyElementText(this)">${it.category}</span></div>` : ''}
+                                    ${it.price ? `<div><strong>Precio:</strong> <span class="copyable" onclick="copyElementText(this)">${it.price}</span></div>` : ''}
                                 </div>
                             </div>
                             ${it.url ? `<div class="business-links"><a href="${it.url}" target="_blank" class="btn-link web">Ver Enlace</a></div>` : ''}
