@@ -36,20 +36,30 @@ serve(async (req: Request) => {
 
   try {
     const payload = await req.json().catch(() => ({}));
-    const { url, prompt } = payload;
+    const { url, prompt, mode: reqMode } = payload;
 
     if (!url) {
       return new Response(
-        JSON.stringify({ error: "Debe proporcionar una URL válida." }),
+        JSON.stringify({ error: "Debe proporcionar una URL o término de búsqueda válido." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const userPrompt = prompt || "Extrae todos los datos relevantes de esta página";
+    // Auto-detect mode if Google search/maps URL or query
+    let mode = reqMode || "extract";
+    if (url.includes("google.com/search") || url.includes("google.com/maps") || mode === "search") {
+      mode = "search";
+    }
+
+    const defaultPrompt = mode === "search"
+      ? "Analiza los datos obtenidos de la búsqueda y extrae la información disponible de cada restaurante o negocio encontrado, incluyendo nombre, categoría, dirección, teléfono, sitio web, URL de Google Maps, calificación, número de reseñas, horarios y zona."
+      : "Extrae todos los datos e información relevante disponible de esta página de forma precisa.";
+
+    const userPrompt = prompt && prompt.trim() !== "" ? prompt.trim() : defaultPrompt;
     const geminiApiKey = (Deno.env.get("GEMINI_API_KEY") || "").trim();
     const sgaiApiKey = (Deno.env.get("SGAI_API_KEY") || Deno.env.get("SCRAPEGRAPH_API_KEY") || "").trim();
 
-    // 1. Scrape content using ScrapeGraph AI
+    // 1. Scrape content using ScrapeGraph AI according to requested mode
     let scrapedData: any = null;
     let sgError: string | null = null;
 
@@ -69,38 +79,48 @@ serve(async (req: Request) => {
         }
       }
 
-      const result = await sgai.extract({
-        url: url,
-        prompt: userPrompt,
-      });
-
-      if (result && result.status === "success") {
-        scrapedData = result.data;
-      } else if (result && result.data) {
-        scrapedData = result.data;
-      } else if (result && result.error) {
-        sgError = typeof result.error === "string" ? result.error : JSON.stringify(result.error);
-      } else {
-        scrapedData = result;
+      if (mode === "search" && typeof sgai.search === "function") {
+        const res = await sgai.search({ prompt: userPrompt, url: url });
+        scrapedData = res?.data || res?.result || res;
+      } else if (mode === "scrape" && typeof sgai.markdownify === "function") {
+        const res = await sgai.markdownify({ url: url });
+        scrapedData = res?.data || res?.result || res;
+      } else if (mode === "crawl" && typeof sgai.crawl === "function") {
+        const res = await sgai.crawl({ url: url, prompt: userPrompt });
+        scrapedData = res?.data || res?.result || res;
+      } else if (typeof sgai.extract === "function") {
+        const res = await sgai.extract({ url: url, prompt: userPrompt });
+        scrapedData = res?.data || res?.result || res;
       }
     } catch (err: any) {
-      console.warn("ScrapeGraphAI direct call failed:", err?.message || err);
+      console.warn("ScrapeGraphAI SDK call failed:", err?.message || err);
       sgError = err?.message || String(err);
     }
 
     // Fallback REST call to ScrapeGraph AI if SDK didn't return data and API Key exists
     if (!scrapedData && sgaiApiKey) {
       try {
-        const sgRes = await fetch("https://api.scrapegraphai.com/v1/smartscraper", {
+        let endpoint = "https://api.scrapegraphai.com/v1/smartscraper";
+        let bodyPayload: any = { website_url: url, user_prompt: userPrompt };
+
+        if (mode === "search") {
+          endpoint = "https://api.scrapegraphai.com/v1/smartsearch";
+          bodyPayload = { user_prompt: `${userPrompt}. Target query/URL: ${url}` };
+        } else if (mode === "scrape") {
+          endpoint = "https://api.scrapegraphai.com/v1/markdownify";
+          bodyPayload = { website_url: url };
+        } else if (mode === "crawl") {
+          endpoint = "https://api.scrapegraphai.com/v1/crawler";
+          bodyPayload = { website_url: url, user_prompt: userPrompt };
+        }
+
+        const sgRes = await fetch(endpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "sgai-api-key": sgaiApiKey,
           },
-          body: JSON.stringify({
-            website_url: url,
-            user_prompt: userPrompt,
-          }),
+          body: JSON.stringify(bodyPayload),
         });
 
         if (sgRes.ok) {
@@ -112,8 +132,8 @@ serve(async (req: Request) => {
       }
     }
 
-    // Fallback HTML fetch if ScrapeGraph data is unavailable or empty
-    if (!scrapedData) {
+    // Fallback direct HTML fetch if ScrapeGraph data is unavailable
+    if (!scrapedData && url.startsWith("http")) {
       try {
         const pageRes = await fetch(url, {
           headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
@@ -130,7 +150,7 @@ serve(async (req: Request) => {
     if (!scrapedData) {
       return new Response(
         JSON.stringify({
-          error: `No se pudieron obtener datos de la URL (${url}). ${sgError ? "Detalle: " + sgError : ""}`,
+          error: `No se pudieron obtener datos de la URL o búsqueda (${url}). ${sgError ? "Detalle: " + sgError : ""}`,
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -151,72 +171,77 @@ serve(async (req: Request) => {
       );
     }
 
-    const geminiSystemPrompt = `REGLA DE ORO OBLIGATORIA: DEBES DEVOLVER ÚNICAMENTE UN OBJETO JSON VÁLIDO.
-NO incluyas bloques de código JavaScript, minificados, ni scripts de la página. Ignera totalmente código fuente o scripts JS. Extrae EXCLUSIVAMENTE información humana/de negocio de la página (${url}) respondiendo a: "${userPrompt}".
+    const geminiSystemPrompt = `REGLA DE ORO STRICTA Y OBLIGATORIA:
+1. DEBES DEVOLVER ÚNICAMENTE UN OBJETO JSON VÁLIDO.
+2. NUNCA INVENTES DATOS, NUNCA GENERES EJEMPLOS, PLACEHOLDERS O FALSAS TARJETAS COMO "Elemento 1", "Elemento 2" O VALORES FICTICIOS.
+3. Extrae EXCLUSIVAMENTE la información REAL Y HUMANA presente en los datos scrapeados de (${url}) atendiendo a la instrucción: "${userPrompt}".
+4. Si un campo no está disponible en los datos scrapeados, déjalo como cadena vacía "" o no lo incluyas. NUNCA insertes texto de relleno.
 
-ESTRUCTURAS PERMITIDAS SEGÚN EL TIPO DE DATOS:
+ESTRUCTURAS PERMITIDAS SEGÚN EL TIPO DE DATOS ENCONTRADOS:
 
-1. Si el usuario solicita un menú de restaurante o los datos son de un menú:
+1. Menú de restaurante (si se detectan platillos, precios, categorías o menú):
 {
   "type": "menu",
   "restaurant": {
-    "name": "Nombre del restaurante",
-    "address": "Dirección completa",
-    "phone": "Teléfono",
-    "hours": "Horarios de atención",
+    "name": "Nombre real o vacío",
+    "address": "Dirección real o vacía",
+    "phone": "Teléfono real o vacío",
+    "hours": "Horario real o vacío",
     "websiteUrl": "${url}"
   },
   "categories": [
     {
-      "name": "Nombre de la Categoría",
+      "name": "Nombre real de la categoría",
       "dishes": [
         {
-          "name": "Nombre del platillo",
-          "price": "$0.00",
-          "description": "Descripción del platillo",
-          "image": "URL de la imagen (o vacía)",
-          "availability": "Disponible",
-          "variants": ["Chico", "Grande"],
-          "extras": ["Queso extra"]
+          "name": "Nombre real del platillo",
+          "price": "Precio real",
+          "description": "Descripción real",
+          "image": "URL real de la imagen",
+          "availability": "Disponibilidad real",
+          "variants": ["Variante 1"],
+          "extras": ["Extra 1"]
         }
       ]
     }
   ]
 }
 
-2. Si el usuario solicita negocios, restaurantes por zona, o resultados de Google Maps/búsquedas:
+2. Lista de Negocios / Búsquedas de Google Maps / Google Search / Directorios:
 {
   "type": "business_list",
   "businesses": [
     {
-      "name": "Nombre del negocio",
-      "category": "Giro o tipo de cocina",
-      "address": "Dirección",
-      "phone": "Teléfono",
-      "websiteUrl": "Enlace al sitio web del negocio",
-      "googleMapsUrl": "Enlace a Google Maps",
-      "rating": "4.5",
-      "reviewsCount": "150",
-      "hours": "Horario",
-      "zone": "Zona o colonia"
+      "name": "Nombre real del negocio",
+      "category": "Giro / Categoría real",
+      "address": "Dirección real",
+      "phone": "Teléfono real",
+      "websiteUrl": "Sitio web real",
+      "googleMapsUrl": "URL real de Google Maps",
+      "rating": "Calificación real (ej. 4.5)",
+      "reviewsCount": "Número real de reseñas",
+      "hours": "Horario real",
+      "zone": "Zona o ubicación real"
     }
   ]
 }
 
-3. Si es otro tipo de consulta genérica, utiliza:
+3. Datos genéricos o estructurados de otro tipo:
 {
   "type": "generic",
-  "title": "Resumen de Extracción",
+  "title": "Datos Extraídos",
   "data": [
     {
-      "title": "Elemento 1",
-      "description": "Detalles del elemento",
+      "name": "Nombre real encontrado",
+      "description": "Descripción o detalle real",
+      "price": "Precio si aplica",
+      "category": "Categoría si aplica",
       "url": "Enlace si aplica"
     }
   ]
 }
 
-DATOS SCRAPEADOS A ANALIZAR (SANTIZADOS SIN SCRIPTS/MINIFICADOS):
+DATOS SCRAPEADOS REALES A ANALIZAR:
 ${cleanedTextData.substring(0, 90000)}`;
 
     const geminiPayload = {
