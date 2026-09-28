@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extractor AI (ScrapeGraph + Gemini) | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #059669;
+            --error: #dc2626;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
+
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
+        #top-nav > * { pointer-events: auto; }
+
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; }
+        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
+
+        .theme-switch { width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        #user-display-pill {
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); min-width: 180px;
+        }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); }
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
+        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); }
+
+        .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 100px 24px 60px 24px; animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        header { text-align: center; margin-bottom: 40px; }
+        .logo-main { width: 100%; max-width: 260px; height: auto; margin: 0 auto 12px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
+
+        .extractor-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 32px; padding: 36px; box-shadow: 0 20px 50px rgba(0,0,0,0.06); margin-bottom: 40px; }
+
+        .form-fields-container { display: flex; flex-direction: column; gap: 20px; }
+
+        .field-group { display: flex; flex-direction: column; gap: 8px; }
+        .field-group label { font-size: 0.8rem; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Outfit', sans-serif; }
+
+        .input-wrapper input, .input-wrapper textarea {
+            width: 100%; background: var(--input); border: 1.5px solid var(--border); border-radius: 20px;
+            padding: 18px 24px; color: var(--text); font-size: 1rem; font-family: inherit; transition: 0.3s;
+        }
+        .input-wrapper textarea { resize: vertical; min-height: 100px; }
+        .input-wrapper input:focus, .input-wrapper textarea:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 4px rgba(255,149,51,0.12); }
+
+        .btn-extract {
+            background: var(--orange); color: #ffffff; border: none; padding: 18px 36px; border-radius: 20px;
+            font-size: 0.95rem; font-weight: 800; cursor: pointer; transition: 0.3s; display: inline-flex;
+            align-items: center; justify-content: center; gap: 10px; font-family: 'Outfit', sans-serif; letter-spacing: 0.5px;
+            box-shadow: 0 8px 25px rgba(255,149,51,0.3); white-space: nowrap; margin-top: 10px; width: 100%;
+        }
+        .btn-extract:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255,149,51,0.4); }
+        .btn-extract:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* Progress section */
+        #progress-card { display: none; margin-top: 24px; background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px; }
+        .progress-bar-container { width: 100%; height: 8px; background: var(--border); border-radius: 10px; overflow: hidden; margin-top: 12px; }
+        .progress-bar { height: 100%; width: 0%; background: var(--orange); transition: width 0.4s ease; border-radius: 10px; }
+        .progress-status { font-size: 0.85rem; font-weight: 700; color: var(--orange); display: flex; align-items: center; justify-content: space-between; }
+
+        /* Results section */
+        #results-wrapper { display: none; }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+        .section-header h2 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 700; }
+
+        .export-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-export {
+            background: var(--input); border: 1.5px solid var(--border); color: var(--text); padding: 12px 22px;
+            border-radius: 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.3s;
+            display: inline-flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif;
+        }
+        .btn-export:hover { border-color: var(--orange); color: var(--orange); transform: translateY(-2px); }
+        .btn-export.primary { background: var(--orange); color: #fff; border-color: var(--orange); box-shadow: 0 6px 20px rgba(255,149,51,0.25); }
+        .btn-export.primary:hover { filter: brightness(1.1); color: #fff; }
+
+        /* General Info Card */
+        .info-card {
+            background: var(--card); border: 1.5px solid var(--border); border-radius: 28px; padding: 28px;
+            margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;
+        }
+        .info-field label { display: block; font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .info-field div { font-size: 0.95rem; font-weight: 600; color: var(--text); word-break: break-word; }
+        .info-field div.empty { color: var(--text-dim); font-style: italic; font-weight: 400; font-size: 0.85rem; }
+
+        /* Menu Display */
+        .categories-container { display: flex; flex-direction: column; gap: 28px; }
+
+        .category-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 28px; padding: 28px; }
+        .category-title {
+            font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--orange);
+            margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .category-count { font-size: 0.75rem; font-weight: 700; background: rgba(255,149,51,0.12); color: var(--orange); padding: 4px 12px; border-radius: 20px; }
+
+        .dishes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+
+        .dish-card {
+            background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px;
+            display: flex; flex-direction: column; justify-content: space-between; gap: 12px; transition: 0.3s;
+        }
+        .dish-card:hover { border-color: var(--orange); }
+
+        .dish-header { display: flex; gap: 14px; align-items: flex-start; }
+        .dish-img { width: 75px; height: 75px; border-radius: 16px; object-fit: cover; background: var(--border); flex-shrink: 0; }
+        .dish-main-info { flex: 1; min-width: 0; }
+        .dish-name { font-weight: 700; font-size: 0.95rem; color: var(--text); margin-bottom: 4px; line-height: 1.3; }
+        .dish-price { font-weight: 800; font-size: 0.9rem; color: var(--orange); font-family: 'Outfit', sans-serif; }
+        .dish-desc { font-size: 0.8rem; color: var(--text-dim); line-height: 1.4; margin-top: 6px; }
+
+        .dish-meta { font-size: 0.75rem; border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
+        .dish-meta-item { display: flex; gap: 6px; flex-wrap: wrap; }
+        .meta-tag { background: var(--card); border: 1px solid var(--border); padding: 2px 8px; border-radius: 8px; color: var(--text-dim); font-size: 0.7rem; font-weight: 600; }
+
+        /* Business List Display */
+        .business-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .business-card {
+            background: var(--card); border: 1.5px solid var(--border); border-radius: 24px; padding: 24px;
+            display: flex; flex-direction: column; justify-content: space-between; gap: 16px; transition: 0.3s;
+        }
+        .business-card:hover { border-color: var(--orange); transform: translateY(-3px); }
+        .business-name { font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--text); }
+        .business-category-tag { display: inline-block; background: rgba(255,149,51,0.12); color: var(--orange); font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 10px; margin-top: 4px; }
+        .business-details { display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; color: var(--text-dim); }
+        .business-details div { display: flex; gap: 8px; align-items: flex-start; }
+        .business-links { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .btn-link {
+            padding: 8px 14px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;
+        }
+        .btn-link.web { background: var(--input); border: 1px solid var(--border); color: var(--text); }
+        .btn-link.web:hover { border-color: var(--orange); color: var(--orange); }
+        .btn-link.maps { background: #4285F4; color: #fff; }
+        .btn-link.maps:hover { filter: brightness(1.1); }
+
+        /* Generic JSON Tree Display */
+        .generic-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 28px; padding: 28px; overflow-x: auto; }
+
+        /* JSON Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-card {
+            background: var(--card); border: 1.5px solid var(--border); border-radius: 28px; padding: 28px;
+            width: 100%; max-width: 800px; max-height: 85vh; display: flex; flex-direction: column; gap: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); transform: scale(0.95); transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-card { transform: scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 800; }
+        .btn-close-modal { background: none; border: none; font-size: 1.5rem; color: var(--text-dim); cursor: pointer; }
+        pre.json-pre {
+            background: var(--input); border: 1px solid var(--border); border-radius: 18px; padding: 20px;
+            font-family: monospace; font-size: 0.85rem; color: var(--text); overflow: auto; flex: 1; white-space: pre-wrap; word-break: break-all;
+        }
+
+        /* Toast Notifications */
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast { min-width: 300px; max-width: 460px; padding: 16px 20px; border-radius: 20px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.85rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.4s ease; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+        .toast.success { border-left: 5px solid var(--success); }
+        .toast.error { border-left: 5px solid var(--error); }
+        .toast.warning { border-left: 5px solid var(--orange); }
+        @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        .loader-spin { border: 3px solid rgba(255, 149, 51, 0.2); width: 22px; height: 22px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 0.8s linear infinite; display: inline-block; }
+        @keyframes rotate { to { transform: rotate(360deg); } }
+
+        @media (max-width: 640px) {
+            .container { padding-top: 90px; }
+            .btn-extract { width: 100%; justify-content: center; }
+            .dishes-grid, .business-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
+
+    <div id="top-nav">
+        <div>
+            <button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="theme-switch" id="theme-toggle" title="Cambiar Tema">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+            <div id="user-display-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: var(--orange);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div class="pill-info">
+                    <div id="user-name">Menutech</div>
+                    <div id="user-role-label">ScrapeGraph AI</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
+        </header>
+
+        <div class="extractor-card">
+            <div class="form-fields-container">
+                <div class="field-group">
+                    <label for="target-url">URL del Sitio Web</label>
+                    <div class="input-wrapper">
+                        <input type="url" id="target-url" placeholder="https://ejemplo.com/menu" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="target-prompt">Instrucción de Extracción</label>
+                    <div class="input-wrapper">
+                        <textarea id="target-prompt" placeholder="Extrae todos los platillos con nombre, precio, descripción, imagen y categoría"></textarea>
+                    </div>
+                </div>
+
+                <button class="btn-extract" id="btn-extract" onclick="startExtraction()">
+                    <span>Extraer Datos</span>
+                </button>
+            </div>
+
+            <div id="progress-card">
+                <div class="progress-status">
+                    <span id="progress-text">Iniciando ScrapeGraph AI...</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Display -->
+        <div id="results-wrapper">
+            <div class="section-header">
+                <h2>Resultados Estructurados</h2>
+                <div class="export-actions">
+                    <button class="btn-export primary" onclick="openJsonModal()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        Ver JSON
+                    </button>
+                </div>
+            </div>
+
+            <div id="structured-content-display">
+                <!-- Dynamically rendered visual cards -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JSON Inspector Modal -->
+    <div class="modal-overlay" id="json-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>JSON Generado por Gemini</h3>
+                <button class="btn-close-modal" onclick="closeJsonModal()">&times;</button>
+            </div>
+            <pre class="json-pre" id="json-modal-content"></pre>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn-export" onclick="copyJsonToClipboard()">Copiar JSON</button>
+                <button class="btn-export primary" onclick="downloadJsonFile()">Descargar JSON</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { MT_CONFIG } from './config.js';
+        import { supabase as sb } from './supabase.js';
+
+        window.lastExtractedJson = null;
+
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const msg = document.createElement('div');
+            msg.textContent = message;
+            toast.appendChild(msg);
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
+            checkUserSession();
+        });
+
+        async function checkUserSession() {
+            if (sb) {
+                const { data: { session } } = await sb.auth.getSession();
+                if (session && session.user) {
+                    const { data: profile } = await sb.from('profiles').select('username, role').eq('id', session.user.id).single();
+                    if (profile) {
+                        document.getElementById('user-name').textContent = profile.username || session.user.email.split('@')[0];
+                        document.getElementById('user-role-label').textContent = profile.role || 'User';
+                    }
+                }
+            }
+        }
+
+        function initTheme() {
+            const toggle = document.getElementById('theme-toggle');
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            toggle.onclick = () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            };
+        }
+
+        function updateProgress(percent, text) {
+            const card = document.getElementById('progress-card');
+            const bar = document.getElementById('progress-bar');
+            const pText = document.getElementById('progress-text');
+            const pPercent = document.getElementById('progress-percent');
+
+            card.style.display = 'block';
+            bar.style.width = percent + '%';
+            pText.textContent = text;
+            pPercent.textContent = percent + '%';
+        }
+
+        function hideProgress() {
+            document.getElementById('progress-card').style.display = 'none';
+        }
+
+        window.startExtraction = async () => {
+            const urlInput = document.getElementById('target-url');
+            const promptInput = document.getElementById('target-prompt');
+
+            let targetUrl = urlInput.value.trim();
+            const promptText = promptInput.value.trim();
+
+            if (!targetUrl) {
+                showToast("Por favor ingresa una URL válida.", "warning");
+                return;
+            }
+
+            if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+                targetUrl = 'https://' + targetUrl;
+                urlInput.value = targetUrl;
+            }
+
+            const btn = document.getElementById('btn-extract');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="loader-spin"></span> Conectando con ScrapeGraph AI...`;
+            document.getElementById('results-wrapper').style.display = 'none';
+
+            updateProgress(15, "Enviando solicitud a Edge Function (ScrapeGraph AI)...");
+
+            try {
+                const edgeFunctionUrl = (MT_CONFIG?.SUPABASE_URL || 'https://eemqyrysdgasfjlitads.supabase.co') + '/functions/v1/scraping';
+                const apiKey = MT_CONFIG?.SUPABASE_KEY || '';
+
+                updateProgress(40, "Ejecutando ScrapeGraph AI y procesando con Gemini...");
+
+                const res = await fetch(edgeFunctionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': apiKey,
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        url: targetUrl,
+                        prompt: promptText
+                    })
+                });
+
+                updateProgress(80, "Recibiendo y estructurando datos JSON...");
+
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok || data.error) {
+                    throw new Error(data.error || `HTTP ${res.status}`);
+                }
+
+                window.lastExtractedJson = data;
+
+                updateProgress(95, "Renderizando interfaz visual...");
+                renderResults(data);
+
+                updateProgress(100, "¡Extracción completada!");
+                setTimeout(hideProgress, 1000);
+                showToast("Extracción completada con éxito.", "success");
+            } catch (err) {
+                console.error("ScrapeGraph extraction error:", err);
+                hideProgress();
+                showToast("Error en la extracción: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<span>Extraer Datos</span>`;
+            }
+        };
+
+        function renderResults(data) {
+            const display = document.getElementById('structured-content-display');
+            const wrapper = document.getElementById('results-wrapper');
+            display.innerHTML = '';
+
+            const isMenu = data.type === 'menu' || data.categories || data.restaurant;
+            const isBusinessList = data.type === 'business_list' || Array.isArray(data.businesses);
+
+            if (isMenu) {
+                renderMenuUI(display, data);
+            } else if (isBusinessList) {
+                renderBusinessListUI(display, data);
+            } else {
+                renderGenericUI(display, data);
+            }
+
+            wrapper.style.display = 'block';
+            wrapper.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderMenuUI(container, data) {
+            const r = data.restaurant || {};
+            const categories = data.categories || [];
+
+            let html = `
+                <div class="info-card">
+                    <div class="info-field">
+                        <label>Restaurante</label>
+                        <div class="${!r.name ? 'empty' : ''}">${r.name || 'No especificado'}</div>
+                    </div>
+                    <div class="info-field">
+                        <label>Dirección</label>
+                        <div class="${!r.address ? 'empty' : ''}">${r.address || 'No especificada'}</div>
+                    </div>
+                    <div class="info-field">
+                        <label>Teléfono</label>
+                        <div class="${!r.phone ? 'empty' : ''}">${r.phone || 'No especificado'}</div>
+                    </div>
+                    <div class="info-field">
+                        <label>Horarios</label>
+                        <div class="${!r.hours ? 'empty' : ''}">${r.hours || 'No especificados'}</div>
+                    </div>
+                </div>
+            `;
+
+            if (categories.length === 0) {
+                html += `
+                    <div class="category-card" style="text-align:center; color:var(--text-dim); padding:40px;">
+                        No se detectaron categorías ni platillos en el resultado.
+                    </div>
+                `;
+            } else {
+                html += `<div class="categories-container">`;
+                categories.forEach(cat => {
+                    const dishes = cat.dishes || cat.items || [];
+                    html += `
+                        <div class="category-card">
+                            <div class="category-title">
+                                <span>${cat.name || 'Categoría'}</span>
+                                <span class="category-count">${dishes.length} platillos</span>
+                            </div>
+                            <div class="dishes-grid">
+                                ${dishes.map(d => `
+                                    <div class="dish-card">
+                                        <div>
+                                            <div class="dish-header">
+                                                ${d.image ? `<img src="${d.image}" class="dish-img" alt="${d.name}" onerror="this.style.display='none'">` : ''}
+                                                <div class="dish-main-info">
+                                                    <div class="dish-name">${d.name || 'Platillo'}</div>
+                                                    <div class="dish-price">${d.price || 'Sin precio'}</div>
+                                                </div>
+                                            </div>
+                                            ${d.description ? `<div class="dish-desc">${d.description}</div>` : ''}
+                                        </div>
+                                        ${(d.variants?.length || d.extras?.length || d.availability) ? `
+                                            <div class="dish-meta">
+                                                ${d.availability ? `<div class="dish-meta-item"><strong>Estado:</strong> <span class="meta-tag">${d.availability}</span></div>` : ''}
+                                                ${d.variants?.length ? `<div class="dish-meta-item"><strong>Variantes:</strong> ${d.variants.map(v => `<span class="meta-tag">${v}</span>`).join('')}</div>` : ''}
+                                                ${d.extras?.length ? `<div class="dish-meta-item"><strong>Extras:</strong> ${d.extras.map(e => `<span class="meta-tag">${e}</span>`).join('')}</div>` : ''}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function renderBusinessListUI(container, data) {
+            const businesses = data.businesses || [];
+
+            if (businesses.length === 0) {
+                container.innerHTML = `
+                    <div class="category-card" style="text-align:center; color:var(--text-dim); padding:40px;">
+                        No se encontraron negocios estructurados en la respuesta.
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `<div class="business-grid">`;
+            businesses.forEach(b => {
+                html += `
+                    <div class="business-card">
+                        <div>
+                            <div class="business-name">${b.name || 'Negocio'}</div>
+                            ${b.category ? `<span class="business-category-tag">${b.category}</span>` : ''}
+
+                            <div class="business-details" style="margin-top: 14px;">
+                                ${b.address ? `<div><strong>Dirección:</strong> <span>${b.address}</span></div>` : ''}
+                                ${b.phone ? `<div><strong>Teléfono:</strong> <span>${b.phone}</span></div>` : ''}
+                                ${b.rating ? `<div><strong>Calificación:</strong> <span>⭐ ${b.rating} ${b.reviewsCount ? '(' + b.reviewsCount + ' reseñas)' : ''}</span></div>` : ''}
+                                ${b.hours ? `<div><strong>Horario:</strong> <span>${b.hours}</span></div>` : ''}
+                                ${b.zone ? `<div><strong>Zona:</strong> <span>${b.zone}</span></div>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="business-links">
+                            ${b.websiteUrl ? `<a href="${b.websiteUrl}" target="_blank" class="btn-link web">Sitio Web</a>` : ''}
+                            ${b.googleMapsUrl ? `<a href="${b.googleMapsUrl}" target="_blank" class="btn-link maps">Google Maps</a>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+
+            container.innerHTML = html;
+        }
+
+        function renderGenericUI(container, data) {
+            container.innerHTML = `
+                <div class="generic-card">
+                    <pre class="json-pre">${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        window.openJsonModal = () => {
+            const modal = document.getElementById('json-modal');
+            const pre = document.getElementById('json-modal-content');
+            pre.textContent = JSON.stringify(window.lastExtractedJson || {}, null, 2);
+            modal.classList.add('active');
+        };
+
+        window.closeJsonModal = () => {
+            document.getElementById('json-modal').classList.remove('active');
+        };
+
+        window.copyJsonToClipboard = () => {
+            const str = JSON.stringify(window.lastExtractedJson || {}, null, 2);
+            navigator.clipboard.writeText(str).then(() => {
+                showToast("JSON copiado al portapapeles.", "success");
+            }).catch(() => {
+                showToast("Error al copiar al portapapeles.", "error");
+            });
+        };
+
+        window.downloadJsonFile = () => {
+            const str = JSON.stringify(window.lastExtractedJson || {}, null, 2);
+            const blob = new Blob([str], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'extraccion_scrapegraph.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+    </script>
+    <script src="chatbot.js"></script>
+</body>
+</html>
