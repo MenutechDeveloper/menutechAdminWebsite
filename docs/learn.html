@@ -1451,24 +1451,13 @@
                     return;
                 }
 
-                let extractedColumns = [];
-                if (link) {
-                    showToast("Extrayendo columnas del Google Sheet...", "warning");
-                    extractedColumns = await fetchGoogleSheetColumns(link);
-                    if (extractedColumns.length > 0) {
-                        showToast(`Se detectaron ${extractedColumns.length} columnas en el Google Sheet.`, "success");
-                    } else {
-                        showToast("No se pudieron extraer columnas automáticamente, pero el enlace se guardó correctamente.", "warning");
-                    }
-                }
-
                 await saveKnowledgeItem({
                     title: title,
                     type: 'sheet',
                     content: description || (link ? `Google Sheet: ${link}` : 'Google Sheet'),
                     link: link,
-                    columns: extractedColumns,
-                    metadata: { columns: extractedColumns, link: link }
+                    columns: [],
+                    metadata: { link: link }
                 });
 
                 document.getElementById('sheet-title').value = '';
