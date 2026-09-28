@@ -392,7 +392,7 @@
 
         .algo-canvas-body {
             display: grid;
-            grid-template-columns: 280px 1fr;
+            grid-template-columns: 320px 1fr;
             gap: 24px;
             flex: 1;
             height: calc(100vh - 120px);
@@ -406,18 +406,31 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 16px;
             overflow-y: auto;
+        }
+
+        .palette-section-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 0.82rem;
+            color: var(--orange);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .palette-item {
             background: var(--input);
             border: 1.5px dashed var(--orange);
             border-radius: 16px;
-            padding: 14px;
+            padding: 12px 14px;
             cursor: grab;
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.83rem;
             color: var(--text);
             transition: all 0.2s;
             display: flex;
@@ -427,6 +440,49 @@
         .palette-item:hover {
             background: rgba(255, 149, 51, 0.1);
             transform: translateY(-2px);
+        }
+
+        .tool-chip {
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+            margin-right: 6px;
+        }
+        .tool-chip:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+            background: rgba(255, 149, 51, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .column-chip {
+            background: rgba(255, 149, 51, 0.15);
+            border: 1px solid var(--orange);
+            color: var(--orange-dark);
+            border-radius: 10px;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin: 3px;
+            transition: all 0.2s;
+        }
+        .column-chip:hover {
+            background: var(--orange);
+            color: #ffffff;
         }
 
         .algo-workspace-canvas {
@@ -1144,36 +1200,64 @@
             <div class="algo-canvas-body">
                 <!-- PALETTE SIDEBAR -->
                 <div class="algo-palette-sidebar">
-                    <div style="font-family:'Outfit',sans-serif; font-weight:800; font-size:0.85rem; color:var(--orange); text-transform:uppercase; margin-bottom:4px;">
-                        Bloques Disponibles
+                    <div>
+                        <div class="palette-section-title">Bloques Principales</div>
+                        <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+                            <div class="palette-item" draggable="true" data-type="source">
+                                <span>Fuente de Datos</span>
+                            </div>
+
+                            <div class="palette-item" draggable="true" data-type="query">
+                                <span>Consulta / Filtro de Datos</span>
+                            </div>
+
+                            <div class="palette-item" draggable="true" data-type="calc">
+                                <span>Cálculo / Operación General</span>
+                            </div>
+
+                            <div class="palette-item" draggable="true" data-type="rule">
+                                <span>Instrucción / Regla de Lógica</span>
+                            </div>
+
+                            <div class="palette-item" draggable="true" data-type="responder">
+                                <span>Responder (Guía de Intención)</span>
+                            </div>
+
+                            <div class="palette-item" draggable="true" data-type="event">
+                                <span>Evento / Reacción</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="palette-item" draggable="true" data-type="source">
-                        <span>Fuente de Datos</span>
+                    <div style="border-top:1px solid var(--border); padding-top:12px;">
+                        <div class="palette-section-title">Herramientas & Atajos</div>
+                        <div style="margin-top:8px;" id="sidebar-tools-container">
+                            <div class="tool-chip" onclick="insertToolSnippet('{Responder: Tono amable y profesional}')">
+                                <span>Responder (Tono)</span>
+                            </div>
+                            <div class="tool-chip" onclick="insertToolSnippet('{Filtrar por columna}')">
+                                <span>Buscar / Filtrar</span>
+                            </div>
+                            <div class="tool-chip" onclick="insertToolSnippet('{Calcular: operacion_matematica}')">
+                                <span>Calcular Fórmula</span>
+                            </div>
+                            <div class="tool-chip" onclick="insertToolSnippet('{Si valor > X entonces...}')">
+                                <span>Condición / Si</span>
+                            </div>
+                            <div class="tool-chip" onclick="insertToolSnippet('{Extraer datos e informar}')">
+                                <span>Extraer Datos</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="palette-item" draggable="true" data-type="query">
-                        <span>Consulta de Datos</span>
-                    </div>
-
-                    <div class="palette-item" draggable="true" data-type="calc">
-                        <span>Cálculo / Operación</span>
-                    </div>
-
-                    <div class="palette-item" draggable="true" data-type="rule">
-                        <span>Instrucción / Regla</span>
-                    </div>
-
-                    <div class="palette-item" draggable="true" data-type="responder">
-                        <span>Responder (Guía)</span>
-                    </div>
-
-                    <div class="palette-item" draggable="true" data-type="action">
-                        <span>Reacción Menutech IA</span>
-                    </div>
-
-                    <div class="palette-item" draggable="true" data-type="event">
-                        <span>Evento Interno</span>
+                    <div style="border-top:1px solid var(--border); padding-top:12px;">
+                        <div class="palette-section-title">Columnas Detectadas</div>
+                        <div style="font-size:0.75rem; color:var(--text-dim); margin-top:4px; margin-bottom:8px;">
+                            Haz clic en una columna para insertarla en la regla o fórmula activa:
+                        </div>
+                        <div id="sidebar-detected-columns" style="display:flex; flex-wrap:wrap; max-height:160px; overflow-y:auto;">
+                            <div style="font-size:0.75rem; color:var(--text-dim); font-style:italic;">Selecciona o agrega una Fuente de Datos para ver sus columnas.</div>
+                        </div>
                     </div>
                 </div>
 
@@ -1720,15 +1804,15 @@
                 blockCard.setAttribute('draggable', 'true');
                 blockCard.setAttribute('data-block-type', type);
 
-                let headerTitle = "BLOQUE DE ALGORITMO";
+                let headerTitle = "BLOQUE GENERAL DE ALGORITMO";
                 let innerHtml = "";
 
                 if (type === 'source') {
-                    headerTitle = "FUENTE DE DATOS";
+                    headerTitle = "FUENTE DE DATOS (TABLA / DOCUMENTO)";
                     const opts = knowledgeData.map(k => `<option value="${k.id}" ${initialData.sourceId === k.id ? 'selected' : ''}>[${k.type.toUpperCase()}] ${escapeHtml(k.title)}</option>`).join('');
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Seleccionar Fuente</label>
+                            <label>Seleccionar Fuente de Conocimiento o Sheet</label>
                             <select class="block-field-source" onchange="renderBlockColumns(this)">
                                 <option value="">Seleccionar Fuente...</option>
                                 ${opts}
@@ -1737,68 +1821,61 @@
                         <div class="block-columns-container"></div>
                     `;
                 } else if (type === 'query') {
-                    headerTitle = "CONSULTA DE DATOS";
+                    headerTitle = "CONSULTA / FILTRO DE DATOS";
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Campo / Columna a Consultar</label>
+                            <label>Columna(s) a Consultar (ej. {Estado}, {Prioridad}, {Nombre})</label>
                             <input type="text" class="block-field-query-col" value="${escapeHtml(initialData.queryCol || '')}">
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
-                            <label>Criterio / Clave de Búsqueda</label>
+                            <label>Criterio o Valor de Búsqueda (ej. "Pendiente", "Abierto")</label>
                             <input type="text" class="block-field-query-val" value="${escapeHtml(initialData.queryVal || '')}">
                         </div>
                     `;
                 } else if (type === 'calc') {
-                    headerTitle = "CÁLCULO / OPERACIÓN";
-                    const operationType = initialData.calcType || 'discount';
+                    headerTitle = "CÁLCULO / OPERACIÓN GENERAL";
+                    const operationType = initialData.calcType || 'formula';
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Tipo de Operación</label>
+                            <label>Tipo de Operación o Análisis</label>
                             <select class="block-field-calc-type">
-                                <option value="discount" ${operationType === 'discount' ? 'selected' : ''}>Aplicar Descuento (%)</option>
-                                <option value="formula" ${operationType === 'formula' ? 'selected' : ''}>Fórmula Aritmética Libre</option>
-                                <option value="sum" ${operationType === 'sum' ? 'selected' : ''}>Sumar Columnas</option>
+                                <option value="formula" ${operationType === 'formula' ? 'selected' : ''}>Fórmula Aritmética Libre (ej. {Precio} * {Stock})</option>
+                                <option value="sum" ${operationType === 'sum' ? 'selected' : ''}>Suma / Totalizar Columna</option>
+                                <option value="ratio" ${operationType === 'ratio' ? 'selected' : ''}>Calcular Porcentaje / Proporción</option>
+                                <option value="discount" ${operationType === 'discount' ? 'selected' : ''}>Aplicar Descuento o Modificación</option>
                             </select>
                         </div>
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Columna(s) Afectada(s)</label>
+                            <label>Columna(s) Involucradas (Usa el panel de la izquierda para insertar)</label>
                             <input type="text" class="block-field-calc-cols" value="${escapeHtml(initialData.calcCols || '')}">
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
-                            <label>Fórmula o Valor de Cálculo</label>
+                            <label>Expresión, Fórmula o Instrucción Matemática</label>
                             <input type="text" class="block-field-calc-formula" value="${escapeHtml(initialData.calcFormula || '')}">
                         </div>
                     `;
                 } else if (type === 'rule') {
-                    headerTitle = "INSTRUCCIÓN / REGLA";
+                    headerTitle = "INSTRUCCIÓN / REGLA DE LÓGICA (CS & AUTOMATIZACIÓN)";
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Instrucción / Condición</label>
+                            <label>Regla de Negocio / Condición de Lógica</label>
                             <textarea class="block-field-rule">${escapeHtml(initialData.ruleText || '')}</textarea>
                         </div>
                     `;
                 } else if (type === 'responder') {
-                    headerTitle = "RESPONDER (GUÍA DE RESPUESTA)";
+                    headerTitle = "RESPONDER (GUÍA DE INTENCIÓN DE IA)";
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:0;">
-                            <label>Guía Intencionada de Respuesta (Gemini interpretará la intención)</label>
+                            <label>Orientación e Intención de Respuesta (La IA interpretará el objetivo sin copiar literal)</label>
                             <textarea class="block-field-responder">${escapeHtml(initialData.responderText || '')}</textarea>
                         </div>
                     `;
-                } else if (type === 'action') {
-                    headerTitle = "REACCIÓN MENUTECH IA";
+                } else if (type === 'action' || type === 'event') {
+                    headerTitle = "EVENTO / REACCIÓN INTERNA";
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:0;">
-                            <label>Instrucciones de Respuesta para Menutech IA</label>
-                            <textarea class="block-field-ia">${escapeHtml(initialData.iaText || '')}</textarea>
-                        </div>
-                    `;
-                } else if (type === 'event') {
-                    headerTitle = "EVENTO INTERNO";
-                    innerHtml = `
-                        <div class="form-group" style="margin-bottom:0;">
-                            <label>Nombre del Evento</label>
-                            <input type="text" class="block-field-event" value="${escapeHtml(initialData.eventName || '')}">
+                            <label>Nombre o Identificador del Evento</label>
+                            <input type="text" class="block-field-event" value="${escapeHtml(initialData.eventName || initialData.iaText || '')}">
                         </div>
                     `;
                 }
@@ -1982,6 +2059,7 @@
                             </div>
                         </div>
                     `;
+                    window.updateSidebarDetectedColumns(detectedCols);
                 } else {
                     container.innerHTML = `<div style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">Sin columnas tabulares detectadas.</div>`;
                 }
@@ -1990,6 +2068,44 @@
 
             window.toggleColBadge = (badge) => {
                 badge.classList.toggle('active');
+            };
+
+            window.lastActiveInput = null;
+            document.addEventListener('focusin', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    window.lastActiveInput = e.target;
+                }
+            });
+
+            window.insertToolSnippet = (textToInsert) => {
+                if (window.lastActiveInput && document.body.contains(window.lastActiveInput)) {
+                    const el = window.lastActiveInput;
+                    const start = el.selectionStart || 0;
+                    const end = el.selectionEnd || 0;
+                    const val = el.value;
+                    el.value = val.substring(0, start) + textToInsert + val.substring(end);
+                    el.selectionStart = el.selectionEnd = start + textToInsert.length;
+                    el.focus();
+                    showToast(`Incertado: ${textToInsert}`, 'success');
+                } else {
+                    showToast("Haz clic dentro de un campo o regla para insertar.", "warning");
+                }
+            };
+
+            window.updateSidebarDetectedColumns = (columnsList) => {
+                const sidebarContainer = document.getElementById('sidebar-detected-columns');
+                if (!sidebarContainer) return;
+
+                if (!columnsList || columnsList.length === 0) {
+                    sidebarContainer.innerHTML = `<div style="font-size:0.75rem; color:var(--text-dim); font-style:italic;">Selecciona o agrega una Fuente de Datos para ver sus columnas.</div>`;
+                    return;
+                }
+
+                sidebarContainer.innerHTML = columnsList.map(col => `
+                    <div class="column-chip" onclick="insertToolSnippet('{${escapeHtml(col)}}')">
+                        <span>{${escapeHtml(col)}}</span>
+                    </div>
+                `).join('');
             };
 
             window.autoSuggestAlgorithmName = () => {
@@ -2144,15 +2260,6 @@
 // RUTA SUGERIDA: supabase/functions/${slug}/index.ts
 // SECRET REQUERIDO EN SUPABASE: GEMINI_API_KEY
 // ==============================================================================
-// INSTRUCCIONES DE CREACIÓN Y DESPLIEGUE EN SUPABASE:
-// 1. En la consola web de Supabase, crea una Edge Function con el nombre exacto:
-//    ${slug}
-// 2. O desde tu terminal local usando Supabase CLI:
-//    supabase functions new ${slug}
-// 3. Copia y pega este código en index.ts y guarda los cambios.
-// 4. Despliega la función ejecutando:
-//    supabase functions deploy ${slug} --no-verify-jwt
-// ==============================================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
@@ -2196,37 +2303,35 @@ serve(async (req: Request) => {
             : (Array.isArray(sourceObj.columns) ? sourceObj.columns.join(', ') : 'Todas');
 
           contextDataText += \`\\n--- FUENTE DE DATOS: \${sourceObj.title} ---\\n\`;
-          contextDataText += \`COLUMNAS DISPONIBLES / SELECCIONADAS: \${colsStr}\\n\`;
-          if (sourceObj.link) contextDataText += \`LINK: \${sourceObj.link}\\n\`;
-          contextDataText += \`CONTENIDO:\\n\${sourceObj.content || ''}\\n\`;
+          contextDataText += \`COLUMNAS DISPONIBLES: \${colsStr}\\n\`;
+          if (sourceObj.link) contextDataText += \`LINK DE CONSULTA: \${sourceObj.link}\\n\`;
+          contextDataText += \`CONTENIDO TABULAR / DOCUMENTAL:\\n\${sourceObj.content || ''}\\n\`;
         }
       } else if (block.type === 'query') {
-        systemInstructions.push(\`INSTRUCCIÓN DE CONSULTA: Buscar en la columna '\${block.queryCol}' el criterio '\${block.queryVal}' para responder con los datos coincidentes.\`);
+        systemInstructions.push(\`CONSULTA Y FILTRADO: Buscar en la columna '\${block.queryCol}' la clave/criterio '\${block.queryVal}' e identificar todas las filas/registros coincidentes.\`);
       } else if (block.type === 'calc') {
-        systemInstructions.push(\`INSTRUCCIÓN DE CÁLCULO: Realizar la operación '\${block.calcType}' en las columnas [\${block.calcCols}] usando la fórmula/porcentaje '\${block.calcFormula}'. CALCULA LOS VALORES MATEMÁTICOS REALES Y DEVUELVE LOS PRECIOS/RESULTADOS OBTENIDOS. NUNCA REPITAS LA FÓRMULA TEXTUALMENTE.\`);
+        systemInstructions.push(\`CÁLCULO Y ANÁLISIS MATEMÁTICO: Ejecutar la operación '\${block.calcType}' en las columnas [\${block.calcCols}] usando la regla/fórmula '\${block.calcFormula}'. CALCULA LOS NÚMEROS REALES, TOTALES O DESCUENTOS Y MUESTRA EL RESULTADO DE LA OPERACIÓN MATEMÁTICA. NUNCA REPITAS LA SINTAXIS DE LA FÓRMULA TEXTUALMENTE.\`);
       } else if (block.type === 'rule') {
-        systemInstructions.push(\`REGLA DE NEGOCIO: \${block.ruleText}\`);
+        systemInstructions.push(\`REGLA O CONDICIÓN DE LÓGICA: \${block.ruleText}\`);
       } else if (block.type === 'responder') {
-        systemInstructions.push(\`GUÍA DE RESPUESTA INTENCIONADA: Usa la siguiente guía como orientación intencionada del tono y objetivo de la respuesta: "\${block.responderText}". NO repitas esta guía palabra por palabra, sino genera una respuesta natural adaptada a la consulta del usuario.\`);
-      } else if (block.type === 'action') {
-        systemInstructions.push(\`REACCIÓN DE IA: \${block.iaText}\`);
-      } else if (block.type === 'event') {
-        eventsTriggered.push(block.eventName);
+        systemInstructions.push(\`ORIENTACIÓN DE RESPUESTA: Usa la siguiente guía como orientación intencionada: "\${block.responderText}". NO repitas la guía palabra por palabra, interpreta el objetivo y responde de forma natural.\`);
+      } else if (block.type === 'action' || block.type === 'event') {
+        if (block.eventName || block.iaText) eventsTriggered.push(block.eventName || block.iaText);
       }
     }
 
-    const aiSystemPrompt = \`Eres Menutech AI, un asistente inteligente de restaurante/plataforma.
-NO repitas de forma literal las instrucciones o reglas de configuración.
-Tu trabajo es EJECUTAR las operaciones, realizar los CÁLCULOS matemáticos reales (descuentos, sumas, precios finales) sobre las fuentes de datos y responder de manera atenta, clara y conversacional.
+    const aiSystemPrompt = \`Eres el motor de ejecución de Menutech AI.
+NO debes imprimir ni repetir el texto de las fórmulas o reglas literalmente.
+Tu tarea es PENSAR Y CALCULAR: realiza las operaciones matemáticas reales, evalúa las condiciones y genera la respuesta conversacional requerida.
 
 \${contextDataText}
 
-REGLAS DE EJECUCIÓN Y CÁLCULO:
+DIRECTIVAS Y OPERACIONES A REALIZAR:
 \${systemInstructions.map((inst, i) => \`\${i + 1}. \${inst}\`).join('\\n')}
 
-MENSAJE DEL USUARIO: "\${userPrompt}"
+SOLICITUD / MENSAJE DEL USUARIO: "\${userPrompt}"
 
-Procesa la solicitud realizando las consultas y cálculos solicitados. Responde al usuario en un tono amable, profesional y natural:\`;
+Procesa los datos, calcula las expresiones requeridas y responde de manera amable, clara y directa:\`;
 
     let reply = "";
     if (geminiApiKey) {
@@ -2240,7 +2345,7 @@ Procesa la solicitud realizando las consultas y cálculos solicitados. Responde 
       const geminiData = await geminiRes.json();
       reply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "Procesado con éxito.";
     } else {
-      reply = "Ejecutado (Sin GEMINI_API_KEY configurada). Prompt generado:\\n" + aiSystemPrompt;
+      reply = "Ejecutado con éxito. Prompt de cálculo generado:\\n" + aiSystemPrompt;
     }
 
     return new Response(JSON.stringify({
