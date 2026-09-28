@@ -40,6 +40,112 @@ function extractRuidFromUrl(urlStr: string): string | null {
   return match ? match[1] : null;
 }
 
+// Transform Foodbooking / Menutech API JSON directly into clean structured menu object
+function transformFoodbookingToMenu(apiJson: any, sourceUrl: string) {
+  const root = apiJson?.data || apiJson || {};
+  const terms = root.terms || {};
+  const menuObj = root.menu || {};
+  const categoriesList = menuObj.categories || root.categories || [];
+  const picturesObj = root.pictures || {};
+  const cdnBase = root.cdn_base_path || "https://www.fbgcdn.com/pictures/";
+
+  const restaurantName = root.name || terms.company_name || "Restaurante Digital";
+  const restaurantAddress = root.address || [terms.address, terms.city, terms.zip, terms.country_code].filter(Boolean).join(", ");
+  const restaurantPhone = root.phone || terms.phone || root.phones || "";
+
+  let formattedHours = "";
+  if (Array.isArray(root.opening_hours) && root.opening_hours.length > 0) {
+    const hoursList = root.opening_hours.map((oh: any) => {
+      const startH = String(Math.floor(oh.begin_minute / 60)).padStart(2, "0");
+      const startM = String(oh.begin_minute % 60).padStart(2, "0");
+      const endH = String(Math.floor(oh.end_minute / 60)).padStart(2, "0");
+      const endM = String(oh.end_minute % 60).padStart(2, "0");
+      return `${startH}:${startM} - ${endH}:${endM}`;
+    });
+    formattedHours = Array.from(new Set(hoursList)).join(" | ");
+  }
+
+  const categories: any[] = [];
+
+  categoriesList.forEach((cat: any) => {
+    const catName = cat.name || "Menú General";
+    const items = cat.items || [];
+    const dishes: any[] = [];
+
+    items.forEach((it: any) => {
+      if (it && it.name) {
+        let imgUrl = "";
+        if (picturesObj) {
+          const pKey = `menu_item-${it.id}`;
+          const pKeySmall = `menu_item_small-${it.id}`;
+          const picItem = picturesObj[pKey] || picturesObj[pKeySmall];
+          if (picItem && picItem.filename) {
+            imgUrl = `${cdnBase}${picItem.filename}`;
+          }
+        }
+
+        let priceText = "";
+        if (it.price !== undefined && it.price !== null) {
+          priceText = `$${parseFloat(it.price).toFixed(2)}`;
+        }
+
+        const variants: string[] = [];
+        if (Array.isArray(it.sizes) && it.sizes.length > 0) {
+          it.sizes.forEach((s: any) => {
+            if (s && s.name) {
+              const sPrice = s.price ? ` ($${parseFloat(s.price).toFixed(2)})` : "";
+              variants.push(`${s.name}${sPrice}`);
+            }
+          });
+        }
+
+        const extras: string[] = [];
+        if (Array.isArray(it.groups) && it.groups.length > 0) {
+          it.groups.forEach((g: any) => {
+            if (g && g.name) {
+              const opts = (g.options || []).map((o: any) => o.name).filter(Boolean).slice(0, 4);
+              if (opts.length > 0) {
+                extras.push(`${g.name}: ${opts.join(", ")}`);
+              } else {
+                extras.push(g.name);
+              }
+            }
+          });
+        }
+
+        dishes.push({
+          name: it.name,
+          price: priceText,
+          description: it.description || "",
+          image: imgUrl,
+          availability: it.is_out_of_stock ? "Agotado" : "Disponible",
+          variants: variants,
+          extras: extras,
+        });
+      }
+    });
+
+    if (dishes.length > 0) {
+      categories.push({
+        name: catName,
+        dishes: dishes,
+      });
+    }
+  });
+
+  return {
+    type: "menu",
+    restaurant: {
+      name: restaurantName,
+      address: restaurantAddress,
+      phone: restaurantPhone,
+      hours: formattedHours,
+      websiteUrl: sourceUrl,
+    },
+    categories: categories,
+  };
+}
+
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -84,6 +190,7 @@ serve(async (req: Request) => {
       const apiEndpoints = [
         `https://www.menu-technology.com/api/restaurant/${digitalRuid}`,
         `https://www.foodbooking.com/api/restaurant/${digitalRuid}`,
+        `https://api.foodbooking.com/api/restaurant/${digitalRuid}`,
       ];
 
       for (const endpoint of apiEndpoints) {
@@ -91,10 +198,15 @@ serve(async (req: Request) => {
           const apiRes = await fetch(endpoint, { headers: { "Accept": "application/json" } });
           if (apiRes.ok) {
             const menuJson = await apiRes.json();
-            if (menuJson && (menuJson.menu || menuJson.name || menuJson.categories)) {
-              scrapedData = menuJson;
-              console.log("Successfully retrieved digital ordering menu data via API");
-              break;
+            if (menuJson) {
+              const formattedMenu = transformFoodbookingToMenu(menuJson, url);
+              if (formattedMenu.categories && formattedMenu.categories.length > 0) {
+                console.log(`Successfully formatted ${formattedMenu.categories.length} categories with dishes directly via API.`);
+                return new Response(
+                  JSON.stringify(formattedMenu),
+                  { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
+              }
             }
           }
         } catch (apiErr) {
@@ -138,7 +250,7 @@ serve(async (req: Request) => {
         scrapedData = null;
       }
 
-      // Fallback REST call to ScrapeGraph AI endpoints if SDK failed
+      // Fallback REST call to ScrapeGraph AI endpoints with all key header variations
       if (!scrapedData) {
         try {
           let endpoint = "https://api.scrapegraphai.com/v1/smartscraper";
@@ -146,7 +258,7 @@ serve(async (req: Request) => {
 
           if (mode === "search") {
             endpoint = "https://api.scrapegraphai.com/v1/smartsearch";
-            bodyPayload = { user_prompt: `${userPrompt}. Query/URL: ${url}` };
+            bodyPayload = { user_prompt: `${userPrompt}. Target query or URL: ${url}` };
           } else if (mode === "scrape") {
             endpoint = "https://api.scrapegraphai.com/v1/markdownify";
             bodyPayload = { website_url: url };
@@ -159,7 +271,10 @@ serve(async (req: Request) => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "SGAI-APIKEY": sgaiApiKey,
               "sgai-api-key": sgaiApiKey,
+              "x-api-key": sgaiApiKey,
+              "Authorization": `Bearer ${sgaiApiKey}`,
             },
             body: JSON.stringify(bodyPayload),
           });
@@ -222,7 +337,7 @@ serve(async (req: Request) => {
         JSON.stringify({
           data: scrapedData,
           type: "generic",
-          warning: "GEMINI_API_KEY no encontrada. Se devolvieron los datos brutos de la extracción.",
+          warning: "GEMINI_API_KEY no encontrada. Se devolvieron los datos extraídos.",
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
