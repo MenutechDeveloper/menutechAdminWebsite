@@ -10,6 +10,25 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// Helper function to clean minified JS, CSS styles, and useless markup noise
+function sanitizeHtmlAndRawData(content: any): string {
+  if (!content) return "";
+  let str = typeof content === "string" ? content : JSON.stringify(content);
+
+  // Strip script and style tags completely along with their contents
+  str = str.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, " ");
+  str = str.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, " ");
+  str = str.replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, " ");
+
+  // Remove inline JS code signatures (e.g., function(...), closure_uid, etc.)
+  str = str.replace(/function\s*\([^)]*\)\s*\{[^}]*\}/g, " ");
+  str = str.replace(/var\s+[a-zA-Z0-9_$]+\s*=\s*function\b/g, " ");
+
+  // Collapse multiple whitespaces
+  str = str.replace(/\s+/g, " ").trim();
+  return str;
+}
+
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -97,12 +116,11 @@ serve(async (req: Request) => {
     if (!scrapedData) {
       try {
         const pageRes = await fetch(url, {
-          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
         });
         if (pageRes.ok) {
           const rawHtml = await pageRes.text();
-          // Trim HTML to avoid exceeding token limits
-          scrapedData = { rawHtml: rawHtml.substring(0, 50000) };
+          scrapedData = { rawHtml: rawHtml };
         }
       } catch (hErr: any) {
         console.warn("HTML fetch fallback failed:", hErr);
@@ -118,9 +136,11 @@ serve(async (req: Request) => {
       );
     }
 
+    // Clean and sanitize scraped payload before feeding Gemini
+    const cleanedTextData = sanitizeHtmlAndRawData(scrapedData);
+
     // 2. Format with Google Gemini
     if (!geminiApiKey) {
-      // If Gemini key is missing, return raw scraped data
       return new Response(
         JSON.stringify({
           data: scrapedData,
@@ -131,18 +151,17 @@ serve(async (req: Request) => {
       );
     }
 
-    const geminiSystemPrompt = `Eres un asistente de extracción de datos extremadamente preciso.
-Tu trabajo es organizar los datos scrapeados de la URL (${url}) respondiendo a la instrucción del usuario: "${userPrompt}".
+    const geminiSystemPrompt = `REGLA DE ORO OBLIGATORIA: DEBES DEVOLVER ÚNICAMENTE UN OBJETO JSON VÁLIDO.
+NO incluyas bloques de código JavaScript, minificados, ni scripts de la página. Ignera totalmente código fuente o scripts JS. Extrae EXCLUSIVAMENTE información humana/de negocio de la página (${url}) respondiendo a: "${userPrompt}".
 
-DEBES DEVOLVER ÚNICAMENTE UN OBJETO JSON VÁLIDO. No agregues comillas de Markdown (\`\`\`json), ni introducciones, ni explicaciones fuera del JSON.
+ESTRUCTURAS PERMITIDAS SEGÚN EL TIPO DE DATOS:
 
-INSTRUCCIONES DE ESTRUCTURA:
-1. Si los datos corresponden a un menú de restaurante, el JSON debe usar la siguiente estructura:
+1. Si el usuario solicita un menú de restaurante o los datos son de un menú:
 {
   "type": "menu",
   "restaurant": {
     "name": "Nombre del restaurante",
-    "address": "Dirección",
+    "address": "Dirección completa",
     "phone": "Teléfono",
     "hours": "Horarios de atención",
     "websiteUrl": "${url}"
@@ -155,39 +174,50 @@ INSTRUCCIONES DE ESTRUCTURA:
           "name": "Nombre del platillo",
           "price": "$0.00",
           "description": "Descripción del platillo",
-          "image": "URL de la imagen o vacía",
+          "image": "URL de la imagen (o vacía)",
           "availability": "Disponible",
-          "variants": ["Tamaño chico", "Tamaño grande"],
-          "extras": ["Extra queso", "Salsa especial"]
+          "variants": ["Chico", "Grande"],
+          "extras": ["Queso extra"]
         }
       ]
     }
   ]
 }
 
-2. Si los datos corresponden a negocios o resultados de Google Maps / zona, el JSON debe usar la siguiente estructura:
+2. Si el usuario solicita negocios, restaurantes por zona, o resultados de Google Maps/búsquedas:
 {
   "type": "business_list",
   "businesses": [
     {
       "name": "Nombre del negocio",
-      "category": "Categoría o giro",
-      "address": "Dirección completa",
-      "phone": "Teléfono de contacto",
-      "websiteUrl": "Sitio web",
-      "googleMapsUrl": "URL de Google Maps",
+      "category": "Giro o tipo de cocina",
+      "address": "Dirección",
+      "phone": "Teléfono",
+      "websiteUrl": "Enlace al sitio web del negocio",
+      "googleMapsUrl": "Enlace a Google Maps",
       "rating": "4.5",
-      "reviewsCount": "120",
+      "reviewsCount": "150",
       "hours": "Horario",
       "zone": "Zona o colonia"
     }
   ]
 }
 
-3. Si es otro tipo de información solicitada por el usuario, utiliza "type": "generic" con un campo "data" que contenga la información organizada limpiamente en arreglos u objetos.
+3. Si es otro tipo de consulta genérica, utiliza:
+{
+  "type": "generic",
+  "title": "Resumen de Extracción",
+  "data": [
+    {
+      "title": "Elemento 1",
+      "description": "Detalles del elemento",
+      "url": "Enlace si aplica"
+    }
+  ]
+}
 
-Únicamente incluye información que esté respaldada por los datos scrapeados provistos a continuación:
-${JSON.stringify(scrapedData).substring(0, 80000)}`;
+DATOS SCRAPEADOS A ANALIZAR (SANTIZADOS SIN SCRIPTS/MINIFICADOS):
+${cleanedTextData.substring(0, 90000)}`;
 
     const geminiPayload = {
       contents: [{ parts: [{ text: geminiSystemPrompt }] }],
@@ -198,7 +228,6 @@ ${JSON.stringify(scrapedData).substring(0, 80000)}`;
     };
 
     let geminiResponseText = "";
-    // Try primary gemini model endpoints
     const modelsToTry = [
       "gemini-2.0-flash",
       "gemini-1.5-flash",
@@ -234,7 +263,7 @@ ${JSON.stringify(scrapedData).substring(0, 80000)}`;
         JSON.stringify({
           data: scrapedData,
           type: "generic",
-          warning: "No se pudo obtener respuesta de Gemini API. Mostrando datos de ScrapeGraph.",
+          warning: "No se pudo obtener respuesta estructurada de Gemini API. Mostrando datos de ScrapeGraph.",
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -252,9 +281,10 @@ ${JSON.stringify(scrapedData).substring(0, 80000)}`;
     try {
       finalStructuredData = JSON.parse(cleanJsonStr);
     } catch (parseErr) {
-      console.warn("Failed to parse Gemini output as JSON, returning raw string inside object", parseErr);
+      console.warn("Failed to parse Gemini output as JSON, returning formatted generic fallback", parseErr);
       finalStructuredData = {
         type: "generic",
+        title: "Resultado de Extracción",
         data: scrapedData,
         rawGeminiReply: geminiResponseText,
       };
