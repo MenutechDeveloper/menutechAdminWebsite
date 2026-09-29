@@ -1634,121 +1634,121 @@
                 id: 'sb_menutech_orders',
                 type: 'supabase_table',
                 tableName: 'menutech_orders',
-                title: 'Órdenes / Pedidos (menutech_orders)',
+                title: 'menutech_orders',
                 columns: ['id', 'user_id', 'items', 'total', 'status', 'created_at', 'customer_name', 'customer_phone'],
-                content: 'Tabla de órdenes de usuarios en Supabase: identificador, total de la cuenta, estado de preparación y fecha de creación.'
+                content: ''
             },
             {
                 id: 'sb_menutech_tickets',
                 type: 'supabase_table',
                 tableName: 'menutech_tickets',
-                title: 'Tickets y Configuración de Impresoras (menutech_tickets)',
+                title: 'menutech_tickets',
                 columns: ['id', 'user_id', 'printer_ip', 'footer_note', 'created_at'],
-                content: 'Tabla de tickets y configuración de impresoras térmicas de tickets en Supabase.'
+                content: ''
             },
             {
                 id: 'sb_menutech_menus',
                 type: 'supabase_table',
                 tableName: 'menutech_menus',
-                title: 'Menús Digitales y Platillos (menutech_menus)',
+                title: 'menutech_menus',
                 columns: ['id', 'user_id', 'slug', 'title', 'categories', 'theme', 'created_at'],
-                content: 'Tabla de menús digitales en Supabase: categorías, platillos, variantes, precios y personalización visual.'
+                content: ''
             },
             {
                 id: 'sb_menutech_restaurants',
                 type: 'supabase_table',
                 tableName: 'menutech_restaurants',
-                title: 'Restaurantes e Información de Local (menutech_restaurants)',
+                title: 'menutech_restaurants',
                 columns: ['id', 'user_id', 'name', 'address', 'phone', 'currency', 'created_at'],
-                content: 'Tabla de datos del restaurante en Supabase: nombre comercial, dirección, teléfono y moneda.'
+                content: ''
             },
             {
                 id: 'sb_profiles',
                 type: 'supabase_table',
                 tableName: 'profiles',
-                title: 'Perfiles de Usuario y Roles (profiles)',
+                title: 'profiles',
                 columns: ['id', 'username', 'email', 'role', 'domain', 'created_at'],
-                content: 'Tabla de usuarios y roles de la plataforma (ADMIN, DEVELOPER, OWNER, CS, USER).'
+                content: ''
             },
             {
                 id: 'sb_menutech_knowledge',
                 type: 'supabase_table',
                 tableName: 'menutech_knowledge',
-                title: 'Base de Conocimiento (menutech_knowledge)',
+                title: 'menutech_knowledge',
                 columns: ['id', 'title', 'type', 'content', 'link', 'columns', 'created_at'],
-                content: 'Tabla de FAQs, Documentos y Google Sheets guardados en el sistema.'
+                content: ''
             },
             {
                 id: 'sb_menutech_automations',
                 type: 'supabase_table',
                 tableName: 'menutech_automations',
-                title: 'Algoritmos y Automatizaciones (menutech_automations)',
+                title: 'menutech_automations',
                 columns: ['id', 'name', 'status', 'config', 'generated_code', 'created_at'],
-                content: 'Tabla de algoritmos creados, sus bloques y código TypeScript generado.'
+                content: ''
             },
             {
                 id: 'sb_galeria',
                 type: 'supabase_table',
                 tableName: 'galeria',
-                title: 'Galería de Imágenes del Restaurante (galeria)',
+                title: 'galeria',
                 columns: ['id', 'user_id', 'image_url', 'title', 'created_at'],
-                content: 'Tabla de imágenes e ilustraciones guardadas para sitios web y menús.'
+                content: ''
             },
             {
                 id: 'sb_promos',
                 type: 'supabase_table',
                 tableName: 'promos',
-                title: 'Promociones y Cupones (promos)',
+                title: 'promos',
                 columns: ['id', 'user_id', 'title', 'discount', 'code', 'active', 'created_at'],
-                content: 'Tabla de promociones activas, porcentajes o montos de descuento.'
+                content: ''
             },
             {
                 id: 'sb_menutech_footers',
                 type: 'supabase_table',
                 tableName: 'menutech_footers',
-                title: 'Pie de Página y Redes Sociales (menutech_footers)',
+                title: 'menutech_footers',
                 columns: ['id', 'user_id', 'content', 'social_links', 'created_at'],
-                content: 'Tabla de pie de página, avisos legales y enlaces a redes sociales.'
+                content: ''
             },
             {
                 id: 'sb_menutech_forms',
                 type: 'supabase_table',
                 tableName: 'menutech_forms',
-                title: 'Formularios Personalizados (menutech_forms)',
+                title: 'menutech_forms',
                 columns: ['id', 'user_id', 'title', 'fields', 'created_at'],
-                content: 'Tabla de formularios dinámicos creados para captar clientes o encuestas.'
+                content: ''
             },
             {
                 id: 'sb_menutech_forms_respuestas',
                 type: 'supabase_table',
                 tableName: 'menutech_forms_respuestas',
-                title: 'Respuestas de Formularios (menutech_forms_respuestas)',
+                title: 'menutech_forms_respuestas',
                 columns: ['id', 'form_id', 'response_data', 'created_at'],
-                content: 'Tabla con las respuestas registradas por los clientes en los formularios.'
+                content: ''
             },
             {
                 id: 'sb_menutech_assets',
                 type: 'supabase_table',
                 tableName: 'menutech_assets',
-                title: 'Recursos y Archivos Multimedia (menutech_assets)',
+                title: 'menutech_assets',
                 columns: ['id', 'name', 'url', 'type', 'created_at'],
-                content: 'Tabla de assets, imágenes y modelos 3D subidos al servidor.'
+                content: ''
             },
             {
                 id: 'sb_menutech_physical_menus',
                 type: 'supabase_table',
                 tableName: 'menutech_physical_menus',
-                title: 'Diseños de Menú Físico e Impresión (menutech_physical_menus)',
+                title: 'menutech_physical_menus',
                 columns: ['id', 'user_id', 'title', 'design_data', 'created_at'],
-                content: 'Tabla de diseños guardados en el diseñador de menús físicos e impresión.'
+                content: ''
             },
             {
                 id: 'sb_qrcodes',
                 type: 'supabase_table',
                 tableName: 'qrcodes',
-                title: 'Códigos QR Generados (qrcodes)',
+                title: 'qrcodes',
                 columns: ['id', 'user_id', 'name', 'qr_url', 'redirect_url', 'created_at'],
-                content: 'Tabla de códigos QR generados y sus URLs de redirección.'
+                content: ''
             }
         ];
 
@@ -1922,7 +1922,7 @@
                                 <option value="contains" ${op === 'contains' ? 'selected' : ''}>contiene</option>
                                 <option value="not_contains" ${op === 'not_contains' ? 'selected' : ''}>no contiene</option>
                                 <option value="gt" ${op === 'gt' ? 'selected' : ''}>es mayor que</option>
-                                <option value="lt" ${op === 'lt' ? 'selected' : ''}>es menor que (ej. $100)</option>
+                                <option value="lt" ${op === 'lt' ? 'selected' : ''}>es menor que</option>
                                 <option value="gte" ${op === 'gte' ? 'selected' : ''}>es mayor o igual que</option>
                                 <option value="lte" ${op === 'lte' ? 'selected' : ''}>es menor o igual que</option>
                                 <option value="in_days" ${op === 'in_days' ? 'selected' : ''}>está dentro de los últimos X días</option>
@@ -1949,30 +1949,14 @@
                     headerTitle = "BLOQUE 3: MENUTECH AI";
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Objetivo de Menutech AI</label>
-                            <input type="text" class="block-field-gemini-goal" value="${escapeHtml(initialData.goal || initialData.responderText || '')}">
-                        </div>
-                        <div class="form-group" style="margin-bottom:8px;">
-                            <label>Campos Vinculados de la Fuente de Datos</label>
+                            <label>Campos Vinculados</label>
                             <div class="block-gemini-cols-container" style="display:flex; flex-wrap:wrap; gap:6px;">
-                                <span style="font-size:0.75rem; color:var(--text-dim);">Selecciona una Fuente de Datos en el Bloque 1 para ver sus campos vinculados</span>
+                                <span style="font-size:0.75rem; color:var(--text-dim);">Selecciona una Fuente de Datos en el Bloque 1</span>
                             </div>
                         </div>
-                        <div class="form-group" style="margin-bottom:8px;">
-                            <label>Qué debe analizar</label>
-                            <textarea class="block-field-gemini-analyze" style="min-height:60px;">${escapeHtml(initialData.analyze || '')}</textarea>
-                        </div>
-                        <div class="form-group" style="margin-bottom:8px;">
-                            <label>Qué debe generar</label>
-                            <textarea class="block-field-gemini-generate" style="min-height:60px;">${escapeHtml(initialData.generate || '')}</textarea>
-                        </div>
-                        <div class="form-group" style="margin-bottom:8px;">
-                            <label>Tono o Estilo</label>
-                            <input type="text" class="block-field-gemini-tone" value="${escapeHtml(initialData.tone || '')}">
-                        </div>
                         <div class="form-group" style="margin-bottom:0;">
-                            <label>Instrucciones Adicionales (Opcional)</label>
-                            <textarea class="block-field-gemini-extra" style="min-height:60px;">${escapeHtml(initialData.extra || '')}</textarea>
+                            <label>¿Qué debe hacer Menutech AI con estos datos?</label>
+                            <textarea class="block-field-gemini-goal" style="min-height:80px;">${escapeHtml(initialData.goal || initialData.responderText || initialData.analyze || '')}</textarea>
                         </div>
                     `;
                 } else if (type === 'acciones' || type === 'action' || type === 'event') {
@@ -2263,21 +2247,6 @@
                         }
                     }
 
-                    // Auto-adapt goals if goal is empty and a source was selected
-                    const goalInput = card.querySelector('.block-field-gemini-goal');
-                    if (goalInput && selectedSourceObj && !goalInput.value.trim()) {
-                        if (selectedSourceObj.id === 'sys_orders_html') {
-                            goalInput.value = 'Revisar ventas e historial de pedidos y alertar si las ventas son menores a 100';
-                        } else if (selectedSourceObj.id === 'sys_extractor_html') {
-                            goalInput.value = 'Mostrar recomendaciones y tips de uso del extractor de menús';
-                        } else if (selectedSourceObj.type === 'faq') {
-                            goalInput.value = 'Responder consultas del usuario utilizando la base de FAQs';
-                        } else if (selectedSourceObj.type === 'document') {
-                            goalInput.value = 'Analizar el documento y extraer información clave';
-                        } else {
-                            goalInput.value = `Procesar y analizar ${selectedSourceObj.title}`;
-                        }
-                    }
                 });
             };
 
