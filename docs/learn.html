@@ -1629,6 +1629,129 @@
 
         /* --- VISUAL AUTOMATIONS BUILDER LOGIC --- */
 
+        const SUPABASE_PROJECT_TABLES = [
+            {
+                id: 'sb_menutech_orders',
+                type: 'supabase_table',
+                tableName: 'menutech_orders',
+                title: 'Órdenes / Pedidos (menutech_orders)',
+                columns: ['id', 'user_id', 'items', 'total', 'status', 'created_at', 'customer_name', 'customer_phone'],
+                content: 'Tabla de órdenes de usuarios en Supabase: identificador, total de la cuenta, estado de preparación y fecha de creación.'
+            },
+            {
+                id: 'sb_menutech_tickets',
+                type: 'supabase_table',
+                tableName: 'menutech_tickets',
+                title: 'Tickets y Configuración de Impresoras (menutech_tickets)',
+                columns: ['id', 'user_id', 'printer_ip', 'footer_note', 'created_at'],
+                content: 'Tabla de tickets y configuración de impresoras térmicas de tickets en Supabase.'
+            },
+            {
+                id: 'sb_menutech_menus',
+                type: 'supabase_table',
+                tableName: 'menutech_menus',
+                title: 'Menús Digitales y Platillos (menutech_menus)',
+                columns: ['id', 'user_id', 'slug', 'title', 'categories', 'theme', 'created_at'],
+                content: 'Tabla de menús digitales en Supabase: categorías, platillos, variantes, precios y personalización visual.'
+            },
+            {
+                id: 'sb_menutech_restaurants',
+                type: 'supabase_table',
+                tableName: 'menutech_restaurants',
+                title: 'Restaurantes e Información de Local (menutech_restaurants)',
+                columns: ['id', 'user_id', 'name', 'address', 'phone', 'currency', 'created_at'],
+                content: 'Tabla de datos del restaurante en Supabase: nombre comercial, dirección, teléfono y moneda.'
+            },
+            {
+                id: 'sb_profiles',
+                type: 'supabase_table',
+                tableName: 'profiles',
+                title: 'Perfiles de Usuario y Roles (profiles)',
+                columns: ['id', 'username', 'email', 'role', 'domain', 'created_at'],
+                content: 'Tabla de usuarios y roles de la plataforma (ADMIN, DEVELOPER, OWNER, CS, USER).'
+            },
+            {
+                id: 'sb_menutech_knowledge',
+                type: 'supabase_table',
+                tableName: 'menutech_knowledge',
+                title: 'Base de Conocimiento (menutech_knowledge)',
+                columns: ['id', 'title', 'type', 'content', 'link', 'columns', 'created_at'],
+                content: 'Tabla de FAQs, Documentos y Google Sheets guardados en el sistema.'
+            },
+            {
+                id: 'sb_menutech_automations',
+                type: 'supabase_table',
+                tableName: 'menutech_automations',
+                title: 'Algoritmos y Automatizaciones (menutech_automations)',
+                columns: ['id', 'name', 'status', 'config', 'generated_code', 'created_at'],
+                content: 'Tabla de algoritmos creados, sus bloques y código TypeScript generado.'
+            },
+            {
+                id: 'sb_galeria',
+                type: 'supabase_table',
+                tableName: 'galeria',
+                title: 'Galería de Imágenes del Restaurante (galeria)',
+                columns: ['id', 'user_id', 'image_url', 'title', 'created_at'],
+                content: 'Tabla de imágenes e ilustraciones guardadas para sitios web y menús.'
+            },
+            {
+                id: 'sb_promos',
+                type: 'supabase_table',
+                tableName: 'promos',
+                title: 'Promociones y Cupones (promos)',
+                columns: ['id', 'user_id', 'title', 'discount', 'code', 'active', 'created_at'],
+                content: 'Tabla de promociones activas, porcentajes o montos de descuento.'
+            },
+            {
+                id: 'sb_menutech_footers',
+                type: 'supabase_table',
+                tableName: 'menutech_footers',
+                title: 'Pie de Página y Redes Sociales (menutech_footers)',
+                columns: ['id', 'user_id', 'content', 'social_links', 'created_at'],
+                content: 'Tabla de pie de página, avisos legales y enlaces a redes sociales.'
+            },
+            {
+                id: 'sb_menutech_forms',
+                type: 'supabase_table',
+                tableName: 'menutech_forms',
+                title: 'Formularios Personalizados (menutech_forms)',
+                columns: ['id', 'user_id', 'title', 'fields', 'created_at'],
+                content: 'Tabla de formularios dinámicos creados para captar clientes o encuestas.'
+            },
+            {
+                id: 'sb_menutech_forms_respuestas',
+                type: 'supabase_table',
+                tableName: 'menutech_forms_respuestas',
+                title: 'Respuestas de Formularios (menutech_forms_respuestas)',
+                columns: ['id', 'form_id', 'response_data', 'created_at'],
+                content: 'Tabla con las respuestas registradas por los clientes en los formularios.'
+            },
+            {
+                id: 'sb_menutech_assets',
+                type: 'supabase_table',
+                tableName: 'menutech_assets',
+                title: 'Recursos y Archivos Multimedia (menutech_assets)',
+                columns: ['id', 'name', 'url', 'type', 'created_at'],
+                content: 'Tabla de assets, imágenes y modelos 3D subidos al servidor.'
+            },
+            {
+                id: 'sb_menutech_physical_menus',
+                type: 'supabase_table',
+                tableName: 'menutech_physical_menus',
+                title: 'Diseños de Menú Físico e Impresión (menutech_physical_menus)',
+                columns: ['id', 'user_id', 'title', 'design_data', 'created_at'],
+                content: 'Tabla de diseños guardados en el diseñador de menús físicos e impresión.'
+            },
+            {
+                id: 'sb_qrcodes',
+                type: 'supabase_table',
+                tableName: 'qrcodes',
+                title: 'Códigos QR Generados (qrcodes)',
+                columns: ['id', 'user_id', 'name', 'qr_url', 'redirect_url', 'created_at'],
+                content: 'Tabla de códigos QR generados y sus URLs de redirección.'
+            }
+        ];
+
         const SYSTEM_HTML_SOURCES = [
             {
                 id: 'sys_orders_html',
@@ -1674,19 +1797,25 @@
                 const currentVal = select.value;
                 let html = '<option value="">Seleccionar Fuente de Datos...</option>';
 
-                html += '<optgroup label="SISTEMA Y PÁGINAS .HTML">';
-                SYSTEM_HTML_SOURCES.forEach(sys => {
-                    html += `<option value="${sys.id}" ${currentVal === sys.id ? 'selected' : ''}>[.HTML] ${escapeHtml(sys.title)}</option>`;
+                html += '<optgroup label="TABLAS DE SUPABASE (PROYECTO)">';
+                SUPABASE_PROJECT_TABLES.forEach(sbTab => {
+                    html += `<option value="${sbTab.id}" ${currentVal === sbTab.id ? 'selected' : ''}>[SUPABASE] ${escapeHtml(sbTab.title)}</option>`;
                 });
                 html += '</optgroup>';
 
                 if (knowledgeData && knowledgeData.length > 0) {
-                    html += '<optgroup label="BASE DE CONOCIMIENTO (FAQs, Docs, Sheets)">';
+                    html += '<optgroup label="GOOGLE SHEETS Y BASE DE CONOCIMIENTO">';
                     knowledgeData.forEach(item => {
                         html += `<option value="${item.id}" ${currentVal === item.id ? 'selected' : ''}>[${item.type.toUpperCase()}] ${escapeHtml(item.title)}</option>`;
                     });
                     html += '</optgroup>';
                 }
+
+                html += '<optgroup label="PÁGINAS Y SISTEMA .HTML">';
+                SYSTEM_HTML_SOURCES.forEach(sys => {
+                    html += `<option value="${sys.id}" ${currentVal === sys.id ? 'selected' : ''}>[.HTML] ${escapeHtml(sys.title)}</option>`;
+                });
+                html += '</optgroup>';
 
                 select.innerHTML = html;
             });
@@ -1759,9 +1888,9 @@
                     headerTitle = "BLOQUE 1: DATOS";
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Fuente de Datos (Sheet, FAQs, Docs, Páginas .HTML / Sistema)</label>
+                            <label>¿Qué datos necesitas? (Tabla de Supabase, Sheet, FAQs, Docs o Sistema)</label>
                             <select class="block-field-source" onchange="renderBlockColumns(this)">
-                                <option value="">Cargando fuentes...</option>
+                                <option value="">Seleccionar Fuente de Datos...</option>
                             </select>
                         </div>
                         <div class="block-columns-container"></div>
@@ -1770,37 +1899,49 @@
                     headerTitle = "BLOQUE 2: CONDICIONES";
                     const op = initialData.operator || 'eq';
                     const logic = initialData.logicConnector || 'AND';
+                    const timePeriod = initialData.timePeriod || 'all';
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
                             <label>Conector Lógico</label>
                             <select class="block-field-logic">
-                                <option value="AND" ${logic === 'AND' ? 'selected' : ''}>AND (Y)</option>
-                                <option value="OR" ${logic === 'OR' ? 'selected' : ''}>OR (O)</option>
+                                <option value="AND" ${logic === 'AND' ? 'selected' : ''}>AND (Cumplir todas las condiciones)</option>
+                                <option value="OR" ${logic === 'OR' ? 'selected' : ''}>OR (Cumplir al menos una condición)</option>
                             </select>
                         </div>
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Campo / Columna</label>
+                            <label>Campo / Columna a Evaluar</label>
                             <select class="block-field-cond-col">
-                                <option value="">Cargando campos de la fuente...</option>
+                                <option value="">-- Seleccionar Campo --</option>
                             </select>
                         </div>
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>Condición</label>
+                            <label>Condición o Regla</label>
                             <select class="block-field-cond-op">
                                 <option value="eq" ${op === 'eq' ? 'selected' : ''}>es igual a</option>
                                 <option value="neq" ${op === 'neq' ? 'selected' : ''}>no es igual a</option>
                                 <option value="contains" ${op === 'contains' ? 'selected' : ''}>contiene</option>
                                 <option value="not_contains" ${op === 'not_contains' ? 'selected' : ''}>no contiene</option>
                                 <option value="gt" ${op === 'gt' ? 'selected' : ''}>es mayor que</option>
-                                <option value="lt" ${op === 'lt' ? 'selected' : ''}>es menor que</option>
-                                <option value="in_days" ${op === 'in_days' ? 'selected' : ''}>está dentro de X días</option>
-                                <option value="out_days" ${op === 'out_days' ? 'selected' : ''}>está fuera de X días</option>
+                                <option value="lt" ${op === 'lt' ? 'selected' : ''}>es menor que (ej. $100)</option>
+                                <option value="gte" ${op === 'gte' ? 'selected' : ''}>es mayor o igual que</option>
+                                <option value="lte" ${op === 'lte' ? 'selected' : ''}>es menor o igual que</option>
+                                <option value="in_days" ${op === 'in_days' ? 'selected' : ''}>está dentro de los últimos X días</option>
                                 <option value="is_empty" ${op === 'is_empty' ? 'selected' : ''}>está vacío</option>
                                 <option value="is_not_empty" ${op === 'is_not_empty' ? 'selected' : ''}>no está vacío</option>
                             </select>
                         </div>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label>¿Durante qué periodo? (Filtro de Fecha / Tiempo)</label>
+                            <select class="block-field-time-period">
+                                <option value="all" ${timePeriod === 'all' ? 'selected' : ''}>Todo el historial</option>
+                                <option value="today" ${timePeriod === 'today' ? 'selected' : ''}>Hoy</option>
+                                <option value="last_week" ${timePeriod === 'last_week' ? 'selected' : ''}>Última semana (7 días)</option>
+                                <option value="last_month" ${timePeriod === 'last_month' ? 'selected' : ''}>Último mes (30 días)</option>
+                                <option value="last_year" ${timePeriod === 'last_year' ? 'selected' : ''}>Último año</option>
+                            </select>
+                        </div>
                         <div class="form-group" style="margin-bottom:0;">
-                            <label>Valor / Parámetro</label>
+                            <label>Valor de Comparación</label>
                             <input type="text" class="block-field-cond-val" value="${escapeHtml(initialData.condVal || initialData.queryVal || '')}">
                         </div>
                     `;
@@ -1998,7 +2139,11 @@
                 }
 
                 let detectedCols = [];
-                let sourceObj = SYSTEM_HTML_SOURCES.find(s => s.id === sourceId);
+                let sourceObj = SUPABASE_PROJECT_TABLES.find(s => s.id === sourceId);
+
+                if (!sourceObj) {
+                    sourceObj = SYSTEM_HTML_SOURCES.find(s => s.id === sourceId);
+                }
 
                 if (!sourceObj) {
                     sourceObj = knowledgeData.find(k => k.id === sourceId);
@@ -2080,7 +2225,7 @@
                 datosCards.forEach(card => {
                     const sourceId = card.querySelector('.block-field-source')?.value;
                     if (sourceId) {
-                        selectedSourceObj = SYSTEM_HTML_SOURCES.find(s => s.id === sourceId) || knowledgeData.find(k => k.id === sourceId);
+                        selectedSourceObj = SUPABASE_PROJECT_TABLES.find(s => s.id === sourceId) || SYSTEM_HTML_SOURCES.find(s => s.id === sourceId) || knowledgeData.find(k => k.id === sourceId);
                     }
                     const badges = card.querySelectorAll('.block-col-badge.active');
                     badges.forEach(b => {
@@ -2190,8 +2335,9 @@
                         const logicConnector = card.querySelector('.block-field-logic')?.value || 'AND';
                         const condCol = card.querySelector('.block-field-cond-col')?.value || '';
                         const operator = card.querySelector('.block-field-cond-op')?.value || 'eq';
+                        const timePeriod = card.querySelector('.block-field-time-period')?.value || 'all';
                         const condVal = card.querySelector('.block-field-cond-val')?.value || '';
-                        blocksData.push({ type: 'condiciones', logicConnector, condCol, operator, condVal });
+                        blocksData.push({ type: 'condiciones', logicConnector, condCol, operator, timePeriod, condVal });
                     } else if (bType === 'gemini' || bType === 'responder' || bType === 'calc') {
                         const goal = card.querySelector('.block-field-gemini-goal')?.value || '';
                         const usedCols = Array.from(card.querySelectorAll('.block-gemini-cols-container .block-col-badge.active')).map(el => el.getAttribute('data-col'));
@@ -2293,6 +2439,24 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const SUPABASE_PROJECT_TABLES = [
+  { id: 'sb_menutech_orders', tableName: 'menutech_orders', title: 'Órdenes / Pedidos (menutech_orders)' },
+  { id: 'sb_menutech_tickets', tableName: 'menutech_tickets', title: 'Tickets y Configuración de Impresoras (menutech_tickets)' },
+  { id: 'sb_menutech_menus', tableName: 'menutech_menus', title: 'Menús Digitales y Platillos (menutech_menus)' },
+  { id: 'sb_menutech_restaurants', tableName: 'menutech_restaurants', title: 'Restaurantes e Información de Local (menutech_restaurants)' },
+  { id: 'sb_profiles', tableName: 'profiles', title: 'Perfiles de Usuario y Roles (profiles)' },
+  { id: 'sb_menutech_knowledge', tableName: 'menutech_knowledge', title: 'Base de Conocimiento (menutech_knowledge)' },
+  { id: 'sb_menutech_automations', tableName: 'menutech_automations', title: 'Algoritmos y Automatizaciones (menutech_automations)' },
+  { id: 'sb_galeria', tableName: 'galeria', title: 'Galería de Imágenes del Restaurante (galeria)' },
+  { id: 'sb_promos', tableName: 'promos', title: 'Promociones y Cupones (promos)' },
+  { id: 'sb_menutech_footers', tableName: 'menutech_footers', title: 'Pie de Página y Redes Sociales (menutech_footers)' },
+  { id: 'sb_menutech_forms', tableName: 'menutech_forms', title: 'Formularios Personalizados (menutech_forms)' },
+  { id: 'sb_menutech_forms_respuestas', tableName: 'menutech_forms_respuestas', title: 'Respuestas de Formularios (menutech_forms_respuestas)' },
+  { id: 'sb_menutech_assets', tableName: 'menutech_assets', title: 'Recursos y Archivos Multimedia (menutech_assets)' },
+  { id: 'sb_menutech_physical_menus', tableName: 'menutech_physical_menus', title: 'Diseños de Menú Físico e Impresión (menutech_physical_menus)' },
+  { id: 'sb_qrcodes', tableName: 'qrcodes', title: 'Códigos QR Generados (qrcodes)' }
+];
+
 const SYSTEM_HTML_SOURCES = [
   { id: 'sys_orders_html', title: 'orders.html (Historial de Pedidos, Ventas y Métricas en Supabase)' },
   { id: 'sys_extractor_html', title: 'extractor.html (Extractor de Menús, Recomendaciones y Tips de Uso)' },
@@ -2323,32 +2487,45 @@ serve(async (req: Request) => {
 
     for (const block of blocks) {
       if ((block.type === 'datos' || block.type === 'source') && block.sourceId) {
-        let sourceObj = SYSTEM_HTML_SOURCES.find(s => s.id === block.sourceId);
-        if (!sourceObj) {
-          const { data: dbObj } = await supabase
-            .from('menutech_knowledge')
-            .select('*')
-            .eq('id', block.sourceId)
-            .single();
-          sourceObj = dbObj;
-        }
+        let sbTableObj = SUPABASE_PROJECT_TABLES.find(s => s.id === block.sourceId);
+        if (sbTableObj) {
+          const selectCols = Array.isArray(block.selectedCols) && block.selectedCols.length > 0
+            ? block.selectedCols.join(',')
+            : '*';
 
-        if (sourceObj) {
-          let colsStr = Array.isArray(block.selectedCols) && block.selectedCols.length > 0
-            ? block.selectedCols.join(', ')
-            : (Array.isArray(sourceObj.columns) ? sourceObj.columns.join(', ') : 'Todas');
+          const { data: dbRows, count, error: queryErr } = await supabase
+            .from(sbTableObj.tableName)
+            .select(selectCols, { count: 'exact' })
+            .limit(50);
 
-          contextDataText += \`\\n--- FUENTE DE DATOS: \${sourceObj.title} ---\\n\`;
-          contextDataText += \`CAMPOS SELECCIONADOS: \${colsStr}\\n\`;
-          if (sourceObj.link) contextDataText += \`LINK: \${sourceObj.link}\\n\`;
-          if (sourceObj.content) contextDataText += \`CONTENIDO / DESCRIPCIÓN:\\n\${sourceObj.content}\\n\`;
+          contextDataText += \`\\n--- TABLA DE SUPABASE: \${sbTableObj.title} (\${sbTableObj.tableName}) ---\\n\`;
+          contextDataText += \`COLUMNAS SELECCIONADAS: \${selectCols}\\n\`;
+          contextDataText += \`TOTAL REGISTROS: \${count || (dbRows ? dbRows.length : 0)}\\n\`;
+          if (dbRows && dbRows.length > 0) {
+            contextDataText += \`DATOS CONSULTADOS:\\n\${JSON.stringify(dbRows, null, 2)}\\n\`;
+          } else {
+            contextDataText += \`DATOS CONSULTADOS: (Sin registros o tabla vacía)\\n\`;
+          }
+        } else {
+          let sourceObj = SYSTEM_HTML_SOURCES.find(s => s.id === block.sourceId);
+          if (!sourceObj) {
+            const { data: dbObj } = await supabase
+              .from('menutech_knowledge')
+              .select('*')
+              .eq('id', block.sourceId)
+              .single();
+            sourceObj = dbObj;
+          }
 
-          if (block.sourceId === 'sys_orders_html') {
-            const { count, data: orders } = await supabase
-              .from('menutech_tickets')
-              .select('*', { count: 'exact' })
-              .limit(10);
-            contextDataText += \`\\n[DATOS EN TIEMPO REAL SUPABASE ORDERS]: Total pedidos registrados = \${count || 0}\\n\`;
+          if (sourceObj) {
+            let colsStr = Array.isArray(block.selectedCols) && block.selectedCols.length > 0
+              ? block.selectedCols.join(', ')
+              : (Array.isArray(sourceObj.columns) ? sourceObj.columns.join(', ') : 'Todas');
+
+            contextDataText += \`\\n--- FUENTE DE DATOS: \${sourceObj.title} ---\\n\`;
+            contextDataText += \`CAMPOS SELECCIONADOS: \${colsStr}\\n\`;
+            if (sourceObj.link) contextDataText += \`LINK: \${sourceObj.link}\\n\`;
+            if (sourceObj.content) contextDataText += \`CONTENIDO / DESCRIPCIÓN:\\n\${sourceObj.content}\\n\`;
           }
         }
       } else if (block.type === 'condiciones' || block.type === 'query' || block.type === 'rule') {
@@ -2359,13 +2536,15 @@ serve(async (req: Request) => {
           not_contains: 'no contiene',
           gt: 'es mayor que',
           lt: 'es menor que',
-          in_days: 'está dentro de X días',
-          out_days: 'está fuera de X días',
+          gte: 'es mayor o igual que',
+          lte: 'es menor o igual que',
+          in_days: 'está dentro de los últimos X días',
           is_empty: 'está vacío',
           is_not_empty: 'no está vacío'
         }[block.operator] || block.operator || 'cumple condición';
 
-        systemInstructions.push(\`CONDICIÓN (\${block.logicConnector || 'AND'}): Evaluar si el campo '\${block.condCol || block.queryCol}' \${opLabel} '\${block.condVal || block.queryVal || ''}'.\`);
+        let periodStr = block.timePeriod && block.timePeriod !== 'all' ? \` | PERIODO: \${block.timePeriod}\` : '';
+        systemInstructions.push(\`CONDICIÓN (\${block.logicConnector || 'AND'}\${periodStr}): Evaluar si el campo '\${block.condCol || block.queryCol}' \${opLabel} '\${block.condVal || block.queryVal || ''}'.\`);
       } else if (block.type === 'gemini' || block.type === 'responder' || block.type === 'calc') {
         let aiInst = \`CONFIGURACIÓN MENUTECH AI:\\n\`;
         if (block.goal || block.responderText) aiInst += \` - Objetivo: \${block.goal || block.responderText}\\n\`;
