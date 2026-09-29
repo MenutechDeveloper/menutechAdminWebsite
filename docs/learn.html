@@ -1797,25 +1797,19 @@
                 const currentVal = select.value;
                 let html = '<option value="">Seleccionar Fuente de Datos...</option>';
 
-                html += '<optgroup label="TABLAS DE SUPABASE (PROYECTO)">';
+                html += '<optgroup label="BASE DE DATOS">';
                 SUPABASE_PROJECT_TABLES.forEach(sbTab => {
-                    html += `<option value="${sbTab.id}" ${currentVal === sbTab.id ? 'selected' : ''}>[SUPABASE] ${escapeHtml(sbTab.title)}</option>`;
+                    html += `<option value="${sbTab.id}" ${currentVal === sbTab.id ? 'selected' : ''}>${escapeHtml(sbTab.title)}</option>`;
                 });
                 html += '</optgroup>';
 
                 if (knowledgeData && knowledgeData.length > 0) {
-                    html += '<optgroup label="GOOGLE SHEETS Y BASE DE CONOCIMIENTO">';
+                    html += '<optgroup label="GOOGLE SHEETS">';
                     knowledgeData.forEach(item => {
-                        html += `<option value="${item.id}" ${currentVal === item.id ? 'selected' : ''}>[${item.type.toUpperCase()}] ${escapeHtml(item.title)}</option>`;
+                        html += `<option value="${item.id}" ${currentVal === item.id ? 'selected' : ''}>${escapeHtml(item.title)}</option>`;
                     });
                     html += '</optgroup>';
                 }
-
-                html += '<optgroup label="PÁGINAS Y SISTEMA .HTML">';
-                SYSTEM_HTML_SOURCES.forEach(sys => {
-                    html += `<option value="${sys.id}" ${currentVal === sys.id ? 'selected' : ''}>[.HTML] ${escapeHtml(sys.title)}</option>`;
-                });
-                html += '</optgroup>';
 
                 select.innerHTML = html;
             });
@@ -1888,7 +1882,7 @@
                     headerTitle = "BLOQUE 1: DATOS";
                     innerHtml = `
                         <div class="form-group" style="margin-bottom:8px;">
-                            <label>¿Qué datos necesitas? (Tabla de Supabase, Sheet, FAQs, Docs o Sistema)</label>
+                            <label>¿Qué datos necesitas?</label>
                             <select class="block-field-source" onchange="renderBlockColumns(this)">
                                 <option value="">Seleccionar Fuente de Datos...</option>
                             </select>
