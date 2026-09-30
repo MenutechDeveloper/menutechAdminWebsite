@@ -1090,15 +1090,19 @@
                 if (resLector.ok && (lectorData.menu || lectorData.categories)) {
                     const menuObj = lectorData.menu || lectorData;
                     sessionStorage.setItem('menutech_transcribed_menu', JSON.stringify(menuObj));
-                    window.open('disenadorIA_Menu.html', '_blank');
 
-                    const reply = "¡He transcrito el menú de la imagen! Abrí la interfaz **disenadorIA_Menu.html** para que puedas consultar y copiar cada elemento de forma organizada por secciones.";
+                    const reply = "¡He transcrito el menú de la imagen! Redirigiendo a **disenadorIA_Menu.html** para que consultes y me edites todo organizadamente...";
                     chatHistory.push({ role: "user", text: payloadPrompt });
                     chatHistory.push({ role: "model", text: reply });
                     if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
 
                     appendBotMessage(reply);
                     speakText(reply);
+
+                    // Redirección automática inmediata a la interfaz disenadorIA_Menu.html
+                    setTimeout(() => {
+                        window.location.href = 'disenadorIA_Menu.html';
+                    }, 1200);
                     return;
                 }
             }
