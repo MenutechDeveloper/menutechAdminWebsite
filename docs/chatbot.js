@@ -18,7 +18,7 @@
         EDGE_FUNCTION_URL: "https://eemqyrysdgasfjlitads.supabase.co/functions/v1/gemini-chat",
         LECTOR_MENUS_URL: "https://eemqyrysdgasfjlitads.supabase.co/functions/v1/LectorMenus",
         SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY",
-        MODEL_URL: "assets/menutechbot.gltf"
+        MODEL_URL: window.MENUTECH_BOT_MODEL_URL || "assets/menutechbot.gltf"
     };
 
     // Dynamically inject FontAwesome if missing
@@ -1096,6 +1096,8 @@
                     chatHistory.push({ role: "model", text: reply });
                     if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
 
+                    sessionStorage.setItem('menutech_chat_history', JSON.stringify(chatHistory));
+
                     appendBotMessage(reply);
                     speakText(reply);
 
@@ -1141,6 +1143,8 @@
             chatHistory.push({ role: "user", text: payloadPrompt });
             chatHistory.push({ role: "model", text: reply });
             if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
+
+            sessionStorage.setItem('menutech_chat_history', JSON.stringify(chatHistory));
 
             appendBotMessage(reply);
             speakText(reply);
@@ -1620,6 +1624,26 @@
 
     initSpeechRecognition();
     initAdminThoughtBubble();
+
+    // --- RESTORE PREVIOUS CHAT HISTORY FROM SESSIONSTORAGE ---
+    try {
+        const savedHistory = sessionStorage.getItem('menutech_chat_history');
+        if (savedHistory) {
+            const parsedHistory = JSON.parse(savedHistory);
+            if (Array.isArray(parsedHistory) && parsedHistory.length > 0) {
+                chatHistory = parsedHistory;
+                parsedHistory.forEach(turn => {
+                    if (turn.role === 'user') {
+                        appendUserMessage(turn.text || '', null);
+                    } else if (turn.role === 'model') {
+                        appendBotMessage(turn.text || '');
+                    }
+                });
+            }
+        }
+    } catch (e) {
+        console.warn("Error restoring chatbot history from sessionStorage:", e);
+    }
 
     // --- GLOBAL EVENT LISTENERS & PUBLIC API EXPORT ---
     window.addEventListener('menutech-new-order', (e) => {
