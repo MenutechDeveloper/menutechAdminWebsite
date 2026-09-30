@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcripción de Menú AI | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #059669;
+            --error: #dc2626;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
+
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
+        #top-nav > * { pointer-events: auto; }
+
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; }
+        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
+
+        .theme-switch { width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        #user-display-pill {
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); min-width: 180px;
+        }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); }
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
+        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); }
+
+        .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 100px 24px 60px 24px; animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        header { text-align: center; margin-bottom: 40px; }
+        .logo-main { width: 100%; max-width: 260px; height: auto; margin: 0 auto 12px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
+
+        /* Results section */
+        #results-wrapper { display: block; }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+        .section-header h2 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+
+        .export-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-export {
+            background: var(--input); border: 1.5px solid var(--border); color: var(--text); padding: 10px 18px;
+            border-radius: 14px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.3s;
+            display: inline-flex; align-items: center; gap: 8px; font-family: inherit;
+        }
+        .btn-export:hover { border-color: var(--orange); color: var(--orange); transform: translateY(-2px); }
+        .btn-export.primary { background: var(--orange); color: #ffffff; border-color: var(--orange); font-weight: 800; }
+        .btn-export.primary:hover { filter: brightness(1.1); }
+
+        /* General Info Card */
+        .info-card {
+            background: var(--card); border: 1.5px solid var(--border); border-radius: 28px; padding: 28px;
+            margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;
+        }
+        .info-field label { display: block; font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .info-field div { font-size: 0.95rem; font-weight: 600; color: var(--text); word-break: break-word; }
+        .info-field div.empty { color: var(--text-dim); font-style: italic; font-weight: 400; font-size: 0.85rem; }
+
+        /* Menu Display */
+        .categories-container { display: flex; flex-direction: column; gap: 28px; }
+
+        .category-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 28px; padding: 28px; }
+        .category-title {
+            font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--orange);
+            margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .category-count { font-size: 0.75rem; font-weight: 700; background: rgba(255,149,51,0.12); color: var(--orange); padding: 4px 12px; border-radius: 20px; }
+
+        .dishes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+
+        .dish-card {
+            background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px;
+            display: flex; flex-direction: column; justify-content: space-between; gap: 12px; transition: 0.3s;
+        }
+        .dish-card:hover { border-color: var(--orange); }
+
+        .dish-header { display: flex; gap: 14px; align-items: flex-start; }
+        .dish-main-info { flex: 1; min-width: 0; }
+        .dish-name { font-weight: 700; font-size: 0.95rem; color: var(--text); margin-bottom: 4px; line-height: 1.3; }
+        .dish-price { font-weight: 800; font-size: 0.9rem; color: var(--orange); font-family: 'Outfit', sans-serif; }
+        .dish-desc { font-size: 0.8rem; color: var(--text-dim); line-height: 1.4; margin-top: 6px; }
+
+        /* Copyable elements highlight green when copied */
+        .copyable {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1.5px solid transparent;
+            border-radius: 8px;
+            padding: 4px 8px;
+            margin: -2px -6px;
+            display: inline-block;
+            max-width: 100%;
+        }
+        .copyable:hover {
+            border-color: var(--orange);
+            background: rgba(255, 149, 51, 0.05);
+        }
+        .copyable.copied {
+            border-color: var(--success) !important;
+            box-shadow: 0 0 0 1px var(--success);
+            background: rgba(5, 150, 105, 0.1) !important;
+        }
+
+        .dish-meta { font-size: 0.75rem; border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
+        .dish-meta-item { display: flex; gap: 6px; flex-wrap: wrap; }
+        .meta-tag { background: var(--card); border: 1px solid var(--border); padding: 2px 8px; border-radius: 8px; color: var(--text-dim); font-size: 0.7rem; font-weight: 600; }
+
+        /* Empty state */
+        .empty-state-card {
+            background: var(--card); border: 1.5px solid var(--border); border-radius: 32px; padding: 60px 30px; text-align: center;
+        }
+        .empty-state-card i { font-size: 3.5rem; color: var(--orange); margin-bottom: 16px; }
+        .empty-state-card h3 { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+        .empty-state-card p { font-size: 0.9rem; color: var(--text-dim); max-width: 500px; margin: 0 auto; }
+
+        /* Toast Notifications */
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast { min-width: 300px; max-width: 460px; padding: 16px 20px; border-radius: 20px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.85rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.4s ease; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+        .toast.success { border-left: 5px solid var(--success); }
+        .toast.error { border-left: 5px solid var(--error); }
+        .toast.warning { border-left: 5px solid var(--orange); }
+        @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        @media (max-width: 640px) {
+            .container { padding-top: 90px; }
+            .dishes-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
+
+    <div id="top-nav">
+        <div>
+            <button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="theme-switch" id="theme-toggle" title="Cambiar Tema">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+            <div id="user-display-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: var(--orange);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div class="pill-info">
+                    <div id="user-name">Menutech</div>
+                    <div id="user-role-label">Lector AI</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
+        </header>
+
+        <!-- Results Display -->
+        <div id="results-wrapper">
+            <div class="section-header">
+                <h2><i class="fa-solid fa-file-invoice" style="color: var(--orange);"></i> Menú Transcrito</h2>
+                <div class="export-actions">
+                    <button class="btn-export" onclick="exportTXT()">
+                        <i class="fa-regular fa-file-lines"></i> Exportar TXT
+                    </button>
+                    <button class="btn-export" onclick="exportSVG()">
+                        <i class="fa-solid fa-vector-square"></i> Exportar SVG
+                    </button>
+                    <button class="btn-export primary" onclick="copyFullMenuJSON()">
+                        <i class="fa-regular fa-copy"></i> Copiar JSON
+                    </button>
+                </div>
+            </div>
+
+            <div id="structured-content-display">
+                <!-- Visual Cards render dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase as sb } from './supabase.js';
+
+        window.lastTranscribedMenu = null;
+
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const msg = document.createElement('div');
+            msg.textContent = message;
+            toast.appendChild(msg);
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        };
+
+        window.copyElementText = (el) => {
+            const textToCopy = (el.getAttribute('data-copy-text') || el.innerText || el.textContent || '').trim();
+            if (!textToCopy) return;
+
+            el.classList.add('copied');
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    showToast(`Copiado: "${textToCopy.substring(0, 35)}${textToCopy.length > 35 ? '...' : ''}"`, 'success');
+                }).catch(() => {
+                    fallbackCopyText(textToCopy);
+                });
+            } else {
+                fallbackCopyText(textToCopy);
+            }
+        };
+
+        function fallbackCopyText(text) {
+            try {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast(`Copiado: "${text.substring(0, 35)}${text.length > 35 ? '...' : ''}"`, 'success');
+            } catch (e) {
+                showToast(`Elemento marcado como copiado`, 'success');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
+            checkUserSession();
+            loadTranscribedMenuData();
+        });
+
+        async function checkUserSession() {
+            if (sb) {
+                try {
+                    const { data: { session } } = await sb.auth.getSession();
+                    if (session && session.user) {
+                        const { data: profile } = await sb.from('profiles').select('username, role').eq('id', session.user.id).single();
+                        if (profile) {
+                            document.getElementById('user-name').textContent = profile.username || session.user.email.split('@')[0];
+                            document.getElementById('user-role-label').textContent = profile.role || 'User';
+                        }
+                    }
+                } catch (e) {}
+            }
+        }
+
+        function initTheme() {
+            const toggle = document.getElementById('theme-toggle');
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            toggle.onclick = () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            };
+        }
+
+        function loadTranscribedMenuData() {
+            const raw = sessionStorage.getItem('menutech_transcribed_menu');
+            if (!raw) {
+                renderEmptyState();
+                return;
+            }
+
+            try {
+                const parsed = JSON.parse(raw);
+                window.lastTranscribedMenu = parsed;
+                renderMenuUI(parsed);
+            } catch (err) {
+                console.error("Error parsing transcribed menu from sessionStorage:", err);
+                renderEmptyState();
+            }
+        }
+
+        function renderEmptyState() {
+            const container = document.getElementById('structured-content-display');
+            container.innerHTML = `
+                <div class="empty-state-card">
+                    <i class="fa-solid fa-image"></i>
+                    <h3>No hay menú transcrito activo</h3>
+                    <p>Pídele a Gemini en el chat: <strong>"transcribe este menu"</strong> adjuntando una imagen para ver la transcripción bonita y separada por secciones aquí.</p>
+                </div>
+            `;
+        }
+
+        function renderMenuUI(data) {
+            const container = document.getElementById('structured-content-display');
+            const r = data.restaurant || {};
+            const categories = data.categories || [];
+
+            let html = `
+                <div class="info-card">
+                    <div class="info-field">
+                        <label>Restaurante</label>
+                        <div class="${!r.name ? 'empty' : 'copyable'}" ${r.name ? 'onclick="copyElementText(this)"' : ''}>${r.name || 'No especificado'}</div>
+                    </div>
+                    <div class="info-field">
+                        <label>Dirección</label>
+                        <div class="${!r.address ? 'empty' : 'copyable'}" ${r.address ? 'onclick="copyElementText(this)"' : ''}>${r.address || 'No especificada'}</div>
+                    </div>
+                    <div class="info-field">
+                        <label>Teléfono</label>
+                        <div class="${!r.phone ? 'empty' : 'copyable'}" ${r.phone ? 'onclick="copyElementText(this)"' : ''}>${r.phone || 'No especificado'}</div>
+                    </div>
+                    <div class="info-field">
+                        <label>Horarios</label>
+                        <div class="${!r.hours ? 'empty' : 'copyable'}" ${r.hours ? 'onclick="copyElementText(this)"' : ''}>${r.hours || 'No especificados'}</div>
+                    </div>
+                </div>
+            `;
+
+            if (categories.length === 0) {
+                html += `
+                    <div class="category-card" style="text-align:center; color:var(--text-dim); padding:40px;">
+                        No se detectaron categorías ni platillos en el menú.
+                    </div>
+                `;
+            } else {
+                html += `<div class="categories-container">`;
+                categories.forEach(cat => {
+                    const dishes = cat.dishes || cat.items || [];
+                    html += `
+                        <div class="category-card">
+                            <div class="category-title">
+                                <span class="copyable" onclick="copyElementText(this)">${cat.name || 'Categoría'}</span>
+                                <span class="category-count">${dishes.length} elementos</span>
+                            </div>
+                            <div class="dishes-grid">
+                                ${dishes.map(d => `
+                                    <div class="dish-card">
+                                        <div>
+                                            <div class="dish-header">
+                                                <div class="dish-main-info">
+                                                    <div class="dish-name copyable" onclick="copyElementText(this)">${d.name || 'Elemento'}</div>
+                                                    <div class="dish-price copyable" onclick="copyElementText(this)">${d.price ? (typeof d.price === 'number' ? '$' + parseFloat(d.price).toFixed(2) : d.price) : 'Sin precio'}</div>
+                                                </div>
+                                            </div>
+                                            ${d.description ? `<div class="dish-desc copyable" onclick="copyElementText(this)">${d.description}</div>` : ''}
+                                        </div>
+                                        ${(d.variants?.length || d.extras?.length) ? `
+                                            <div class="dish-meta">
+                                                ${d.variants?.length ? `<div class="dish-meta-item"><strong>Variantes:</strong> ${d.variants.map(v => `<span class="meta-tag copyable" onclick="copyElementText(this)">${v}</span>`).join('')}</div>` : ''}
+                                                ${d.extras?.length ? `<div class="dish-meta-item"><strong>Extras:</strong> ${d.extras.map(e => `<span class="meta-tag copyable" onclick="copyElementText(this)">${e}</span>`).join('')}</div>` : ''}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        window.exportTXT = () => {
+            const data = window.lastTranscribedMenu;
+            if (!data) {
+                showToast("No hay menú transcrito para exportar.", "warning");
+                return;
+            }
+
+            let text = `========================================\n`;
+            text += `TRANSCRIPCIÓN DE MENÚ - MENUTECH AI\n`;
+            text += `========================================\n\n`;
+
+            const r = data.restaurant || {};
+            if (r.name) text += `RESTAURANTE: ${r.name}\n`;
+            if (r.address) text += `Dirección: ${r.address}\n`;
+            if (r.phone) text += `Teléfono: ${r.phone}\n`;
+            if (r.hours) text += `Horarios: ${r.hours}\n`;
+            text += `\n`;
+
+            const categories = data.categories || [];
+            categories.forEach(cat => {
+                text += `--- CATEGORÍA: ${(cat.name || 'General').toUpperCase()} ---\n`;
+                (cat.dishes || cat.items || []).forEach(d => {
+                    text += `• ${d.name} - ${d.price || 'S/N'}\n`;
+                    if (d.description) text += `  Descripción: ${d.description}\n`;
+                    if (d.variants?.length) text += `  Variantes: ${d.variants.join(', ')}\n`;
+                    if (d.extras?.length) text += `  Extras: ${d.extras.join(', ')}\n`;
+                });
+                text += `\n`;
+            });
+
+            downloadBlob(text, 'transcripcion_menu.txt', 'text/plain;charset=utf-8');
+        };
+
+        window.exportSVG = () => {
+            const data = window.lastTranscribedMenu;
+            if (!data) {
+                showToast("No hay menú transcrito para exportar.", "warning");
+                return;
+            }
+
+            let y = 60;
+            const width = 800;
+            let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} 2000" width="${width}" style="background-color:#ffffff; font-family:sans-serif; color:#1a1c1e;">`;
+            svgContent += `<style>
+                .title { font-size: 26px; font-weight: bold; fill: #ff9533; }
+                .sub { font-size: 14px; fill: #4a5568; }
+                .cat-title { font-size: 20px; font-weight: bold; fill: #ff9533; }
+                .item-title { font-size: 16px; font-weight: bold; fill: #1a1c1e; }
+                .item-desc { font-size: 13px; fill: #4a5568; }
+            </style>`;
+
+            svgContent += `<text x="40" y="${y}" class="title">Transcripción de Menú - Menutech AI</text>`;
+            y += 40;
+
+            const r = data.restaurant || {};
+            if (r.name) { svgContent += `<text x="40" y="${y}" class="item-title">Restaurante: ${escapeXml(r.name)}</text>`; y += 25; }
+            if (r.address) { svgContent += `<text x="40" y="${y}" class="sub">Dirección: ${escapeXml(r.address)}</text>`; y += 20; }
+            y += 20;
+
+            const categories = data.categories || [];
+            categories.forEach(cat => {
+                svgContent += `<text x="40" y="${y}" class="cat-title">${escapeXml(cat.name)}</text>`; y += 25;
+                (cat.dishes || cat.items || []).forEach(d => {
+                    svgContent += `<text x="40" y="${y}" class="item-title">${escapeXml(d.name)} (${escapeXml(String(d.price || ''))})</text>`; y += 20;
+                    if (d.description) { svgContent += `<text x="40" y="${y}" class="item-desc">${escapeXml(d.description.substring(0, 90))}</text>`; y += 20; }
+                });
+                y += 15;
+            });
+
+            svgContent += `</svg>`;
+            downloadBlob(svgContent, 'transcripcion_menu.svg', 'image/svg+xml');
+        };
+
+        window.copyFullMenuJSON = () => {
+            const data = window.lastTranscribedMenu;
+            if (!data) return;
+            navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
+                showToast("JSON completo copiado al portapapeles.", "success");
+            }).catch(() => {
+                showToast("Error al copiar JSON.", "error");
+            });
+        };
+
+        function downloadBlob(content, fileName, mimeType) {
+            const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function escapeXml(unsafe) {
+            if (!unsafe) return "";
+            return unsafe.replace(/[<>&'"]/g, (c) => {
+                switch (c) {
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '&': return '&amp;';
+                    case '\'': return '&apos;';
+                    case '"': return '&quot;';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -16,6 +16,7 @@
     // --- CONFIGURATION ---
     const CONFIG = {
         EDGE_FUNCTION_URL: "https://eemqyrysdgasfjlitads.supabase.co/functions/v1/gemini-chat",
+        LECTOR_MENUS_URL: "https://eemqyrysdgasfjlitads.supabase.co/functions/v1/LectorMenus",
         SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY",
         MODEL_URL: "assets/menutechbot.gltf"
     };
@@ -1063,6 +1064,43 @@
 
                 window.dispatchEvent(new CustomEvent('menutech-menu-updated', { detail: clientIntentResult }));
                 return;
+            }
+
+            // Check for menu transcription intent ("transcribe este menu" or similar)
+            const lowerText = payloadPrompt.toLowerCase();
+            const isTranscriptionIntent = lowerText.includes("transcribe") || lowerText.includes("transcribir") || lowerText.includes("extrae este menu") || lowerText.includes("extraer menu");
+
+            if (isTranscriptionIntent && payloadImage) {
+                const resLector = await fetch(CONFIG.LECTOR_MENUS_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "apikey": CONFIG.SUPABASE_ANON_KEY,
+                        "Authorization": `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+                    },
+                    body: JSON.stringify({
+                        prompt: payloadPrompt,
+                        image: payloadImage
+                    })
+                });
+
+                removeTypingIndicator(typingEl);
+                const lectorData = await resLector.json().catch(() => ({}));
+
+                if (resLector.ok && (lectorData.menu || lectorData.categories)) {
+                    const menuObj = lectorData.menu || lectorData;
+                    sessionStorage.setItem('menutech_transcribed_menu', JSON.stringify(menuObj));
+                    window.open('disenadorIA_Menu.html', '_blank');
+
+                    const reply = "¡He transcrito el menú de la imagen! Abrí la interfaz **disenadorIA_Menu.html** para que puedas consultar y copiar cada elemento de forma organizada por secciones.";
+                    chatHistory.push({ role: "user", text: payloadPrompt });
+                    chatHistory.push({ role: "model", text: reply });
+                    if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
+
+                    appendBotMessage(reply);
+                    speakText(reply);
+                    return;
+                }
             }
 
             const res = await fetch(CONFIG.EDGE_FUNCTION_URL, {
