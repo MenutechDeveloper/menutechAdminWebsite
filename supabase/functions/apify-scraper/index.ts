@@ -1,5 +1,6 @@
 // Supabase Edge Function: apify-scraper
 // Executes Apify Actor nwua9Gu5YrADL7ZDj and returns results to extractor.html
+// NOTE: The Apify API Key MUST be stored in Supabase Secrets under the name: APIFY_API_KEY
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -18,8 +19,9 @@ serve(async (req: Request) => {
 
   try {
     const payload = await req.json().catch(() => ({}));
-    let { url, input, timeout } = payload;
+    let { search, location, limit, url, input, timeout } = payload;
 
+    // Retrieve Apify API key securely from Supabase Secrets (named APIFY_API_KEY)
     const apifyApiKey = (
       Deno.env.get("APIFY_API_KEY") ||
       Deno.env.get("APIFY_KEY") ||
@@ -29,29 +31,42 @@ serve(async (req: Request) => {
 
     if (!apifyApiKey) {
       return new Response(
-        JSON.stringify({ error: "APIFY_API_KEY no encontrada en los secrets de Supabase." }),
+        JSON.stringify({ error: "APIFY_API_KEY no encontrada en los secrets de Supabase. Asegúrate de haberla guardado como APIFY_API_KEY." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Build actor input object
+    // Construct actor input object depending on supplied parameters
     let actorInput: any = {};
+
     if (input && typeof input === "object") {
       actorInput = input;
-    } else if (url) {
-      let cleanUrl = String(url).trim();
-      if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
-        cleanUrl = "https://" + cleanUrl;
-      }
-      actorInput = {
-        startUrls: [{ url: cleanUrl }],
-        ...payload
-      };
-      delete actorInput.url;
-      delete actorInput.input;
-      delete actorInput.timeout;
     } else {
-      actorInput = payload;
+      const maxResults = parseInt(limit || "20", 10) || 20;
+
+      if (search || location) {
+        const queryTerm = [search, location].filter(Boolean).join(" ");
+        actorInput = {
+          searchStringsArray: [queryTerm],
+          searchQuery: queryTerm,
+          locationQuery: location || "",
+          maxCrawledPlacesPerSearch: maxResults,
+          maxResults: maxResults,
+          language: "es"
+        };
+      } else if (url) {
+        let cleanUrl = String(url).trim();
+        if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
+          cleanUrl = "https://" + cleanUrl;
+        }
+        actorInput = {
+          startUrls: [{ url: cleanUrl }],
+          maxCrawledPlacesPerSearch: maxResults,
+          maxResults: maxResults
+        };
+      } else {
+        actorInput = payload;
+      }
     }
 
     console.log(`Executing Apify Actor ${ACTOR_ID} with input:`, JSON.stringify(actorInput));

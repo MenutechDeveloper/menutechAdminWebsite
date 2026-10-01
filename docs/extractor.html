@@ -280,13 +280,26 @@
 
             <!-- Panel 2: Apify Integration -->
             <div id="tab-panel-apify" class="tab-panel">
-                <div class="input-group" style="margin-bottom: 16px;">
-                    <div class="input-wrapper">
-                        <input type="url" id="apify-target-url" autocomplete="off">
+                <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+                        <div class="input-wrapper">
+                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Qué Buscar (Categoría / Negocio)</label>
+                            <input type="text" id="apify-search" autocomplete="off">
+                        </div>
+                        <div class="input-wrapper">
+                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Ubicación / Dirección / Ciudad</label>
+                            <input type="text" id="apify-location" autocomplete="off">
+                        </div>
+                        <div class="input-wrapper" style="max-width: 200px;">
+                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Límite de Resultados</label>
+                            <input type="number" id="apify-limit" autocomplete="off" value="20" min="1" max="500">
+                        </div>
                     </div>
-                    <button class="btn-extract" id="btn-extract-apify" onclick="startApifyScraping()">
-                        <span>Ejecutar Apify</span>
-                    </button>
+                    <div style="display: flex; justify-content: flex-end;">
+                        <button class="btn-extract" id="btn-extract-apify" onclick="startApifyScraping()">
+                            <span>Ejecutar Apify</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div id="apify-progress-card" style="display: none; margin-top: 24px; background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px;">
@@ -1534,17 +1547,17 @@
         }
 
         window.startApifyScraping = async () => {
-            const urlInput = document.getElementById('apify-target-url');
-            let targetUrl = urlInput ? urlInput.value.trim() : '';
+            const searchInput = document.getElementById('apify-search');
+            const locationInput = document.getElementById('apify-location');
+            const limitInput = document.getElementById('apify-limit');
 
-            if (!targetUrl) {
-                showToast("Por favor ingresa una URL válida para Apify.", "warning");
+            const search = searchInput ? searchInput.value.trim() : '';
+            const location = locationInput ? locationInput.value.trim() : '';
+            const limit = limitInput ? limitInput.value.trim() : '20';
+
+            if (!search && !location) {
+                showToast("Ingresa un término de búsqueda (ej. Restaurantes, Barberías) o una ubicación/dirección.", "warning");
                 return;
-            }
-
-            if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
-                targetUrl = 'https://' + targetUrl;
-                urlInput.value = targetUrl;
             }
 
             const btn = document.getElementById('btn-extract-apify');
@@ -1558,12 +1571,17 @@
 
             try {
                 let resultData = null;
+                const requestPayload = {
+                    search: search,
+                    location: location,
+                    limit: parseInt(limit, 10) || 20
+                };
 
                 updateApifyProgress(40, "Ejecutando Actor nwua9Gu5YrADL7ZDj...");
 
                 if (sb && sb.functions) {
                     const { data, error } = await sb.functions.invoke('apify-scraper', {
-                        body: { url: targetUrl }
+                        body: requestPayload
                     });
 
                     if (error) {
@@ -1578,7 +1596,7 @@
                     const res = await fetch("https://eemqyrysdgasfjlitads.supabase.co/functions/v1/apify-scraper", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ url: targetUrl })
+                        body: JSON.stringify(requestPayload)
                     });
                     const json = await res.json();
                     if (!res.ok || json.error) {
@@ -1590,7 +1608,7 @@
                 updateApifyProgress(90, "Procesando respuesta del Actor...");
 
                 window.apifyExtractedData = resultData;
-                renderApifyResults(resultData, targetUrl);
+                renderApifyResults(resultData, search, location);
 
                 updateApifyProgress(100, "¡Scraping de Apify completado!");
                 setTimeout(hideApifyProgress, 1200);
@@ -1607,13 +1625,14 @@
             }
         };
 
-        function renderApifyResults(res, sourceUrl) {
+        function renderApifyResults(res, search, location) {
             const wrapper = document.getElementById('apify-results-wrapper');
             const summaryDisplay = document.getElementById('apify-summary-display');
             const jsonDisplay = document.getElementById('apify-json-display');
 
             const items = res?.data || res;
             const itemsCount = Array.isArray(items) ? items.length : (items ? 1 : 0);
+            const queryLabel = [search, location].filter(Boolean).join(" - ");
 
             summaryDisplay.innerHTML = `
                 <div class="info-field">
@@ -1621,8 +1640,8 @@
                     <div>${res?.actorId || 'nwua9Gu5YrADL7ZDj'}</div>
                 </div>
                 <div class="info-field">
-                    <label>URL Analizada</label>
-                    <div>${sourceUrl}</div>
+                    <label>Búsqueda / Ubicación</label>
+                    <div>${queryLabel || 'Búsqueda general'}</div>
                 </div>
                 <div class="info-field">
                     <label>Elementos Obtenidos</label>
