@@ -161,6 +161,58 @@
         .loader-spin { border: 3px solid rgba(255, 149, 51, 0.2); width: 22px; height: 22px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 0.8s linear infinite; display: inline-block; }
         @keyframes rotate { to { transform: rotate(360deg); } }
 
+        /* Tabs Navigation */
+        .tabs-nav {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            justify-content: center;
+        }
+        .tab-btn {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            color: var(--text-dim);
+            padding: 12px 28px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+        .tab-btn:hover {
+            color: var(--text);
+            border-color: var(--orange);
+        }
+        .tab-btn.active {
+            background: var(--orange);
+            color: #ffffff;
+            border-color: var(--orange);
+            box-shadow: 0 6px 20px rgba(255, 149, 51, 0.25);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* Apify Results JSON Pre Container */
+        .apify-json-container {
+            background: var(--input);
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--text);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
         @media (max-width: 640px) {
             .container { padding-top: 90px; }
             .input-group { flex-direction: column; }
@@ -197,28 +249,59 @@
             <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
         </header>
 
+        <!-- Tabs Selector -->
+        <div class="tabs-nav">
+            <button class="tab-btn active" id="tab-btn-direct" onclick="switchExtractorTab('direct')">Extractor Directo</button>
+            <button class="tab-btn" id="tab-btn-apify" onclick="switchExtractorTab('apify')">Apify</button>
+        </div>
+
         <div class="extractor-card">
-            <div class="input-group">
-                <div class="input-wrapper">
-                    <input type="url" id="target-url" autocomplete="off">
+            <!-- Panel 1: Extractor Directo -->
+            <div id="tab-panel-direct" class="tab-panel active">
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="url" id="target-url" autocomplete="off">
+                    </div>
+                    <button class="btn-extract" id="btn-extract" onclick="startExtraction()">
+                        <span>Extraer Información</span>
+                    </button>
                 </div>
-                <button class="btn-extract" id="btn-extract" onclick="startExtraction()">
-                    <span>Extraer Información</span>
-                </button>
+
+                <div id="progress-card">
+                    <div class="progress-status">
+                        <span id="progress-text">Iniciando conexión...</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                </div>
             </div>
 
-            <div id="progress-card">
-                <div class="progress-status">
-                    <span id="progress-text">Iniciando conexión...</span>
-                    <span id="progress-percent">0%</span>
+            <!-- Panel 2: Apify Integration -->
+            <div id="tab-panel-apify" class="tab-panel">
+                <div class="input-group" style="margin-bottom: 16px;">
+                    <div class="input-wrapper">
+                        <input type="url" id="apify-target-url" autocomplete="off">
+                    </div>
+                    <button class="btn-extract" id="btn-extract-apify" onclick="startApifyScraping()">
+                        <span>Ejecutar Apify</span>
+                    </button>
                 </div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar" id="progress-bar"></div>
+
+                <div id="apify-progress-card" style="display: none; margin-top: 24px; background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px;">
+                    <div class="progress-status">
+                        <span id="apify-progress-text">Ejecutando Actor en Apify...</span>
+                        <span id="apify-progress-percent">0%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="apify-progress-bar"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Results Display -->
+        <!-- Direct Extractor Results Display -->
         <div id="results-wrapper">
             <div class="section-header">
                 <h2>Vista Previa de Información Extraída</h2>
@@ -252,6 +335,29 @@
                 <!-- Dynamically filled -->
             </div>
         </div>
+
+        <!-- Apify Results Display -->
+        <div id="apify-results-wrapper" style="display: none; margin-top: 30px;">
+            <div class="section-header">
+                <h2>Resultados de Apify</h2>
+                <div class="export-actions">
+                    <button class="btn-export" onclick="exportApifyJSON()">
+                        Exportar JSON
+                    </button>
+                    <button class="btn-export" onclick="copyApifyJSON()">
+                        Copiar JSON
+                    </button>
+                </div>
+            </div>
+
+            <div class="restaurant-info-card" id="apify-summary-display" style="margin-bottom: 20px;">
+                <!-- Dynamically filled summary -->
+            </div>
+
+            <div class="apify-json-container" id="apify-json-display">
+                <!-- Dynamically filled raw/structured output -->
+            </div>
+        </div>
     </div>
 
     <!-- Hidden Export Container for PDF / SVG Rendering -->
@@ -259,6 +365,38 @@
 
     <script type="module">
         import { supabase as sb } from './supabase.js';
+
+        // Global tab switching function
+        window.switchExtractorTab = (tab) => {
+            const btnDirect = document.getElementById('tab-btn-direct');
+            const btnApify = document.getElementById('tab-btn-apify');
+            const panelDirect = document.getElementById('tab-panel-direct');
+            const panelApify = document.getElementById('tab-panel-apify');
+            const directResults = document.getElementById('results-wrapper');
+            const apifyResults = document.getElementById('apify-results-wrapper');
+
+            if (tab === 'apify') {
+                if (btnDirect) btnDirect.classList.remove('active');
+                if (btnApify) btnApify.classList.add('active');
+                if (panelDirect) panelDirect.classList.remove('active');
+                if (panelApify) panelApify.classList.add('active');
+
+                if (directResults) directResults.style.display = 'none';
+                if (window.apifyExtractedData && apifyResults) {
+                    apifyResults.style.display = 'block';
+                }
+            } else {
+                if (btnApify) btnApify.classList.remove('active');
+                if (btnDirect) btnDirect.classList.add('active');
+                if (panelApify) panelApify.classList.remove('active');
+                if (panelDirect) panelDirect.classList.add('active');
+
+                if (apifyResults) apifyResults.style.display = 'none';
+                if (window.extractedData && (window.extractedData.restaurant.name || window.extractedData.categories.length > 0) && directResults) {
+                    directResults.style.display = 'block';
+                }
+            }
+        };
 
         // State Data
         window.extractedData = {
@@ -1368,6 +1506,160 @@
                 }
             });
         }
+
+        // ==========================================
+        // APIFY INTEGRATION (Independent Logic)
+        // ==========================================
+
+        window.apifyExtractedData = null;
+
+
+        function updateApifyProgress(percent, text) {
+            const card = document.getElementById('apify-progress-card');
+            const bar = document.getElementById('apify-progress-bar');
+            const pText = document.getElementById('apify-progress-text');
+            const pPercent = document.getElementById('apify-progress-percent');
+
+            if (card && bar && pText && pPercent) {
+                card.style.display = 'block';
+                bar.style.width = percent + '%';
+                pText.textContent = text;
+                pPercent.textContent = percent + '%';
+            }
+        }
+
+        function hideApifyProgress() {
+            const card = document.getElementById('apify-progress-card');
+            if (card) card.style.display = 'none';
+        }
+
+        window.startApifyScraping = async () => {
+            const urlInput = document.getElementById('apify-target-url');
+            let targetUrl = urlInput ? urlInput.value.trim() : '';
+
+            if (!targetUrl) {
+                showToast("Por favor ingresa una URL válida para Apify.", "warning");
+                return;
+            }
+
+            if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+                targetUrl = 'https://' + targetUrl;
+                urlInput.value = targetUrl;
+            }
+
+            const btn = document.getElementById('btn-extract-apify');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<span class="loader-spin"></span> Procesando Apify...`;
+            }
+
+            document.getElementById('apify-results-wrapper').style.display = 'none';
+            updateApifyProgress(15, "Iniciando ejecución de Actor en Apify...");
+
+            try {
+                let resultData = null;
+
+                updateApifyProgress(40, "Ejecutando Actor nwua9Gu5YrADL7ZDj...");
+
+                if (sb && sb.functions) {
+                    const { data, error } = await sb.functions.invoke('apify-scraper', {
+                        body: { url: targetUrl }
+                    });
+
+                    if (error) {
+                        throw new Error(error.message || "Error al llamar a Edge Function apify-scraper");
+                    }
+                    if (data && data.error) {
+                        throw new Error(data.error);
+                    }
+                    resultData = data;
+                } else {
+                    // Fallback direct HTTP fetch to Edge Function endpoint if sb client unavailable
+                    const res = await fetch("https://eemqyrysdgasfjlitads.supabase.co/functions/v1/apify-scraper", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ url: targetUrl })
+                    });
+                    const json = await res.json();
+                    if (!res.ok || json.error) {
+                        throw new Error(json.error || `HTTP ${res.status}`);
+                    }
+                    resultData = json;
+                }
+
+                updateApifyProgress(90, "Procesando respuesta del Actor...");
+
+                window.apifyExtractedData = resultData;
+                renderApifyResults(resultData, targetUrl);
+
+                updateApifyProgress(100, "¡Scraping de Apify completado!");
+                setTimeout(hideApifyProgress, 1200);
+                showToast("Scraping con Apify finalizado con éxito.", "success");
+            } catch (err) {
+                console.error("Apify scraping failed:", err);
+                hideApifyProgress();
+                showToast("Error en Apify: " + err.message, "error");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<span>Ejecutar Apify</span>`;
+                }
+            }
+        };
+
+        function renderApifyResults(res, sourceUrl) {
+            const wrapper = document.getElementById('apify-results-wrapper');
+            const summaryDisplay = document.getElementById('apify-summary-display');
+            const jsonDisplay = document.getElementById('apify-json-display');
+
+            const items = res?.data || res;
+            const itemsCount = Array.isArray(items) ? items.length : (items ? 1 : 0);
+
+            summaryDisplay.innerHTML = `
+                <div class="info-field">
+                    <label>Actor ID</label>
+                    <div>${res?.actorId || 'nwua9Gu5YrADL7ZDj'}</div>
+                </div>
+                <div class="info-field">
+                    <label>URL Analizada</label>
+                    <div>${sourceUrl}</div>
+                </div>
+                <div class="info-field">
+                    <label>Elementos Obtenidos</label>
+                    <div>${itemsCount} ${itemsCount === 1 ? 'registro' : 'registros'}</div>
+                </div>
+                <div class="info-field">
+                    <label>Estado</label>
+                    <div style="color: var(--success); font-weight: 700;">Completado</div>
+                </div>
+            `;
+
+            jsonDisplay.textContent = JSON.stringify(res, null, 2);
+            wrapper.style.display = 'block';
+            wrapper.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        window.exportApifyJSON = () => {
+            if (!window.apifyExtractedData) {
+                showToast("No hay datos de Apify para exportar.", "warning");
+                return;
+            }
+            const jsonStr = JSON.stringify(window.apifyExtractedData, null, 2);
+            downloadBlob(jsonStr, `apify_result_${Date.now()}.json`, 'application/json');
+        };
+
+        window.copyApifyJSON = () => {
+            if (!window.apifyExtractedData) {
+                showToast("No hay datos de Apify para copiar.", "warning");
+                return;
+            }
+            const jsonStr = JSON.stringify(window.apifyExtractedData, null, 2);
+            navigator.clipboard.writeText(jsonStr).then(() => {
+                showToast("JSON de Apify copiado al portapapeles.", "success");
+            }).catch(() => {
+                showToast("No se pudo copiar el JSON.", "error");
+            });
+        };
     </script>
     <script src="chatbot.js"></script>
 </body>
