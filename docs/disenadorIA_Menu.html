@@ -300,6 +300,7 @@
             const raw = sessionStorage.getItem('menutech_transcribed_menu');
             sessionStorage.removeItem('menutech_transcribed_menu');
             if (!raw) {
+                sessionStorage.removeItem('menutech_chat_history');
                 renderEmptyState();
                 return;
             }

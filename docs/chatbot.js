@@ -1648,6 +1648,8 @@
                     }
                 });
             }
+            // Remove chat history from sessionStorage after restoring so it resets on page refresh
+            sessionStorage.removeItem('menutech_chat_history');
         }
 
         const shouldOpenChat = sessionStorage.getItem('menutech_open_chat_on_load');
