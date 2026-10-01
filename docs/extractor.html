@@ -281,17 +281,19 @@
             <!-- Panel 2: Apify Integration -->
             <div id="tab-panel-apify" class="tab-panel">
                 <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
                         <div class="input-wrapper">
-                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Qué Buscar (Categoría / Negocio)</label>
-                            <input type="text" id="apify-search" autocomplete="off">
+                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Categoría</label>
+                            <select id="apify-search" style="width: 100%; background: var(--input); border: 1.5px solid var(--border); border-radius: 20px; padding: 18px 24px; color: var(--text); font-size: 1rem; font-family: inherit; transition: 0.3s; cursor: pointer;">
+                                <option value="restaurant">Restaurante</option>
+                            </select>
                         </div>
                         <div class="input-wrapper">
-                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Ubicación / Dirección / Ciudad</label>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Ubicación</label>
                             <input type="text" id="apify-location" autocomplete="off">
                         </div>
                         <div class="input-wrapper" style="max-width: 200px;">
-                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Límite de Resultados</label>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Límite de resultados</label>
                             <input type="number" id="apify-limit" autocomplete="off" value="20" min="1" max="500">
                         </div>
                     </div>
@@ -1551,12 +1553,12 @@
             const locationInput = document.getElementById('apify-location');
             const limitInput = document.getElementById('apify-limit');
 
-            const search = searchInput ? searchInput.value.trim() : '';
+            const search = searchInput ? searchInput.value.trim() : 'restaurant';
             const location = locationInput ? locationInput.value.trim() : '';
             const limit = limitInput ? limitInput.value.trim() : '20';
 
-            if (!search && !location) {
-                showToast("Ingresa un término de búsqueda (ej. Restaurantes, Barberías) o una ubicación/dirección.", "warning");
+            if (!location) {
+                showToast("Por favor ingresa una ubicación para realizar la búsqueda.", "warning");
                 return;
             }
 
