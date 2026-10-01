@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos de Restaurantes Scraping | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #059669;
+            --success-bg: rgba(5, 150, 105, 0.08);
+            --success-border: #10b981;
+            --error: #dc2626;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+            --success-bg: rgba(16, 185, 129, 0.12);
+            --success-border: #10b981;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
+
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
+        #top-nav > * { pointer-events: auto; }
+
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; }
+        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
+
+        .theme-switch { width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        #user-display-pill {
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); min-width: 180px;
+        }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); }
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
+        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); }
+
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 100px 24px 60px 24px; animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        header { text-align: center; margin-bottom: 30px; }
+        .logo-main { width: 100%; max-width: 260px; height: auto; margin: 0 auto 12px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
+        header h1 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+
+        /* Navigation Tabs */
+        .tabs-nav {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            justify-content: center;
+        }
+        .tab-btn {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            color: var(--text-dim);
+            padding: 12px 32px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-btn:hover {
+            color: var(--text);
+            border-color: var(--orange);
+        }
+        .tab-btn.active {
+            background: var(--orange);
+            color: #ffffff;
+            border-color: var(--orange);
+            box-shadow: 0 6px 20px rgba(255, 149, 51, 0.25);
+        }
+        .tab-btn.crap-tab.active {
+            background: #64748b;
+            border-color: #64748b;
+            box-shadow: 0 6px 20px rgba(100, 116, 139, 0.25);
+        }
+        .badge-count {
+            background: rgba(255,255,255,0.25);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        /* Controls Bar */
+        .controls-card {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 28px;
+            padding: 24px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        }
+        .filter-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            flex: 1;
+            min-width: 280px;
+        }
+        .search-input, .city-select {
+            background: var(--input);
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            padding: 12px 18px;
+            color: var(--text);
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            transition: 0.3s;
+        }
+        .search-input { flex: 2; min-width: 200px; }
+        .city-select { flex: 1; min-width: 160px; cursor: pointer; }
+        .search-input:focus, .city-select:focus {
+            border-color: var(--orange);
+            box-shadow: 0 0 0 3px rgba(255,149,51,0.12);
+        }
+
+        .export-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-export {
+            background: var(--input);
+            border: 1.5px solid var(--border);
+            color: var(--text);
+            padding: 12px 20px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+        .btn-export:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+            transform: translateY(-2px);
+        }
+        .btn-export.primary {
+            background: var(--orange);
+            color: #ffffff;
+            border-color: var(--orange);
+        }
+
+        /* Restaurant Cards Grid */
+        .restaurants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .restaurant-card {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 28px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.03);
+        }
+        .restaurant-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--orange);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.08);
+        }
+
+        /* Called Green Style */
+        .restaurant-card.is-called {
+            border-color: var(--success-border) !important;
+            background: var(--success-bg) !important;
+            box-shadow: 0 8px 25px rgba(5, 150, 105, 0.12);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.3;
+        }
+        .city-badge {
+            background: rgba(255, 149, 51, 0.12);
+            color: var(--orange);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .info-label {
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: var(--orange);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .info-value {
+            font-weight: 600;
+            color: var(--text);
+            word-break: break-word;
+        }
+        .info-value.empty {
+            color: var(--text-dim);
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding-top: 14px;
+            border-top: 1px dashed var(--border);
+            align-items: center;
+        }
+
+        .btn-action {
+            padding: 8px 14px;
+            border-radius: 14px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1.5px solid var(--border);
+            background: var(--input);
+            color: var(--text);
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-action:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+
+        .btn-call {
+            border-color: var(--border);
+            color: var(--text-dim);
+        }
+        .btn-call.called {
+            background: var(--success);
+            color: #ffffff;
+            border-color: var(--success);
+        }
+        .btn-call.called:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn-crap {
+            border-color: #cbd5e1;
+            color: #64748b;
+        }
+        .btn-crap:hover {
+            background: #ef4444;
+            color: #ffffff;
+            border-color: #ef4444;
+        }
+
+        .btn-restore {
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+        .btn-restore:hover {
+            background: var(--orange);
+            color: #ffffff;
+        }
+
+        /* Edit Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(6px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-card {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 32px;
+            padding: 32px;
+            width: 100%;
+            max-width: 580px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--orange);
+        }
+        .btn-close-modal {
+            background: var(--input);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .btn-close-modal:hover { color: var(--error); border-color: var(--error); }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group label {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--orange);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-group input {
+            background: var(--input);
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            padding: 12px 16px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--orange);
+            box-shadow: 0 0 0 3px rgba(255,149,51,0.12);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--card);
+            border: 1.5px dashed var(--border);
+            border-radius: 32px;
+            color: var(--text-dim);
+        }
+        .empty-state h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        /* Toast Notifications */
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast { min-width: 300px; max-width: 460px; padding: 16px 20px; border-radius: 20px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.85rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.4s ease; line-height: 1.4; }
+        .toast.success { border-left: 5px solid var(--success); }
+        .toast.error { border-left: 5px solid var(--error); }
+        .toast.warning { border-left: 5px solid var(--orange); }
+        @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        .loader-spin { border: 3px solid rgba(255, 149, 51, 0.2); width: 22px; height: 22px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 0.8s linear infinite; display: inline-block; }
+        @keyframes rotate { to { transform: rotate(360deg); } }
+
+        @media (max-width: 640px) {
+            .container { padding-top: 90px; }
+            .form-row { grid-template-columns: 1fr; }
+            .controls-card { flex-direction: column; align-items: stretch; }
+            .restaurants-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
+
+    <div id="top-nav">
+        <div>
+            <button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="theme-switch" id="theme-toggle" title="Cambiar Tema">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+            <div id="user-display-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: var(--orange);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div class="pill-info">
+                    <div id="user-name">Menutech</div>
+                    <div id="user-role-label">Scraped Data</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
+            <h1>Gestión de Restaurantes Extraídos</h1>
+        </header>
+
+        <!-- Main Tabs -->
+        <div class="tabs-nav">
+            <button class="tab-btn active" id="tab-btn-active" onclick="switchMainTab('active')">
+                Restaurantes
+                <span class="badge-count" id="count-active">0</span>
+            </button>
+            <button class="tab-btn crap-tab" id="tab-btn-crap" onclick="switchMainTab('crap')">
+                Crap
+                <span class="badge-count" id="count-crap">0</span>
+            </button>
+        </div>
+
+        <!-- Filter & Actions Bar -->
+        <div class="controls-card">
+            <div class="filter-group">
+                <input type="text" id="search-input" class="search-input" placeholder="Buscar por nombre, teléfono o dirección..." oninput="applyFilters()">
+                <select id="city-select" class="city-select" onchange="applyFilters()">
+                    <option value="">Todas las Ciudades</option>
+                </select>
+            </div>
+            <div class="export-actions">
+                <button class="btn-export" onclick="exportFilteredTXT()">
+                    Exportar TXT
+                </button>
+                <button class="btn-export primary" onclick="exportFilteredCSV()">
+                    Descargar para Google Sheet
+                </button>
+            </div>
+        </div>
+
+        <!-- Restaurants Grid -->
+        <div class="restaurants-grid" id="restaurants-grid">
+            <div class="empty-state">
+                <span class="loader-spin"></span>
+                <p style="margin-top: 10px;">Cargando restaurantes desde Supabase...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">Editar Restaurante</div>
+                <button class="btn-close-modal" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form class="modal-form" onsubmit="saveEdit(event)">
+                <input type="hidden" id="edit-id">
+                <div class="form-group">
+                    <label>Nombre del Restaurante</label>
+                    <input type="text" id="edit-title" required>
+                </div>
+                <div class="form-group">
+                    <label>Dirección</label>
+                    <input type="text" id="edit-address">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ciudad</label>
+                        <input type="text" id="edit-city" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Zipcode</label>
+                        <input type="text" id="edit-zipcode">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="text" id="edit-phone">
+                    </div>
+                    <div class="form-group">
+                        <label>Horario</label>
+                        <input type="text" id="edit-hours">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Website / Link</label>
+                    <input type="text" id="edit-website">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-action" onclick="closeEditModal()">Cancelar</button>
+                    <button type="submit" class="btn-action btn-restore" id="btn-save-modal">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase as sb } from './supabase.js';
+
+        let allRestaurants = [];
+        let currentTab = 'active'; // 'active' or 'crap'
+
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const msg = document.createElement('div');
+            msg.textContent = message;
+            toast.appendChild(msg);
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
+            checkUserSession();
+            await fetchRestaurants();
+        });
+
+        async function checkUserSession() {
+            if (sb) {
+                const { data: { session } } = await sb.auth.getSession();
+                if (session && session.user) {
+                    const { data: profile } = await sb.from('profiles').select('username, role').eq('id', session.user.id).single();
+                    if (profile) {
+                        document.getElementById('user-name').textContent = profile.username || session.user.email.split('@')[0];
+                        document.getElementById('user-role-label').textContent = profile.role || 'User';
+                    }
+                }
+            }
+        }
+
+        function initTheme() {
+            const toggle = document.getElementById('theme-toggle');
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            toggle.onclick = () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            };
+        }
+
+        async function fetchRestaurants() {
+            if (!sb) {
+                showToast("Error de conexión con Supabase", "error");
+                return;
+            }
+
+            try {
+                const { data, error } = await sb
+                    .from('menutech_scraped_restaurants')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allRestaurants = data || [];
+                populateCityFilter();
+                updateCounts();
+                renderGrid();
+            } catch (err) {
+                console.error("Error loading restaurants:", err);
+                showToast("Error al cargar restaurantes: " + err.message, "error");
+                document.getElementById('restaurants-grid').innerHTML = `
+                    <div class="empty-state">
+                        <h3>Error de carga</h3>
+                        <p>${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function populateCityFilter() {
+            const select = document.getElementById('city-select');
+            const currentVal = select.value;
+
+            const cities = Array.from(new Set(allRestaurants.map(r => r.city).filter(Boolean))).sort();
+
+            select.innerHTML = `<option value="">Todas las Ciudades (${cities.length})</option>` +
+                cities.map(c => `<option value="${escapeXml(c)}">${escapeXml(c)}</option>`).join('');
+
+            select.value = currentVal;
+        }
+
+        function updateCounts() {
+            const activeCount = allRestaurants.filter(r => (r.status || 'active') === 'active').length;
+            const crapCount = allRestaurants.filter(r => r.status === 'crap').length;
+
+            document.getElementById('count-active').textContent = activeCount;
+            document.getElementById('count-crap').textContent = crapCount;
+        }
+
+        window.switchMainTab = (tab) => {
+            currentTab = tab;
+            document.getElementById('tab-btn-active').classList.toggle('active', tab === 'active');
+            document.getElementById('tab-btn-crap').classList.toggle('active', tab === 'crap');
+            renderGrid();
+        };
+
+        window.applyFilters = () => {
+            renderGrid();
+        };
+
+        function getFilteredRestaurants() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+            const selectedCity = document.getElementById('city-select').value;
+
+            return allRestaurants.filter(r => {
+                const matchTab = (r.status || 'active') === currentTab;
+                const matchCity = !selectedCity || r.city === selectedCity;
+                const matchSearch = !searchTerm ||
+                    (r.title && r.title.toLowerCase().includes(searchTerm)) ||
+                    (r.phone && r.phone.toLowerCase().includes(searchTerm)) ||
+                    (r.address && r.address.toLowerCase().includes(searchTerm)) ||
+                    (r.city && r.city.toLowerCase().includes(searchTerm));
+
+                return matchTab && matchCity && matchSearch;
+            });
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('restaurants-grid');
+            const filtered = getFilteredRestaurants();
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No hay restaurantes ${currentTab === 'crap' ? 'en Crap' : 'activos'}</h3>
+                        <p>No se encontraron registros ${currentTab === 'crap' ? 'descartados' : 'con los filtros seleccionados'}.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(item => {
+                const isCalled = Boolean(item.is_called);
+                return `
+                    <div class="restaurant-card ${isCalled ? 'is-called' : ''}" id="card-${item.id}">
+                        <div>
+                            <div class="card-header">
+                                <div class="card-title">${escapeXml(item.title)}</div>
+                                <span class="city-badge">${escapeXml(item.city || 'Desconocida')}</span>
+                            </div>
+
+                            <div class="info-list" style="margin-top: 14px;">
+                                <div class="info-item">
+                                    <span class="info-label">Dirección</span>
+                                    <span class="info-value ${!item.address ? 'empty' : ''}">${escapeXml(item.address) || 'No especificada'}</span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                    <div class="info-item">
+                                        <span class="info-label">Teléfono</span>
+                                        <span class="info-value ${!item.phone ? 'empty' : ''}">${escapeXml(item.phone) || 'No especificado'}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Zipcode</span>
+                                        <span class="info-value ${!item.zipcode ? 'empty' : ''}">${escapeXml(item.zipcode) || 'No especificado'}</span>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Horario</span>
+                                    <span class="info-value ${!item.hours ? 'empty' : ''}">${escapeXml(item.hours) || 'No especificado'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Website</span>
+                                    <span class="info-value">
+                                        ${item.website ? `<a href="${escapeXml(item.website)}" target="_blank" rel="noopener noreferrer" style="color: var(--orange); text-decoration: underline;">${escapeXml(item.website)}</a>` : '<span class="empty">No especificado</span>'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-actions">
+                            <button class="btn-action btn-call ${isCalled ? 'called' : ''}" onclick="toggleCallStatus('${item.id}', ${!isCalled})">
+                                ${isCalled ? '✓ Llamado' : 'Marcar Llamado'}
+                            </button>
+                            <button class="btn-action" onclick="openEditModal('${item.id}')">
+                                Editar
+                            </button>
+
+                            ${currentTab === 'active' ? `
+                                <button class="btn-action btn-crap" onclick="moveToCrap('${item.id}')">
+                                    Mover a Crap
+                                </button>
+                            ` : `
+                                <button class="btn-action btn-restore" onclick="restoreFromCrap('${item.id}')">
+                                    Restaurar
+                                </button>
+                                <button class="btn-action btn-crap" onclick="deletePermanently('${item.id}')">
+                                    Eliminar
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle Llamado (Green)
+        window.toggleCallStatus = async (id, newStatus) => {
+            const item = allRestaurants.find(r => r.id === id);
+            if (!item) return;
+
+            item.is_called = newStatus;
+            renderGrid();
+
+            try {
+                const { error } = await sb
+                    .from('menutech_scraped_restaurants')
+                    .update({ is_called: newStatus })
+                    .eq('id', id);
+
+                if (error) throw error;
+                showToast(newStatus ? "Marcar como llamado (verde)" : "Estado de llamada removido", "success");
+            } catch (err) {
+                console.error("Error updating called status:", err);
+                item.is_called = !newStatus; // revert
+                renderGrid();
+                showToast("Error al actualizar llamada: " + err.message, "error");
+            }
+        };
+
+        // Move to Crap
+        window.moveToCrap = async (id) => {
+            const item = allRestaurants.find(r => r.id === id);
+            if (!item) return;
+
+            item.status = 'crap';
+            updateCounts();
+            renderGrid();
+
+            try {
+                const { error } = await sb
+                    .from('menutech_scraped_restaurants')
+                    .update({ status: 'crap' })
+                    .eq('id', id);
+
+                if (error) throw error;
+                showToast("Mover a pestaña Crap", "success");
+            } catch (err) {
+                console.error("Error moving to crap:", err);
+                item.status = 'active'; // revert
+                updateCounts();
+                renderGrid();
+                showToast("Error al mover a crap: " + err.message, "error");
+            }
+        };
+
+        // Restore from Crap
+        window.restoreFromCrap = async (id) => {
+            const item = allRestaurants.find(r => r.id === id);
+            if (!item) return;
+
+            item.status = 'active';
+            updateCounts();
+            renderGrid();
+
+            try {
+                const { error } = await sb
+                    .from('menutech_scraped_restaurants')
+                    .update({ status: 'active' })
+                    .eq('id', id);
+
+                if (error) throw error;
+                showToast("Restaurado a Restaurantes", "success");
+            } catch (err) {
+                console.error("Error restoring from crap:", err);
+                item.status = 'crap'; // revert
+                updateCounts();
+                renderGrid();
+                showToast("Error al restaurar: " + err.message, "error");
+            }
+        };
+
+        // Delete Permanently
+        window.deletePermanently = async (id) => {
+            if (!confirm("¿Estás seguro de eliminar permanentemente este registro?")) return;
+
+            allRestaurants = allRestaurants.filter(r => r.id !== id);
+            populateCityFilter();
+            updateCounts();
+            renderGrid();
+
+            try {
+                const { error } = await sb
+                    .from('menutech_scraped_restaurants')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+                showToast("Registro eliminado permanentemente.", "success");
+            } catch (err) {
+                console.error("Error deleting restaurant:", err);
+                showToast("Error al eliminar: " + err.message, "error");
+                await fetchRestaurants();
+            }
+        };
+
+        // Edit Modal Handlers
+        window.openEditModal = (id) => {
+            const item = allRestaurants.find(r => r.id === id);
+            if (!item) return;
+
+            document.getElementById('edit-id').value = item.id;
+            document.getElementById('edit-title').value = item.title || '';
+            document.getElementById('edit-address').value = item.address || '';
+            document.getElementById('edit-city').value = item.city || '';
+            document.getElementById('edit-zipcode').value = item.zipcode || '';
+            document.getElementById('edit-phone').value = item.phone || '';
+            document.getElementById('edit-hours').value = item.hours || '';
+            document.getElementById('edit-website').value = item.website || '';
+
+            document.getElementById('edit-modal').classList.add('active');
+        };
+
+        window.closeEditModal = () => {
+            document.getElementById('edit-modal').classList.remove('active');
+        };
+
+        window.saveEdit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const item = allRestaurants.find(r => r.id === id);
+            if (!item) return;
+
+            const updatedData = {
+                title: document.getElementById('edit-title').value.trim(),
+                address: document.getElementById('edit-address').value.trim(),
+                city: document.getElementById('edit-city').value.trim() || 'Desconocida',
+                zipcode: document.getElementById('edit-zipcode').value.trim(),
+                phone: document.getElementById('edit-phone').value.trim(),
+                hours: document.getElementById('edit-hours').value.trim(),
+                website: document.getElementById('edit-website').value.trim()
+            };
+
+            const btn = document.getElementById('btn-save-modal');
+            btn.disabled = true;
+
+            try {
+                const { error } = await sb
+                    .from('menutech_scraped_restaurants')
+                    .update(updatedData)
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                Object.assign(item, updatedData);
+                closeEditModal();
+                populateCityFilter();
+                renderGrid();
+                showToast("Cambios guardados correctamente.", "success");
+            } catch (err) {
+                console.error("Error saving edit:", err);
+                showToast("Error al guardar cambios: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        // Export Handlers
+        window.exportFilteredTXT = () => {
+            const list = getFilteredRestaurants();
+            if (list.length === 0) {
+                showToast("No hay registros para exportar.", "warning");
+                return;
+            }
+
+            let text = `========================================\n`;
+            text += `RESTAURANTES SCRAPED (${list.length} Registros - ${currentTab.toUpperCase()})\n`;
+            text += `========================================\n\n`;
+
+            list.forEach((item, i) => {
+                text += `[${i + 1}] ${item.title.toUpperCase()}\n`;
+                text += `• Dirección: ${item.address || 'No especificada'}\n`;
+                text += `• Ciudad: ${item.city}\n`;
+                text += `• Zipcode: ${item.zipcode || 'No especificado'}\n`;
+                text += `• Teléfono: ${item.phone || 'No especificado'}\n`;
+                text += `• Horarios: ${item.hours || 'No especificado'}\n`;
+                text += `• Website: ${item.website || 'No especificado'}\n`;
+                text += `• Estado Llamada: ${item.is_called ? 'LLAMADO (Verde)' : 'Pendiente'}\n\n`;
+            });
+
+            downloadBlob(text, `restaurantes_${currentTab}_${Date.now()}.txt`, 'text/plain;charset=utf-8');
+        };
+
+        window.exportFilteredCSV = () => {
+            const list = getFilteredRestaurants();
+            if (list.length === 0) {
+                showToast("No hay registros para exportar.", "warning");
+                return;
+            }
+
+            const headers = ["Nombre", "Direccion", "Ciudad", "Zipcode", "Telefono", "Horarios", "Website", "Llamado"];
+
+            function escapeCsvCell(val) {
+                if (!val) return '""';
+                const str = String(val).replace(/"/g, '""');
+                return `"${str}"`;
+            }
+
+            const rows = [
+                headers.map(escapeCsvCell).join(','),
+                ...list.map(item => [
+                    escapeCsvCell(item.title),
+                    escapeCsvCell(item.address),
+                    escapeCsvCell(item.city),
+                    escapeCsvCell(item.zipcode),
+                    escapeCsvCell(item.phone),
+                    escapeCsvCell(item.hours),
+                    escapeCsvCell(item.website),
+                    escapeCsvCell(item.is_called ? 'SI' : 'NO')
+                ].join(','))
+            ];
+
+            const csvContent = '\uFEFF' + rows.join('\r\n');
+            downloadBlob(csvContent, `restaurantes_google_sheets_${currentTab}_${Date.now()}.csv`, 'text/csv;charset=utf-8;');
+        };
+
+        function downloadBlob(content, fileName, mimeType) {
+            const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function escapeXml(unsafe) {
+            if (!unsafe) return "";
+            return String(unsafe).replace(/[<>&'"]/g, (c) => {
+                switch (c) {
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '&': return '&amp;';
+                    case '\'': return '&apos;';
+                    case '"': return '&quot;';
+                }
+            });
+        }
+    </script>
+    <script src="chatbot.js"></script>
+</body>
+</html>

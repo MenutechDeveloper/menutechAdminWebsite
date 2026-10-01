@@ -356,11 +356,20 @@
             <div class="section-header">
                 <h2>Resultados de Apify</h2>
                 <div class="export-actions">
+                    <button class="btn-export" onclick="exportApifyTXT()">
+                        Exportar TXT
+                    </button>
+                    <button class="btn-export" onclick="exportApifyCSV()">
+                        Descargar para Google Sheet
+                    </button>
                     <button class="btn-export" onclick="exportApifyJSON()">
                         Exportar JSON
                     </button>
                     <button class="btn-export" onclick="copyApifyJSON()">
                         Copiar JSON
+                    </button>
+                    <button class="btn-export primary" id="btn-save-apify-sb" onclick="saveApifyToSupabase()">
+                        Guardar en Supabase
                     </button>
                 </div>
             </div>
@@ -1750,6 +1759,157 @@
             wrapper.style.display = 'block';
             wrapper.scrollIntoView({ behavior: 'smooth' });
         }
+
+        function getApifyParsedItems() {
+            if (!window.apifyExtractedData) return [];
+            const res = window.apifyExtractedData;
+            let rawItems = [];
+            if (Array.isArray(res)) rawItems = res;
+            else if (res && Array.isArray(res.data)) rawItems = res.data;
+            else if (res && Array.isArray(res.items)) rawItems = res.items;
+            else if (res) rawItems = [res];
+
+            const searchLocation = document.getElementById('apify-location')?.value?.trim() || '';
+
+            return rawItems.map(item => {
+                const title = (item.title || item.name || 'Sin nombre').trim();
+                const address = (item.address || item.street || '').trim();
+                const zipcode = (item.postalCode || item.zipCode || item.zipcode || item.zip || '').trim();
+                let city = (item.city || item.addressCity || item.municipality || '').trim();
+                if (!city && searchLocation) city = searchLocation;
+                if (!city) city = 'Desconocida';
+                const phone = (item.phone || item.phoneUnformatted || item.telephone || '').trim();
+                const hours = formatApifyHours(item.openingHours || item.hours);
+                const website = (item.website || item.url || item.web || '').trim();
+
+                return { title, address, city, zipcode, phone, hours, website };
+            });
+        }
+
+        window.exportApifyTXT = () => {
+            const items = getApifyParsedItems();
+            if (items.length === 0) {
+                showToast("No hay datos de Apify para exportar.", "warning");
+                return;
+            }
+            let text = `========================================\n`;
+            text += `RESULTADOS DE APIFY (${items.length} Registros)\n`;
+            text += `========================================\n\n`;
+
+            items.forEach((item, index) => {
+                text += `[${index + 1}] ${item.title.toUpperCase()}\n`;
+                text += `• Dirección: ${item.address || 'No especificada'}\n`;
+                text += `• Ciudad: ${item.city}\n`;
+                text += `• Zipcode: ${item.zipcode || 'No especificado'}\n`;
+                text += `• Teléfono: ${item.phone || 'No especificado'}\n`;
+                text += `• Horarios: ${item.hours || 'No especificado'}\n`;
+                text += `• Website: ${item.website || 'No especificado'}\n\n`;
+            });
+
+            downloadBlob(text, `apify_restaurantes_${Date.now()}.txt`, 'text/plain;charset=utf-8');
+        };
+
+        window.exportApifyCSV = () => {
+            const items = getApifyParsedItems();
+            if (items.length === 0) {
+                showToast("No hay datos de Apify para exportar.", "warning");
+                return;
+            }
+
+            const headers = ["Nombre", "Direccion", "Ciudad", "Zipcode", "Telefono", "Horarios", "Website"];
+
+            function escapeCsvCell(val) {
+                if (!val) return '""';
+                const str = String(val).replace(/"/g, '""');
+                return `"${str}"`;
+            }
+
+            const rows = [
+                headers.map(escapeCsvCell).join(','),
+                ...items.map(item => [
+                    escapeCsvCell(item.title),
+                    escapeCsvCell(item.address),
+                    escapeCsvCell(item.city),
+                    escapeCsvCell(item.zipcode),
+                    escapeCsvCell(item.phone),
+                    escapeCsvCell(item.hours),
+                    escapeCsvCell(item.website)
+                ].join(','))
+            ];
+
+            const csvContent = '\uFEFF' + rows.join('\r\n');
+            downloadBlob(csvContent, `apify_google_sheets_${Date.now()}.csv`, 'text/csv;charset=utf-8;');
+        };
+
+        window.saveApifyToSupabase = async () => {
+            const items = getApifyParsedItems();
+            if (items.length === 0) {
+                showToast("No hay datos de Apify para guardar.", "warning");
+                return;
+            }
+
+            if (!sb) {
+                showToast("Error de conexión con Supabase.", "error");
+                return;
+            }
+
+            const btn = document.getElementById('btn-save-apify-sb');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<span class="loader-spin"></span> Guardando...`;
+            }
+
+            try {
+                const payload = items.map(it => ({
+                    title: it.title,
+                    address: it.address,
+                    city: it.city,
+                    zipcode: it.zipcode,
+                    phone: it.phone,
+                    hours: it.hours,
+                    website: it.website,
+                    is_called: false,
+                    status: 'active'
+                }));
+
+                const { data, error } = await sb
+                    .from('menutech_scraped_restaurants')
+                    .upsert(payload, { onConflict: 'title,city', ignoreDuplicates: true })
+                    .select();
+
+                if (error) {
+                    throw error;
+                }
+
+                const insertedCount = data ? data.length : payload.length;
+
+                showToast(`¡Datos guardados en Supabase! (${insertedCount} procesados). Puedes verlos en Datos Scraping.`, "success");
+
+                let shortcutBtn = document.getElementById('btn-go-restaurant-data');
+                if (!shortcutBtn) {
+                    const exportActions = document.querySelector('#apify-results-wrapper .export-actions');
+                    if (exportActions) {
+                        const linkBtn = document.createElement('button');
+                        linkBtn.id = 'btn-go-restaurant-data';
+                        linkBtn.className = 'btn-export primary';
+                        linkBtn.style.background = '#059669';
+                        linkBtn.style.color = '#fff';
+                        linkBtn.style.borderColor = '#059669';
+                        linkBtn.innerHTML = `Ver en restaurantData.html →`;
+                        linkBtn.onclick = () => window.location.href = 'restaurantData.html';
+                        exportActions.appendChild(linkBtn);
+                    }
+                }
+            } catch (err) {
+                console.error("Error saving to Supabase:", err);
+                showToast("Error al guardar en Supabase: " + err.message, "error");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `Guardar en Supabase`;
+                }
+            }
+        };
 
         window.exportApifyJSON = () => {
             if (!window.apifyExtractedData) {
