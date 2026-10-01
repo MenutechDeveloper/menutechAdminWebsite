@@ -1,5 +1,5 @@
 // Supabase Edge Function: apify-scraper
-// Executes Apify Actor nwua9Gu5YrADL7ZDj and returns results to extractor.html
+// Executes Apify Actor nwua9Gu5YrADL7ZDj (Google Maps Scraper) and returns results to extractor.html
 // NOTE: The Apify API Key MUST be stored in Supabase Secrets under the name: APIFY_API_KEY
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -36,7 +36,7 @@ serve(async (req: Request) => {
       );
     }
 
-    // Construct actor input object depending on supplied parameters
+    // Construct actor input object strictly matching compass/google-maps-scraper input schema
     let actorInput: any = {};
 
     if (input && typeof input === "object") {
@@ -45,13 +45,14 @@ serve(async (req: Request) => {
       const maxResults = parseInt(limit || "20", 10) || 20;
 
       if (search || location) {
-        const queryTerm = [search, location].filter(Boolean).join(" ");
+        const categoryStr = (search || "restaurant").trim();
+        const locationStr = (location || "").trim();
+        const fullSearchTerm = locationStr ? `${categoryStr} in ${locationStr}` : categoryStr;
+
         actorInput = {
-          searchStringsArray: [queryTerm],
-          searchQuery: queryTerm,
-          locationQuery: location || "",
+          searchStringsArray: [fullSearchTerm],
+          locationQuery: locationStr,
           maxCrawledPlacesPerSearch: maxResults,
-          maxResults: maxResults,
           language: "es"
         };
       } else if (url) {
@@ -62,7 +63,7 @@ serve(async (req: Request) => {
         actorInput = {
           startUrls: [{ url: cleanUrl }],
           maxCrawledPlacesPerSearch: maxResults,
-          maxResults: maxResults
+          language: "es"
         };
       } else {
         actorInput = payload;
@@ -90,7 +91,8 @@ serve(async (req: Request) => {
     }
 
     // If sync run returned non-200 (or HTTP 201/408 timeout), attempt run + poll fallback
-    console.warn(`Sync run status ${syncRes.status}. Retrying via async run & poll...`);
+    const syncErrText = await syncRes.text().catch(() => "");
+    console.warn(`Sync run status ${syncRes.status}: ${syncErrText}. Retrying via async run & poll...`);
 
     const startRunUrl = `https://api.apify.com/v2/acts/${ACTOR_ID}/runs?token=${apifyApiKey}`;
     const startRunRes = await fetch(startRunUrl, {
