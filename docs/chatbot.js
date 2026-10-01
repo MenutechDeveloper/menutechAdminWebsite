@@ -1055,7 +1055,7 @@
             if (clientIntentResult) {
                 removeTypingIndicator(typingEl);
                 const reply = clientIntentResult.reply;
-                chatHistory.push({ role: "user", text: payloadPrompt });
+                chatHistory.push({ role: "user", text: payloadPrompt, image: payloadImage ? payloadImage.data : null });
                 chatHistory.push({ role: "model", text: reply });
                 if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
 
@@ -1092,7 +1092,7 @@
                     sessionStorage.setItem('menutech_transcribed_menu', JSON.stringify(menuObj));
 
                     const reply = "¡He transcrito el menú de la imagen! Redirigiendo a **disenadorIA_Menu.html** para que consultes y me edites todo organizadamente...";
-                    chatHistory.push({ role: "user", text: payloadPrompt });
+                    chatHistory.push({ role: "user", text: payloadPrompt, image: payloadImage ? payloadImage.data : null });
                     chatHistory.push({ role: "model", text: reply });
                     if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
 
@@ -1101,10 +1101,18 @@
                     appendBotMessage(reply);
                     speakText(reply);
 
-                    // Redirección automática inmediata a la interfaz disenadorIA_Menu.html
-                    setTimeout(() => {
-                        window.location.href = 'disenadorIA_Menu.html';
-                    }, 1200);
+                    // Redirección automática a la interfaz disenadorIA_Menu.html
+                    const isAlreadyOnDesigner = window.location.pathname.endsWith('disenadorIA_Menu.html');
+                    if (isAlreadyOnDesigner) {
+                        window.location.reload();
+                    } else {
+                        sessionStorage.setItem('menutech_open_chat_on_load', 'true');
+                        // Ensure chat window is open so user sees and hears Gemini speak before transition
+                        windowEl.classList.add('active');
+                        setTimeout(() => {
+                            window.location.href = 'disenadorIA_Menu.html';
+                        }, 3500);
+                    }
                     return;
                 }
             }
@@ -1140,7 +1148,7 @@
             // Clean reply client-side as safety fallback
             reply = sanitizeReply(reply);
 
-            chatHistory.push({ role: "user", text: payloadPrompt });
+            chatHistory.push({ role: "user", text: payloadPrompt, image: payloadImage ? payloadImage.data : null });
             chatHistory.push({ role: "model", text: reply });
             if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
 
@@ -1634,11 +1642,19 @@
                 chatHistory = parsedHistory;
                 parsedHistory.forEach(turn => {
                     if (turn.role === 'user') {
-                        appendUserMessage(turn.text || '', null);
+                        appendUserMessage(turn.text || '', turn.image || null);
                     } else if (turn.role === 'model') {
                         appendBotMessage(turn.text || '');
                     }
                 });
+            }
+        }
+
+        const shouldOpenChat = sessionStorage.getItem('menutech_open_chat_on_load');
+        if (shouldOpenChat === 'true') {
+            sessionStorage.removeItem('menutech_open_chat_on_load');
+            if (windowEl) {
+                windowEl.classList.add('active');
             }
         }
     } catch (e) {
