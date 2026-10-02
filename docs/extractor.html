@@ -307,7 +307,7 @@
 
             <div id="apify-progress-card" style="display: none; margin-top: 24px; background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px;">
                 <div class="progress-status">
-                    <span id="apify-progress-text">Ejecutando Actor en Apify...</span>
+                    <span id="apify-progress-text">Procesando extracción...</span>
                     <span id="apify-progress-percent">0%</span>
                 </div>
                 <div class="progress-bar-container">
@@ -316,10 +316,10 @@
             </div>
         </div>
 
-        <!-- Apify Results Display -->
+        <!-- Results Display -->
         <div id="apify-results-wrapper" style="display: none; margin-top: 30px;">
             <div class="section-header">
-                <h2>Resultados de Apify</h2>
+                <h2>Resultados Extraídos</h2>
                 <div class="export-actions">
                     <button class="btn-export" onclick="exportApifyTXT()">
                         Exportar TXT
@@ -334,7 +334,7 @@
                         Copiar JSON
                     </button>
                     <button class="btn-export primary" id="btn-save-apify-sb" onclick="saveApifyToSupabase()">
-                        Guardar en Supabase
+                        Guardar en Leads
                     </button>
                 </div>
             </div>
@@ -467,11 +467,11 @@
             const btn = document.getElementById('btn-extract-apify');
             if (btn) {
                 btn.disabled = true;
-                btn.innerHTML = `<span class="loader-spin"></span> Procesando Apify...`;
+                btn.innerHTML = `<span class="loader-spin"></span> Procesando...`;
             }
 
             document.getElementById('apify-results-wrapper').style.display = 'none';
-            updateApifyProgress(15, "Iniciando ejecución de Actor en Apify...");
+            updateApifyProgress(15, "Iniciando extracción...");
 
             try {
                 let resultData = null;
@@ -481,7 +481,7 @@
                     limit: parseInt(limit, 10) || 20
                 };
 
-                updateApifyProgress(40, "Ejecutando Actor nwua9Gu5YrADL7ZDj...");
+                updateApifyProgress(40, "Obteniendo datos...");
 
                 if (sb && sb.functions) {
                     const { data, error } = await sb.functions.invoke('apify-scraper', {
@@ -509,18 +509,18 @@
                     resultData = json;
                 }
 
-                updateApifyProgress(90, "Procesando respuesta del Actor...");
+                updateApifyProgress(90, "Procesando respuesta...");
 
                 window.apifyExtractedData = resultData;
                 renderApifyResults(resultData, search, location);
 
-                updateApifyProgress(100, "¡Scraping de Apify completado!");
+                updateApifyProgress(100, "¡Extracción completada!");
                 setTimeout(hideApifyProgress, 1200);
-                showToast("Scraping con Apify finalizado con éxito.", "success");
+                showToast("Extracción finalizada con éxito.", "success");
             } catch (err) {
-                console.error("Apify scraping failed:", err);
+                console.error("Scraping failed:", err);
                 hideApifyProgress();
-                showToast("Error en Apify: " + err.message, "error");
+                showToast("Error en la extracción: " + err.message, "error");
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -674,11 +674,11 @@
         window.exportApifyTXT = () => {
             const items = getApifyParsedItems();
             if (items.length === 0) {
-                showToast("No hay datos de Apify para exportar.", "warning");
+                showToast("No hay datos para exportar.", "warning");
                 return;
             }
             let text = `========================================\n`;
-            text += `RESULTADOS DE APIFY (${items.length} Registros)\n`;
+            text += `RESULTADOS EXTRAÍDOS (${items.length} Registros)\n`;
             text += `========================================\n\n`;
 
             items.forEach((item, index) => {
@@ -691,13 +691,13 @@
                 text += `• Website: ${item.website || 'No especificado'}\n\n`;
             });
 
-            downloadBlob(text, `apify_restaurantes_${Date.now()}.txt`, 'text/plain;charset=utf-8');
+            downloadBlob(text, `restaurantes_${Date.now()}.txt`, 'text/plain;charset=utf-8');
         };
 
         window.exportApifyCSV = () => {
             const items = getApifyParsedItems();
             if (items.length === 0) {
-                showToast("No hay datos de Apify para exportar.", "warning");
+                showToast("No hay datos para exportar.", "warning");
                 return;
             }
 
@@ -723,18 +723,18 @@
             ];
 
             const csvContent = '\uFEFF' + rows.join('\r\n');
-            downloadBlob(csvContent, `apify_google_sheets_${Date.now()}.csv`, 'text/csv;charset=utf-8;');
+            downloadBlob(csvContent, `google_sheets_${Date.now()}.csv`, 'text/csv;charset=utf-8;');
         };
 
         window.saveApifyToSupabase = async () => {
             const items = getApifyParsedItems();
             if (items.length === 0) {
-                showToast("No hay datos de Apify para guardar.", "warning");
+                showToast("No hay datos para guardar.", "warning");
                 return;
             }
 
             if (!sb) {
-                showToast("Error de conexión con Supabase.", "error");
+                showToast("Error de conexión.", "error");
                 return;
             }
 
@@ -768,7 +768,7 @@
 
                 const insertedCount = data ? data.length : payload.length;
 
-                showToast(`¡Datos guardados en Supabase! (${insertedCount} procesados). Puedes verlos en Datos Scraping.`, "success");
+                showToast(`¡Datos guardados en Leads! (${insertedCount} procesados). Puedes verlos en Datos Scraping.`, "success");
 
                 let shortcutBtn = document.getElementById('btn-go-restaurant-data');
                 if (!shortcutBtn) {
@@ -786,33 +786,33 @@
                     }
                 }
             } catch (err) {
-                console.error("Error saving to Supabase:", err);
-                showToast("Error al guardar en Supabase: " + err.message, "error");
+                console.error("Error saving to database:", err);
+                showToast("Error al guardar en Leads: " + err.message, "error");
             } finally {
                 if (btn) {
                     btn.disabled = false;
-                    btn.innerHTML = `Guardar en Supabase`;
+                    btn.innerHTML = `Guardar en Leads`;
                 }
             }
         };
 
         window.exportApifyJSON = () => {
             if (!window.apifyExtractedData) {
-                showToast("No hay datos de Apify para exportar.", "warning");
+                showToast("No hay datos para exportar.", "warning");
                 return;
             }
             const jsonStr = JSON.stringify(window.apifyExtractedData, null, 2);
-            downloadBlob(jsonStr, `apify_result_${Date.now()}.json`, 'application/json');
+            downloadBlob(jsonStr, `result_${Date.now()}.json`, 'application/json');
         };
 
         window.copyApifyJSON = () => {
             if (!window.apifyExtractedData) {
-                showToast("No hay datos de Apify para copiar.", "warning");
+                showToast("No hay datos para copiar.", "warning");
                 return;
             }
             const jsonStr = JSON.stringify(window.apifyExtractedData, null, 2);
             navigator.clipboard.writeText(jsonStr).then(() => {
-                showToast("JSON de Apify copiado al portapapeles.", "success");
+                showToast("JSON copiado al portapapeles.", "success");
             }).catch(() => {
                 showToast("No se pudo copiar el JSON.", "error");
             });
