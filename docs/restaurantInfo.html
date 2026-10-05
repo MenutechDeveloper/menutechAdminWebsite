@@ -180,6 +180,87 @@
         .btn-remove { background: rgba(220, 38, 38, 0.1); color: var(--error); border: none; width: 44px; height: 44px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .btn-remove:hover { background: var(--error); color: #fff; }
 
+        /* Gallery Grid & Slots */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 16px;
+            margin-top: 14px;
+        }
+
+        .gallery-slot {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 20px;
+            border: 2px dashed var(--border);
+            background: var(--input);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .gallery-slot.upload-slot {
+            cursor: pointer;
+            border-color: var(--orange);
+            background: rgba(255, 149, 51, 0.05);
+        }
+
+        .gallery-slot.upload-slot:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 149, 51, 0.12);
+            box-shadow: 0 10px 25px rgba(255, 149, 51, 0.15);
+        }
+
+        .gallery-slot.upload-slot svg {
+            width: 32px;
+            height: 32px;
+            color: var(--orange);
+        }
+
+        .gallery-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .gallery-slot:hover img {
+            transform: scale(1.06);
+        }
+
+        .gallery-slot .btn-delete-img {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(220, 38, 38, 0.85);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 5;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .gallery-slot:hover .btn-delete-img {
+            opacity: 1;
+        }
+
+        .gallery-slot .btn-delete-img:hover {
+            transform: scale(1.15);
+            background: var(--error);
+        }
+
         @media (max-width: 768px) { .dashboard-layout { flex-direction: column; } .sidebar-container { position: relative; top: 0; transform: none !important; width: 100%; margin-bottom: 20px; } .sidebar { width: 100%; height: auto; } }
     </style>
 </head>
@@ -275,6 +356,12 @@
                         <label>Opening Hours</label>
                         <div id="schedule-list" class="dynamic-list"></div>
                         <button class="btn-add" onclick="addSchedule()">+ Add Schedule Entry</button>
+                    </div>
+
+                    <div class="group" style="margin-top: 32px; border-top: 1px solid var(--border); padding-top: 24px;">
+                        <label style="font-size: 0.85rem; font-weight: 800; color: var(--orange); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 16px;">GALLERY</label>
+                        <div id="gallery-grid" class="gallery-grid"></div>
+                        <input type="file" id="gallery-file-input" class="hidden" accept="image/*" multiple>
                     </div>
 
                     <button class="btn-save" id="btn-save">Save</button>
@@ -385,6 +472,93 @@
             loadRestaurantInfo();
         }
 
+        let localGallery = [];
+
+        async function loadGallery() {
+            if (!activeOwnerId) return;
+            const grid = document.getElementById('gallery-grid');
+            if (!grid) return;
+
+            const { data, error } = await sb.from('galeria').select('*').eq('user_id', activeOwnerId).order('created_at', { ascending: false });
+            localGallery = data || [];
+
+            grid.innerHTML = '';
+
+            // Render existing image slots
+            localGallery.forEach(item => {
+                const slot = document.createElement('div');
+                slot.className = 'gallery-slot';
+                const optimizedUrl = item.image_url ? item.image_url.replace('/upload/', '/upload/w_400,c_fill,f_auto,q_auto:eco/') : '';
+                slot.innerHTML = `
+                    <img src="${optimizedUrl}" alt="Gallery image">
+                    <button class="btn-delete-img" title="Remove image">✕</button>
+                `;
+                slot.querySelector('.btn-delete-img').onclick = (e) => {
+                    e.stopPropagation();
+                    deleteGalleryImage(item.id);
+                };
+                grid.appendChild(slot);
+            });
+
+            // Upload slot
+            const uploadSlot = document.createElement('div');
+            uploadSlot.className = 'gallery-slot upload-slot';
+            uploadSlot.id = 'gallery-upload-slot';
+            uploadSlot.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            `;
+            uploadSlot.onclick = () => document.getElementById('gallery-file-input').click();
+            grid.appendChild(uploadSlot);
+        }
+
+        async function handleGalleryUpload(files) {
+            if (!files || !files.length || !activeOwnerId) return;
+            const uploadSlot = document.getElementById('gallery-upload-slot');
+            if (uploadSlot) uploadSlot.innerHTML = '<div class="loader"></div>';
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (!file.type.startsWith('image/')) continue;
+
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
+
+                try {
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
+                    const d = await res.json();
+                    if (d.secure_url) {
+                        await sb.from('galeria').insert({
+                            user_id: activeOwnerId,
+                            domain: activeDomain || 'undetermined',
+                            image_url: d.secure_url,
+                            created_at: new Date().toISOString()
+                        });
+                    }
+                } catch (e) {
+                    console.error("Gallery upload error:", e);
+                    showToast("Error uploading image to gallery", "error");
+                }
+            }
+
+            showToast("Gallery updated!");
+            await loadGallery();
+        }
+
+        window.deleteGalleryImage = async (id) => {
+            if (!id) return;
+            const { error } = await sb.from('galeria').delete().eq('id', id);
+            if (error) {
+                showToast("Error removing image", "error");
+            } else {
+                showToast("Image removed from gallery");
+                await loadGallery();
+            }
+        };
+
         async function loadRestaurantInfo() {
             if (!activeOwnerId) return;
             const { data, error } = await sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle();
@@ -422,6 +596,8 @@
                     data.schedule.forEach(s => addSchedule(s.day, s.hours));
                 }
             }
+
+            await loadGallery();
         }
 
         async function syncToOtherModules(payload) {
@@ -628,6 +804,17 @@
             dz.ondragover = e => { e.preventDefault(); dz.style.borderColor = "var(--orange)"; };
             ['dragleave', 'dragend'].forEach(t => dz.addEventListener(t, () => dz.style.borderColor = "var(--border)"));
             dz.ondrop = e => { e.preventDefault(); dz.style.borderColor = "var(--border)"; if(e.dataTransfer.files.length) handleLogoUpload(e.dataTransfer.files[0]); };
+
+            const gfi = document.getElementById('gallery-file-input');
+            if (gfi) {
+                gfi.onchange = () => { if(gfi.files.length) handleGalleryUpload(gfi.files); };
+            }
+
+            const grid = document.getElementById('gallery-grid');
+            if (grid) {
+                grid.ondragover = e => { e.preventDefault(); };
+                grid.ondrop = e => { e.preventDefault(); if (e.dataTransfer.files.length) handleGalleryUpload(e.dataTransfer.files); };
+            }
         }
     </script>
     <script src="chatbot.js"></script>
