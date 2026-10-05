@@ -1,0 +1,62 @@
+================================================================================
+GUÍA COMPLETA: CÓMO ABRIR EL PROYECTO EN ANDROID STUDIO, GENERAR LA APP Y CONFIGURAR EL LOGO DE MENUTECH
+================================================================================
+
+--------------------------------------------------------------------------------
+1. CÓMO AGREGAR Y ABRIR EL PROYECTO EN ANDROID STUDIO
+--------------------------------------------------------------------------------
+1. Abre Android Studio en tu computadora.
+2. En la pantalla de bienvenida o en el menú superior, selecciona "Open" (o "File" -> "Open...").
+3. Navega hasta la carpeta del proyecto y selecciona la carpeta "android" (ejemplo: C:\ruta\a\tu\proyecto\android).
+4. Haz clic en "OK" para abrir el proyecto.
+5. Si es la primera vez que lo abres en Android Studio:
+   - Ve a Settings/Preferences -> Plugins.
+   - Verifica que los plugins de "Flutter" y "Dart" estén instalados y habilitados.
+   - Ve a Settings/Preferences -> Languages & Frameworks -> Flutter y especifica la ruta de tu SDK de Flutter si el programa lo solicita.
+6. Abre la terminal integrada en Android Studio (en la parte inferior, pestaña "Terminal") y ejecuta el siguiente comando para instalar las dependencias:
+
+   flutter pub get
+
+--------------------------------------------------------------------------------
+2. CÓMO GENERAR LA APLICACIÓN (APK / AAB)
+--------------------------------------------------------------------------------
+Abre la terminal en la carpeta "android" del proyecto y ejecuta el comando según lo que necesites:
+
+• Para generar el instalador APK (para probar en celulares o enviar directamente a clientes):
+
+  flutter build apk --release
+
+  Ubicación del archivo generado:
+  android/build/app/outputs/flutter-apk/app-release.apk
+
+• Para generar el App Bundle AAB (para subir a Google Play Console):
+
+  flutter build appbundle
+
+  Ubicación del archivo generado:
+  android/build/app/outputs/bundle/release/app-release.aab
+
+--------------------------------------------------------------------------------
+3. CÓMO SE LOGRÓ VER EL LOGO DE MENUTECH COMO ICONO DE LA APP Y CÓMO CAMBIARLO
+--------------------------------------------------------------------------------
+¿Por qué se veía el logo por defecto de Android antes?
+Por defecto, los proyectos de Android incluyen un icono genérico en las carpetas "mipmap". Para que aparezca el logo oficial de MenuTech en la pantalla de inicio de los celulares, el proyecto utiliza la herramienta "flutter_launcher_icons".
+
+Ya hemos ejecutado el proceso y configurado el logo oficial de MenuTech (mtech.png) en todas las resoluciones de pantalla de Android (hdpi, mdpi, xhdpi, xxhdpi, xxxhdpi).
+
+Si en el futuro deseas cambiar la imagen del logo por otra, solo sigue estos sencillos pasos:
+
+1. Reemplaza o coloca tu nueva imagen PNG cuadrada (de preferencia 512x512 px) en la ruta:
+   android/assets/icon/mtech.png
+
+2. Abre la terminal en la carpeta "android" del proyecto.
+
+3. Ejecuta los siguientes dos comandos:
+
+   flutter pub get
+   dart run flutter_launcher_icons
+
+4. ¡Listo! La herramienta reemplazará automáticamente todos los iconos de la app en las carpetas nativas de Android (mipmap-hdpi, mipmap-mdpi, mipmap-xhdpi, mipmap-xxhdpi, mipmap-xxxhdpi).
+
+5. Al compilar la app con `flutter build apk --release`, la aplicación se instalará en los celulares mostrando el icono oficial de MenuTech.
+================================================================================

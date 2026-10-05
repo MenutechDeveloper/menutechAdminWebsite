@@ -101,7 +101,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             icon: Icons.language_outlined,
                             route: '/placeholder',
                           ),
-                        if (isPrivileged)
+                        if (isPrivileged || role == 'OWNER')
                           _buildBentoCard(
                             context,
                             title: 'Menus',
