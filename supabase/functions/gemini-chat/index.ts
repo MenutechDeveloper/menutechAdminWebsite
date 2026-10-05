@@ -41,69 +41,6 @@ interface RequestBody {
   image_base64?: string;
   image_mime?: string;
   is_proactive?: boolean;
-  userSession?: {
-    id?: string;
-    email?: string;
-    role?: string;
-    username?: string;
-    domain?: string;
-  };
-}
-
-// Upload image to Cloudinary and insert record into Supabase galeria table
-async function saveImageToCloudinaryAndGallery(rawImageData: string, userId: string, domain?: string): Promise<string | null> {
-  try {
-    const cloudName = "dzklt0a5u";
-    const uploadPreset = "Menutech";
-
-    let cleanBase64 = rawImageData;
-    if (cleanBase64.includes('base64,')) {
-      cleanBase64 = cleanBase64.split('base64,')[1];
-    }
-
-    const formData = new FormData();
-    formData.append("file", `data:image/jpeg;base64,${cleanBase64}`);
-    formData.append("upload_preset", uploadPreset);
-
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-      method: "POST",
-      body: formData
-    });
-
-    if (!res.ok) {
-      console.warn("Cloudinary upload failed in edge function:", await res.text());
-      return null;
-    }
-
-    const data = await res.json();
-    const secureUrl = data.secure_url;
-
-    if (secureUrl && userId) {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL') || "https://eemqyrysdgasfjlitads.supabase.co";
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY') || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY";
-
-      await fetch(`${supabaseUrl}/rest/v1/galeria`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": supabaseKey,
-          "Authorization": `Bearer ${supabaseKey}`,
-          "Prefer": "return=minimal"
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          domain: domain || 'undetermined',
-          image_url: secureUrl,
-          created_at: new Date().toISOString()
-        })
-      });
-    }
-
-    return secureUrl;
-  } catch (err) {
-    console.warn("Error uploading image to Cloudinary & galeria:", err);
-    return null;
-  }
 }
 
 // Limpieza y sanitización estricta de las respuestas devueltas por el modelo
@@ -209,8 +146,7 @@ serve(async (req: Request) => {
       image_url,
       image_base64,
       image_mime = 'image/jpeg',
-      is_proactive = false,
-      userSession
+      is_proactive = false
     } = body;
 
     if (is_proactive) {
@@ -315,12 +251,6 @@ serve(async (req: Request) => {
       currentParts.push({ text: userPrompt });
     }
 
-    // Check if an image was provided and save it to Cloudinary & galeria table if user is available
-    let uploadedGalleryUrl: string | null = null;
-    if (rawImageData && userSession && userSession.id) {
-      uploadedGalleryUrl = await saveImageToCloudinaryAndGallery(rawImageData, userSession.id, userSession.domain);
-    }
-
     if (currentParts.length > 0) {
       if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
         contents[contents.length - 1].parts.push(...currentParts);
@@ -329,47 +259,19 @@ serve(async (req: Request) => {
       }
     }
 
-    const userRole = ((userSession && userSession.role) || 'owner').trim().toLowerCase();
-    const nonOwnerRoles = ['admin', 'developer', 'cs', 'admincs', 'designer', 'disenador', 'retention'];
-    const isOwner = !nonOwnerRoles.includes(userRole) && userRole !== 'admin';
-
-    let systemText = '';
-
-    if (isOwner) {
-      systemText = `You are Menutech AI, an intelligent, helpful, and friendly virtual assistant for restaurant owners and clients.
-
-STRICT LANGUAGE RULE FOR CLIENTS/OWNERS:
-- ALWAYS talk and respond to the client strictly in English (en-US). Never address the client in Spanish.
-
-GALLERY & BRAND ASSET PROMPTING INSTRUCTIONS:
-- Actively, naturally, and dynamically ask the client to provide or upload images for their account gallery and brand assets.
-- Formulate creative, context-aware requests in English such as:
-  * "Upload an image and I will save it directly to your gallery!"
-  * "Give me photos to elevate your brand or provide your designer with more material for your website and advertising!"
-  * "Feel free to send me images anytime—I'll make sure they are stored safely in your restaurant gallery!"
-- NEVER rely on a rigid static phrase. Always generate natural, contextual English sentences according to the flow of conversation.
-${uploadedGalleryUrl ? `- IMPORTANT: An image sent by the client was JUST successfully uploaded to Cloudinary (${uploadedGalleryUrl}) and saved to their gallery in Restaurant Info. Inform the client enthusiastically in English that their photo has been saved to their gallery!` : ''}
-
-GENERAL RULES:
-1. Speak naturally and politely in English.
-2. NEVER output internal reasoning, thought blocks, or meta-comments.
-3. If the user attaches an image, analyze it accurately and confirm its gallery saving.`;
-    } else {
-      systemText = `Eres Menutech AI, una Inteligencia Artificial extraordinariamente inteligente, capaz, brillante, empática, alegre y atenta (al estilo de ChatGPT / Gemini).
-Tienes conocimientos amplios sobre desarrollo web, restaurantes, menú digital, soporte y administración.
-
-REGLAS ABSOLUTAS PARA EQUIPO INTERNO (ADMIN / DISEÑO / CS / DEVELOPER):
-1. Hablas SIEMPRE Y ÚNICAMENTE en español de forma natural, fluida, cercana, clara y directa.
-2. Queda STRICTAMENTE PROHIBIDO incluir pensamientos internos, notas de razonamiento, traducciones al inglés, borradores de pasos, desgloses de preguntas o metacomentarios.
-3. Si el usuario te pide ayuda con galerías o imágenes de restaurantes, oriéntalo en español sobre la gestión de marca y assets.
-${uploadedGalleryUrl ? `- NOTA: La imagen adjunta fue subida exitosamente a Cloudinary (${uploadedGalleryUrl}) y guardada en la galería del restaurante.` : ''}
-4. NUNCA respondas con plantillas ni mensajes evasivos. RESPONDE DE UNA VEZ LA CONSULTA COMPLETA.`;
-    }
-
     const systemInstruction = {
       parts: [
         {
-          text: systemText
+          text: `Eres una Inteligencia Artificial extraordinariamente inteligente, capaz, brillante, empática, alegre y atenta (al estilo de ChatGPT / Gemini).
+Tienes conocimientos amplios y profundos sobre programación, matemáticas, física, tecnología, cocina, ciencias, historia, filosofía, arte, cine, música, desarrollo web, pasatiempos y conversación general.
+
+REGLAS ABSOLUTAS E IMPERATIVAS:
+1. Hablas SIEMPRE Y ÚNICAMENTE en español de forma natural, fluida, cercana, clara y directa.
+2. Queda STRICTAMENTE PROHIBIDO incluir pensamientos internos, notas de razonamiento, traducciones al inglés, borradores de pasos, desgloses de preguntas o metacomentarios.
+3. Si te hacen preguntas matemáticas o de cálculo (por ejemplo "1 más 1"), responde el resultado directo ("El resultado de 1 + 1 es 2").
+4. Si te piden explicaciones, guías o recetas, entrega la información completa paso a paso con todos sus detalles directamente en español sin prefijos ni borradores.
+5. NUNCA respondas con plantillas ni mensajes evasivos como "Con mucho gusto te ayudo, ¿qué aspecto quieres profundizar?". RESPONDE DE UNA VEZ LA CONSULTA COMPLETA.
+6. Si te adjuntan una imagen, analízala con alta precisión y describe o responde detalladamente la consulta relacionada.`
         }
       ]
     };
