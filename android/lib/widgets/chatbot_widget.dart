@@ -108,6 +108,9 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+  <script>
+    window.MENUTECH_BOT_MODEL_URL = 'https://menutech.services/assets/menutechbot.gltf';
+  </script>
   <script src="https://menutech.services/chatbot.js"></script>
 </body>
 </html>

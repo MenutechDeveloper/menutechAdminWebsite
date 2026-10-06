@@ -107,7 +107,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             title: 'Menus',
                             description: 'Create and manage digital menus.',
                             icon: Icons.restaurant_menu_outlined,
-                            route: '/placeholder',
+                            route: '/menus',
                           ),
                         _buildBentoCard(
                           context,

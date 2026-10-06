@@ -6,6 +6,7 @@ import 'screens/main_screen.dart';
 import 'screens/orders_screen.dart';
 import 'screens/order_detail_screen.dart';
 import 'screens/printer_settings_screen.dart';
+import 'screens/menu_editor_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +25,7 @@ class MenutechAdminApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Menutech Admin',
+      title: 'Menutech',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -47,6 +48,7 @@ class MenutechAdminApp extends StatelessWidget {
         '/orders': (context) => const OrdersScreen(),
         '/order-detail': (context) => const OrderDetailScreen(),
         '/printer-settings': (context) => const PrinterSettingsScreen(),
+        '/menus': (context) => const MenuEditorScreen(),
       },
     );
   }
