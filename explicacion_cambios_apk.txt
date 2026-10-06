@@ -1,0 +1,26 @@
+Explicación de por qué no se veían los cambios al generar la nueva APK y cómo solucionarlo:
+
+1. Rama de Git (Branch) no actualizada en tu equipo local:
+   Los cambios de código se envían a la rama 'menutech-android-updates-4915553194953328878'. Si al compilar la APK en tu computadora o en Android Studio compilas sobre la rama 'main' sin haber descargado (pull / merge) la rama de cambios, la APK resultante se genera con el código antiguo sin las modificaciones.
+
+2. Archivos de iconos de Android (.png) ignorados previamente por Git:
+   El proyecto cuenta con una regla en `.gitignore` que ignoraba los archivos `.png`. Por este motivo, aunque se habían generado las imágenes de icono en `res/mipmap-*`, Git no los estaba incluyendo en los cambios subidos. Ahora hemos forzado e incluido explícitamente todos los archivos de icono (`ic_launcher.png` e `ic_launcher_round.png`) en todas las densidades de pantalla (`hdpi`, `mdpi`, `xhdpi`, `xxhdpi`, `xxxhdpi`).
+
+3. Pasos necesarios para compilar la nueva APK correctamente en tu celular/equipo:
+   Paso A: Cambia a esta rama en Git o haz pull/merge de los cambios a tu rama principal:
+      git pull origin menutech-android-updates-4915553194953328878
+
+   Paso B: Limpia completamente el caché de compilación anterior de Flutter y Gradle:
+      cd android
+      flutter clean
+      flutter pub get
+
+   Paso C: Genera la nueva APK:
+      flutter build apk
+
+Resumen de cambios efectuados en este commit:
+- Nombre de la app: Cambiado a "Menutech" en AndroidManifest.xml y main.dart.
+- Logo de la app: Reemplazados los iconos en todas las carpetas res/mipmap-* con el logo oficial mtech.png / menutech.png.
+- Módulo de Menús: Implementada la pantalla nativa MenuEditorScreen que abre adminMenus.html con inyección de token de Supabase en localStorage.
+- Chatbot Gemini AI: Configurada la URL del modelo 3D menutechbot.gltf y habilitado responsivo en la pantalla de menús y dashboard.
+- Explicaciones escritas: explicacion_menus.txt y explicacion_cambios_apk.txt.
