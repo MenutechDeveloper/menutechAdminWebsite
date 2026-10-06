@@ -706,25 +706,25 @@
         const lower = text.toLowerCase().trim();
 
         // Modo 2D / 3D toggle commands
-        if (lower.includes("modo 2d") || lower.includes("modo 2 d") || lower.includes("2d mode")) {
+        if (lower.includes("modo 2d") || lower.includes("modo 2 d") || lower.includes("2d mode") || lower.includes("modo plano")) {
             if (window.Modo2D) {
                 window.Modo2D.enable2D();
             } else {
                 localStorage.setItem('menutech_modo_2d', 'true');
             }
             return {
-                reply: "¡Modo 2D activado! Se ha reemplazado la visualización 3D por la imagen 2D para optimizar la velocidad y el rendimiento."
+                reply: "Está bien, cambiaré a modo plano."
             };
         }
 
-        if (lower.includes("modo 3d") || lower.includes("modo 3 d") || lower.includes("3d mode")) {
+        if (lower.includes("modo 3d") || lower.includes("modo 3 d") || lower.includes("3d mode") || lower.includes("forma real")) {
             if (window.Modo2D) {
                 window.Modo2D.enable3D();
             } else {
                 localStorage.setItem('menutech_modo_2d', 'false');
             }
             return {
-                reply: "¡Modo 3D activado! Se ha restaurado el modelo 3D interactivo."
+                reply: "¡Perfecto! Volveré a mi forma real."
             };
         }
 

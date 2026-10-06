@@ -14,7 +14,19 @@
     function applyMode(): boolean {
         const mode2dActive = is2DMode();
         const modelViewers = document.querySelectorAll<HTMLElement>('model-viewer');
-        const imgSrc = (window as any).MENUTECH_2D_IMG_URL || 'assets/modo2d.png';
+
+        // Target paths list to attempt in order
+        const fallbackPaths = [
+            (window as any).MENUTECH_2D_IMG_URL,
+            'assets/modo2d.png',
+            'assets/img/modo2d.png',
+            'modo2d.png',
+            '../assets/modo2d.png',
+            '../assets/img/modo2d.png',
+            '../modo2d.png',
+            '/assets/modo2d.png',
+            '/docs/assets/modo2d.png'
+        ].filter(Boolean);
 
         modelViewers.forEach((mv) => {
             const parent = mv.parentElement;
@@ -30,8 +42,10 @@
                 if (!img2d) {
                     img2d = document.createElement('img');
                     img2d.className = 'mt-modo2d-image';
-                    img2d.src = imgSrc;
                     img2d.alt = 'Menutech Bot 2D';
+
+                    let currentPathIndex = 0;
+                    img2d.src = fallbackPaths[0];
 
                     // Match parent/container dimensions and positioning seamlessly
                     img2d.style.width = '100%';
@@ -41,10 +55,11 @@
                     img2d.style.userSelect = 'none';
                     img2d.style.display = 'block';
 
-                    // Fallback image handling
+                    // Fallback image handling through path options
                     img2d.onerror = () => {
-                        if (img2d && img2d.src.indexOf('assets/img/modo2d.png') === -1) {
-                            img2d.src = 'assets/img/modo2d.png';
+                        currentPathIndex++;
+                        if (img2d && currentPathIndex < fallbackPaths.length) {
+                            img2d.src = fallbackPaths[currentPathIndex];
                         }
                     };
 
