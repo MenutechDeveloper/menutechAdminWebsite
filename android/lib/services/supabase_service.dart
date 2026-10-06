@@ -17,6 +17,8 @@ class SupabaseService {
 
   User? get currentUser => client.auth.currentUser;
 
+  Session? get currentSession => client.auth.currentSession;
+
   Stream<AuthState> get authStateChanges => client.auth.onAuthStateChange;
 
   Future<Map<String, dynamic>?> getUserProfile(String userId) async {

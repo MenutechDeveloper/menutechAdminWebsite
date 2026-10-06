@@ -1,0 +1,11 @@
+Explicación sobre el mensaje "Módulo coming soon..." al hacer clic en Menús:
+
+1. ¿Por qué ocurría esto?
+   En el archivo `android/lib/screens/dashboard_screen.dart`, la tarjeta (Bento card) correspondiente a "Menus" tenía configurada su ruta como `route: '/placeholder'`.
+   En la función `_buildBentoCard`, al presionar una tarjeta cuya ruta fuera `'/placeholder'`, la aplicación mostraba explícitamente un mensaje informativo en pantalla (SnackBar) diciendo: "Module coming soon to native app. Use web version for now." en lugar de abrir el módulo de edición de menús.
+
+2. Solución aplicada:
+   - Se creó una pantalla nativa dentro de la aplicación Android (`android/lib/screens/menu_editor_screen.dart`) que integra el editor completo de menús digitales mediante WebView cargando `https://menutech.services/adminMenus.html`.
+   - Se implementó la inyección automática de la sesión activa de Supabase (token de autenticación del usuario en `localStorage`) para que el usuario acceda directamente sin necesidad de iniciar sesión nuevamente.
+   - Se registró la ruta `'/menus'` en `android/lib/main.dart` y se actualizó la tarjeta de "Menus" en `DashboardScreen` para redirigir a dicha pantalla.
+   - Adicionalmente, se incluyó el asistente AI Chatbot Gemini en la pantalla de gestión de menús.
