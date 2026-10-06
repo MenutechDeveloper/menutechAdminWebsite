@@ -37,6 +37,13 @@
         document.head.appendChild(mvScript);
     }
 
+    // Dynamically inject modo2D.js if missing
+    if (!document.querySelector('script[src*="modo2D.js"]')) {
+        const m2dScript = document.createElement('script');
+        m2dScript.src = 'modo2D.js';
+        document.head.appendChild(m2dScript);
+    }
+
     // --- INJECT CSS STYLES ---
     const style = document.createElement('style');
     style.id = 'menutech-chatbot-styles';
@@ -696,8 +703,32 @@
     let activeClientTarget = null; // { targetId, accountName, domain }
 
     async function processClientSideIntent(text, session) {
-        if (!window.supabase) return null;
         const lower = text.toLowerCase().trim();
+
+        // Modo 2D / 3D toggle commands
+        if (lower.includes("modo 2d") || lower.includes("modo 2 d") || lower.includes("2d mode")) {
+            if (window.Modo2D) {
+                window.Modo2D.enable2D();
+            } else {
+                localStorage.setItem('menutech_modo_2d', 'true');
+            }
+            return {
+                reply: "¡Modo 2D activado! Se ha reemplazado la visualización 3D por la imagen 2D para optimizar la velocidad y el rendimiento."
+            };
+        }
+
+        if (lower.includes("modo 3d") || lower.includes("modo 3 d") || lower.includes("3d mode")) {
+            if (window.Modo2D) {
+                window.Modo2D.enable3D();
+            } else {
+                localStorage.setItem('menutech_modo_2d', 'false');
+            }
+            return {
+                reply: "¡Modo 3D activado! Se ha restaurado el modelo 3D interactivo."
+            };
+        }
+
+        if (!window.supabase) return null;
         const sb = window.supabase;
         const nonOwnerRoles = ['admin', 'developer', 'cs', 'admincs', 'admindesign', 'design', 'retention'];
         const userRole = (session?.role || 'owner').toLowerCase();
