@@ -1,10 +1,34 @@
-Comprobación de Configuración de Tickets - Menutech
+Comprobación de Cambios para la Versión Android - Menutech
 
-La configuración de los tickets ha sido verificada y funciona de la siguiente manera:
+Todos los cambios solicitados para la versión Android han sido efectuados y verificados:
 
-1. Detección de Impresoras: La aplicación escanea automáticamente la red local buscando dispositivos en el puerto 9100 (estándar para impresoras térmicas Ethernet/ESC POS).
-2. Sincronización: Al detectar una impresora, su dirección IP se guarda localmente y se sincroniza con la base de datos (tabla public.menutech_tickets, columna printer_ip) para que esté disponible en otros dispositivos del mismo usuario.
-3. Formato de Ticket: El diseño del ticket impreso desde la app ahora coincide con la configuración establecida en tickets.html. Utiliza el encabezado, pie de página y logo (opcional) configurados por el usuario.
-4. Mejoras Realizadas: Se actualizó el formato del payload para cumplir con los requisitos del paquete flutter_thermal_printer_pos, asegurando que el logo y la alineación de los artículos (Nombre a la izquierda, Precio a la derecha) sean correctos.
+1. Nombre de la Aplicación:
+   - Modificado en `android/android/app/src/main/AndroidManifest.xml`: `android:label="Menutech"`.
+   - Modificado en `android/lib/main.dart`: `title: 'Menutech'`.
 
-Todo está correctamente configurado y listo para usar.
+2. Logo / Icono de Lanzamiento:
+   - Generados e incluidos en el repositorio todos los iconos PNG en las carpetas nativas de Android:
+     `android/android/app/src/main/res/mipmap-hdpi/`
+     `android/android/app/src/main/res/mipmap-mdpi/`
+     `android/android/app/src/main/res/mipmap-xhdpi/`
+     `android/android/app/src/main/res/mipmap-xxhdpi/`
+     `android/android/app/src/main/res/mipmap-xxxhdpi/`
+   - Tanto `ic_launcher.png` como `ic_launcher_round.png` utilizan el logo oficial `mtech.png` / `menutech.png`.
+
+3. Módulo de Gestión de Menús:
+   - Creada la pantalla `MenuEditorScreen` (`android/lib/screens/menu_editor_screen.dart`).
+   - Carga la interfaz web de gestión de menús (`https://menutech.services/adminMenus.html`).
+   - Inyecta automáticamente los tokens de autenticación de la sesión de Supabase en `localStorage` (`sb-eemqyrysdgasfjlitads-auth-token`) para que el restaurante pueda editar sus menús sin volver a iniciar sesión.
+   - Registrada la ruta `'/menus'` en `main.dart` y actualizada la tarjeta Bento de "Menus" en `dashboard_screen.dart`.
+
+4. Chatbot Gemini AI 3D:
+   - Actualizada la ruta del modelo 3D GLTF en `android/lib/widgets/chatbot_widget.dart` (`window.MENUTECH_BOT_MODEL_URL = 'https://menutech.services/assets/menutechbot.gltf'`).
+   - Integrado de forma flotante e interactiva en la aplicación.
+
+5. Control de Versión e Invalidation de Caché de APK:
+   - Incrementada la versión en `android/pubspec.yaml` a `version: 1.0.1+2` (`versionName: 1.0.1`, `versionCode: 2`).
+   - Esto obliga al sistema operativo Android y a Android Studio a invalidar el caché de la APK anterior e instalar la actualización correctamente.
+
+Archivos de explicación creados:
+- `explicacion_menus.txt`: Explica el origen del mensaje previo "modulo coming soon...".
+- `explicacion_cambios_apk.txt`: Explica los pasos para limpiar la compilación y actualizar la rama en tu equipo local.
