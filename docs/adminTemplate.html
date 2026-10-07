@@ -298,18 +298,39 @@
             left: 38px;
         }
 
-        /* Reposition chatbot trigger to vertical right-center in adminTemplate, but keep chat window in bottom-right corner when opened */
+        /* Chatbot positioning in adminTemplate: keep trigger at vertical right-center, but chat window fixed at bottom-right corner */
         #mt-bot-root {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            pointer-events: none !important;
+            transform: none !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+        }
+        #mt-bot-trigger {
+            position: fixed !important;
             top: 50% !important;
-            bottom: auto !important;
             right: 24px !important;
+            bottom: auto !important;
+            left: auto !important;
             transform: translateY(-50%) !important;
+        }
+        #mt-admin-thought-bubble {
+            position: fixed !important;
+            top: calc(50% - 140px) !important;
+            right: 15px !important;
+            bottom: auto !important;
         }
         #mt-bot-window {
             position: fixed !important;
             bottom: 24px !important;
             right: 24px !important;
             top: auto !important;
+            left: auto !important;
             transform: translateY(20px) scale(0.95) !important;
         }
         #mt-bot-window.active {
