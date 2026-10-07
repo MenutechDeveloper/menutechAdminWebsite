@@ -325,6 +325,17 @@
             right: 15px !important;
             bottom: auto !important;
         }
+        #mt-bot-trigger {
+            z-index: 300 !important;
+        }
+        #mt-admin-thought-bubble {
+            z-index: 350 !important;
+        }
+        #mt-bot-window:not(.active) {
+            visibility: hidden !important;
+            pointer-events: none !important;
+            z-index: 5 !important;
+        }
         #mt-bot-window {
             position: fixed !important;
             bottom: 24px !important;
@@ -334,6 +345,8 @@
             transform: translateY(20px) scale(0.95) !important;
         }
         #mt-bot-window.active {
+            visibility: visible !important;
+            z-index: 400 !important;
             transform: translateY(0) scale(1) !important;
         }
     </style>
