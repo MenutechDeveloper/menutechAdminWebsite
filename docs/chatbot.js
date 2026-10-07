@@ -1127,8 +1127,6 @@
                     chatHistory.push({ role: "model", text: reply });
                     if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
 
-                    sessionStorage.setItem('menutech_chat_history', JSON.stringify(chatHistory));
-
                     appendBotMessage(reply);
                     speakText(reply);
 
@@ -1182,8 +1180,6 @@
             chatHistory.push({ role: "user", text: payloadPrompt, image: payloadImage ? payloadImage.data : null });
             chatHistory.push({ role: "model", text: reply });
             if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
-
-            sessionStorage.setItem('menutech_chat_history', JSON.stringify(chatHistory));
 
             appendBotMessage(reply);
             speakText(reply);
@@ -1664,25 +1660,8 @@
     initSpeechRecognition();
     initAdminThoughtBubble();
 
-    // --- RESTORE PREVIOUS CHAT HISTORY FROM SESSIONSTORAGE ---
+    // --- RESTORE PREVIOUS CHAT STATE FROM SESSIONSTORAGE ---
     try {
-        const savedHistory = sessionStorage.getItem('menutech_chat_history');
-        if (savedHistory) {
-            const parsedHistory = JSON.parse(savedHistory);
-            if (Array.isArray(parsedHistory) && parsedHistory.length > 0) {
-                chatHistory = parsedHistory;
-                parsedHistory.forEach(turn => {
-                    if (turn.role === 'user') {
-                        appendUserMessage(turn.text || '', turn.image || null);
-                    } else if (turn.role === 'model') {
-                        appendBotMessage(turn.text || '');
-                    }
-                });
-            }
-            // Remove chat history from sessionStorage after restoring so it resets on page refresh
-            sessionStorage.removeItem('menutech_chat_history');
-        }
-
         const shouldOpenChat = sessionStorage.getItem('menutech_open_chat_on_load');
         if (shouldOpenChat === 'true') {
             sessionStorage.removeItem('menutech_open_chat_on_load');
@@ -1691,7 +1670,7 @@
             }
         }
     } catch (e) {
-        console.warn("Error restoring chatbot history from sessionStorage:", e);
+        console.warn("Error restoring chatbot state from sessionStorage:", e);
     }
 
     // --- GLOBAL EVENT LISTENERS & PUBLIC API EXPORT ---
