@@ -298,12 +298,22 @@
             left: 38px;
         }
 
-        /* Reposition chatbot trigger to vertical right-center in adminTemplate */
+        /* Reposition chatbot trigger to vertical right-center in adminTemplate, but keep chat window in bottom-right corner when opened */
         #mt-bot-root {
             top: 50% !important;
             bottom: auto !important;
             right: 24px !important;
             transform: translateY(-50%) !important;
+        }
+        #mt-bot-window {
+            position: fixed !important;
+            bottom: 24px !important;
+            right: 24px !important;
+            top: auto !important;
+            transform: translateY(20px) scale(0.95) !important;
+        }
+        #mt-bot-window.active {
+            transform: translateY(0) scale(1) !important;
         }
     </style>
 </head>
