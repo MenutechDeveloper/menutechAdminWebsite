@@ -109,14 +109,14 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
 </head>
 <body>
   <script>
-    window.MENUTECH_BOT_MODEL_URL = 'https://menutech.services/assets/menutechbot.gltf';
+    window.MENUTECH_BOT_MODEL_URL = 'https://menutech.io/assets/menutechbot.gltf';
   </script>
-  <script src="https://menutech.services/chatbot.js"></script>
+  <script src="https://menutech.io/chatbot.js"></script>
 </body>
 </html>
 ''';
 
-    _controller.loadHtmlString(htmlContent, baseUrl: 'https://menutech.services/');
+    _controller.loadHtmlString(htmlContent, baseUrl: 'https://menutech.io/');
     ChatbotWidget._controller = _controller;
   }
 
@@ -124,8 +124,8 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
 
-    final double width = _isExpanded ? screenSize.width : 220.0;
-    final double height = _isExpanded ? (screenSize.height * 0.85) : 260.0;
+    final double width = _isExpanded ? screenSize.width : 110.0;
+    final double height = _isExpanded ? (screenSize.height * 0.85) : 120.0;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
