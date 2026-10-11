@@ -1,4 +1,4 @@
-name: menutech_admin
+name: menutech
 description: "A new Flutter project."
 publish_to: 'none'
 
@@ -33,3 +33,6 @@ flutter_launcher_icons:
   android: true
   ios: false
   image_path: "assets/icon/mtech.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/mtech.png"

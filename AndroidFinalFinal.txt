@@ -1,0 +1,16 @@
+SOLUCION PARA MOSTRAR NOMBRE "menutech" Y LOGO DE MENUTECH:
+
+1. Abrir terminal en la carpeta principal del proyecto Flutter:
+cd android
+
+2. Limpiar cache del proyecto:
+flutter clean
+flutter pub get
+
+3. Compilar la APK desde la ruta correcta (android, NO android/android):
+flutter build apk --release
+
+Ruta del APK generado:
+android/build/app/outputs/flutter-apk/app-release.apk
+
+IMPORTANTE: Si se ejecuta el comando desde android/android, Android Studio usa el applicationId y manifiesto generico antiguo sin cargar los iconos ni la configuracion de Flutter. Siempre ejecutar desde la carpeta "android".
