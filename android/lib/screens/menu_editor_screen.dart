@@ -75,7 +75,7 @@ class _MenuEditorScreenState extends State<MenuEditorScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Menús',
+          'My Menu',
           style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Outfit'),
         ),
         centerTitle: true,
