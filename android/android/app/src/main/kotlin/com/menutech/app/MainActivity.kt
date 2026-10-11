@@ -1,4 +1,4 @@
-package com.example.menutech_admin
+package com.menutech.app
 
 import io.flutter.embedding.android.FlutterActivity
 
