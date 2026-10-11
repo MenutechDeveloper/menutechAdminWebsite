@@ -1,0 +1,36 @@
+====================================================================
+MENUTECH - SOLUCIÓN Y GUÍA PARA COMPILACIÓN DE APP ANDROID (FLUTTER)
+====================================================================
+
+1. DIAGNÓSTICO Y CAUSA DEL ERROR
+--------------------------------------------------------------------
+El error en la tarea Gradle `:app:processReleaseResources`:
+  "AAPT: error: resource drawable/ic_launcher_foreground (aka com.menutech.app:drawable/ic_launcher_foreground) not found."
+
+Causa raíz:
+Los archivos XML de íconos adaptativos (`mipmap-anydpi-v26/ic_launcher.xml` y `ic_launcher_round.xml`) declaraban la referencia `@drawable/ic_launcher_foreground`. Sin embargo, al ejecutar la herramienta de generación de íconos, la imagen `ic_launcher_foreground.png` se ubicaba en carpetas con sufijos de densidad (`drawable-hdpi`, `drawable-mdpi`, etc.) en lugar del directorio principal `drawable/`. Durante la vinculación de recursos en la compilación release (`assembleRelease`), Gradle / AAPT2 buscaba la imagen en `res/drawable/ic_launcher_foreground.png` y al no encontrarla fallaba el build.
+
+2. SOLUCIÓN APLICADA
+--------------------------------------------------------------------
+- Se ubicó y copió la imagen `ic_launcher_foreground.png` directamente dentro del directorio principal de recursos:
+  `android/android/app/src/main/res/drawable/ic_launcher_foreground.png`
+- Se verificaron los archivos de configuración del ícono adaptativo (`ic_launcher.xml` e `ic_launcher_round.xml`) para garantizar la compatibilidad con todas las versiones de Android.
+
+3. VERIFICACIÓN DE REQUISITOS DEL PROYECTO
+--------------------------------------------------------------------
+- Nombre de la app: "Menutech" configurado correctamente en `pubspec.yaml` (`name: menutech`), `AndroidManifest.xml` (`android:label="Menutech"`), y en `main.dart` (`title: 'Menutech'`).
+- Logo de Menutech: Configurado desde `assets/icon/mtech.png` para íconos de aplicación y en el encabezado de la app.
+- Edición de Menú para el rol OWNER: El slot en el Dashboard para la gestión de menú está nombrado exactamente "My Menu" (ruta `/menus`), permitiendo al usuario con rol OWNER editar su menú abriendo `adminMenus.html` en la app.
+
+4. COMANDOS PARA COMPILAR LA APK EN TERMINAL DE ANDROID STUDIO
+--------------------------------------------------------------------
+Para compilar la APK de manera limpia desde el directorio `android`, ejecuta los siguientes comandos en PowerShell / Terminal:
+
+cd android
+& "C:\flutter\flutter\bin\flutter.bat" clean
+& "C:\flutter\flutter\bin\flutter.bat" pub get
+& "C:\flutter\flutter\bin\flutter.bat" build apk --release
+
+Con esto, el proceso de compilación `assembleRelease` finalizará exitosamente generando tu APK lista en:
+`android/build/app/outputs/flutter-apk/app-release.apk`
+====================================================================
