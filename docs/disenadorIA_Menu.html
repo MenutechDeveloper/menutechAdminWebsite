@@ -72,10 +72,10 @@
         /* Results section */
         #results-wrapper { display: block; }
 
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+        .section-header { position: relative; z-index: 9999; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
         .section-header h2 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
 
-        .export-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .export-actions { position: relative; z-index: 9999; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         .btn-export {
             background: var(--input); border: 1.5px solid var(--border); color: var(--text); padding: 10px 18px;
             border-radius: 14px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.3s;
@@ -84,6 +84,50 @@
         .btn-export:hover { border-color: var(--orange); color: var(--orange); transform: translateY(-2px); }
         .btn-export.primary { background: var(--orange); color: #ffffff; border-color: var(--orange); font-weight: 800; }
         .btn-export.primary:hover { filter: brightness(1.1); }
+
+        /* Dropdown Menu Styles */
+        .dropdown { position: relative; display: inline-block; z-index: 10000; }
+        .dropdown-menu {
+            position: absolute; right: 0; top: calc(100% + 8px); background: #ffffff;
+            border: 1.5px solid var(--border); border-radius: 16px; padding: 8px; min-width: 240px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); display: none; flex-direction: column; gap: 4px;
+            z-index: 10001; animation: dropdownFade 0.2s ease;
+        }
+        body.dark-mode .dropdown-menu { background: #1c1f26; }
+        .dropdown.active .dropdown-menu { display: flex; }
+        @keyframes dropdownFade { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        .dropdown-item {
+            padding: 10px 14px; border-radius: 10px; font-size: 0.8rem; font-weight: 700;
+            color: var(--text); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; text-align: left;
+        }
+        .dropdown-item:hover { background: rgba(255,149,51,0.1); color: var(--orange); }
+
+        /* Account Modal Styles */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            z-index: 20000; display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-card {
+            background: var(--card); border: 1.5px solid var(--border); border-radius: 28px;
+            padding: 30px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            max-height: 85vh; display: flex; flex-direction: column; animation: modalSlide 0.3s ease;
+        }
+        @keyframes modalSlide { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .modal-header h3 { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--text); }
+        .modal-close { background: none; border: none; font-size: 1.2rem; color: var(--text-dim); cursor: pointer; }
+        .modal-search { width: 100%; padding: 12px 16px; border-radius: 14px; background: var(--input); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 0.85rem; margin-bottom: 15px; outline: none; }
+        .modal-search:focus { border-color: var(--orange); }
+        .account-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; max-height: 320px; padding-right: 4px; }
+        .account-item {
+            padding: 12px 16px; border-radius: 14px; background: var(--input); border: 1px solid var(--border);
+            cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 2px;
+        }
+        .account-item:hover { border-color: var(--orange); background: rgba(255,149,51,0.06); }
+        .account-name { font-weight: 700; font-size: 0.88rem; color: var(--text); }
+        .account-sub { font-size: 0.72rem; color: var(--text-dim); }
+        .hidden { display: none !important; }
 
         /* General Info Card */
         .info-card {
@@ -199,15 +243,42 @@
             <div class="section-header">
                 <h2>Menú Transcrito</h2>
                 <div class="export-actions">
+                    <div class="dropdown" id="digital-menu-dropdown">
+                        <button class="btn-export primary" id="btn-digital-menu-trigger" onclick="toggleDigitalMenuDropdown(event)">
+                            <i class="fa-solid fa-utensils"></i> Digital Menu <i class="fa-solid fa-chevron-down" style="font-size:0.7rem; margin-left:4px;"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item" onclick="openAccountModal('create')">
+                                <i class="fa-solid fa-plus-circle" style="color:var(--orange);"></i> create (Crear menú digital)
+                            </div>
+                            <div class="dropdown-item" onclick="openAccountModal('update')">
+                                <i class="fa-solid fa-pen-to-square" style="color:var(--orange);"></i> update (Agregar a menú)
+                            </div>
+                        </div>
+                    </div>
                     <button class="btn-export" onclick="exportTXT()">
                         <i class="fa-regular fa-file-lines"></i> Exportar TXT
                     </button>
                     <button class="btn-export" onclick="exportSVG()">
                         <i class="fa-solid fa-vector-square"></i> Exportar SVG
                     </button>
-                    <button class="btn-export primary" onclick="copyFullMenuJSON()">
+                    <button class="btn-export" onclick="copyFullMenuJSON()">
                         <i class="fa-regular fa-copy"></i> Copiar JSON
                     </button>
+                </div>
+            </div>
+
+            <!-- Modal for Account Selection -->
+            <div class="modal-overlay" id="account-select-modal">
+                <div class="modal-card">
+                    <div class="modal-header">
+                        <h3 id="modal-action-title">Seleccionar Cuenta</h3>
+                        <button class="modal-close" onclick="closeAccountModal()"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <input type="text" class="modal-search" id="account-search-input" placeholder="Buscar cuenta o dominio..." oninput="filterAccountsList()">
+                    <div class="account-list" id="account-list-container">
+                        <!-- Populated dynamically -->
+                    </div>
                 </div>
             </div>
 
@@ -272,6 +343,10 @@
             loadTranscribedMenuData();
         });
 
+        let currentUserRole = '';
+        let allAccountsList = [];
+        let selectedMenuMode = 'create'; // 'create' or 'update'
+
         async function checkUserSession() {
             if (sb) {
                 try {
@@ -279,12 +354,247 @@
                     if (session && session.user) {
                         const { data: profile } = await sb.from('profiles').select('username, role').eq('id', session.user.id).single();
                         if (profile) {
+                            currentUserRole = (profile.role || '').toUpperCase();
                             document.getElementById('user-name').textContent = profile.username || session.user.email.split('@')[0];
                             document.getElementById('user-role-label').textContent = profile.role || 'User';
+
+                            // Hide dropdown for OWNER role
+                            if (currentUserRole === 'OWNER') {
+                                const dropdownEl = document.getElementById('digital-menu-dropdown');
+                                if (dropdownEl) dropdownEl.style.display = 'none';
+                            }
                         }
                     }
                 } catch (e) {}
             }
+        }
+
+        window.toggleDigitalMenuDropdown = (e) => {
+            e.stopPropagation();
+            if (currentUserRole === 'OWNER') return;
+            const dropdown = document.getElementById('digital-menu-dropdown');
+            dropdown.classList.toggle('active');
+        };
+
+        document.addEventListener('click', () => {
+            const dropdown = document.getElementById('digital-menu-dropdown');
+            if (dropdown) dropdown.classList.remove('active');
+        });
+
+        window.openAccountModal = async (mode) => {
+            if (!window.lastTranscribedMenu) {
+                showToast("No hay menú transcrito activo para procesar.", "warning");
+                return;
+            }
+            if (currentUserRole === 'OWNER') {
+                showToast("Esta función no está disponible para cuentas de tipo OWNER.", "error");
+                return;
+            }
+
+            selectedMenuMode = mode;
+            const dropdown = document.getElementById('digital-menu-dropdown');
+            if (dropdown) dropdown.classList.remove('active');
+
+            const titleEl = document.getElementById('modal-action-title');
+            if (titleEl) {
+                titleEl.textContent = mode === 'create'
+                    ? 'Crear Menú Digital (Reemplazar)'
+                    : 'Actualizar Menú Digital (Agregar Faltantes)';
+            }
+
+            const modal = document.getElementById('account-select-modal');
+            modal.classList.add('active');
+
+            await loadAccountsList();
+        };
+
+        window.closeAccountModal = () => {
+            const modal = document.getElementById('account-select-modal');
+            if (modal) modal.classList.remove('active');
+        };
+
+        async function loadAccountsList() {
+            const container = document.getElementById('account-list-container');
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-dim);"><i class="fa-solid fa-spinner fa-spin"></i> Cargando cuentas...</div>`;
+
+            try {
+                const { data, error } = await sb.from('profiles').select('id, username, email, domain, role').order('username', { ascending: true });
+                if (error) throw error;
+                allAccountsList = data || [];
+                renderAccountsList(allAccountsList);
+            } catch (err) {
+                console.error("Error loading accounts:", err);
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--error);">Error al cargar la lista de cuentas.</div>`;
+            }
+        }
+
+        function renderAccountsList(accounts) {
+            const container = document.getElementById('account-list-container');
+            if (!accounts || accounts.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-dim);">No se encontraron cuentas.</div>`;
+                return;
+            }
+
+            container.innerHTML = accounts.map(acc => {
+                const name = acc.username || acc.email || 'Usuario';
+                const domain = acc.domain || 'Sin dominio';
+                const role = acc.role || 'user';
+                return `
+                    <div class="account-item" onclick="selectAccountForDigitalMenu('${acc.id}', '${escapeJsString(name)}', '${escapeJsString(domain)}')">
+                        <div class="account-name">${escapeHtml(name)}</div>
+                        <div class="account-sub">${escapeHtml(domain)} • ${escapeHtml(role)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.filterAccountsList = () => {
+            const term = (document.getElementById('account-search-input').value || '').toLowerCase().trim();
+            if (!term) {
+                renderAccountsList(allAccountsList);
+                return;
+            }
+            const filtered = allAccountsList.filter(a =>
+                (a.username || '').toLowerCase().includes(term) ||
+                (a.email || '').toLowerCase().includes(term) ||
+                (a.domain || '').toLowerCase().includes(term)
+            );
+            renderAccountsList(filtered);
+        };
+
+        window.selectAccountForDigitalMenu = async (targetUserId, accountName, accountDomain) => {
+            closeAccountModal();
+            showToast(`Procesando menú para ${accountName}...`, "warning");
+
+            try {
+                const transcribed = window.lastTranscribedMenu;
+                if (!transcribed) {
+                    showToast("No se encontró información del menú.", "error");
+                    return;
+                }
+
+                // Standardize categories & dishes into adminMenus format
+                const newCategories = (transcribed.categories || []).map(cat => {
+                    const rawDishes = cat.dishes || cat.items || [];
+                    const formattedDishes = rawDishes.map(d => {
+                        let parsedPrice = 0;
+                        if (typeof d.price === 'number') parsedPrice = d.price;
+                        else if (typeof d.price === 'string') {
+                            const cleaned = d.price.replace(/[^0-9\.]/g, '');
+                            parsedPrice = parseFloat(cleaned) || 0;
+                        }
+                        return {
+                            name: d.name || 'Platillo',
+                            description: d.description || '',
+                            price: parsedPrice,
+                            image: '',
+                            sizes: [],
+                            toppings: []
+                        };
+                    });
+
+                    return {
+                        name: cat.name || 'General',
+                        description: '',
+                        image: '',
+                        visibility: { days: [0, 1, 2, 3, 4, 5, 6], start: '00:00', end: '23:59', startDate: '', endDate: '' },
+                        dishes: formattedDishes
+                    };
+                });
+
+                // Get target user profile to determine slug & domain
+                const { data: targetProfile } = await sb.from('profiles').select('*').eq('id', targetUserId).single();
+                let domain = targetProfile?.domain || accountDomain || 'undetermined';
+                let defaultSlug = '';
+                if (domain && !domain.includes('menutech')) {
+                    defaultSlug = domain.split('.')[0];
+                } else {
+                    defaultSlug = targetProfile?.username || accountName || 'restaurant';
+                }
+                let slug = defaultSlug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+                if (selectedMenuMode === 'create') {
+                    // Full overwrite / creation from scratch
+                    const finalConfig = {
+                        categories: newCategories,
+                        toppings: []
+                    };
+
+                    const { error } = await sb.from('menutech_menus').upsert({
+                        user_id: targetUserId,
+                        domain: domain,
+                        slug: slug,
+                        menu_style: 'mode2',
+                        cover_url: '',
+                        cover_type: 'image',
+                        config: finalConfig
+                    }, { onConflict: 'user_id' });
+
+                    if (error) throw error;
+                    showToast(`Menú digital CREADO con éxito para ${accountName}.`, "success");
+                } else {
+                    // UPDATE mode: Merge missing categories and dishes
+                    const { data: existingMenu } = await sb.from('menutech_menus').select('*').eq('user_id', targetUserId).maybeSingle();
+
+                    let existingConfig = existingMenu?.config || { categories: [], toppings: [] };
+                    if (!existingConfig.categories) existingConfig.categories = [];
+                    if (!existingConfig.toppings) existingConfig.toppings = [];
+
+                    newCategories.forEach(newCat => {
+                        let existingCat = existingConfig.categories.find(c => c.name.toLowerCase().trim() === newCat.name.toLowerCase().trim());
+
+                        if (!existingCat) {
+                            // Add new category directly
+                            existingConfig.categories.push(newCat);
+                        } else {
+                            // Category exists: append missing dishes
+                            if (!existingCat.dishes) existingCat.dishes = [];
+
+                            newCat.dishes.forEach(newDish => {
+                                const dishExists = existingCat.dishes.some(d => d.name.toLowerCase().trim() === newDish.name.toLowerCase().trim());
+                                if (!dishExists) {
+                                    existingCat.dishes.push(newDish);
+                                }
+                            });
+                        }
+                    });
+
+                    const finalSlug = existingMenu?.slug || slug;
+                    const finalDomain = existingMenu?.domain || domain;
+
+                    const { error } = await sb.from('menutech_menus').upsert({
+                        user_id: targetUserId,
+                        domain: finalDomain,
+                        slug: finalSlug,
+                        menu_style: existingMenu?.menu_style || 'mode2',
+                        cover_url: existingMenu?.cover_url || '',
+                        cover_type: existingMenu?.cover_type || 'image',
+                        config: existingConfig
+                    }, { onConflict: 'user_id' });
+
+                    if (error) throw error;
+                    showToast(`Menú digital ACTUALIZADO con éxito para ${accountName}.`, "success");
+                }
+
+                // Optional delay toast informing user they can view it in adminMenus.html
+                setTimeout(() => {
+                    showToast("Puedes ver los cambios en adminMenus.html", "success");
+                }, 1500);
+
+            } catch (err) {
+                console.error("Error processing digital menu operation:", err);
+                showToast(`Error al procesar el menú: ${err.message || err}`, "error");
+            }
+        };
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function escapeJsString(str) {
+            if (!str) return '';
+            return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
         }
 
         function initTheme() {
