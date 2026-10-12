@@ -1099,51 +1099,73 @@
                 return;
             }
 
-            // Check for menu transcription intent ("transcribe este menu" or similar)
-            const lowerText = payloadPrompt.toLowerCase();
-            const isTranscriptionIntent = lowerText.includes("transcribe") || lowerText.includes("transcribir") || lowerText.includes("extrae este menu") || lowerText.includes("extraer menu");
+            // Check for menu transcription intent ("transcribe este menu", "trascribe este menu", "escribe este menu", etc.)
+            function isMenuTranscriptionIntent(text, hasImage) {
+                if (!hasImage) return false;
+                const clean = (text || '').toLowerCase().trim();
+                if (!clean) return true;
+                const hasAction = /transcrib|trascrib|escrib|extra|escane|scan|lee|ley|pas|convert|saca|haz|hac|pasa/i.test(clean);
+                const hasDomain = /menu|menú|carta|platillo|lista|precio|restaurante|comida|imagen|foto|esto|este|esta/i.test(clean);
+                return hasAction || hasDomain;
+            }
 
-            if (isTranscriptionIntent && payloadImage) {
-                const resLector = await fetch(CONFIG.LECTOR_MENUS_URL, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "apikey": CONFIG.SUPABASE_ANON_KEY,
-                        "Authorization": `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
-                    },
-                    body: JSON.stringify({
-                        prompt: payloadPrompt,
-                        image: payloadImage
-                    })
-                });
+            if (isMenuTranscriptionIntent(payloadPrompt, !!payloadImage)) {
+                try {
+                    const resLector = await fetch(CONFIG.LECTOR_MENUS_URL, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "apikey": CONFIG.SUPABASE_ANON_KEY,
+                            "Authorization": `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+                        },
+                        body: JSON.stringify({
+                            prompt: payloadPrompt,
+                            image: payloadImage
+                        })
+                    });
 
-                removeTypingIndicator(typingEl);
-                const lectorData = await resLector.json().catch(() => ({}));
+                    removeTypingIndicator(typingEl);
+                    const lectorData = await resLector.json().catch(() => ({}));
 
-                if (resLector.ok && (lectorData.menu || lectorData.categories)) {
-                    const menuObj = lectorData.menu || lectorData;
-                    sessionStorage.setItem('menutech_transcribed_menu', JSON.stringify(menuObj));
+                    if (resLector.ok && (lectorData.menu || lectorData.categories || lectorData.success)) {
+                        const menuObj = lectorData.menu || lectorData;
+                        sessionStorage.setItem('menutech_transcribed_menu', JSON.stringify(menuObj));
 
-                    const reply = "¡He transcrito el menú de la imagen! Redirigiendo a **disenadorIA_Menu.html** para que consultes y me edites todo organizadamente...";
-                    chatHistory.push({ role: "user", text: payloadPrompt, image: payloadImage ? payloadImage.data : null });
-                    chatHistory.push({ role: "model", text: reply });
-                    if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
+                        const reply = "¡He transcrito el menú de la imagen! Redirigiendo a **disenadorIA_Menu.html** para que consultes y me edites todo organizadamente...";
+                        chatHistory.push({ role: "user", text: payloadPrompt, image: payloadImage ? payloadImage.data : null });
+                        chatHistory.push({ role: "model", text: reply });
+                        if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
 
-                    appendBotMessage(reply);
-                    speakText(reply);
+                        appendBotMessage(reply);
+                        speakText(reply);
 
-                    // Redirección automática a la interfaz disenadorIA_Menu.html
-                    const isAlreadyOnDesigner = window.location.pathname.endsWith('disenadorIA_Menu.html');
-                    if (isAlreadyOnDesigner) {
-                        window.location.reload();
+                        // Redirección automática a la interfaz disenadorIA_Menu.html
+                        const isAlreadyOnDesigner = window.location.pathname.endsWith('disenadorIA_Menu.html');
+                        if (isAlreadyOnDesigner) {
+                            if (typeof window.loadTranscribedMenuData === 'function') {
+                                window.loadTranscribedMenuData();
+                            } else {
+                                window.location.reload();
+                            }
+                        } else {
+                            sessionStorage.setItem('menutech_open_chat_on_load', 'true');
+                            windowEl.classList.add('active');
+                            setTimeout(() => {
+                                window.location.href = 'disenadorIA_Menu.html';
+                            }, 3500);
+                        }
+                        return;
                     } else {
-                        sessionStorage.setItem('menutech_open_chat_on_load', 'true');
-                        // Ensure chat window is open so user sees and hears Gemini speak before transition
-                        windowEl.classList.add('active');
-                        setTimeout(() => {
-                            window.location.href = 'disenadorIA_Menu.html';
-                        }, 3500);
+                        const errorReply = "Ocurrió un error al transcribir el menú de la imagen. Por favor intenta nuevamente.";
+                        appendBotMessage(errorReply);
+                        speakText(errorReply);
+                        return;
                     }
+                } catch (err) {
+                    removeTypingIndicator(typingEl);
+                    const errorReply = "Error de red al transcribir el menú: " + err.message;
+                    appendBotMessage(errorReply);
+                    speakText(errorReply);
                     return;
                 }
             }
