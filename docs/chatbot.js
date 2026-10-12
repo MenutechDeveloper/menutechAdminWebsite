@@ -64,8 +64,8 @@
 
         /* 3D Trigger Widget - Completely transparent container */
         #mt-bot-trigger {
-            width: 170px;
-            height: 170px;
+            width: 105px;
+            height: 105px;
             border-radius: 50%;
             background: transparent !important;
             box-shadow: none !important;
@@ -82,8 +82,8 @@
             transform: scale(1.08) translateY(-4px);
         }
         .mt-trigger-mv {
-            width: 170px;
-            height: 170px;
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
             pointer-events: auto;
             --poster-color: transparent;
@@ -687,6 +687,8 @@
                 camera-controls
                 disable-zoom
                 disable-pan
+                bounds="tight"
+                camera-target="0m 0m 0m"
                 shadow-intensity="0"
                 interaction-prompt="none">
             </model-viewer>

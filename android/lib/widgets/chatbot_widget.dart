@@ -100,8 +100,8 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       overflow: hidden;
     }
     #mt-bot-root {
-      bottom: 10px !important;
-      right: 10px !important;
+      bottom: 5px !important;
+      right: 5px !important;
     }
   </style>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
@@ -124,16 +124,19 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
 
-    final double width = _isExpanded ? screenSize.width : 110.0;
-    final double height = _isExpanded ? (screenSize.height * 0.85) : 120.0;
+    final double width = _isExpanded ? screenSize.width : 90.0;
+    final double height = _isExpanded ? (screenSize.height * 0.85) : 90.0;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
-      width: width,
-      height: height,
-      color: Colors.transparent,
-      child: WebViewWidget(controller: _controller),
+    return IgnorePointer(
+      ignoring: false,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        width: width,
+        height: height,
+        color: Colors.transparent,
+        child: WebViewWidget(controller: _controller),
+      ),
     );
   }
 }

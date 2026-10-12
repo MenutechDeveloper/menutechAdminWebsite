@@ -512,8 +512,44 @@
         });
 
         async function checkSession() {
-            const { data: { session } } = await sb.auth.getSession();
-            if (!session) { location.href = "index.html"; return; }
+            const urlParams = new URLSearchParams(window.location.search);
+            const isAppMode = urlParams.get('app') === 'true';
+
+            // Check for access_token in URL query or hash
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
+            const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
+
+            if (accessToken && refreshToken) {
+                try {
+                    await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+                } catch(e) { console.error('Error setting session:', e); }
+            }
+
+            let { data: { session } } = await sb.auth.getSession();
+            if (!session) {
+                // Check localStorage fallback
+                try {
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+                            const val = JSON.parse(localStorage.getItem(key));
+                            if (val && val.access_token && val.refresh_token) {
+                                const { data: setRes } = await sb.auth.setSession({ access_token: val.access_token, refresh_token: val.refresh_token });
+                                if (setRes && setRes.session) {
+                                    session = setRes.session;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            if (!session) {
+                if (!isAppMode) location.href = "index.html";
+                return;
+            }
             user = session.user;
             const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
             if (!profile) { userRole = 'owner'; activeOwnerId = user.id; showApp(null); return; }
@@ -648,8 +684,24 @@
         };
 
         async function showApp(profile) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isAppMode = urlParams.get('app') === 'true';
+
             document.getElementById('main-app').classList.remove('hidden');
-            document.getElementById('top-nav').classList.remove('hidden');
+            if (!isAppMode) {
+                document.getElementById('top-nav').classList.remove('hidden');
+            } else {
+                document.body.classList.add('app-mode');
+                // Hide header logo, top nav, and switcher in app mode
+                const topNav = document.getElementById('top-nav');
+                if (topNav) topNav.style.display = 'none';
+                const sidebarContainer = document.getElementById('sidebar-container');
+                if (sidebarContainer) sidebarContainer.style.display = 'none';
+                const logoMain = document.querySelector('.logo-main');
+                if (logoMain) logoMain.style.display = 'none';
+                const container = document.querySelector('.container');
+                if (container) container.style.paddingTop = '20px';
+            }
             if (profile) {
                 document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
                 document.getElementById('user-role-label').textContent = profile.role || 'User';
