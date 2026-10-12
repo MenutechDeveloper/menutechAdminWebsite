@@ -1099,14 +1099,10 @@
                 return;
             }
 
-            // Check for menu transcription intent ("transcribe este menu", "trascribe este menu", "escribe este menu", etc.)
+            // Check for menu transcription intent (whenever an image is attached, always transcribe and redirect to disenadorIA_Menu.html)
             function isMenuTranscriptionIntent(text, hasImage) {
                 if (!hasImage) return false;
-                const clean = (text || '').toLowerCase().trim();
-                if (!clean) return true;
-                const hasAction = /transcrib|trascrib|escrib|extra|escane|scan|lee|ley|pas|convert|saca|haz|hac|pasa/i.test(clean);
-                const hasDomain = /menu|menú|carta|platillo|lista|precio|restaurante|comida|imagen|foto|esto|este|esta/i.test(clean);
-                return hasAction || hasDomain;
+                return true;
             }
 
             if (isMenuTranscriptionIntent(payloadPrompt, !!payloadImage)) {
