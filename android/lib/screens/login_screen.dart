@@ -27,11 +27,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         final errStr = e.toString().toLowerCase();
         String title = "Incorrect Credentials";
-        String message = "The email address or password you entered is incorrect. Please double check your login details and try again.";
+        String message = "Incorrect email or password.";
 
         if (errStr.contains('network') || errStr.contains('connection') || errStr.contains('socket')) {
           title = "Connection Error";
-          message = "Unable to connect to server. Please check your internet connection and try again.";
+          message = "Unable to connect to server.";
         }
 
         _showErrorPopup(title, message);
@@ -44,77 +44,38 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showErrorPopup(String title, String message) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        elevation: 10,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(28.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFECEB),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFFFCDD2), width: 1.5),
-                ),
-                child: const Icon(
-                  Icons.lock_person_rounded,
-                  color: Color(0xFFE53935),
-                  size: 34,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Outfit',
-                  color: Color(0xFF2D2D2D),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade700,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 28),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF9533),
-                    foregroundColor: Colors.black,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  child: const Text(
-                    'Try Again',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      fontFamily: 'Outfit',
-                    ),
-                  ),
-                ),
-              ),
-            ],
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Outfit',
+            color: Color(0xFF2D2D2D),
           ),
         ),
+        content: Text(
+          message,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade800,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'OK',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFFF9533),
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

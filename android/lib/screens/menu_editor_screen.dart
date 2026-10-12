@@ -27,6 +27,8 @@ class _MenuEditorScreenState extends State<MenuEditorScreen> {
     final user = SupabaseService().currentUser;
 
     String injectedSessionJs = '';
+    String urlWithTokens = 'https://menutech.io/adminMenus.html?app=true';
+
     if (session != null) {
       final projectRef = Uri.parse(AppConfig.supabaseUrl).host.split('.').first;
       final sessionMap = {
@@ -46,6 +48,8 @@ class _MenuEditorScreenState extends State<MenuEditorScreen> {
           localStorage.setItem('sb-$projectRef-auth-token', JSON.stringify($sessionJson));
         } catch(e) {}
       ''';
+
+      urlWithTokens = 'https://menutech.io/adminMenus.html?app=true#access_token=${session.accessToken}&refresh_token=${session.refreshToken}';
     }
 
     _controller = WebViewController()
@@ -67,7 +71,7 @@ class _MenuEditorScreenState extends State<MenuEditorScreen> {
           },
         ),
       )
-      ..loadRequest(Uri.parse('https://menutech.io/adminMenus.html'));
+      ..loadRequest(Uri.parse(urlWithTokens));
   }
 
   @override

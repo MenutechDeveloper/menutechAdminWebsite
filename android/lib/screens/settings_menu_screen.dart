@@ -104,106 +104,47 @@ class SettingsMenuScreen extends StatelessWidget {
   Future<bool?> _showLogoutDialog(BuildContext context) {
     return showDialog<bool>(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        elevation: 10,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(28.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF3E0),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFFFE0B2), width: 1.5),
-                ),
-                child: const Icon(
-                  Icons.logout_rounded,
-                  color: Color(0xFFFF9533),
-                  size: 34,
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Sign Out',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Outfit',
-                  color: Color(0xFF2D2D2D),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Are you sure you want to log out of your Menutech account?',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade700,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 28),
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 52,
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.grey.shade800,
-                          side: BorderSide(color: Colors.grey.shade300),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        child: const Text(
-                          'Cancel',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            fontFamily: 'Outfit',
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: SizedBox(
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF9533),
-                          foregroundColor: Colors.black,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        child: const Text(
-                          'Sign Out',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            fontFamily: 'Outfit',
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+        title: const Text(
+          'Sign Out',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Outfit',
+            color: Color(0xFF2D2D2D),
           ),
         ),
+        content: const Text(
+          'Are you sure you want to sign out?',
+          style: TextStyle(
+            fontSize: 14,
+            color: Color(0xFF4A5568),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: Colors.grey.shade700,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Sign Out',
+              style: TextStyle(
+                color: Color(0xFFFF9533),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
