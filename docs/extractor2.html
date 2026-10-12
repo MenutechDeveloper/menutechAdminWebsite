@@ -276,10 +276,10 @@
         </header>
 
         <div class="extractor-card">
-            <!-- Mode Selection Tabs -->
-            <div class="mode-selector" id="mode-selector">
-                <button class="mode-btn active" data-mode="search" onclick="selectMode('search')">Google Maps</button>
-                <button class="mode-btn" data-mode="extract" onclick="selectMode('extract')">Menus</button>
+            <!-- Mode Selection Tabs (Hidden from UI, default mode is 'extract') -->
+            <div class="mode-selector" id="mode-selector" style="display: none;">
+                <button class="mode-btn" data-mode="search" onclick="selectMode('search')">Google Maps</button>
+                <button class="mode-btn active" data-mode="extract" onclick="selectMode('extract')">Menus</button>
                 <button class="mode-btn" data-mode="scrape" onclick="selectMode('scrape')">Scrape Markdown</button>
                 <button class="mode-btn" data-mode="crawl" onclick="selectMode('crawl')">Rastrear / Crawl</button>
             </div>
@@ -292,12 +292,8 @@
                     </div>
                 </div>
 
-                <div class="field-group">
-                    <label for="target-prompt">Instrucción de Extracción</label>
-                    <div class="input-wrapper">
-                        <textarea id="target-prompt"></textarea>
-                    </div>
-                </div>
+                <!-- Prompt field hidden from UI, default prompt handled internally -->
+                <textarea id="target-prompt" style="display: none;"></textarea>
 
                 <button class="btn-extract" id="btn-extract" onclick="startExtraction()">
                     <span>Extraer Datos</span>
@@ -368,7 +364,7 @@
         import { supabase as sb } from './supabase.js';
 
         window.lastExtractedJson = null;
-        window.selectedMode = 'search';
+        window.selectedMode = 'extract';
 
         window.showToast = (message, type = 'success') => {
             const container = document.getElementById('toast-container');
