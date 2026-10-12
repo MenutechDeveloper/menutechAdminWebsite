@@ -67,7 +67,7 @@ class _MenuEditorScreenState extends State<MenuEditorScreen> {
           },
         ),
       )
-      ..loadRequest(Uri.parse('https://menutech.services/adminMenus.html'));
+      ..loadRequest(Uri.parse('https://menutech.io/adminMenus.html'));
   }
 
   @override

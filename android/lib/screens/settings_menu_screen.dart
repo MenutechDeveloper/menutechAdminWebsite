@@ -33,20 +33,7 @@ class SettingsMenuScreen extends StatelessWidget {
             icon: Icons.logout_rounded,
             title: 'Logout',
             onTap: () async {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Are you sure you want to sign out?'),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('LOGOUT', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
-              );
+              final confirmed = await _showLogoutDialog(context);
 
               if (confirmed == true) {
                 await SupabaseService().signOut();
@@ -109,6 +96,113 @@ class SettingsMenuScreen extends StatelessWidget {
             const Spacer(),
             const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFD1D1D1), size: 18),
           ],
+        ),
+      ),
+    );
+  }
+
+  Future<bool?> _showLogoutDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        elevation: 10,
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(28.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3E0),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFFFE0B2), width: 1.5),
+                ),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  color: Color(0xFFFF9533),
+                  size: 34,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Sign Out',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Outfit',
+                  color: Color(0xFF2D2D2D),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Are you sure you want to log out of your Menutech account?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade700,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 28),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 52,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.grey.shade800,
+                          side: BorderSide(color: Colors.grey.shade300),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            fontFamily: 'Outfit',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF9533),
+                          foregroundColor: Colors.black,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        child: const Text(
+                          'Sign Out',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            fontFamily: 'Outfit',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
