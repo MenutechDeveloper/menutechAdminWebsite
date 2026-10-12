@@ -244,29 +244,29 @@
                 <h2>Menú Transcrito</h2>
                 <div class="export-actions">
                     <button class="btn-export primary" id="btn-toggle-transcribe" onclick="toggleTranscribeSection()">
-                        <i class="fa-solid fa-file-import"></i> Transcribir
+                        Transcribir
                     </button>
                     <div class="dropdown" id="digital-menu-dropdown">
                         <button class="btn-export primary" id="btn-digital-menu-trigger" onclick="toggleDigitalMenuDropdown(event)">
-                            <i class="fa-solid fa-utensils"></i> Digital Menu <i class="fa-solid fa-chevron-down" style="font-size:0.7rem; margin-left:4px;"></i>
+                            Digital Menu <i class="fa-solid fa-chevron-down" style="font-size:0.7rem; margin-left:4px;"></i>
                         </button>
                         <div class="dropdown-menu">
                             <div class="dropdown-item" onclick="openAccountModal('create')">
-                                <i class="fa-solid fa-plus-circle" style="color:var(--orange);"></i> create (Crear menú digital)
+                                create
                             </div>
                             <div class="dropdown-item" onclick="openAccountModal('update')">
-                                <i class="fa-solid fa-pen-to-square" style="color:var(--orange);"></i> update (Agregar a menú)
+                                update
                             </div>
                         </div>
                     </div>
                     <button class="btn-export" onclick="exportTXT()">
-                        <i class="fa-regular fa-file-lines"></i> Exportar TXT
+                        Exportar TXT
                     </button>
                     <button class="btn-export" onclick="exportSVG()">
-                        <i class="fa-solid fa-vector-square"></i> Exportar SVG
+                        Exportar SVG
                     </button>
                     <button class="btn-export" onclick="copyFullMenuJSON()">
-                        <i class="fa-regular fa-copy"></i> Copiar JSON
+                        Copiar JSON
                     </button>
                 </div>
             </div>
@@ -286,7 +286,7 @@
                     </div>
                     <div style="margin-top: 22px; display: flex; justify-content: center; gap: 12px;">
                         <button class="btn-export primary" id="btn-generate-transcription" onclick="executeTranscriptionFromPage()" style="padding: 12px 32px; font-size: 0.95rem;">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Generar
+                            Generar
                         </button>
                     </div>
                 </div>
@@ -422,8 +422,8 @@
             const titleEl = document.getElementById('modal-action-title');
             if (titleEl) {
                 titleEl.textContent = mode === 'create'
-                    ? 'Crear Menú Digital (Reemplazar)'
-                    : 'Actualizar Menú Digital (Agregar Faltantes)';
+                    ? 'Crear Menú Digital'
+                    : 'Actualizar Menú Digital';
             }
 
             const modal = document.getElementById('account-select-modal');
@@ -698,10 +698,10 @@
             const originalText = btn ? btn.innerHTML : '';
             if (btn) {
                 btn.disabled = true;
-                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Transcribiendo...`;
+                btn.innerHTML = `Transcribiendo...`;
             }
 
-            showToast("Transcribiendo menú con IA...", "warning");
+            showToast("Transcribiendo menu con MenutechIA", "warning");
 
             try {
                 const res = await fetch("https://eemqyrysdgasfjlitads.supabase.co/functions/v1/LectorMenus", {
