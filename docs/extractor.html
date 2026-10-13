@@ -70,7 +70,87 @@
         header { text-align: center; margin-bottom: 40px; }
         .logo-main { width: 100%; max-width: 260px; height: auto; margin: 0 auto 12px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
 
-        .extractor-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 32px; padding: 36px; box-shadow: 0 20px 50px rgba(0,0,0,0.06); margin-bottom: 40px; }
+        .extractor-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 32px; padding: 36px; box-shadow: 0 20px 50px rgba(0,0,0,0.06); margin-bottom: 40px; position: relative; overflow: hidden; }
+
+        .view-step {
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .view-step.hidden-step {
+            display: none !important;
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        .view-step.active-step {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-top: 10px;
+        }
+
+        .platform-btn-card {
+            background: var(--input);
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 32px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .platform-btn-card:hover {
+            border-color: var(--orange);
+            transform: translateY(-6px);
+            box-shadow: 0 15px 35px rgba(255, 149, 51, 0.15);
+        }
+
+        .platform-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 18px;
+            background: rgba(255, 149, 51, 0.12);
+            color: var(--orange);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .platform-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .btn-back-platform {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .btn-back-platform:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+        }
 
         .input-group { display: flex; gap: 16px; flex-wrap: wrap; }
         .input-wrapper { flex: 1; min-width: 280px; position: relative; }
@@ -281,37 +361,64 @@
         </header>
 
         <div class="extractor-card">
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-                    <div class="input-wrapper">
-                        <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Categoría</label>
-                        <select id="apify-search" style="width: 100%; background: var(--input); border: 1.5px solid var(--border); border-radius: 20px; padding: 18px 24px; color: var(--text); font-size: 1rem; font-family: inherit; transition: 0.3s; cursor: pointer;">
-                            <option value="restaurant">Restaurante</option>
-                        </select>
+            <!-- Platform Selection View -->
+            <div id="platform-selection-view" class="view-step active-step">
+                <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; text-align: center; margin-bottom: 24px;">Selecciona la Plataforma de Búsqueda</h3>
+                <div class="platform-grid">
+                    <div class="platform-btn-card" onclick="selectPlatform('google')">
+                        <div class="platform-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px; height:28px;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                        </div>
+                        <div class="platform-title">Google Maps</div>
                     </div>
-                    <div class="input-wrapper">
-                        <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Ubicación</label>
-                        <input type="text" id="apify-location" autocomplete="off">
+                    <div class="platform-btn-card" onclick="selectPlatform('yelp')">
+                        <div class="platform-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px; height:28px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        </div>
+                        <div class="platform-title">Yelp</div>
                     </div>
-                    <div class="input-wrapper" style="max-width: 200px;">
-                        <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Límite de resultados</label>
-                        <input type="number" id="apify-limit" autocomplete="off" value="20" min="1" max="500">
-                    </div>
-                </div>
-                <div style="display: flex; justify-content: flex-end;">
-                    <button class="btn-extract" id="btn-extract-apify" onclick="startApifyScraping()">
-                        <span>Ejecutar</span>
-                    </button>
                 </div>
             </div>
 
-            <div id="apify-progress-card" style="display: none; margin-top: 24px; background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px;">
-                <div class="progress-status">
-                    <span id="apify-progress-text">Procesando extracción...</span>
-                    <span id="apify-progress-percent">0%</span>
+            <!-- Form View -->
+            <div id="extractor-form-view" class="view-step hidden-step">
+                <button class="btn-back-platform" onclick="resetPlatformSelection()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px;"><polyline points="15 18 9 12 15 6"/></svg>
+                    <span>Cambiar Plataforma (<span id="selected-platform-label">Google Maps</span>)</span>
+                </button>
+
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                        <div class="input-wrapper">
+                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Categoría</label>
+                            <select id="apify-search" style="width: 100%; background: var(--input); border: 1.5px solid var(--border); border-radius: 20px; padding: 18px 24px; color: var(--text); font-size: 1rem; font-family: inherit; transition: 0.3s; cursor: pointer;">
+                                <option value="restaurant">Restaurante</option>
+                            </select>
+                        </div>
+                        <div class="input-wrapper">
+                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Ubicación</label>
+                            <input type="text" id="apify-location" autocomplete="off">
+                        </div>
+                        <div class="input-wrapper" style="max-width: 200px;">
+                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Límite de resultados</label>
+                            <input type="number" id="apify-limit" autocomplete="off" value="20" min="1" max="500">
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end;">
+                        <button class="btn-extract" id="btn-extract-apify" onclick="startApifyScraping()">
+                            <span>Ejecutar</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar" id="apify-progress-bar"></div>
+
+                <div id="apify-progress-card" style="display: none; margin-top: 24px; background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px;">
+                    <div class="progress-status">
+                        <span id="apify-progress-text">Procesando extracción...</span>
+                        <span id="apify-progress-percent">0%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="apify-progress-bar"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -357,6 +464,66 @@
         </div>
     </div>
 
+
+    <script>
+        window.selectedProvider = 'google';
+
+        window.selectPlatform = function(platform) {
+            window.selectedProvider = platform;
+            var selectionView = document.getElementById('platform-selection-view');
+            var formView = document.getElementById('extractor-form-view');
+            var label = document.getElementById('selected-platform-label');
+            var searchSelect = document.getElementById('apify-search');
+
+            if (platform === 'yelp') {
+                if (label) label.textContent = 'Yelp';
+                if (searchSelect) {
+                    searchSelect.innerHTML = `
+                        <option value="Mexican" selected>Mexican</option>
+                        <option value="Restaurants">Restaurants</option>
+                        <option value="Takeout">Takeout</option>
+                        <option value="Delivery">Delivery</option>
+                        <option value="Hot & Trendy">Hot & Trendy</option>
+                        <option value="Lunch">Lunch</option>
+                        <option value="Dinner">Dinner</option>
+                        <option value="Coffee & Cafes">Coffee & Cafes</option>
+                        <option value="Pizza">Pizza</option>
+                        <option value="Chinese">Chinese</option>
+                        <option value="Bakeries">Bakeries</option>
+                        <option value="Italian">Italian</option>
+                        <option value="Food Trucks">Food Trucks</option>
+                        <option value="Sports Bars & Pubs">Sports Bars & Pubs</option>
+                    `;
+                }
+            } else {
+                if (label) label.textContent = 'Google Maps';
+                if (searchSelect) {
+                    searchSelect.innerHTML = `
+                        <option value="restaurant" selected>Restaurante</option>
+                    `;
+                }
+            }
+
+            selectionView.classList.remove('active-step');
+            selectionView.classList.add('hidden-step');
+            setTimeout(function() {
+                formView.classList.remove('hidden-step');
+                formView.classList.add('active-step');
+            }, 150);
+        };
+
+        window.resetPlatformSelection = function() {
+            var selectionView = document.getElementById('platform-selection-view');
+            var formView = document.getElementById('extractor-form-view');
+
+            formView.classList.remove('active-step');
+            formView.classList.add('hidden-step');
+            setTimeout(function() {
+                selectionView.classList.remove('hidden-step');
+                selectionView.classList.add('active-step');
+            }, 150);
+        };
+    </script>
 
     <script type="module">
         import { supabase as sb } from './supabase.js';
@@ -455,7 +622,7 @@
             const locationInput = document.getElementById('apify-location');
             const limitInput = document.getElementById('apify-limit');
 
-            const search = searchInput ? searchInput.value.trim() : 'restaurant';
+            const search = searchInput ? searchInput.value.trim() : (window.selectedProvider === 'yelp' ? 'Mexican' : 'restaurant');
             const location = locationInput ? locationInput.value.trim() : '';
             const limit = limitInput ? limitInput.value.trim() : '20';
 
@@ -476,6 +643,7 @@
             try {
                 let resultData = null;
                 const requestPayload = {
+                    provider: window.selectedProvider || 'google',
                     search: search,
                     location: location,
                     limit: parseInt(limit, 10) || 20
@@ -565,10 +733,12 @@
             const itemsCount = rawItems.length;
             const queryLabel = [search, location].filter(Boolean).join(" - ");
 
+            const actorIdDisplay = res?.actorId || (window.selectedProvider === 'yelp' ? 'api-ninja~yelp-ultimate-scraper' : 'nwua9Gu5YrADL7ZDj');
+
             summaryDisplay.innerHTML = `
                 <div class="info-field">
                     <label>Actor ID</label>
-                    <div>${res?.actorId || 'nwua9Gu5YrADL7ZDj'}</div>
+                    <div>${actorIdDisplay}</div>
                 </div>
                 <div class="info-field">
                     <label>Búsqueda / Ubicación</label>
@@ -592,13 +762,13 @@
                 `;
             } else {
                 itemsDisplay.innerHTML = rawItems.map(item => {
-                    const name = item.title || item.name || 'Sin nombre';
-                    const address = item.address || item.street || '';
-                    const zipcode = item.postalCode || item.zipCode || item.zipcode || item.zip || '';
-                    const city = item.city || item.addressCity || item.municipality || '';
-                    const phone = item.phone || item.phoneUnformatted || item.telephone || '';
-                    const hours = formatApifyHours(item.openingHours || item.hours);
-                    const website = item.website || item.url || item.web || '';
+                    const name = item.title || item.name || item.businessName || 'Sin nombre';
+                    const address = item.address || item.streetAddress || item.street || (typeof item.location === 'string' ? item.location : item.location?.address) || '';
+                    const zipcode = item.postalCode || item.zipCode || item.zipcode || item.zip || item.location?.zipCode || '';
+                    const city = item.city || item.addressCity || item.municipality || item.location?.city || '';
+                    const phone = item.phone || item.phoneUnformatted || item.telephone || item.displayPhone || '';
+                    const hours = formatApifyHours(item.openingHours || item.hours || item.businessHours);
+                    const website = item.website || item.url || item.web || item.businessUrl || '';
 
                     return `
                         <div class="category-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 14px; margin-bottom: 0;">
@@ -657,15 +827,15 @@
             const searchLocation = document.getElementById('apify-location')?.value?.trim() || '';
 
             return rawItems.map(item => {
-                const title = (item.title || item.name || 'Sin nombre').trim();
-                const address = (item.address || item.street || '').trim();
-                const zipcode = (item.postalCode || item.zipCode || item.zipcode || item.zip || '').trim();
-                let city = (item.city || item.addressCity || item.municipality || '').trim();
+                const title = (item.title || item.name || item.businessName || 'Sin nombre').trim();
+                const address = (item.address || item.streetAddress || item.street || (typeof item.location === 'string' ? item.location : item.location?.address) || '').trim();
+                const zipcode = (item.postalCode || item.zipCode || item.zipcode || item.zip || item.location?.zipCode || '').trim();
+                let city = (item.city || item.addressCity || item.municipality || item.location?.city || '').trim();
                 if (!city && searchLocation) city = searchLocation;
                 if (!city) city = 'Desconocida';
-                const phone = (item.phone || item.phoneUnformatted || item.telephone || '').trim();
-                const hours = formatApifyHours(item.openingHours || item.hours);
-                const website = (item.website || item.url || item.web || '').trim();
+                const phone = (item.phone || item.phoneUnformatted || item.telephone || item.displayPhone || '').trim();
+                const hours = formatApifyHours(item.openingHours || item.hours || item.businessHours);
+                const website = (item.website || item.url || item.web || item.businessUrl || '').trim();
 
                 return { title, address, city, zipcode, phone, hours, website };
             });
