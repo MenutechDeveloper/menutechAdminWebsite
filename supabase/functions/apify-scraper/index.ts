@@ -10,8 +10,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const ACTOR_ID = "nwua9Gu5YrADL7ZDj";
-
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -19,7 +17,10 @@ serve(async (req: Request) => {
 
   try {
     const payload = await req.json().catch(() => ({}));
-    let { search, location, limit, url, input, timeout } = payload;
+    let { search, location, limit, url, input, timeout, provider, actorId } = payload;
+
+    const isYelp = provider === "yelp" || (actorId && actorId.includes("yelp"));
+    const ACTOR_ID = isYelp ? "api-ninja~yelp-ultimate-scraper" : (actorId || "nwua9Gu5YrADL7ZDj");
 
     // Retrieve Apify API key securely from Supabase Secrets (named APIFY_API_KEY)
     const apifyApiKey = (
@@ -44,7 +45,15 @@ serve(async (req: Request) => {
     } else {
       const maxResults = parseInt(limit || "20", 10) || 20;
 
-      if (search || location) {
+      if (isYelp) {
+        const categoryStr = (search || "Mexican").trim();
+        const locationStr = (location || "").trim();
+        actorInput = {
+          location: locationStr,
+          query: categoryStr,
+          maxItems: maxResults
+        };
+      } else if (search || location) {
         const categoryStr = (search || "restaurant").trim();
         const locationStr = (location || "").trim();
         const fullSearchTerm = locationStr ? `${categoryStr} in ${locationStr}` : categoryStr;
@@ -83,7 +92,13 @@ serve(async (req: Request) => {
     });
 
     if (syncRes.ok) {
-      const items = await syncRes.json();
+      let items = await syncRes.json();
+      if (Array.isArray(items) && limit) {
+        const maxLimit = parseInt(limit, 10);
+        if (maxLimit > 0 && items.length > maxLimit) {
+          items = items.slice(0, maxLimit);
+        }
+      }
       return new Response(
         JSON.stringify({ success: true, actorId: ACTOR_ID, data: items }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -159,7 +174,13 @@ serve(async (req: Request) => {
       );
     }
 
-    const datasetItems = await datasetRes.json();
+    let datasetItems = await datasetRes.json();
+    if (Array.isArray(datasetItems) && limit) {
+      const maxLimit = parseInt(limit, 10);
+      if (maxLimit > 0 && datasetItems.length > maxLimit) {
+        datasetItems = datasetItems.slice(0, maxLimit);
+      }
+    }
     return new Response(
       JSON.stringify({ success: true, actorId: ACTOR_ID, runId: runId, data: datasetItems }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
