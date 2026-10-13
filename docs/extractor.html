@@ -745,7 +745,21 @@
                     });
 
                     if (error) {
-                        throw new Error(error.message || "Error al llamar a Edge Function apify-scraper");
+                        let detailMsg = error.message;
+                        if (error.context) {
+                            try {
+                                const errBody = await error.context.json();
+                                if (errBody && errBody.error) {
+                                    detailMsg = errBody.error;
+                                }
+                            } catch (_) {
+                                try {
+                                    const errText = await error.context.text();
+                                    if (errText) detailMsg = errText;
+                                } catch (_) {}
+                            }
+                        }
+                        throw new Error(detailMsg || "Error al llamar a Edge Function apify-scraper");
                     }
                     if (data && data.error) {
                         throw new Error(data.error);
