@@ -378,41 +378,41 @@
             <div id="extractor-form-view" class="view-step hidden-step">
                 <button class="btn-back-platform" onclick="resetPlatformSelection()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px;"><polyline points="15 18 9 12 15 6"/></svg>
-                    <span>Cambiar Plataforma (<span id="selected-platform-label">Google Maps</span>)</span>
+                    <span>Cambiar</span>
                 </button>
 
                 <!-- Google Maps Form (3 fields) -->
                 <div id="google-form-fields" style="display: flex; flex-direction: column; gap: 16px;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-                        <div class="input-wrapper">
+                    <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;">
+                        <div class="input-wrapper" style="flex: 0 0 180px;">
                             <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Categoría</label>
-                            <select id="google-search" style="width: 100%; background: var(--input); border: 1.5px solid var(--border); border-radius: 20px; padding: 18px 24px; color: var(--text); font-size: 1rem; font-family: inherit; transition: 0.3s; cursor: pointer;">
+                            <select id="google-search" style="width: 100%; background: var(--input); border: 1.5px solid var(--border); border-radius: 20px; padding: 14px 18px; color: var(--text); font-size: 0.95rem; font-family: inherit; transition: 0.3s; cursor: pointer; margin: 2px;">
                                 <option value="restaurant">Restaurante</option>
                             </select>
                         </div>
-                        <div class="input-wrapper">
+                        <div class="input-wrapper" style="flex: 1 1 240px;">
                             <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Ubicación</label>
-                            <input type="text" id="google-location" autocomplete="off">
+                            <input type="text" id="google-location" autocomplete="off" style="margin: 2px; padding: 14px 18px;">
                         </div>
-                        <div class="input-wrapper" style="max-width: 200px;">
-                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Límite de resultados</label>
-                            <input type="number" id="google-limit" autocomplete="off" value="20" min="1" max="500">
+                        <div class="input-wrapper" style="flex: 0 0 130px;">
+                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Límite</label>
+                            <input type="number" id="google-limit" autocomplete="off" value="20" min="1" max="500" style="margin: 2px; padding: 14px 18px;">
                         </div>
                     </div>
                 </div>
 
                 <!-- Yelp Form (strictly 4 fields: Categoría, Tipo, Ubicación, Límite) -->
                 <div id="yelp-form-fields" style="display: none; flex-direction: column; gap: 16px;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                        <div class="input-wrapper">
+                    <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;">
+                        <div class="input-wrapper" style="flex: 0 0 160px;">
                             <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Categoría</label>
-                            <select id="yelp-category" style="width: 100%; background: var(--input); border: 1.5px solid var(--border); border-radius: 20px; padding: 18px 24px; color: var(--text); font-size: 1rem; font-family: inherit; transition: 0.3s; cursor: pointer;">
+                            <select id="yelp-category" style="width: 100%; background: var(--input); border: 1.5px solid var(--border); border-radius: 20px; padding: 14px 18px; color: var(--text); font-size: 0.95rem; font-family: inherit; transition: 0.3s; cursor: pointer; margin: 2px;">
                                 <option value="Restaurants" selected>Restaurants</option>
                             </select>
                         </div>
-                        <div class="input-wrapper">
+                        <div class="input-wrapper" style="flex: 0 0 160px;">
                             <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Tipo</label>
-                            <select id="yelp-type" style="width: 100%; background: var(--input); border: 1.5px solid var(--border); border-radius: 20px; padding: 18px 24px; color: var(--text); font-size: 1rem; font-family: inherit; transition: 0.3s; cursor: pointer;">
+                            <select id="yelp-type" style="width: 100%; background: var(--input); border: 1.5px solid var(--border); border-radius: 20px; padding: 14px 18px; color: var(--text); font-size: 0.95rem; font-family: inherit; transition: 0.3s; cursor: pointer; margin: 2px;">
                                 <option value="Mexican" selected>Mexican</option>
                                 <option value="Italian">Italian</option>
                                 <option value="Chinese">Chinese</option>
@@ -423,13 +423,13 @@
                                 <option value="Delivery">Delivery</option>
                             </select>
                         </div>
-                        <div class="input-wrapper">
+                        <div class="input-wrapper" style="flex: 1 1 220px;">
                             <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Ubicación</label>
-                            <input type="text" id="yelp-location" autocomplete="off">
+                            <input type="text" id="yelp-location" autocomplete="off" style="margin: 2px; padding: 14px 18px;">
                         </div>
-                        <div class="input-wrapper" style="max-width: 200px;">
-                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Límite de resultados</label>
-                            <input type="number" id="yelp-limit" autocomplete="off" value="20" min="1" max="500">
+                        <div class="input-wrapper" style="flex: 0 0 130px;">
+                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Límite</label>
+                            <input type="number" id="yelp-limit" autocomplete="off" value="20" min="1" max="500" style="margin: 2px; padding: 14px 18px;">
                         </div>
                     </div>
                 </div>
@@ -951,6 +951,7 @@
                     phone: it.phone,
                     hours: it.hours,
                     website: it.website,
+                    source: window.selectedProvider === 'yelp' ? 'yelp' : 'google',
                     is_called: false,
                     status: 'active'
                 }));
