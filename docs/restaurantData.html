@@ -498,9 +498,13 @@
 
         <!-- Main Tabs -->
         <div class="tabs-nav">
-            <button class="tab-btn active" id="tab-btn-active" onclick="switchMainTab('active')">
-                Restaurantes
-                <span class="badge-count" id="count-active">0</span>
+            <button class="tab-btn active" id="tab-btn-maps" onclick="switchMainTab('maps')">
+                Resultados Maps
+                <span class="badge-count" id="count-maps">0</span>
+            </button>
+            <button class="tab-btn" id="tab-btn-yelp" onclick="switchMainTab('yelp')">
+                Resultados Yelp
+                <span class="badge-count" id="count-yelp">0</span>
             </button>
             <button class="tab-btn crap-tab" id="tab-btn-crap" onclick="switchMainTab('crap')">
                 Crap
@@ -588,7 +592,7 @@
         import { supabase as sb } from './supabase.js';
 
         let allRestaurants = [];
-        let currentTab = 'active'; // 'active' or 'crap'
+        let currentTab = 'maps'; // 'maps', 'yelp', or 'crap'
 
         window.showToast = (message, type = 'success') => {
             const container = document.getElementById('toast-container');
@@ -672,16 +676,19 @@
         }
 
         function updateCounts() {
-            const activeCount = allRestaurants.filter(r => (r.status || 'active') === 'active').length;
+            const mapsCount = allRestaurants.filter(r => (r.status || 'active') === 'active' && (r.source || 'google') !== 'yelp').length;
+            const yelpCount = allRestaurants.filter(r => (r.status || 'active') === 'active' && (r.source || 'google') === 'yelp').length;
             const crapCount = allRestaurants.filter(r => r.status === 'crap').length;
 
-            document.getElementById('count-active').textContent = activeCount;
-            document.getElementById('count-crap').textContent = crapCount;
+            if (document.getElementById('count-maps')) document.getElementById('count-maps').textContent = mapsCount;
+            if (document.getElementById('count-yelp')) document.getElementById('count-yelp').textContent = yelpCount;
+            if (document.getElementById('count-crap')) document.getElementById('count-crap').textContent = crapCount;
         }
 
         window.switchMainTab = (tab) => {
             currentTab = tab;
-            document.getElementById('tab-btn-active').classList.toggle('active', tab === 'active');
+            document.getElementById('tab-btn-maps').classList.toggle('active', tab === 'maps');
+            document.getElementById('tab-btn-yelp').classList.toggle('active', tab === 'yelp');
             document.getElementById('tab-btn-crap').classList.toggle('active', tab === 'crap');
             renderGrid();
         };
@@ -695,7 +702,18 @@
             const selectedCity = document.getElementById('city-select').value;
 
             return allRestaurants.filter(r => {
-                const matchTab = (r.status || 'active') === currentTab;
+                const status = r.status || 'active';
+                const source = r.source || 'google';
+
+                let matchTab = false;
+                if (currentTab === 'crap') {
+                    matchTab = (status === 'crap');
+                } else if (currentTab === 'yelp') {
+                    matchTab = (status === 'active' && source === 'yelp');
+                } else { // 'maps'
+                    matchTab = (status === 'active' && source !== 'yelp');
+                }
+
                 const matchCity = !selectedCity || r.city === selectedCity;
                 const matchSearch = !searchTerm ||
                     (r.title && r.title.toLowerCase().includes(searchTerm)) ||
@@ -712,10 +730,14 @@
             const filtered = getFilteredRestaurants();
 
             if (filtered.length === 0) {
+                let tabLabel = 'en Resultados Maps';
+                if (currentTab === 'yelp') tabLabel = 'en Resultados Yelp';
+                if (currentTab === 'crap') tabLabel = 'en Crap';
+
                 grid.innerHTML = `
                     <div class="empty-state">
-                        <h3>No hay restaurantes ${currentTab === 'crap' ? 'en Crap' : 'activos'}</h3>
-                        <p>No se encontraron registros ${currentTab === 'crap' ? 'descartados' : 'con los filtros seleccionados'}.</p>
+                        <h3>No hay restaurantes ${tabLabel}</h3>
+                        <p>No se encontraron registros con los filtros seleccionados.</p>
                     </div>
                 `;
                 return;
@@ -767,7 +789,7 @@
                                 Editar
                             </button>
 
-                            ${currentTab === 'active' ? `
+                            ${currentTab !== 'crap' ? `
                                 <button class="btn-action btn-crap" onclick="moveToCrap('${item.id}')">
                                     Mover a Crap
                                 </button>

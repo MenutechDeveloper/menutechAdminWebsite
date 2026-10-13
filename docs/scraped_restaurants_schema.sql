@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.menutech_scraped_restaurants (
     phone TEXT DEFAULT '',
     hours TEXT DEFAULT '',
     website TEXT DEFAULT '',
+    source TEXT DEFAULT 'google',
     is_called BOOLEAN DEFAULT FALSE,
     status TEXT DEFAULT 'active' CHECK (status IN ('active', 'crap')),
     created_at TIMESTAMPTZ DEFAULT NOW(),
