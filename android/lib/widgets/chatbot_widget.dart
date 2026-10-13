@@ -76,10 +76,36 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
         NavigationDelegate(
           onPageFinished: (String url) {
             ChatbotWidget._isReady = true;
-            // Inject Supabase session context into chatbot script
+            // Inject Supabase session context & WebGL optimization into chatbot script
             _controller.runJavaScript('''
               (function() {
                 window.MenutechUserSession = $userSessionJson;
+
+                // Apply low-power & low render scale performance optimizations to 3D model-viewers
+                function applyPerformanceSettings() {
+                  var mvs = document.querySelectorAll('model-viewer');
+                  mvs.forEach(function(mv) {
+                    mv.setAttribute('power-preference', 'low-power');
+                    mv.setAttribute('render-scale', '0.4');
+                    mv.setAttribute('shadow-intensity', '0');
+                    mv.setAttribute('interaction-prompt', 'none');
+                  });
+                }
+                applyPerformanceSettings();
+                setTimeout(applyPerformanceSettings, 1000);
+
+                // Custom handleNewOrder override for Spanish order voice notification
+                if (window.MenutechBot) {
+                  window.MenutechBot.handleNewOrder = function(orderData) {
+                    if (!orderData) return;
+                    var customerName = orderData.customerName || orderData.customer_name || 'un cliente';
+                    var msgHtml = '🛍️ <b>¡Tienes una nueva orden!</b><br><small>De ' + customerName + '</small>';
+                    window.MenutechBot.showThoughtBubble(msgHtml, 8000, 'es-ES');
+                    if (typeof window.MenutechBot.speakText === 'function') {
+                      window.MenutechBot.speakText('¡Tienes una nueva orden!', 'es-ES');
+                    }
+                  };
+                }
               })();
             ''');
           },
@@ -118,14 +144,16 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       display: none !important;
       visibility: hidden !important;
       pointer-events: none !important;
+      opacity: 0 !important;
     }
 
-    /* Closed chat window is hidden completely */
+    /* Closed chat window is hidden with smooth opacity transition */
     #mt-bot-root:not(.chat-open) #mt-bot-window {
-      display: none !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
       opacity: 0 !important;
+      transform: translateY(30px) scale(0.95) !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s !important;
     }
 
     /* Expanded active chat window fills the WebView viewport responsively */
@@ -140,12 +168,45 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       height: 100% !important;
       max-width: 100% !important;
       max-height: 100% !important;
-      border-radius: 20px 20px 0 0 !important;
+      border-radius: 24px 24px 0 0 !important;
       border: none !important;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.15) !important;
-      transform: none !important;
+      box-shadow: 0 -8px 30px rgba(0,0,0,0.2) !important;
+      transform: translateY(0) scale(1) !important;
       opacity: 1 !important;
       pointer-events: auto !important;
+      visibility: visible !important;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .mt-bot-header {
+      padding: 12px 18px !important;
+      background: linear-gradient(135deg, #ff9533 0%, #f97316 100%) !important;
+      color: #ffffff !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      box-shadow: 0 4px 15px rgba(249, 115, 22, 0.2) !important;
+      flex-shrink: 0 !important;
+      z-index: 10 !important;
+    }
+
+    #mt-bot-close {
+      width: 38px !important;
+      height: 38px !important;
+      border-radius: 50% !important;
+      background: rgba(255, 255, 255, 0.25) !important;
+      color: #ffffff !important;
+      font-size: 1.1rem !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      border: 1px solid rgba(255, 255, 255, 0.4) !important;
+      transition: all 0.2s ease !important;
+    }
+    #mt-bot-close:active {
+      transform: scale(0.9) !important;
+      background: rgba(255, 255, 255, 0.4) !important;
     }
 
     .mt-bot-banner {
@@ -222,14 +283,17 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
 
     double height = 90.0;
     if (_isExpanded) {
-      final availableHeight = screenSize.height - bottomInset - topPadding - 10;
+      final availableHeight = screenSize.height - bottomInset - topPadding - 16;
       height = availableHeight > 200 ? availableHeight : 200;
     }
 
     return Padding(
-      padding: EdgeInsets.only(bottom: _isExpanded ? bottomInset : 0.0),
+      padding: EdgeInsets.only(
+        top: _isExpanded ? (topPadding > 0 ? topPadding + 10 : 20.0) : 0.0,
+        bottom: _isExpanded ? bottomInset : 0.0,
+      ),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
         width: width,
         height: height,
