@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel | Menutech</title>
+    <script src="authGuard.js"></script>
     <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
 <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
     <style>
@@ -363,8 +364,10 @@
                 document.getElementById('main-app').classList.remove('hidden');
                 document.getElementById('nav-left').classList.remove('hidden');
                 document.getElementById('user-display-pill').classList.remove('hidden');
+                if (window.revealPage) window.revealPage();
             } else {
                 document.getElementById('auth-overlay').style.display = 'flex';
+                if (window.revealPage) window.revealPage();
             }
         }
 
