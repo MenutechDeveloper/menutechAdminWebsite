@@ -429,7 +429,7 @@
                         </div>
                         <div class="input-wrapper" style="flex: 0 0 130px;">
                             <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Límite</label>
-                            <input type="number" id="google-limit" autocomplete="off" value="20" min="1" max="500" style="margin: 2px; padding: 14px 18px;">
+                            <input type="number" id="google-limit" autocomplete="off" value="20" min="1" max="1000" style="margin: 2px; padding: 14px 18px;">
                         </div>
                     </div>
                 </div>
@@ -462,7 +462,7 @@
                         </div>
                         <div class="input-wrapper" style="flex: 0 0 130px;">
                             <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Límite</label>
-                            <input type="number" id="yelp-limit" autocomplete="off" value="20" min="1" max="500" style="margin: 2px; padding: 14px 18px;">
+                            <input type="number" id="yelp-limit" autocomplete="off" value="20" min="1" max="1000" style="margin: 2px; padding: 14px 18px;">
                         </div>
                     </div>
                 </div>
@@ -689,7 +689,7 @@
         window.startApifyScraping = async () => {
             let search = 'restaurant';
             let location = '';
-            let limit = '20';
+            let rawLimit = '';
 
             if (window.selectedProvider === 'yelp') {
                 const categorySelect = document.getElementById('yelp-category');
@@ -701,7 +701,7 @@
                 const type = typeSelect ? typeSelect.value.trim() : 'Mexican';
                 search = `${type} ${category}`.trim();
                 location = locationInput ? locationInput.value.trim() : '';
-                limit = limitInput ? limitInput.value.trim() : '20';
+                rawLimit = limitInput ? limitInput.value.trim() : '';
             } else {
                 const searchSelect = document.getElementById('google-search');
                 const locationInput = document.getElementById('google-location');
@@ -709,8 +709,10 @@
 
                 search = searchSelect ? searchSelect.value.trim() : 'restaurant';
                 location = locationInput ? locationInput.value.trim() : '';
-                limit = limitInput ? limitInput.value.trim() : '20';
+                rawLimit = limitInput ? limitInput.value.trim() : '';
             }
+
+            const limitNum = rawLimit !== '' ? (parseInt(rawLimit, 10) || 1000) : 1000;
 
             if (!location) {
                 showToast("Por favor ingresa una ubicación para realizar la búsqueda.", "warning");
@@ -732,7 +734,7 @@
                     provider: window.selectedProvider || 'google',
                     search: search,
                     location: location,
-                    limit: parseInt(limit, 10) || 20
+                    limit: limitNum
                 };
 
                 updateApifyProgress(40, "Obteniendo datos...");
@@ -787,11 +789,16 @@
             if (!hours) return '';
             if (typeof hours === 'string') return hours;
             if (Array.isArray(hours)) {
+                if (hours.length === 0) return '';
+                const dayMap = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
                 return hours.map(h => {
                     if (typeof h === 'string') return h;
                     if (h && typeof h === 'object') {
-                        const day = h.day || h.dayOfWeek || '';
-                        const time = h.hours || h.time || h.openingHours || '';
+                        let day = h.day !== undefined ? (typeof h.day === 'number' ? (dayMap[h.day] || h.day) : h.day) : (h.dayOfWeek || h.title || '');
+                        let time = h.hours || h.time || h.openingHours || '';
+                        if (!time && (h.start || h.open) && (h.end || h.close)) {
+                            time = `${h.start || h.open} - ${h.end || h.close}`;
+                        }
                         return [day, time].filter(Boolean).join(': ');
                     }
                     return '';
@@ -849,12 +856,18 @@
             } else {
                 itemsDisplay.innerHTML = rawItems.map(item => {
                     const name = item.title || item.name || item.businessName || 'Sin nombre';
-                    const address = item.address || item.streetAddress || item.street || (typeof item.location === 'string' ? item.location : item.location?.address) || '';
+                    const fullAddressLines = [item.address1, item.address2, item.address3].filter(Boolean).join(', ');
+                    const address = fullAddressLines || item.address || item.addresses?.primary_language?.long_form || item.streetAddress || item.street || (typeof item.location === 'string' ? item.location : item.location?.address) || '';
                     const zipcode = item.postalCode || item.zipCode || item.zipcode || item.zip || item.location?.zipCode || '';
                     const city = item.city || item.addressCity || item.municipality || item.location?.city || '';
-                    const phone = item.phone || item.phoneUnformatted || item.telephone || item.displayPhone || '';
-                    const hours = formatApifyHours(item.openingHours || item.hours || item.businessHours);
-                    const website = item.website || item.url || item.web || item.businessUrl || '';
+                    const phone = item.phone || item.phoneUnformatted || item.telephone || item.displayPhone || item.localized_phone || '';
+                    const hours = formatApifyHours(item.openingHours || item.hours || item.businessHours || item.operatingHours || item.schedule);
+                    let website = item.website || item.businessUrl || item.business_url || item.url || item.web || item.link || '';
+                    if (!website && item.alias) {
+                        website = `https://www.yelp.com/biz/${item.alias}`;
+                    } else if (!website && item.id && window.selectedProvider === 'yelp') {
+                        website = `https://www.yelp.com/biz/${item.id}`;
+                    }
 
                     return `
                         <div class="category-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 14px; margin-bottom: 0;">
@@ -914,14 +927,20 @@
 
             return rawItems.map(item => {
                 const title = (item.title || item.name || item.businessName || 'Sin nombre').trim();
-                const address = (item.address || item.streetAddress || item.street || (typeof item.location === 'string' ? item.location : item.location?.address) || '').trim();
+                const fullAddressLines = [item.address1, item.address2, item.address3].filter(Boolean).join(', ');
+                const address = (fullAddressLines || item.address || item.addresses?.primary_language?.long_form || item.streetAddress || item.street || (typeof item.location === 'string' ? item.location : item.location?.address) || '').trim();
                 const zipcode = (item.postalCode || item.zipCode || item.zipcode || item.zip || item.location?.zipCode || '').trim();
                 let city = (item.city || item.addressCity || item.municipality || item.location?.city || '').trim();
                 if (!city && searchLocation) city = searchLocation;
                 if (!city) city = 'Desconocida';
-                const phone = (item.phone || item.phoneUnformatted || item.telephone || item.displayPhone || '').trim();
-                const hours = formatApifyHours(item.openingHours || item.hours || item.businessHours);
-                const website = (item.website || item.url || item.web || item.businessUrl || '').trim();
+                const phone = (item.phone || item.phoneUnformatted || item.telephone || item.displayPhone || item.localized_phone || '').trim();
+                const hours = formatApifyHours(item.openingHours || item.hours || item.businessHours || item.operatingHours || item.schedule);
+                let website = (item.website || item.businessUrl || item.business_url || item.url || item.web || item.link || '').trim();
+                if (!website && item.alias) {
+                    website = `https://www.yelp.com/biz/${item.alias}`;
+                } else if (!website && item.id && window.selectedProvider === 'yelp') {
+                    website = `https://www.yelp.com/biz/${item.id}`;
+                }
 
                 return { title, address, city, zipcode, phone, hours, website };
             });
