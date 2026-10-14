@@ -52,7 +52,7 @@ class _MenuEditorScreenState extends State<MenuEditorScreen> {
       urlWithTokens = 'https://menutech.io/adminMenus.html?app=true&access_token=${session.accessToken}&refresh_token=${session.refreshToken}#access_token=${session.accessToken}&refresh_token=${session.refreshToken}';
     }
 
-    const hideWebChatbotAndUnhideAppJs = '''
+    const hideWebChatbotJs = '''
       (function() {
         var styleId = 'mt-hide-web-bot-style';
         if (!document.getElementById(styleId)) {
@@ -63,9 +63,6 @@ class _MenuEditorScreenState extends State<MenuEditorScreen> {
         }
         var bot = document.getElementById('mt-bot-root');
         if (bot) bot.remove();
-
-        var mainApp = document.getElementById('main-app');
-        if (mainApp) mainApp.classList.remove('hidden');
       })();
     ''';
 
@@ -79,14 +76,14 @@ class _MenuEditorScreenState extends State<MenuEditorScreen> {
             if (injectedSessionJs.isNotEmpty) {
               _controller.runJavaScript(injectedSessionJs);
             }
-            _controller.runJavaScript(hideWebChatbotAndUnhideAppJs);
+            _controller.runJavaScript(hideWebChatbotJs);
           },
           onPageFinished: (String url) {
             if (mounted) setState(() => _isLoading = false);
             if (injectedSessionJs.isNotEmpty) {
               _controller.runJavaScript(injectedSessionJs);
             }
-            _controller.runJavaScript(hideWebChatbotAndUnhideAppJs);
+            _controller.runJavaScript(hideWebChatbotJs);
           },
         ),
       )

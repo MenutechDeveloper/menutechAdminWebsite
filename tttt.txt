@@ -1,0 +1,5 @@
+Decisión Jules: Las notificaciones usarán la escucha en tiempo real de Supabase Realtime en Flutter y la puentean a Gemini/ChatbotWidget (`window.MenutechBot.handleNewOrder`).
+Archivos ajustados: Únicamente `android/lib/widgets/chatbot_widget.dart`, `android/lib/screens/main_screen.dart` y `android/lib/screens/menu_editor_screen.dart`.
+¿Cambios en Supabase/TS/RLS?: NO es necesario ningún ajuste en Supabase backend, TypeScript ni políticas RLS, la configuración actual es correcta.
+Arreglo Notificaciones: Se corrigió la referencia al controlador del WebView, la altura del contenedor para evitar recortar el bocadillo 🗨️ y la inicialización del stream.
+Arreglo Mi Menú: Se eliminó la manipulación prematura del DOM (`main-app`) en `menu_editor_screen.dart`, permitiendo que `adminMenus.html` cargue e instancie el editor correctamente.

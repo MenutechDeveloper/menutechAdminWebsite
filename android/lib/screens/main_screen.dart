@@ -16,6 +16,7 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   StreamSubscription? _ordersSubscription;
   final Set<String> _notifiedOrderIds = {};
+  bool _isInitialOrderLoad = true;
 
   final List<Widget> _screens = [
     const DashboardScreen(),
@@ -38,6 +39,17 @@ class _MainScreenState extends State<MainScreen> {
         .stream(primaryKey: ['id'])
         .eq('user_id', user.id)
         .listen((orders) {
+      if (_isInitialOrderLoad) {
+        _isInitialOrderLoad = false;
+        for (var orderMap in orders) {
+          final id = (orderMap['id'] ?? '').toString();
+          if (id.isNotEmpty) {
+            _notifiedOrderIds.add(id);
+          }
+        }
+        return;
+      }
+
       for (var orderMap in orders) {
         final status = (orderMap['status'] ?? '').toString().toLowerCase();
         final id = (orderMap['id'] ?? '').toString();
