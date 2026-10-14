@@ -1,12 +1,38 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../main.dart';
+import '../models/order_model.dart';
 import '../services/supabase_service.dart';
 
 class ChatbotWidget extends StatefulWidget {
   const ChatbotWidget({super.key});
 
   static _ChatbotWidgetState? _activeState;
+
+  static void notifyNewOrderCustom({required String phrase, required OrderModel order}) {
+    final state = _activeState;
+    if (state != null && state.mounted) {
+      final orderJson = jsonEncode(order.toJson());
+      final escapedPhrase = jsonEncode(phrase);
+      state._controller.runJavaScript('''
+        if (window.MenutechBot && typeof window.MenutechBot.showCustomOrderNotification === 'function') {
+          window.MenutechBot.showCustomOrderNotification($escapedPhrase, $orderJson);
+        }
+      ''');
+    }
+  }
+
+  static void clearThoughtBubble() {
+    final state = _activeState;
+    if (state != null && state.mounted) {
+      state._controller.runJavaScript('''
+        if (window.MenutechBot && typeof window.MenutechBot.clearThoughtBubble === 'function') {
+          window.MenutechBot.clearThoughtBubble();
+        }
+      ''');
+    }
+  }
 
   static void notifyNewOrder(Map<String, dynamic> orderJson) {
     final state = _activeState;
@@ -77,6 +103,13 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
               if (mounted) setState(() => _isExpanded = true);
             } else if (event == 'chat_closed') {
               if (mounted) setState(() => _isExpanded = false);
+            } else if (event == 'open_order') {
+              final orderData = data['orderData'];
+              if (orderData != null) {
+                final orderMap = Map<String, dynamic>.from(orderData);
+                final order = OrderModel.fromJson(orderMap);
+                navigatorKey.currentState?.pushNamed('/order-detail', arguments: order);
+              }
             }
           } catch (e) {
             // Error parsing message from JS
@@ -87,12 +120,10 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
         NavigationDelegate(
           onPageFinished: (String url) {
             ChatbotWidget._activeState = this;
-            // Inject Supabase session context & WebGL optimization into chatbot script
             _controller.runJavaScript('''
               (function() {
                 window.MenutechUserSession = $userSessionJson;
 
-                // Apply low-power & low render scale performance optimizations to 3D model-viewers
                 function applyPerformanceSettings() {
                   var mvs = document.querySelectorAll('model-viewer');
                   mvs.forEach(function(mv) {
@@ -109,6 +140,11 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
           },
         ),
       );
+
+    try {
+      dynamic platform = _controller.platform;
+      platform.setMediaPlaybackRequiresUserGesture(false);
+    } catch (_) {}
 
     const htmlContent = '''
 <!DOCTYPE html>
@@ -137,7 +173,6 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       pointer-events: none !important;
     }
 
-    /* When chat window is open, completely hide trigger button to save GPU/CPU memory */
     #mt-bot-root.chat-open #mt-bot-trigger {
       display: none !important;
       visibility: hidden !important;
@@ -145,7 +180,6 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       opacity: 0 !important;
     }
 
-    /* Closed chat window is hidden with smooth opacity transition */
     #mt-bot-root:not(.chat-open) #mt-bot-window {
       opacity: 0 !important;
       transform: translateY(30px) scale(0.95) !important;
@@ -154,7 +188,6 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s !important;
     }
 
-    /* Expanded active chat window sits elegantly as a modal card with comfortable top margin */
     #mt-bot-root.chat-open #mt-bot-window {
       display: flex !important;
       position: absolute !important;
@@ -252,6 +285,50 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
   </script>
   <script src="https://menutech.io/chatbot.js"></script>
   <script>
+    window.MenutechBot = window.MenutechBot || {};
+
+    window.MenutechBot.showCustomOrderNotification = function(phrase, orderData) {
+      var root = document.getElementById('mt-bot-root');
+      if (!root) return;
+      var bubble = document.getElementById('mt-admin-thought-bubble');
+      if (!bubble) {
+        bubble = document.createElement('div');
+        bubble.id = 'mt-admin-thought-bubble';
+        root.appendChild(bubble);
+      }
+
+      bubble.style.cssText = 'position: absolute !important; bottom: 85px !important; right: 10px !important; width: 230px !important; background: #ffffff !important; color: #2d2d2d !important; padding: 12px 14px !important; border-radius: 18px !important; box-shadow: 0 10px 25px rgba(0,0,0,0.18) !important; border: 1.5px solid #ff9533 !important; font-family: sans-serif !important; font-size: 13px !important; line-height: 1.4 !important; z-index: 9999 !important; pointer-events: auto !important; cursor: pointer !important; text-align: left !important; display: block !important;';
+
+      window._activeOrderForClick = orderData;
+
+      bubble.innerHTML = '<div style="font-weight: 500; margin-bottom: 8px; color: #1a1a1a;">' + phrase + '</div>' +
+        '<div id="mt-btn-open-order" style="display: inline-block; background: #ff9533; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 12px; text-align: center; border: none; box-shadow: 0 2px 6px rgba(255,149,51,0.3);">Ver orden</div>';
+
+      var handleOrderClick = function(e) {
+        if (e) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+        if (window.FlutterChatbotChannel && window.FlutterChatbotChannel.postMessage) {
+          window.FlutterChatbotChannel.postMessage(JSON.stringify({
+            event: 'open_order',
+            orderData: window._activeOrderForClick
+          }));
+        }
+      };
+
+      bubble.onclick = handleOrderClick;
+      var btn = document.getElementById('mt-btn-open-order');
+      if (btn) btn.onclick = handleOrderClick;
+    };
+
+    window.MenutechBot.clearThoughtBubble = function() {
+      var bubble = document.getElementById('mt-admin-thought-bubble');
+      if (bubble) {
+        bubble.style.display = 'none';
+      }
+    };
+
     function syncChatState() {
       var root = document.getElementById('mt-bot-root');
       var win = document.getElementById('mt-bot-window');
