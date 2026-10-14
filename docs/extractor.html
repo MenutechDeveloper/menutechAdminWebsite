@@ -182,6 +182,45 @@
         }
 
         .input-group { display: flex; gap: 16px; flex-wrap: wrap; }
+        .switch-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .switch-input {
+            display: none;
+        }
+        .switch-slider {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background-color: var(--border);
+            border-radius: 24px;
+            transition: 0.3s;
+            flex-shrink: 0;
+            display: inline-block;
+        }
+        .switch-slider::before {
+            content: "";
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            transition: 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .switch-input:checked + .switch-slider {
+            background-color: var(--orange);
+        }
+        .switch-input:checked + .switch-slider::before {
+            transform: translateX(20px);
+        }
+
         .input-wrapper { flex: 1; min-width: 280px; position: relative; }
         .input-wrapper input {
             width: 100%; background: var(--input); border: 1.5px solid var(--border); border-radius: 20px;
@@ -464,6 +503,13 @@
                             <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Límite</label>
                             <input type="number" id="yelp-limit" autocomplete="off" value="20" min="1" max="1000" style="margin: 2px; padding: 14px 18px;">
                         </div>
+                        <div class="input-wrapper" style="flex: 0 0 auto; display: flex; align-items: center; padding-bottom: 6px;">
+                            <label class="switch-container" title="Ignora el límite máximo y extrae todas las listas orgánicas disponibles para esta búsqueda">
+                                <input type="checkbox" id="yelp-scrape-all" class="switch-input" onchange="toggleYelpLimitInput(this)">
+                                <span class="switch-slider"></span>
+                                <span style="font-size: 0.8rem; font-weight: 700; color: var(--text); font-family: 'Outfit', sans-serif;">Ignorar límite</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -554,6 +600,21 @@
                 formView.classList.remove('hidden-step');
                 formView.classList.add('active-step');
             }, 150);
+        };
+
+        window.toggleYelpLimitInput = function(switchEl) {
+            const limitInput = document.getElementById('yelp-limit');
+            if (limitInput) {
+                if (switchEl.checked) {
+                    limitInput.disabled = true;
+                    limitInput.style.opacity = '0.5';
+                    limitInput.style.cursor = 'not-allowed';
+                } else {
+                    limitInput.disabled = false;
+                    limitInput.style.opacity = '1';
+                    limitInput.style.cursor = 'text';
+                }
+            }
         };
 
         window.resetPlatformSelection = function() {
@@ -690,18 +751,21 @@
             let search = 'restaurant';
             let location = '';
             let rawLimit = '';
+            let scrapeAll = false;
 
             if (window.selectedProvider === 'yelp') {
                 const categorySelect = document.getElementById('yelp-category');
                 const typeSelect = document.getElementById('yelp-type');
                 const locationInput = document.getElementById('yelp-location');
                 const limitInput = document.getElementById('yelp-limit');
+                const scrapeAllInput = document.getElementById('yelp-scrape-all');
 
                 const category = categorySelect ? categorySelect.value.trim() : 'Restaurants';
                 const type = typeSelect ? typeSelect.value.trim() : 'Mexican';
                 search = `${type} ${category}`.trim();
                 location = locationInput ? locationInput.value.trim() : '';
                 rawLimit = limitInput ? limitInput.value.trim() : '';
+                scrapeAll = scrapeAllInput ? scrapeAllInput.checked : false;
             } else {
                 const searchSelect = document.getElementById('google-search');
                 const locationInput = document.getElementById('google-location');
@@ -733,16 +797,20 @@
                 const requestPayload = {
                     provider: window.selectedProvider || 'google',
                     search: search,
-                    location: location,
-                    limit: limitNum
+                    location: location
                 };
+
+                if (!scrapeAll) {
+                    requestPayload.limit = limitNum;
+                }
 
                 if (window.selectedProvider === 'yelp') {
                     requestPayload.input = {
                         location: location,
                         query: search,
                         details: 'advanced',
-                        numberOfResults: Math.max(limitNum, 40)
+                        scrapeAll: scrapeAll,
+                        numberOfResults: scrapeAll ? 99999 : Math.max(limitNum, 40)
                     };
                 }
 
