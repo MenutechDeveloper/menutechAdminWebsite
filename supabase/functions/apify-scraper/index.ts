@@ -41,7 +41,13 @@ serve(async (req: Request) => {
     let actorInput: any = {};
 
     if (input && typeof input === "object") {
-      actorInput = input;
+      actorInput = { ...input };
+      if (isYelp) {
+        if (!actorInput.details) actorInput.details = "advanced";
+        if (!actorInput.numberOfResults || actorInput.numberOfResults < 40) {
+          actorInput.numberOfResults = 40;
+        }
+      }
     } else {
       const maxResults = parseInt(limit || "20", 10) || 20;
 
@@ -51,7 +57,8 @@ serve(async (req: Request) => {
         actorInput = {
           location: locationStr,
           query: categoryStr,
-          maxItems: maxResults
+          details: "advanced",
+          numberOfResults: Math.max(maxResults, 40)
         };
       } else if (search || location) {
         const categoryStr = (search || "restaurant").trim();

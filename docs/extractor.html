@@ -737,6 +737,15 @@
                     limit: limitNum
                 };
 
+                if (window.selectedProvider === 'yelp') {
+                    requestPayload.input = {
+                        location: location,
+                        query: search,
+                        details: 'advanced',
+                        numberOfResults: Math.max(limitNum, 40)
+                    };
+                }
+
                 updateApifyProgress(40, "Obteniendo datos...");
 
                 if (sb && sb.functions) {
@@ -799,11 +808,70 @@
             }
         };
 
-        function formatApifyHours(hours) {
+        function extractClientWebsite(item) {
+            if (!item) return '';
+            let candidate = item.display_url || item.website || item.biz_website || item.business_website || item.external_url || item.display_menu_url || '';
+
+            let rawUrl = item.url || item.link || candidate;
+            if (rawUrl && (rawUrl.includes('biz_redir') || rawUrl.includes('/redirect?'))) {
+                try {
+                    const urlObj = new URL(rawUrl, 'https://www.yelp.com');
+                    const target = urlObj.searchParams.get('url');
+                    if (target) {
+                        return decodeURIComponent(target);
+                    }
+                } catch (_) {}
+            }
+
+            if (candidate && !candidate.includes('yelp.com') && !candidate.includes('yelp.co')) {
+                return candidate;
+            }
+
+            let fallback = item.business_url || item.businessUrl || item.web || '';
+            if (fallback && !fallback.includes('yelp.com') && !fallback.includes('yelp.co')) {
+                return fallback;
+            }
+
+            if (candidate) return candidate;
+            if (item.alias) return `https://www.yelp.com/biz/${item.alias}`;
+            if (item.id && window.selectedProvider === 'yelp') return `https://www.yelp.com/biz/${item.id}`;
+            return '';
+        }
+
+        function formatApifyHours(itemOrHours) {
+            if (!itemOrHours) return '';
+            let item = typeof itemOrHours === 'object' && !Array.isArray(itemOrHours) ? itemOrHours : null;
+            let hours = item ? (item.localized_hours || item.openingHours || item.hours || item.businessHours || item.operatingHours || item.schedule) : itemOrHours;
+
             if (!hours) return '';
             if (typeof hours === 'string') return hours;
+
             if (Array.isArray(hours)) {
                 if (hours.length === 0) return '';
+                if (typeof hours[0] === 'string') {
+                    return hours.join(' | ');
+                }
+
+                if (Array.isArray(hours[0]) && typeof hours[0][0] === 'number') {
+                    const dayMap = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+                    return hours.map(pair => {
+                        if (!Array.isArray(pair) || pair.length < 2) return '';
+                        const start = pair[0];
+                        const end = pair[1];
+                        const dayIdx = Math.floor(start / 1440) % 7;
+                        const dayName = dayMap[dayIdx] || ('Día ' + dayIdx);
+
+                        const formatMin = (m) => {
+                            const dayMin = m % 1440;
+                            const hh = String(Math.floor(dayMin / 60)).padStart(2, '0');
+                            const mm = String(dayMin % 60).padStart(2, '0');
+                            return `${hh}:${mm}`;
+                        };
+
+                        return `${dayName}: ${formatMin(start)} - ${formatMin(end)}`;
+                    }).filter(Boolean).join(' | ');
+                }
+
                 const dayMap = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
                 return hours.map(h => {
                     if (typeof h === 'string') return h;
@@ -818,6 +886,7 @@
                     return '';
                 }).filter(Boolean).join(' | ');
             }
+
             if (typeof hours === 'object') {
                 return Object.entries(hours).map(([k, v]) => `${k}: ${v}`).join(' | ');
             }
@@ -875,13 +944,8 @@
                     const zipcode = item.postalCode || item.zipCode || item.zipcode || item.zip || item.location?.zipCode || '';
                     const city = item.city || item.addressCity || item.municipality || item.location?.city || '';
                     const phone = item.phone || item.phoneUnformatted || item.telephone || item.displayPhone || item.localized_phone || '';
-                    const hours = formatApifyHours(item.openingHours || item.hours || item.businessHours || item.operatingHours || item.schedule);
-                    let website = item.website || item.businessUrl || item.business_url || item.url || item.web || item.link || '';
-                    if (!website && item.alias) {
-                        website = `https://www.yelp.com/biz/${item.alias}`;
-                    } else if (!website && item.id && window.selectedProvider === 'yelp') {
-                        website = `https://www.yelp.com/biz/${item.id}`;
-                    }
+                    const hours = formatApifyHours(item);
+                    const website = extractClientWebsite(item);
 
                     return `
                         <div class="category-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 14px; margin-bottom: 0;">
@@ -948,13 +1012,8 @@
                 if (!city && searchLocation) city = searchLocation;
                 if (!city) city = 'Desconocida';
                 const phone = (item.phone || item.phoneUnformatted || item.telephone || item.displayPhone || item.localized_phone || '').trim();
-                const hours = formatApifyHours(item.openingHours || item.hours || item.businessHours || item.operatingHours || item.schedule);
-                let website = (item.website || item.businessUrl || item.business_url || item.url || item.web || item.link || '').trim();
-                if (!website && item.alias) {
-                    website = `https://www.yelp.com/biz/${item.alias}`;
-                } else if (!website && item.id && window.selectedProvider === 'yelp') {
-                    website = `https://www.yelp.com/biz/${item.id}`;
-                }
+                const hours = formatApifyHours(item);
+                const website = extractClientWebsite(item);
 
                 return { title, address, city, zipcode, phone, hours, website };
             });
