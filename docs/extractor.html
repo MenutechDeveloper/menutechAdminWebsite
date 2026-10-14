@@ -503,12 +503,15 @@
                             <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Límite</label>
                             <input type="number" id="yelp-limit" autocomplete="off" value="20" min="1" max="1000" style="margin: 2px; padding: 14px 18px;">
                         </div>
-                        <div class="input-wrapper" style="flex: 0 0 auto; display: flex; align-items: center; padding-bottom: 6px;">
-                            <label class="switch-container" title="Ignora el límite máximo y extrae todas las listas orgánicas disponibles para esta búsqueda">
-                                <input type="checkbox" id="yelp-scrape-all" class="switch-input" onchange="toggleYelpLimitInput(this)">
-                                <span class="switch-slider"></span>
-                                <span style="font-size: 0.8rem; font-weight: 700; color: var(--text); font-family: 'Outfit', sans-serif;">Ignorar límite</span>
-                            </label>
+                        <div class="input-wrapper" style="flex: 0 0 auto;">
+                            <label style="display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Ignorar Límite</label>
+                            <div style="background: var(--input); border: 1.5px solid var(--border); border-radius: 20px; padding: 12px 18px; margin: 2px; display: flex; align-items: center; height: 51px;">
+                                <label class="switch-container" title="Ignora el límite máximo y extrae todas las listas orgánicas disponibles para esta búsqueda">
+                                    <input type="checkbox" id="yelp-scrape-all" class="switch-input" onchange="toggleYelpLimitInput(this)">
+                                    <span class="switch-slider"></span>
+                                    <span id="yelp-scrape-all-text" style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); font-family: 'Outfit', sans-serif;">Inactivo</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -604,15 +607,24 @@
 
         window.toggleYelpLimitInput = function(switchEl) {
             const limitInput = document.getElementById('yelp-limit');
+            const statusText = document.getElementById('yelp-scrape-all-text');
             if (limitInput) {
                 if (switchEl.checked) {
                     limitInput.disabled = true;
                     limitInput.style.opacity = '0.5';
                     limitInput.style.cursor = 'not-allowed';
+                    if (statusText) {
+                        statusText.textContent = 'Activo';
+                        statusText.style.color = 'var(--orange)';
+                    }
                 } else {
                     limitInput.disabled = false;
                     limitInput.style.opacity = '1';
                     limitInput.style.cursor = 'text';
+                    if (statusText) {
+                        statusText.textContent = 'Inactivo';
+                        statusText.style.color = 'var(--text-dim)';
+                    }
                 }
             }
         };
@@ -809,9 +821,11 @@
                         location: location,
                         query: search,
                         details: 'advanced',
-                        scrapeAll: scrapeAll,
-                        numberOfResults: scrapeAll ? 99999 : Math.max(limitNum, 40)
+                        scrapeAll: scrapeAll
                     };
+                    if (!scrapeAll) {
+                        requestPayload.input.numberOfResults = Math.max(limitNum, 40);
+                    }
                 }
 
                 updateApifyProgress(40, "Obteniendo datos...");
