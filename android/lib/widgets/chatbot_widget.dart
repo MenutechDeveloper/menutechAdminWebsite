@@ -6,26 +6,28 @@ import '../services/supabase_service.dart';
 class ChatbotWidget extends StatefulWidget {
   const ChatbotWidget({super.key});
 
-  static WebViewController? _controller;
-  static bool _isReady = false;
+  static _ChatbotWidgetState? _activeState;
 
   static void notifyNewOrder(Map<String, dynamic> orderJson) {
-    if (_controller != null && _isReady) {
+    final state = _activeState;
+    if (state != null && state.mounted) {
       final jsonStr = jsonEncode(orderJson);
-      _controller!.runJavaScript('if(window.MenutechBot) window.MenutechBot.handleNewOrder($jsonStr);');
+      state._controller.runJavaScript('if(window.MenutechBot) window.MenutechBot.handleNewOrder($jsonStr);');
     }
   }
 
   static void notifyOrderUpdated(String id, String status) {
-    if (_controller != null && _isReady) {
-      _controller!.runJavaScript('if(window.MenutechBot) window.MenutechBot.handleOrderUpdated("$id", "$status");');
+    final state = _activeState;
+    if (state != null && state.mounted) {
+      state._controller.runJavaScript('if(window.MenutechBot) window.MenutechBot.handleOrderUpdated("$id", "$status");');
     }
   }
 
   static void notifyPrinterConnected(String ip, String? name) {
-    if (_controller != null && _isReady) {
+    final state = _activeState;
+    if (state != null && state.mounted) {
       final payload = jsonEncode({'ip': ip, 'name': name ?? 'Printer $ip'});
-      _controller!.runJavaScript('if(window.MenutechBot) window.MenutechBot.handlePrinterConnected($payload);');
+      state._controller.runJavaScript('if(window.MenutechBot) window.MenutechBot.handlePrinterConnected($payload);');
     }
   }
 
@@ -40,7 +42,16 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
   @override
   void initState() {
     super.initState();
+    ChatbotWidget._activeState = this;
     _initWebView();
+  }
+
+  @override
+  void dispose() {
+    if (ChatbotWidget._activeState == this) {
+      ChatbotWidget._activeState = null;
+    }
+    super.dispose();
   }
 
   void _initWebView() {
@@ -75,7 +86,7 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageFinished: (String url) {
-            ChatbotWidget._isReady = true;
+            ChatbotWidget._activeState = this;
             // Inject Supabase session context & WebGL optimization into chatbot script
             _controller.runJavaScript('''
               (function() {
@@ -93,35 +104,6 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
                 }
                 applyPerformanceSettings();
                 setTimeout(applyPerformanceSettings, 1000);
-
-                // Custom handleNewOrder override for English order voice notification & Gemini Chat Message insertion
-                if (window.MenutechBot) {
-                  window.MenutechBot.handleNewOrder = function(orderData) {
-                    if (!orderData) return;
-                    var customerName = orderData.customerName || orderData.customer_name || 'a customer';
-                    var amount = orderData.totalAmount || orderData.total_amount || '0';
-                    var msgHtml = '🛍️ <b>You have a new order!</b><br><small>From ' + customerName + ' (\$' + amount + ')</small>';
-
-                    // 1. Show Thought Bubble 🗨️
-                    window.MenutechBot.showThoughtBubble(msgHtml, 10000, 'en-US');
-
-                    // 2. Speak voice notification
-                    if (typeof window.MenutechBot.speakText === 'function') {
-                      window.MenutechBot.speakText('You have a new order from ' + customerName, 'en-US');
-                    }
-
-                    // 3. Append order notification into Gemini Chat Messages container
-                    var messagesContainer = document.getElementById('mt-bot-messages');
-                    if (messagesContainer) {
-                      var alertDiv = document.createElement('div');
-                      alertDiv.className = 'mt-chat-msg bot-msg order-alert-msg';
-                      alertDiv.style.cssText = 'background: rgba(255, 149, 51, 0.15); border: 1px solid #ff9533; border-radius: 16px; padding: 12px 16px; margin: 10px 0; font-size: 0.9rem; color: #1a1c1e;';
-                      alertDiv.innerHTML = '🚨 <b>NEW ORDER ALERT!</b><br>Customer: <b>' + customerName + '</b><br>Total: <b>\$' + amount + '</b><br><small>Order ID: ' + (orderData.id || '') + '</small>';
-                      messagesContainer.appendChild(alertDiv);
-                      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                    }
-                  };
-                }
               })();
             ''');
           },
@@ -252,6 +234,14 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       z-index: 10 !important;
       pointer-events: auto !important;
     }
+
+    #mt-admin-thought-bubble {
+      position: absolute !important;
+      bottom: 85px !important;
+      right: 10px !important;
+      width: 230px !important;
+      z-index: 9999 !important;
+    }
   </style>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -305,7 +295,6 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
 ''';
 
     _controller.loadHtmlString(htmlContent, baseUrl: 'https://menutech.io/');
-    ChatbotWidget._controller = _controller;
   }
 
   @override
@@ -314,9 +303,9 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final topPadding = MediaQuery.of(context).padding.top;
 
-    final double width = _isExpanded ? screenSize.width : 90.0;
+    final double width = _isExpanded ? screenSize.width : 260.0;
 
-    double height = 90.0;
+    double height = 220.0;
     if (_isExpanded) {
       final topMargin = topPadding > 0 ? topPadding + 65.0 : 80.0;
       final availableHeight = screenSize.height - bottomInset - topMargin;
