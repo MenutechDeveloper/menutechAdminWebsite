@@ -44,7 +44,10 @@ serve(async (req: Request) => {
       actorInput = { ...input };
       if (isYelp) {
         if (!actorInput.details) actorInput.details = "advanced";
-        if (!actorInput.numberOfResults || actorInput.numberOfResults < 40) {
+        if (actorInput.scrapeAll) {
+          delete actorInput.numberOfResults;
+          delete actorInput.maxResults;
+        } else if (!actorInput.numberOfResults || actorInput.numberOfResults < 40) {
           actorInput.numberOfResults = 40;
         }
       }
@@ -90,7 +93,7 @@ serve(async (req: Request) => {
 
     // Try synchronous run first (timeout up to 120 seconds)
     const runTimeout = timeout || 120;
-    const syncUrl = `https://api.apify.com/v2/acts/${ACTOR_ID}/run-sync-get-dataset-items?token=${apifyApiKey}&timeout=${runTimeout}`;
+    const syncUrl = `https://api.apify.com/v2/acts/${ACTOR_ID}/run-sync-get-dataset-items?token=${apifyApiKey}&timeout=${runTimeout}&limit=999999`;
 
     const syncRes = await fetch(syncUrl, {
       method: "POST",
@@ -171,7 +174,7 @@ serve(async (req: Request) => {
     }
 
     // Fetch dataset items
-    const datasetUrl = `https://api.apify.com/v2/datasets/${datasetId}/items?token=${apifyApiKey}`;
+    const datasetUrl = `https://api.apify.com/v2/datasets/${datasetId}/items?token=${apifyApiKey}&limit=999999`;
     const datasetRes = await fetch(datasetUrl);
     if (!datasetRes.ok) {
       const errText = await datasetRes.text().catch(() => "");
