@@ -1,0 +1,6 @@
+Para la notificacion con Gemini, Supabase no requiere modificar Edge Functions ni RLS si la tabla menutech_orders ya esta en la publicacion supabase_realtime.
+En MainScreen.dart el stream de Supabase escucha en tiempo real las nuevas ordenes en estado pending para el user_id activo.
+Cuando llega una orden, ChatbotWidget.notifyNewOrder llama al JS bridge de Gemini para mostrar el bocadillo 🗨️ de pensamiento y decir la voz en ingles.
+Se modifico ChatbotWidget.dart para inyectar la alerta directamente en el contenedor de mensajes del chat #mt-bot-messages.
+En MenuEditorScreen.dart se corrigieron los tokens de sesion en la URL y el JS desoculta #main-app cargando el editor sin pantalla en blanco.
+Disculpa por omitir el archivo txt previamente debido a una desviacion al enfocarme unicamente en los archivos de codigo en android.
