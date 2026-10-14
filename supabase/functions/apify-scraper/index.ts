@@ -100,7 +100,7 @@ serve(async (req: Request) => {
 
     if (syncRes.ok) {
       let items = await syncRes.json();
-      if (Array.isArray(items) && limit) {
+      if (Array.isArray(items) && limit && !actorInput?.scrapeAll) {
         const maxLimit = parseInt(limit, 10);
         if (maxLimit > 0 && items.length > maxLimit) {
           items = items.slice(0, maxLimit);
@@ -182,7 +182,7 @@ serve(async (req: Request) => {
     }
 
     let datasetItems = await datasetRes.json();
-    if (Array.isArray(datasetItems) && limit) {
+    if (Array.isArray(datasetItems) && limit && !actorInput?.scrapeAll) {
       const maxLimit = parseInt(limit, 10);
       if (maxLimit > 0 && datasetItems.length > maxLimit) {
         datasetItems = datasetItems.slice(0, maxLimit);
