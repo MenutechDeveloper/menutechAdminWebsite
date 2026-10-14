@@ -1,0 +1,5 @@
+1. Suscripción global en tiempo real con Supabase Realtime a la tabla menutech_orders activa en toda la app.
+2. Detección automática e instantánea de nuevas órdenes en estado pendiente sin importar la pantalla visible.
+3. Notificación a ChatbotWidget para mostrar la burbuja interactiva y reproducir voz nativa en inglés ("You have a new order!").
+4. Reintentos y recordatorios de voz dinámicos en inglés hasta que el restaurante acepte o modifique la orden.
+5. Control de IDs notificados para evitar alertas duplicadas al navegar entre diferentes secciones.

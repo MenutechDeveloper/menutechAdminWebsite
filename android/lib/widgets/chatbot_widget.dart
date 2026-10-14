@@ -94,15 +94,15 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
                 applyPerformanceSettings();
                 setTimeout(applyPerformanceSettings, 1000);
 
-                // Custom handleNewOrder override for Spanish order voice notification
+                // Custom handleNewOrder override for English order voice notification
                 if (window.MenutechBot) {
                   window.MenutechBot.handleNewOrder = function(orderData) {
                     if (!orderData) return;
-                    var customerName = orderData.customerName || orderData.customer_name || 'un cliente';
-                    var msgHtml = '🛍️ <b>¡Tienes una nueva orden!</b><br><small>De ' + customerName + '</small>';
-                    window.MenutechBot.showThoughtBubble(msgHtml, 8000, 'es-ES');
+                    var customerName = orderData.customerName || orderData.customer_name || 'a customer';
+                    var msgHtml = '🛍️ <b>You have a new order!</b><br><small>From ' + customerName + '</small>';
+                    window.MenutechBot.showThoughtBubble(msgHtml, 8000, 'en-US');
                     if (typeof window.MenutechBot.speakText === 'function') {
-                      window.MenutechBot.speakText('¡Tienes una nueva orden!', 'es-ES');
+                      window.MenutechBot.speakText('You have a new order!', 'en-US');
                     }
                   };
                 }
@@ -153,10 +153,10 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       transform: translateY(30px) scale(0.95) !important;
       pointer-events: none !important;
       visibility: hidden !important;
-      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s !important;
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s !important;
     }
 
-    /* Expanded active chat window fills the WebView viewport responsively */
+    /* Expanded active chat window sits elegantly as a modal card with comfortable top margin */
     #mt-bot-root.chat-open #mt-bot-window {
       display: flex !important;
       position: absolute !important;
@@ -168,18 +168,27 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       height: 100% !important;
       max-width: 100% !important;
       max-height: 100% !important;
-      border-radius: 24px 24px 0 0 !important;
-      border: none !important;
-      box-shadow: 0 -8px 30px rgba(0,0,0,0.2) !important;
+      border-radius: 28px 28px 0 0 !important;
+      border: 1px solid rgba(255, 149, 51, 0.2) !important;
+      box-shadow: 0 -12px 36px rgba(0,0,0,0.22) !important;
       transform: translateY(0) scale(1) !important;
       opacity: 1 !important;
       pointer-events: auto !important;
       visibility: visible !important;
-      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .mt-drag-handle {
+      width: 36px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.45);
+      border-radius: 2px;
+      margin: 6px auto 2px auto;
+      flex-shrink: 0;
     }
 
     .mt-bot-header {
-      padding: 12px 18px !important;
+      padding: 10px 18px 14px 18px !important;
       background: linear-gradient(135deg, #ff9533 0%, #f97316 100%) !important;
       color: #ffffff !important;
       display: flex !important;
@@ -210,12 +219,12 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
     }
 
     .mt-bot-banner {
-      height: 85px !important;
+      height: 80px !important;
       flex-shrink: 0 !important;
     }
     .mt-window-mv {
-      width: 85px !important;
-      height: 85px !important;
+      width: 80px !important;
+      height: 80px !important;
     }
 
     #mt-bot-trigger {
@@ -243,7 +252,8 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       var triggerMv = document.querySelector('.mt-trigger-mv');
       var windowMv = document.querySelector('.mt-window-mv');
       if (root && win) {
-        if (win.classList.contains('active')) {
+        var isActive = win.classList.contains('active');
+        if (isActive) {
           root.classList.add('chat-open');
           if (triggerMv && typeof triggerMv.pause === 'function') triggerMv.pause();
           if (windowMv && typeof windowMv.play === 'function') windowMv.play();
@@ -251,6 +261,15 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
           root.classList.remove('chat-open');
           if (windowMv && typeof windowMv.pause === 'function') windowMv.pause();
           if (triggerMv && typeof triggerMv.play === 'function') triggerMv.play();
+        }
+
+        if (window.lastChatState !== isActive) {
+          window.lastChatState = isActive;
+          if (window.FlutterChatbotChannel && window.FlutterChatbotChannel.postMessage) {
+            window.FlutterChatbotChannel.postMessage(JSON.stringify({
+              event: isActive ? 'chat_opened' : 'chat_closed'
+            }));
+          }
         }
       }
     }
@@ -263,7 +282,7 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       }
       syncChatState();
     });
-    setInterval(syncChatState, 250);
+    setInterval(syncChatState, 200);
   </script>
 </body>
 </html>
@@ -283,17 +302,20 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
 
     double height = 90.0;
     if (_isExpanded) {
-      final availableHeight = screenSize.height - bottomInset - topPadding - 16;
-      height = availableHeight > 200 ? availableHeight : 200;
+      final topMargin = topPadding > 0 ? topPadding + 65.0 : 80.0;
+      final availableHeight = screenSize.height - bottomInset - topMargin;
+      height = availableHeight > 220 ? availableHeight : 220;
     }
+
+    final double topOffset = _isExpanded ? (topPadding > 0 ? topPadding + 65.0 : 80.0) : 0.0;
 
     return Padding(
       padding: EdgeInsets.only(
-        top: _isExpanded ? (topPadding > 0 ? topPadding + 10 : 20.0) : 0.0,
+        top: topOffset,
         bottom: _isExpanded ? bottomInset : 0.0,
       ),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
         width: width,
         height: height,
