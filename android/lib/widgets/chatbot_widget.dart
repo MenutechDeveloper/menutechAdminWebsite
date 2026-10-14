@@ -94,15 +94,31 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
                 applyPerformanceSettings();
                 setTimeout(applyPerformanceSettings, 1000);
 
-                // Custom handleNewOrder override for English order voice notification
+                // Custom handleNewOrder override for English order voice notification & Gemini Chat Message insertion
                 if (window.MenutechBot) {
                   window.MenutechBot.handleNewOrder = function(orderData) {
                     if (!orderData) return;
                     var customerName = orderData.customerName || orderData.customer_name || 'a customer';
-                    var msgHtml = '🛍️ <b>You have a new order!</b><br><small>From ' + customerName + '</small>';
-                    window.MenutechBot.showThoughtBubble(msgHtml, 8000, 'en-US');
+                    var amount = orderData.totalAmount || orderData.total_amount || '0';
+                    var msgHtml = '🛍️ <b>You have a new order!</b><br><small>From ' + customerName + ' (\$' + amount + ')</small>';
+
+                    // 1. Show Thought Bubble 🗨️
+                    window.MenutechBot.showThoughtBubble(msgHtml, 10000, 'en-US');
+
+                    // 2. Speak voice notification
                     if (typeof window.MenutechBot.speakText === 'function') {
-                      window.MenutechBot.speakText('You have a new order!', 'en-US');
+                      window.MenutechBot.speakText('You have a new order from ' + customerName, 'en-US');
+                    }
+
+                    // 3. Append order notification into Gemini Chat Messages container
+                    var messagesContainer = document.getElementById('mt-bot-messages');
+                    if (messagesContainer) {
+                      var alertDiv = document.createElement('div');
+                      alertDiv.className = 'mt-chat-msg bot-msg order-alert-msg';
+                      alertDiv.style.cssText = 'background: rgba(255, 149, 51, 0.15); border: 1px solid #ff9533; border-radius: 16px; padding: 12px 16px; margin: 10px 0; font-size: 0.9rem; color: #1a1c1e;';
+                      alertDiv.innerHTML = '🚨 <b>NEW ORDER ALERT!</b><br>Customer: <b>' + customerName + '</b><br>Total: <b>\$' + amount + '</b><br><small>Order ID: ' + (orderData.id || '') + '</small>';
+                      messagesContainer.appendChild(alertDiv);
+                      messagesContainer.scrollTop = messagesContainer.scrollHeight;
                     }
                   };
                 }
