@@ -50,7 +50,7 @@ class OrderModel {
 
     return OrderModel(
       id: json['id'].toString(),
-      userId: json['user_id'],
+      userId: json['user_id'] ?? '',
       customerName: json['customer_name'] ?? 'N/A',
       customerPhone: json['customer_phone'] ?? 'N/A',
       address: json['address'],
@@ -59,13 +59,34 @@ class OrderModel {
       status: json['status'] ?? 'pending',
       totalAmount: (json['total_amount'] ?? json['total'] ?? 0).toDouble(),
       items: itemsList,
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
       customerNotes: json['customer_notes'],
       paymentMethod: json['payment_method'],
       deliveryDate: json['delivery_date'],
       deliveryTime: json['delivery_time'],
       deliveryTimeMode: json['delivery_time_mode'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'customer_name': customerName,
+      'customer_phone': customerPhone,
+      'address': address,
+      'reference': reference,
+      'order_type': orderType,
+      'status': status,
+      'total_amount': totalAmount,
+      'items': items.map((i) => i.toJson()).toList(),
+      'created_at': createdAt.toIso8601String(),
+      'customer_notes': customerNotes,
+      'payment_method': paymentMethod,
+      'delivery_date': deliveryDate,
+      'delivery_time': deliveryTime,
+      'delivery_time_mode': deliveryTimeMode,
+    };
   }
 }
 
@@ -98,5 +119,17 @@ class OrderItem {
       toppings: json['toppings'] != null ? List<String>.from(json['toppings']) : null,
       instructions: json['instructions'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'quantity': quantity,
+      'price': price,
+      'total': total,
+      'size': size,
+      'toppings': toppings,
+      'instructions': instructions,
+    };
   }
 }

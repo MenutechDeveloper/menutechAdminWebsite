@@ -7,6 +7,10 @@ import 'screens/orders_screen.dart';
 import 'screens/order_detail_screen.dart';
 import 'screens/printer_settings_screen.dart';
 import 'screens/menu_editor_screen.dart';
+import 'services/order_notification_service.dart';
+import 'widgets/chatbot_widget.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,12 +23,33 @@ void main() async {
   runApp(const MenutechAdminApp());
 }
 
-class MenutechAdminApp extends StatelessWidget {
+class MenutechAdminApp extends StatefulWidget {
   const MenutechAdminApp({super.key});
+
+  @override
+  State<MenutechAdminApp> createState() => _MenutechAdminAppState();
+}
+
+class _MenutechAdminAppState extends State<MenutechAdminApp> {
+  @override
+  void initState() {
+    super.initState();
+    if (Supabase.instance.client.auth.currentSession != null) {
+      OrderNotificationService().initialize();
+    }
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.session != null) {
+        OrderNotificationService().initialize();
+      } else {
+        OrderNotificationService().stop();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Menutech',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -49,6 +74,20 @@ class MenutechAdminApp extends StatelessWidget {
         '/order-detail': (context) => const OrderDetailScreen(),
         '/printer-settings': (context) => const PrinterSettingsScreen(),
         '/menus': (context) => const MenuEditorScreen(),
+      },
+      builder: (context, child) {
+        return Scaffold(
+          body: Stack(
+            children: [
+              child ?? const SizedBox.shrink(),
+              const Positioned(
+                right: 0,
+                bottom: 0,
+                child: ChatbotWidget(),
+              ),
+            ],
+          ),
+        );
       },
     );
   }
