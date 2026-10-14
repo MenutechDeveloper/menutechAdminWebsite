@@ -1,12 +1,48 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../main.dart';
+import '../models/order_model.dart';
 import '../services/supabase_service.dart';
 
 class ChatbotWidget extends StatefulWidget {
   const ChatbotWidget({super.key});
 
   static _ChatbotWidgetState? _activeState;
+
+  static void showOrderBubble(String text, OrderModel order) {
+    final state = _activeState;
+    if (state != null && state.mounted) {
+      final jsonOrder = jsonEncode({
+        'id': order.id,
+        'customerName': order.customerName,
+        'customerPhone': order.customerPhone,
+        'orderType': order.orderType,
+        'totalAmount': order.totalAmount,
+        'status': order.status,
+        'items': order.items.map((i) => {
+          'name': i.name,
+          'quantity': i.quantity,
+          'price': i.price,
+          'total': i.total,
+          'size': i.size,
+          'instructions': i.instructions,
+        }).toList(),
+        'createdAt': order.createdAt.toIso8601String(),
+        'paymentMethod': order.paymentMethod,
+        'address': order.address,
+        'reference': order.reference,
+        'customerNotes': order.customerNotes,
+      });
+
+      final jsonText = jsonEncode(text);
+      state._controller.runJavaScript('''
+        if (window.showOrderBubbleInWebView) {
+          window.showOrderBubbleInWebView($jsonText, $jsonOrder);
+        }
+      ''');
+    }
+  }
 
   static void notifyNewOrder(Map<String, dynamic> orderJson) {
     final state = _activeState;
@@ -77,6 +113,12 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
               if (mounted) setState(() => _isExpanded = true);
             } else if (event == 'chat_closed') {
               if (mounted) setState(() => _isExpanded = false);
+            } else if (event == 'open_order') {
+              final orderData = data['orderData'];
+              if (orderData != null) {
+                final order = OrderModel.fromJson(Map<String, dynamic>.from(orderData));
+                navigatorKey.currentState?.pushNamed('/order-detail', arguments: order);
+              }
             }
           } catch (e) {
             // Error parsing message from JS
@@ -249,6 +291,28 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
 <body>
   <script>
     window.MENUTECH_BOT_MODEL_URL = 'https://menutech.io/assets/menutechbot.gltf';
+
+    window.showOrderBubbleInWebView = function(text, orderData) {
+      var bubbleEl = document.getElementById('mt-admin-thought-bubble');
+      var msgEl = document.getElementById('mt-bubble-msg');
+      var win = document.getElementById('mt-bot-window');
+      if (!bubbleEl || !msgEl) return;
+      if (win && win.classList.contains('active')) return;
+
+      msgEl.innerText = text;
+      bubbleEl.classList.remove('hidden');
+
+      bubbleEl.onclick = function(e) {
+        e.stopPropagation();
+        bubbleEl.classList.add('hidden');
+        if (window.FlutterChatbotChannel && window.FlutterChatbotChannel.postMessage) {
+          window.FlutterChatbotChannel.postMessage(JSON.stringify({
+            event: 'open_order',
+            orderData: orderData
+          }));
+        }
+      };
+    };
   </script>
   <script src="https://menutech.io/chatbot.js"></script>
   <script>
