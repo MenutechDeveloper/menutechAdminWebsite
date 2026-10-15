@@ -1707,16 +1707,30 @@ class MenutechPlatformOrders extends HTMLElement {
         const now = new Date();
         const currentDay = now.getDay();
         const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        const currentDate = now.toISOString().split('T')[0];
+        const localYear = now.getFullYear();
+        const localMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const localDay = String(now.getDate()).padStart(2, '0');
+        const currentDate = `${localYear}-${localMonth}-${localDay}`;
 
         const categories = categoriesData.filter(cat => {
             const vis = cat.visibility;
             if (!vis) return true;
             if (vis.startDate && currentDate < vis.startDate) return false;
             if (vis.endDate && currentDate > vis.endDate) return false;
-            if (vis.days && vis.days.length > 0 && !vis.days.includes(currentDay)) return false;
-            if (vis.start && currentTime < vis.start) return false;
-            if (vis.end && currentTime > vis.end) return false;
+            if (vis.days && Array.isArray(vis.days)) {
+                const numDays = vis.days.map(Number);
+                if (!numDays.includes(currentDay)) return false;
+            }
+            if (vis.start && vis.end) {
+                if (vis.start <= vis.end) {
+                    if (currentTime < vis.start || currentTime > vis.end) return false;
+                } else {
+                    if (currentTime < vis.start && currentTime > vis.end) return false;
+                }
+            } else {
+                if (vis.start && currentTime < vis.start) return false;
+                if (vis.end && currentTime > vis.end) return false;
+            }
             return true;
         });
 
