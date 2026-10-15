@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:audioplayers/audioplayers.dart';
 import '../models/order_model.dart';
 import '../services/supabase_service.dart';
-import '../widgets/chatbot_widget.dart';
 import 'order_detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -16,35 +14,18 @@ class OrdersScreen extends StatefulWidget {
 class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final SupabaseService _supabase = SupabaseService();
-  final AudioPlayer _audioPlayer = AudioPlayer();
-
   OrderModel? _selectedOrder;
-  final Set<String> _notifiedOrderIds = {};
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _audioPlayer.setReleaseMode(ReleaseMode.loop);
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _audioPlayer.dispose();
     super.dispose();
-  }
-
-  void _updateAlertSound(bool shouldPlay) async {
-    if (shouldPlay) {
-      if (_audioPlayer.state != PlayerState.playing) {
-        await _audioPlayer.play(UrlSource('https://menutech.services/assets/audio/notification.mp3'));
-      }
-    } else {
-      if (_audioPlayer.state == PlayerState.playing) {
-        await _audioPlayer.stop();
-      }
-    }
   }
 
   @override
@@ -80,26 +61,6 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 
           final allOrders = snapshot.data!.map((json) => OrderModel.fromJson(json)).toList();
-
-          final pendingCount = allOrders.where((o) => o.status == 'pending').length;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _updateAlertSound(pendingCount > 0);
-
-            // Notify chatbot widget of new pending orders or status changes
-            for (var order in allOrders) {
-              if (order.status == 'pending' && !_notifiedOrderIds.contains(order.id)) {
-                _notifiedOrderIds.add(order.id);
-                ChatbotWidget.notifyNewOrder({
-                  'id': order.id,
-                  'customerName': order.customerName,
-                  'totalAmount': order.totalAmount,
-                  'status': order.status,
-                });
-              } else if (order.status != 'pending' && _notifiedOrderIds.contains(order.id)) {
-                ChatbotWidget.notifyOrderUpdated(order.id, order.status);
-              }
-            }
-          });
 
           return LayoutBuilder(
             builder: (context, constraints) {

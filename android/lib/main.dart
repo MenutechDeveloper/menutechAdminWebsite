@@ -8,6 +8,8 @@ import 'screens/order_detail_screen.dart';
 import 'screens/printer_settings_screen.dart';
 import 'screens/menu_editor_screen.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -25,6 +27,7 @@ class MenutechAdminApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Menutech',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
