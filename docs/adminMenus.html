@@ -166,6 +166,106 @@
         .copy-icon-btn:hover { background: rgba(255, 149, 51, 0.1); transform: scale(1.1); }
         .copy-icon-btn svg { width: 18px; height: 18px; }
 
+        .fb-share-btn {
+            margin-top: 10px;
+            background: rgba(255,149,51,0.12);
+            border: 1.5px solid var(--orange);
+            color: var(--orange);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255,149,51,0.15);
+        }
+        .fb-share-btn:hover {
+            background: var(--orange);
+            color: #ffffff;
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(255,149,51,0.3);
+        }
+
+        /* Custom Day Pill Checkboxes for Visibility Modal */
+        .day-pill {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 14px;
+            background: var(--input);
+            border: 1.5px solid var(--border);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+            flex: 1 1 calc(25% - 10px);
+            min-width: 75px;
+            text-align: center;
+        }
+        .day-pill.active, .day-pill:has(input:checked) {
+            background: rgba(255, 149, 51, 0.12);
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+        .day-pill input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            background: var(--card);
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .day-pill input[type="checkbox"]:checked {
+            background: var(--orange);
+            border-color: var(--orange);
+        }
+        .day-pill input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 4px;
+            height: 8px;
+            border: solid #ffffff;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .day-pill:hover {
+            border-color: var(--orange);
+            transform: translateY(-2px);
+        }
+
+        .modal-card input[type="date"],
+        .modal-card input[type="time"] {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            border: 1.5px solid var(--border);
+            background: var(--input);
+            color: var(--text);
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .modal-card input[type="date"]:focus,
+        .modal-card input[type="time"]:focus {
+            border-color: var(--orange);
+        }
+
         #no-menu-container {
             text-align: center; padding: 60px 40px; background: var(--card); border: 2px dashed var(--border);
             border-radius: 32px; margin: 40px auto; max-width: 600px;
@@ -324,17 +424,21 @@
 
             <div style="margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
                 <label id="header-domain-label" style="font-size: 0.9rem; font-weight: 800; color: var(--orange); text-transform: lowercase;">lasalsitapinchi.com</label>
-                <label style="font-size: 0.6rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-top: 10px;">Menu Link</label>
-                <div style="display: flex; align-items: center; background: var(--input); padding: 12px 24px; border-radius: 16px; border: 1px solid var(--border); min-width: 400px; justify-content: center; margin-top: 5px; gap: 10px;">
-                    <div style="display: flex; align-items: center;">
-                        <span style="font-size: 0.95rem; color: var(--orange); font-weight: 900;">menutech.io/menu.html?n=</span>
-                        <input type="text" id="slug-input" style="background:transparent; border:none; color:var(--orange); font-weight:900; font-size:0.95rem; padding:0; outline:none; width: auto; min-width: 50px;" oninput="updateSlug(this.value)">
+                <label style="font-size: 0.65rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-top: 10px; letter-spacing: 0.5px;">Share on Facebook</label>
+                <div style="display: flex; align-items: center; background: var(--input); padding: 10px 18px; border-radius: 16px; border: 1px solid var(--border); max-width: 100%; justify-content: center; margin-top: 5px; gap: 8px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 2px;">
+                        <span style="font-size: 0.9rem; color: var(--orange); font-weight: 900; white-space: nowrap;">menutech.io/menu.html?n=</span>
+                        <input type="text" id="slug-input" style="background:transparent; border:none; color:var(--orange); font-weight:900; font-size:0.9rem; padding:0; outline:none; width: auto; min-width: 60px;" oninput="updateSlug(this.value)">
                     </div>
                     <button class="copy-icon-btn" onclick="copySubdomain()" title="Copy Link">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                     </button>
                 </div>
-                <div id="subdomain-link" style="margin-top: 10px;"></div>
+                <button class="fb-share-btn" id="fb-share-btn" onclick="copySubdomain()" title="Share on Facebook">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </button>
             </div>
         </header>
 
@@ -617,16 +721,12 @@
             const slug = menuData.slug || defaultSlug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
             menuData.slug = slug;
             document.getElementById('slug-input').value = slug;
-            const link = `menutech.io/menu.html?n=${slug}`;
-            document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none; font-weight:800;">Go to Menu</a>`;
         }
 
         window.updateSlug = (val) => {
             setChanges(true);
             const slug = val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
             menuData.slug = slug;
-            const link = `menutech.io/menu.html?n=${slug}`;
-            document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none; font-weight:800;">Go to Menu</a>`;
         };
 
         window.copySubdomain = () => {
@@ -1038,11 +1138,16 @@
             const vis = menuData.config.categories[i].visibility || { days: [0,1,2,3,4,5,6], start: '00:00', end: '23:59', startDate:'', endDate:'' };
             const daysDiv = document.getElementById('visibility-days');
             const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            daysDiv.innerHTML = dayNames.map((name, idx) => `
-                <label style="display:flex; align-items:center; gap:5px; background:var(--input); padding:8px 12px; border-radius:10px; cursor:pointer; font-size:0.8rem;">
-                    <input type="checkbox" value="${idx}" ${vis.days.includes(idx) ? 'checked' : ''}> ${name}
-                </label>
-            `).join('');
+            const activeDays = (vis.days || []).map(Number);
+            daysDiv.innerHTML = dayNames.map((name, idx) => {
+                const isChecked = activeDays.includes(idx);
+                return `
+                    <label class="day-pill ${isChecked ? 'active' : ''}">
+                        <input type="checkbox" value="${idx}" ${isChecked ? 'checked' : ''} onchange="this.parentElement.classList.toggle('active', this.checked)">
+                        <span>${name}</span>
+                    </label>
+                `;
+            }).join('');
             document.getElementById('vis-start-time').value = vis.start || '00:00';
             document.getElementById('vis-end-time').value = vis.end || '23:59';
             document.getElementById('vis-start-date').value = vis.startDate || '';
@@ -1055,10 +1160,10 @@
             const days = Array.from(document.querySelectorAll('#visibility-days input:checked')).map(el => parseInt(el.value));
             menuData.config.categories[currentVisCat].visibility = {
                 days,
-                start: document.getElementById('vis-start-time').value,
-                end: document.getElementById('vis-end-time').value,
-                startDate: document.getElementById('vis-start-date').value,
-                endDate: document.getElementById('vis-end-date').value
+                start: document.getElementById('vis-start-time').value || '00:00',
+                end: document.getElementById('vis-end-time').value || '23:59',
+                startDate: document.getElementById('vis-start-date').value || '',
+                endDate: document.getElementById('vis-end-date').value || ''
             };
             closeVisibilityModal();
             showToast("Visibility updated");
