@@ -166,26 +166,62 @@
         .copy-icon-btn:hover { background: rgba(255, 149, 51, 0.1); transform: scale(1.1); }
         .copy-icon-btn svg { width: 18px; height: 18px; }
 
-        .fb-share-btn {
-            margin-top: 10px;
-            background: rgba(255,149,51,0.12);
-            border: 1.5px solid var(--orange);
-            color: var(--orange);
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
+        .action-card-header {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 24px;
+            padding: 16px 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255,149,51,0.15);
+            gap: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            margin-top: 5px;
+            flex-wrap: wrap;
         }
-        .fb-share-btn:hover {
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border: 1.5px solid var(--border);
+            height: 48px;
+        }
+
+        .action-btn.fb-action {
+            background: rgba(255, 149, 51, 0.08);
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+
+        .action-btn.fb-action:hover {
             background: var(--orange);
             color: #ffffff;
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(255,149,51,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 149, 51, 0.3);
+        }
+
+        .action-btn.code-action {
+            background: var(--input);
+            border-color: var(--border);
+            color: var(--text);
+        }
+
+        .action-btn.code-action:hover {
+            background: var(--orange);
+            border-color: var(--orange);
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 149, 51, 0.3);
         }
 
         /* Custom Day Pill Checkboxes for Visibility Modal */
@@ -424,21 +460,23 @@
 
             <div style="margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
                 <label id="header-domain-label" style="font-size: 0.9rem; font-weight: 800; color: var(--orange); text-transform: lowercase;">lasalsitapinchi.com</label>
-                <label style="font-size: 0.65rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-top: 10px; letter-spacing: 0.5px;">Share on Facebook</label>
-                <div style="display: flex; align-items: center; background: var(--input); padding: 10px 18px; border-radius: 16px; border: 1px solid var(--border); max-width: 100%; justify-content: center; margin-top: 5px; gap: 8px; flex-wrap: wrap;">
-                    <div style="display: flex; align-items: center; gap: 2px;">
-                        <span style="font-size: 0.9rem; color: var(--orange); font-weight: 900; white-space: nowrap;">menutech.io/menu.html?n=</span>
-                        <input type="text" id="slug-input" style="background:transparent; border:none; color:var(--orange); font-weight:900; font-size:0.9rem; padding:0; outline:none; width: auto; min-width: 60px;" oninput="updateSlug(this.value)">
-                    </div>
-                    <button class="copy-icon-btn" onclick="copySubdomain()" title="Copy Link">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <input type="hidden" id="slug-input" value="">
+
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; margin-top: 15px; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">Share on Facebook or Copy Code</h3>
+
+                <div class="action-card-header">
+                    <button class="action-btn fb-action" onclick="copySubdomain()" title="Share Link on Facebook">
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        <span>Share on Facebook</span>
+                    </button>
+
+                    <button class="action-btn code-action" id="btn-copy-snippet" onclick="copySnippetAction()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        <span id="btn-copy-snippet-text">COPY MENU CODE</span>
                     </button>
                 </div>
-                <button class="fb-share-btn" id="fb-share-btn" onclick="copySubdomain()" title="Share on Facebook">
-                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                    </svg>
-                </button>
             </div>
         </header>
 
@@ -459,10 +497,6 @@
             </div>
 
             <div class="main-content">
-                <div id="snippet-section" class="hidden" style="display: flex; justify-content: center; margin-bottom: 40px;">
-                    <button id="btn-copy-snippet" class="btn-copy" style="width: 100%; max-width: 800px;">COPY MENU CODE</button>
-                </div>
-
                 <div id="no-menu-container" class="hidden">
                     <h3>No Menu Created Yet</h3>
                     <p>This account doesn't have a menu configured. Start by creating one now.</p>
@@ -667,7 +701,6 @@
             if (userRole === 'admin' || userRole === 'developer') {
                 document.getElementById('sidebar-container').classList.remove('hidden');
                 document.getElementById('sidebar-container').classList.add('collapsed');
-                document.getElementById('snippet-section').classList.remove('hidden');
                 await setupContextSwitcher();
             }
             activeOwnerId = user.id; activeDomain = profile.domain;
@@ -730,11 +763,28 @@
         };
 
         window.copySubdomain = () => {
-            const slug = document.getElementById('slug-input').value;
-            if (!slug) return showToast("No slug defined", "warning");
+            let slug = menuData.slug;
+            if (!slug) {
+                const inp = document.getElementById('slug-input');
+                slug = inp ? inp.value : '';
+            }
+            if (!slug) slug = 'restaurant';
             const url = `https://menutech.io/menu.html?n=${slug}`;
             navigator.clipboard.writeText(url).then(() => {
                 showToast("Menu URL copied to clipboard!");
+            });
+        };
+
+        window.copySnippetAction = () => {
+            const domain = activeDomain || 'undetermined';
+            const snippet = `<!-- Menutech Menu -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-platform-orders domain="${domain}" view="popup"></menutech-platform-orders>`;
+            navigator.clipboard.writeText(snippet).then(() => {
+                showToast("Menu code copied to clipboard!");
+                const txt = document.getElementById('btn-copy-snippet-text');
+                if (txt) {
+                    txt.textContent = "COPIED!";
+                    setTimeout(() => txt.textContent = "COPY MENU CODE", 2000);
+                }
             });
         };
 
@@ -851,15 +901,6 @@
             pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
             document.addEventListener('click', () => pill.classList.remove('active'));
             window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
-            document.getElementById('btn-copy-snippet').onclick = () => {
-                if (!activeDomain) return showToast("Assign a domain first.", "warning");
-                const snippet = `<!-- Menutech Menu -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-platform-orders domain="${activeDomain}" view="popup"></menutech-platform-orders>`;
-                navigator.clipboard.writeText(snippet).then(() => {
-                    const btn = document.getElementById('btn-copy-snippet');
-                    btn.textContent = "COPIED!";
-                    setTimeout(() => btn.textContent = "COPY MENU CODE", 2000);
-                });
-            };
         }
 
         function renderMenuEditor() {
