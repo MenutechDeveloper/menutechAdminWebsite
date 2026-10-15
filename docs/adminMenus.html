@@ -1179,7 +1179,7 @@
             const vis = menuData.config.categories[i].visibility || { days: [0,1,2,3,4,5,6], start: '00:00', end: '23:59', startDate:'', endDate:'' };
             const daysDiv = document.getElementById('visibility-days');
             const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            const activeDays = (vis.days || []).map(Number);
+            const activeDays = (vis.days && Array.isArray(vis.days)) ? vis.days.map(Number) : [0,1,2,3,4,5,6];
             daysDiv.innerHTML = dayNames.map((name, idx) => {
                 const isChecked = activeDays.includes(idx);
                 return `

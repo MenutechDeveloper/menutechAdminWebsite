@@ -43,6 +43,11 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menutech_orders' AND column_name='customer_notes') THEN
         ALTER TABLE public.menutech_orders ADD COLUMN customer_notes TEXT;
     END IF;
+
+    -- 9. Ensure customer_email column exists
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menutech_orders' AND column_name='customer_email') THEN
+        ALTER TABLE public.menutech_orders ADD COLUMN customer_email TEXT;
+    END IF;
 END $$;
 
 -- 9. Enable Row Level Security
