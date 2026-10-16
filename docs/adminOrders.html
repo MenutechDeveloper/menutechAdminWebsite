@@ -683,6 +683,10 @@
                         <p><a href="tel:${order.customer_phone}">${order.customer_phone}</a></p>
                     </div>
                     <div class="info-group">
+                        <label>Email</label>
+                        <p>${order.customer_email ? `<a href="mailto:${order.customer_email}">${order.customer_email}</a>` : 'N/A'}</p>
+                    </div>
+                    <div class="info-group">
                         <label>Order Type</label>
                         <p>${deliveryType}</p>
                     </div>

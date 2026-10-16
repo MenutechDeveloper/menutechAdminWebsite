@@ -1715,22 +1715,33 @@ class MenutechPlatformOrders extends HTMLElement {
         const categories = categoriesData.filter(cat => {
             const vis = cat.visibility;
             if (!vis) return true;
-            if (vis.startDate && currentDate < vis.startDate) return false;
-            if (vis.endDate && currentDate > vis.endDate) return false;
+
+            // Date Range Check (YYYY-MM-DD)
+            if (vis.startDate && vis.startDate.trim() !== '' && currentDate < vis.startDate) return false;
+            if (vis.endDate && vis.endDate.trim() !== '' && currentDate > vis.endDate) return false;
+
+            // Days of Week Check (0 = Sun, 1 = Mon, ..., 6 = Sat)
             if (vis.days && Array.isArray(vis.days)) {
                 const numDays = vis.days.map(Number);
                 if (!numDays.includes(currentDay)) return false;
             }
-            if (vis.start && vis.end) {
-                if (vis.start <= vis.end) {
-                    if (currentTime < vis.start || currentTime > vis.end) return false;
+
+            // Time Range Check (HH:MM)
+            const startTime = vis.start ? vis.start.trim() : '';
+            const endTime = vis.end ? vis.end.trim() : '';
+            if (startTime && endTime) {
+                if (startTime <= endTime) {
+                    if (currentTime < startTime || currentTime > endTime) return false;
                 } else {
-                    if (currentTime < vis.start && currentTime > vis.end) return false;
+                    // Overnight time range (e.g., 22:00 to 02:00)
+                    if (currentTime < startTime && currentTime > endTime) return false;
                 }
-            } else {
-                if (vis.start && currentTime < vis.start) return false;
-                if (vis.end && currentTime > vis.end) return false;
+            } else if (startTime) {
+                if (currentTime < startTime) return false;
+            } else if (endTime) {
+                if (currentTime > endTime) return false;
             }
+
             return true;
         });
 
@@ -2496,6 +2507,7 @@ class MenutechPlatformOrders extends HTMLElement {
         const currentVals = {
             name: popupContent.querySelector('#cust-name')?.value || savedData.name || '',
             phone: popupContent.querySelector('#cust-phone')?.value || savedData.phone || '',
+            email: popupContent.querySelector('#cust-email')?.value || savedData.email || '',
             address: popupContent.querySelector('#order-address')?.value || savedData.address || '',
             reference: popupContent.querySelector('#order-reference')?.value || savedData.reference || '',
             date: popupContent.querySelector('#order-date')?.value || '',
@@ -2541,6 +2553,10 @@ class MenutechPlatformOrders extends HTMLElement {
                                 <div class="cart-input-group">
                                     <label>PHONE</label>
                                     <input type="tel" id="cust-phone" class="cart-input">
+                                </div>
+                                <div class="cart-input-group">
+                                    <label>EMAIL</label>
+                                    <input type="email" id="cust-email" class="cart-input">
                                 </div>
                             </div>
                         </div>
@@ -2674,6 +2690,7 @@ class MenutechPlatformOrders extends HTMLElement {
         // Restore values
         if (currentVals.name) popupContent.querySelector('#cust-name').value = currentVals.name;
         if (currentVals.phone) popupContent.querySelector('#cust-phone').value = currentVals.phone;
+        if (currentVals.email && popupContent.querySelector('#cust-email')) popupContent.querySelector('#cust-email').value = currentVals.email;
         if (popupContent.querySelector('#order-address')) popupContent.querySelector('#order-address').value = currentVals.address;
         if (popupContent.querySelector('#order-reference')) popupContent.querySelector('#order-reference').value = currentVals.reference;
         if (popupContent.querySelector('#order-date')) popupContent.querySelector('#order-date').value = currentVals.date;
@@ -2794,6 +2811,7 @@ class MenutechPlatformOrders extends HTMLElement {
         const popupContent = this.popupRoot.getElementById('popup-content');
         const name = popupContent.querySelector('#cust-name').value;
         const phone = popupContent.querySelector('#cust-phone').value;
+        const email = popupContent.querySelector('#cust-email')?.value || '';
 
         if (!name || !phone) {
             this.showModal('MISSING DATA', 'Please complete your name and phone.');
@@ -2809,7 +2827,7 @@ class MenutechPlatformOrders extends HTMLElement {
         const payment = popupContent.querySelector('.payment-option.active').dataset.pay;
 
         // Save to localStorage
-        localStorage.setItem('mt_customer_info', JSON.stringify({ name, phone, address, reference }));
+        localStorage.setItem('mt_customer_info', JSON.stringify({ name, phone, email, address, reference }));
 
         const total = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
         const btn = popupContent.querySelector('#send-order-btn');
@@ -2825,6 +2843,7 @@ class MenutechPlatformOrders extends HTMLElement {
                 total: total,
                 customer_name: name,
                 customer_phone: phone,
+                customer_email: email,
                 order_type: orderType,
                 address: address,
                 reference: reference,
