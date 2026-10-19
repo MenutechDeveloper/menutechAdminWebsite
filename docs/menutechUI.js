@@ -1433,6 +1433,21 @@ class MenutechPlatformOrders extends HTMLElement {
             }
             const { data, error } = await query.single();
             if (error) return null;
+
+            if (data && data.user_id && (!data.config || !data.config.restaurant_name)) {
+                try {
+                    const { data: prof } = await this.supabase
+                        .from('profiles')
+                        .select('username')
+                        .eq('id', data.user_id)
+                        .maybeSingle();
+                    if (prof && prof.username) {
+                        if (!data.config) data.config = {};
+                        data.config.restaurant_name = prof.username;
+                    }
+                } catch(e) {}
+            }
+
             return data;
         } catch (err) {
             return null;
@@ -1684,6 +1699,9 @@ class MenutechPlatformOrders extends HTMLElement {
             return;
         }
         this.menuData = data;
+        if (data.config && data.config.restaurant_name && document.title.includes('Menutech')) {
+            document.title = data.config.restaurant_name;
+        }
         this.renderMenu();
     }
 
@@ -2125,7 +2143,7 @@ class MenutechPlatformOrders extends HTMLElement {
             <div class="menu-wrapper" style="${isPopupView ? 'height: 100%; margin: 0; max-width: 100%; border-radius: 0;' : ''}">
                 ${style === 'mode2' ? `
                     <div class="mode2-main-header" style="${isPopupView ? 'padding-right: 80px;' : ''}">
-                        <h1 class="restaurant-name">${config.restaurant_name || 'Menutech'}</h1>
+                        <h1 class="restaurant-name">${config.restaurant_name || ''}</h1>
                         <div class="header-icons">
                             <div class="header-icon active" id="header-menu-btn">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
@@ -2250,7 +2268,7 @@ class MenutechPlatformOrders extends HTMLElement {
         const headerInfoBtn = this.popupRoot.getElementById('header-info-btn');
         if (headerInfoBtn) {
             headerInfoBtn.onclick = () => {
-                this.showModal('INFORMACIÓN', this.menuData.config.restaurant_name || 'Menutech Restaurant Information');
+                this.showModal('INFORMACIÓN', (this.menuData.config && this.menuData.config.restaurant_name) || 'Información del Restaurante');
             };
         }
 
