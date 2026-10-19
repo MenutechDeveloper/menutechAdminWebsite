@@ -224,6 +224,16 @@
                 <h3>Orders</h3>
                 <p>Manage incoming restaurant orders in real-time.</p>
             </a>
+            <a href="reservations.html" class="bento-card" id="card-reservations">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/></svg></div>
+                <h3>Reservations Settings</h3>
+                <p>Configure table booking parameters and widget options.</p>
+            </a>
+            <a href="myreservations.html" class="bento-card" id="card-myreservations">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/></svg></div>
+                <h3>My Reservations</h3>
+                <p>Manage incoming table reservations and guest bookings in real-time.</p>
+            </a>
             <a href="adminTemplate.html" class="bento-card" id="card-template">
                 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div>
                 <h3>Template Web</h3>
@@ -329,7 +339,9 @@
                         document.getElementById('card-restaurants').style.order = "1";
                         document.getElementById('card-menus').style.order = "2";
                         document.getElementById('card-orders').style.order = "3";
-                        document.getElementById('card-tickets').style.order = "4";
+                        document.getElementById('card-reservations').style.order = "4";
+                        document.getElementById('card-myreservations').style.order = "5";
+                        document.getElementById('card-tickets').style.order = "6";
 
                         const grid = document.getElementById('main-bento');
                         grid.style.maxWidth = '800px';
@@ -341,6 +353,8 @@
                         document.getElementById('card-qr-admin').classList.add('hidden');
                         document.getElementById('card-menus').classList.add('hidden');
                         document.getElementById('card-orders').classList.add('hidden');
+                        document.getElementById('card-reservations').classList.add('hidden');
+                        document.getElementById('card-myreservations').classList.add('hidden');
                         document.getElementById('card-customer-website').classList.add('hidden');
                         document.getElementById('card-lab').classList.add('hidden');
                     } else if (qrRoles.includes(role)) {
@@ -348,6 +362,8 @@
                         document.getElementById('card-web').classList.add('hidden');
                         document.getElementById('card-menus').classList.add('hidden');
                         document.getElementById('card-orders').classList.add('hidden');
+                        document.getElementById('card-reservations').classList.add('hidden');
+                        document.getElementById('card-myreservations').classList.add('hidden');
                         document.getElementById('card-template').classList.add('hidden');
                         document.getElementById('card-customer-website').classList.add('hidden');
                         document.getElementById('card-lab').classList.add('hidden');
