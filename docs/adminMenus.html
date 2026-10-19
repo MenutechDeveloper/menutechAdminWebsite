@@ -601,7 +601,7 @@
         import { MT_CONFIG } from './config.js';
         import { supabase as sb } from './supabase.js';
 
-        let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
+        let user = null, userRole = null, activeOwnerId = null, activeDomain = null, currentUserProfile = null;
         let menuData = { cover_url: '', cover_type: 'image', menu_style: 'mode2', config: { categories: [], toppings: [] } };
         let allOwners = [];
         let hasChanges = false;
@@ -777,7 +777,9 @@
 
         window.copySnippetAction = () => {
             const domain = activeDomain || 'undetermined';
-            const snippet = `<!-- Menutech Menu -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-platform-orders domain="${domain}" view="popup"></menutech-platform-orders>`;
+            const owner = allOwners.find(o => o.id === activeOwnerId);
+            const restName = (menuData && menuData.config && menuData.config.restaurant_name) || (owner ? owner.username : '') || (currentUserProfile ? currentUserProfile.username : '') || 'Restaurant';
+            const snippet = `<!-- ${restName} Menu -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-platform-orders domain="${domain}" view="popup"></menutech-platform-orders>`;
             navigator.clipboard.writeText(snippet).then(() => {
                 showToast("Menu code copied to clipboard!");
                 const txt = document.getElementById('btn-copy-snippet-text');
@@ -801,11 +803,15 @@
 
             // Find the active owner profile to refresh UI
             const owner = allOwners.find(o => o.id === activeOwnerId);
+            const restName = (owner ? owner.username : '') || (currentUserProfile ? currentUserProfile.username : '');
             if (owner) updateSubdomainLink(owner);
 
             if (data) {
                 menuData = data;
                 if (!menuData.config) menuData.config = { categories: [], toppings: [] };
+                if (!menuData.config.restaurant_name && restName) {
+                    menuData.config.restaurant_name = restName;
+                }
                 menuData.menu_style = 'mode2';
                 // Ensure Topping IDs
                 (menuData.config.toppings || []).forEach(tg => {
@@ -834,6 +840,7 @@
         };
 
         async function showApp(profile) {
+            currentUserProfile = profile;
             const urlParams = new URLSearchParams(window.location.search);
             const isAppMode = urlParams.get('app') === 'true';
 
@@ -1250,6 +1257,13 @@
             if (!menuData.slug) {
                 const slugInput = document.getElementById('slug-input');
                 menuData.slug = slugInput.value || 'restaurant';
+            }
+
+            if (!menuData.config) menuData.config = { categories: [], toppings: [] };
+            if (!menuData.config.restaurant_name) {
+                const owner = allOwners.find(o => o.id === activeOwnerId);
+                const restName = (owner ? owner.username : '') || (currentUserProfile ? currentUserProfile.username : '');
+                if (restName) menuData.config.restaurant_name = restName;
             }
 
             try {
