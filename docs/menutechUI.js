@@ -3343,3 +3343,589 @@ class MenutechFooter extends HTMLElement {
 if (!customElements.get('menutech-footer')) {
     customElements.define('menutech-footer', MenutechFooter);
 }
+
+/**
+ * Menutech Reservations Web Component
+ * Usage: <menutech-reservations domain="yoursite.com"></menutech-reservations>
+ */
+class MenutechReservations extends HTMLElement {
+    static get observedAttributes() {
+        return ['domain', 'custom-label'];
+    }
+
+    attributeChangedCallback() {
+        this.render();
+    }
+
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.config = MT_UI_CONFIG;
+        this.supabase = null;
+        this.settings = null;
+        this.restaurantInfo = null;
+        this.menuData = null;
+        this.preorderCart = [];
+        this.step = 1; // 1: DateTime, 2: Preorder Choice, 3: Contact/Review, 4: Success
+        this.bookingData = {
+            guests: 2,
+            date: '',
+            time: '',
+            comments: '',
+            name: '',
+            phone: '',
+            email: ''
+        };
+    }
+
+    async connectedCallback() {
+        await this.initSupabase();
+        this.loadData();
+        this.render();
+    }
+
+    async initSupabase() {
+        if (this.supabase) return;
+        try {
+            const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
+            this.supabase = createClient(this.config.url, this.config.key);
+        } catch (err) {
+            console.error("MenutechReservations Supabase Init Error:", err);
+        }
+    }
+
+    async loadData() {
+        if (!this.supabase) await this.initSupabase();
+        let domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
+
+        try {
+            // Find settings by domain or fallback profile
+            const { data: resSettings } = await this.supabase
+                .from('menutech_reservation_settings')
+                .select('*')
+                .eq('domain', domain)
+                .maybeSingle();
+
+            // Find profile user_id by domain
+            let userId = resSettings ? resSettings.user_id : null;
+            if (!userId) {
+                const { data: prof } = await this.supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('domain', domain)
+                    .maybeSingle();
+                if (prof) userId = prof.id;
+            }
+
+            // Fetch restaurant schedule
+            let schedule = [];
+            if (userId) {
+                const { data: rest } = await this.supabase
+                    .from('menutech_restaurants')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .maybeSingle();
+                if (rest) {
+                    this.restaurantInfo = rest;
+                    if (rest.schedule && Array.isArray(rest.schedule)) schedule = rest.schedule;
+                }
+
+                // Fetch menu for preorder if needed
+                const { data: menu } = await this.supabase
+                    .from('menutech_menus')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .maybeSingle();
+                if (menu) this.menuData = menu;
+            }
+
+            this.settings = {
+                user_id: userId,
+                enabled: resSettings ? (resSettings.enabled !== false) : true,
+                min_guests: resSettings ? (resSettings.min_guests || 2) : 2,
+                max_guests: resSettings ? (resSettings.max_guests || 8) : 8,
+                min_lead_time_min: resSettings ? (resSettings.min_lead_time_min !== undefined ? resSettings.min_lead_time_min : 15) : 15,
+                max_advance_days: resSettings ? (resSettings.max_advance_days || 8) : 8,
+                hold_duration_min: resSettings ? (resSettings.hold_duration_min !== undefined ? resSettings.hold_duration_min : 15) : 15,
+                allow_preorder: resSettings ? (resSettings.allow_preorder !== false) : true,
+                custom_schedule: (resSettings && resSettings.custom_schedule && resSettings.custom_schedule.length > 0)
+                    ? resSettings.custom_schedule
+                    : schedule
+            };
+
+            this.bookingData.guests = this.settings.min_guests;
+        } catch (e) {
+            console.error("Error loading reservation configuration:", e);
+        }
+    }
+
+    render() {
+        const customLabel = this.getAttribute('custom-label') || 'Book a Table';
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host {
+                    display: inline-block;
+                    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+                }
+                .btn-reserve-trigger {
+                    background: #ff9533;
+                    color: #fff;
+                    padding: 16px 32px;
+                    border-radius: 40px;
+                    font-weight: 800;
+                    border: none;
+                    cursor: pointer;
+                    box-shadow: 0 10px 30px rgba(255,149,51,0.3);
+                    text-transform: uppercase;
+                    font-size: 0.95rem;
+                    transition: 0.3s;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .btn-reserve-trigger:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 15px 40px rgba(255,149,51,0.4);
+                    filter: brightness(1.1);
+                }
+                .btn-reserve-trigger svg { width: 20px; height: 20px; }
+
+                /* Modal Overlay */
+                .res-modal-overlay {
+                    position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+                    z-index: 200000; display: none; align-items: center; justify-content: center;
+                    animation: fadeIn 0.3s ease; padding: 15px; box-sizing: border-box;
+                }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+                .res-card {
+                    background: #ffffff; width: 100%; max-width: 520px; border-radius: 28px;
+                    box-shadow: 0 25px 60px rgba(0,0,0,0.3); overflow: hidden; position: relative;
+                    animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); color: #1a1c1e;
+                    max-height: 90vh; display: flex; flex-direction: column;
+                }
+                @keyframes scaleUp { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+                .res-card-header {
+                    padding: 22px 28px; background: #fff; border-bottom: 1px solid #f0f0f0;
+                    display: flex; justify-content: space-between; align-items: center;
+                }
+                .res-card-header h3 { margin: 0; font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 800; text-transform: uppercase; color: #333; }
+                .close-btn { background: #f5f5f5; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+                .close-btn:hover { background: #eee; transform: scale(1.05); }
+
+                .res-card-body { padding: 28px; overflow-y: auto; flex: 1; }
+
+                .field-group { margin-bottom: 20px; }
+                .field-group label { display: block; font-size: 0.75rem; font-weight: 800; color: #ff9533; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+                .field-control {
+                    width: 100%; padding: 15px 18px; border-radius: 16px; border: 1.5px solid #eee;
+                    background: #fcfcfc; font-family: inherit; font-size: 0.95rem; box-sizing: border-box; transition: 0.3s; color: #333;
+                }
+                .field-control:focus { outline: none; border-color: #ff9533; background: #fff; box-shadow: 0 0 0 4px rgba(255,149,51,0.1); }
+                textarea.field-control { min-height: 90px; resize: vertical; }
+
+                .info-notice { background: #fffcf5; border: 1px solid #f8e8d8; border-radius: 16px; padding: 16px; font-size: 0.82rem; color: #666; line-height: 1.4; margin-top: 15px; }
+
+                .btn-action {
+                    width: 100%; padding: 18px; border-radius: 18px; border: none; background: #ff9533;
+                    color: #fff; font-weight: 800; font-size: 1rem; cursor: pointer; transition: 0.3s;
+                    text-transform: uppercase; letter-spacing: 0.5px; margin-top: 15px; box-shadow: 0 10px 25px rgba(255,149,51,0.3);
+                }
+                .btn-action:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(255,149,51,0.4); }
+                .btn-secondary { background: #f0f0f0; color: #555; box-shadow: none; margin-top: 10px; }
+                .btn-secondary:hover { background: #e5e5e5; color: #111; box-shadow: none; }
+
+                /* Preorder Popup Card */
+                .preorder-item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+                .preorder-item-row:last-child { border-bottom: none; }
+
+                .check-mark { width: 70px; height: 70px; background: #059669; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 36px; margin: 0 auto 20px auto; }
+            </style>
+
+            <button class="btn-reserve-trigger" id="open-res-modal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/></svg>
+                <span>${customLabel}</span>
+            </button>
+
+            <div class="res-modal-overlay" id="res-modal">
+                <div class="res-card">
+                    <div class="res-card-header">
+                        <h3 id="res-modal-title">Table Reservation</h3>
+                        <button class="close-btn" id="close-res-modal">✕</button>
+                    </div>
+                    <div class="res-card-body" id="res-modal-body">
+                        <!-- Step views rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+        `;
+
+        this.shadowRoot.getElementById('open-res-modal').onclick = () => {
+            if (!this.settings) this.loadData();
+            this.step = 1;
+            this.shadowRoot.getElementById('res-modal').style.display = 'flex';
+            this.renderStep();
+        };
+
+        this.shadowRoot.getElementById('close-res-modal').onclick = () => {
+            this.shadowRoot.getElementById('res-modal').style.display = 'none';
+        };
+
+        this.shadowRoot.getElementById('res-modal').onclick = (e) => {
+            if (e.target === this.shadowRoot.getElementById('res-modal')) {
+                this.shadowRoot.getElementById('res-modal').style.display = 'none';
+            }
+        };
+    }
+
+    renderStep() {
+        const body = this.shadowRoot.getElementById('res-modal-body');
+        const title = this.shadowRoot.getElementById('res-modal-title');
+
+        if (!this.settings || !this.settings.enabled) {
+            title.textContent = "Reservations Unavailable";
+            body.innerHTML = `<div style="text-align:center; padding:40px; color:#666;">Table reservations are currently not available for this restaurant.</div>`;
+            return;
+        }
+
+        if (this.step === 1) {
+            title.textContent = "Reserve a Table";
+
+            // Guests options
+            let guestsOptions = '';
+            for (let g = this.settings.min_guests; g <= this.settings.max_guests; g++) {
+                guestsOptions += `<option value="${g}" ${this.bookingData.guests == g ? 'selected' : ''}>${g} Guests</option>`;
+            }
+
+            // Min and max date
+            const today = new Date();
+            const minDateStr = today.toISOString().split('T')[0];
+            const maxDate = new Date();
+            maxDate.setDate(today.getDate() + this.settings.max_advance_days);
+            const maxDateStr = maxDate.toISOString().split('T')[0];
+
+            if (!this.bookingData.date) this.bookingData.date = minDateStr;
+
+            body.innerHTML = `
+                <div class="field-group">
+                    <label>Number of Guests</label>
+                    <select class="field-control" id="field-guests">
+                        ${guestsOptions}
+                    </select>
+                </div>
+
+                <div class="field-group">
+                    <label>Date</label>
+                    <input type="date" class="field-control" id="field-date" min="${minDateStr}" max="${maxDateStr}" value="${this.bookingData.date}">
+                </div>
+
+                <div class="field-group">
+                    <label>Time</label>
+                    <select class="field-control" id="field-time">
+                        <option value="">Select Date First...</option>
+                    </select>
+                </div>
+
+                <div class="field-group">
+                    <label>Comments (Optional)</label>
+                    <textarea class="field-control" id="field-comments" placeholder="Allergies, high chairs, special seating preferences...">${this.bookingData.comments}</textarea>
+                </div>
+
+                <div class="info-notice">
+                    The table is held for ${this.settings.hold_duration_min} minutes after the reservation time. We appreciate arriving on time.
+                </div>
+
+                <button class="btn-action" id="btn-step1-next">Next</button>
+            `;
+
+            const dateInput = body.querySelector('#field-date');
+            const timeSelect = body.querySelector('#field-time');
+
+            const populateTimes = () => {
+                const selDateStr = dateInput.value;
+                if (!selDateStr) return;
+
+                const dateObj = new Date(selDateStr + 'T00:00:00');
+                const dayIndex = dateObj.getDay(); // 0 = Sun, 1 = Mon ...
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+                // Check schedule entry
+                const sched = this.settings.custom_schedule || [];
+                let dayHoursStr = '';
+                sched.forEach(s => {
+                    const dayLower = (s.day || '').toLowerCase();
+                    if (dayLower.includes(dayNames[dayIndex].toLowerCase()) || dayLower.includes('daily') || dayLower.includes('mon-sun') || dayLower.includes('mon-fri') && dayIndex >= 1 && dayIndex <= 5) {
+                        dayHoursStr = s.hours;
+                    }
+                });
+
+                // Default operating range 10:00 - 22:00 if not specified
+                let startHour = 10, endHour = 22;
+                if (dayHoursStr && dayHoursStr.includes('-')) {
+                    const parts = dayHoursStr.split('-');
+                    const sH = parseInt(parts[0].trim().split(':')[0]);
+                    const eH = parseInt(parts[1].trim().split(':')[0]);
+                    if (!isNaN(sH)) startHour = sH;
+                    if (!isNaN(eH)) endHour = eH;
+                }
+
+                timeSelect.innerHTML = '';
+                const now = new Date();
+                const isToday = selDateStr === now.toISOString().split('T')[0];
+                const leadTimeMs = (this.settings.min_lead_time_min || 15) * 60 * 1000;
+                const minAllowedTs = now.getTime() + leadTimeMs;
+
+                let count = 0;
+                for (let h = startHour; h < endHour; h++) {
+                    for (let m = 0; m < 60; m += 30) {
+                        const slotTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                        const slotDate = new Date(`${selDateStr}T${slotTime}:00`);
+
+                        if (isToday && slotDate.getTime() < minAllowedTs) {
+                            continue; // Skip past or too-soon time slots
+                        }
+
+                        const hour12 = h % 12 || 12;
+                        const ampm = h < 12 ? 'AM' : 'PM';
+                        const displayTime = `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
+
+                        const opt = document.createElement('option');
+                        opt.value = slotTime;
+                        opt.textContent = displayTime;
+                        if (this.bookingData.time === slotTime) opt.selected = true;
+                        timeSelect.appendChild(opt);
+                        count++;
+                    }
+                }
+
+                if (count === 0) {
+                    timeSelect.innerHTML = '<option value="">Closed / No slots available for this date</option>';
+                }
+            };
+
+            populateTimes();
+            dateInput.onchange = populateTimes;
+
+            body.querySelector('#btn-step1-next').onclick = () => {
+                const selectedTime = timeSelect.value;
+                if (!selectedTime) {
+                    alert("Please select a valid reservation time slot.");
+                    return;
+                }
+
+                this.bookingData.guests = parseInt(body.querySelector('#field-guests').value);
+                this.bookingData.date = dateInput.value;
+                this.bookingData.time = selectedTime;
+                this.bookingData.comments = body.querySelector('#field-comments').value;
+
+                if (this.settings.allow_preorder && this.menuData) {
+                    this.step = 2;
+                } else {
+                    this.step = 3;
+                }
+                this.renderStep();
+            };
+
+        } else if (this.step === 2) {
+            title.textContent = "Pre-order Food";
+            body.innerHTML = `
+                <div style="text-align:center; padding: 10px 0 20px 0;">
+                    <div style="font-size:3rem; margin-bottom:15px;">🍽️</div>
+                    <h4 style="font-size:1.15rem; font-weight:800; margin-bottom:12px; color:#333;">Would you like to pre-order food?</h4>
+                    <p style="font-size:0.9rem; color:#666; line-height:1.5;">Have your favorite dishes ready at the table as soon as you arrive at the restaurant.</p>
+                </div>
+
+                ${this.preorderCart.length > 0 ? `
+                    <div style="background:#f9f9f9; border-radius:16px; padding:15px; margin-bottom:20px;">
+                        <div style="font-size:0.75rem; font-weight:800; color:#ff9533; text-transform:uppercase; margin-bottom:10px;">Selected Pre-order Items:</div>
+                        ${this.preorderCart.map(i => `
+                            <div class="preorder-item-row">
+                                <span style="font-weight:600; font-size:0.9rem;">${i.quantity}x ${i.name}</span>
+                                <span style="font-weight:700; color:#ff9533;">$${(i.price * i.quantity).toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                <button class="btn-action" id="btn-preorder-yes">Yes, Order Food Now</button>
+                <button class="btn-action btn-secondary" id="btn-preorder-no">No, Order at Restaurant</button>
+            `;
+
+            body.querySelector('#btn-preorder-yes').onclick = () => {
+                this.showMenuPickerModal();
+            };
+
+            body.querySelector('#btn-preorder-no').onclick = () => {
+                this.step = 3;
+                this.renderStep();
+            };
+
+        } else if (this.step === 3) {
+            title.textContent = "Contact Information";
+
+            // Saved contact info from localStorage
+            const savedInfo = JSON.parse(localStorage.getItem('mt_customer_info') || '{}');
+            const name = this.bookingData.name || savedInfo.name || '';
+            const phone = this.bookingData.phone || savedInfo.phone || '';
+            const email = this.bookingData.email || savedInfo.email || '';
+
+            const preorderTotal = this.preorderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            body.innerHTML = `
+                <div class="field-group">
+                    <label>Full Name *</label>
+                    <input type="text" class="field-control" id="field-name" value="${name}" placeholder="Your Full Name">
+                </div>
+
+                <div class="field-group">
+                    <label>Phone Number *</label>
+                    <input type="tel" class="field-control" id="field-phone" value="${phone}" placeholder="Phone Number">
+                </div>
+
+                <div class="field-group">
+                    <label>Email Address</label>
+                    <input type="email" class="field-control" id="field-email" value="${email}" placeholder="Email Address">
+                </div>
+
+                <div style="background:#fdfdfd; border:1px solid #eee; border-radius:18px; padding:18px; margin-top:15px;">
+                    <div style="font-size:0.75rem; font-weight:800; color:#ff9533; text-transform:uppercase; margin-bottom:10px;">Reservation Summary</div>
+                    <p style="font-size:0.85rem; font-weight:600; margin:4px 0;">Table for ${this.bookingData.guests} Guests</p>
+                    <p style="font-size:0.85rem; color:#666; margin:4px 0;">${this.bookingData.date} at ${this.bookingData.time}</p>
+                    ${this.preorderCart.length > 0 ? `<p style="font-size:0.85rem; color:#ff9533; font-weight:700; margin-top:8px;">Pre-order Total: $${preorderTotal.toFixed(2)} (${this.preorderCart.length} items)</p>` : ''}
+                </div>
+
+                <div class="info-notice">
+                    The table is held for ${this.settings.hold_duration_min} minutes after the reservation time. We appreciate arriving on time.
+                </div>
+
+                <button class="btn-action" id="btn-submit-res">Make Table Reservation Now</button>
+            `;
+
+            body.querySelector('#btn-submit-res').onclick = () => this.submitBooking(body);
+
+        } else if (this.step === 4) {
+            title.textContent = "Reservation Confirmed";
+            body.innerHTML = `
+                <div style="text-align:center; padding:20px 0;">
+                    <div class="check-mark">✓</div>
+                    <h3 style="font-family:'Outfit'; font-size:1.5rem; margin-bottom:10px;">Reservation Received!</h3>
+                    <p style="color:#666; font-size:0.95rem; line-height:1.5; margin-bottom:25px;">Thank you ${this.bookingData.name}! We look forward to welcoming you for ${this.bookingData.guests} guests on <strong>${this.bookingData.date} at ${this.bookingData.time}</strong>.</p>
+
+                    <button class="btn-action" id="btn-res-done">Done</button>
+                </div>
+            `;
+
+            body.querySelector('#btn-res-done').onclick = () => {
+                this.shadowRoot.getElementById('res-modal').style.display = 'none';
+            };
+        }
+    }
+
+    showMenuPickerModal() {
+        const body = this.shadowRoot.getElementById('res-modal-body');
+        const categories = (this.menuData.config && this.menuData.config.categories) ? this.menuData.config.categories : [];
+
+        let dishesHtml = '';
+        categories.forEach(cat => {
+            dishesHtml += `<div style="font-size:0.8rem; font-weight:800; color:#ff9533; text-transform:uppercase; margin:15px 0 8px 0;">${cat.name}</div>`;
+            (cat.dishes || []).forEach((dish, idx) => {
+                dishesHtml += `
+                    <div class="preorder-item-row">
+                        <div>
+                            <div style="font-weight:700; font-size:0.9rem;">${dish.name}</div>
+                            <div style="font-weight:700; color:#ff9533; font-size:0.85rem;">$${dish.price}</div>
+                        </div>
+                        <button class="btn-action" style="width:auto; padding:8px 16px; font-size:0.75rem; margin:0;" data-dish='${JSON.stringify(dish).replace(/'/g, "&apos;")}'>+ Add</button>
+                    </div>
+                `;
+            });
+        });
+
+        body.innerHTML = `
+            <div style="font-size:0.85rem; color:#666; margin-bottom:15px;">Select dishes to pre-order for your table reservation:</div>
+            <div style="max-height:300px; overflow-y:auto; padding-right:5px;">
+                ${dishesHtml}
+            </div>
+            <button class="btn-action" id="btn-finish-preorder" style="margin-top:20px;">Confirm Pre-order & Continue</button>
+        `;
+
+        body.querySelectorAll('button[data-dish]').forEach(btn => {
+            btn.onclick = () => {
+                const dish = JSON.parse(btn.getAttribute('data-dish'));
+                const existing = this.preorderCart.find(i => i.name === dish.name);
+                if (existing) {
+                    existing.quantity++;
+                } else {
+                    this.preorderCart.push({
+                        name: dish.name,
+                        price: parseFloat(dish.price),
+                        quantity: 1
+                    });
+                }
+                btn.textContent = "✓ Added";
+                setTimeout(() => btn.textContent = "+ Add", 1000);
+            };
+        });
+
+        body.querySelector('#btn-finish-preorder').onclick = () => {
+            this.step = 3;
+            this.renderStep();
+        };
+    }
+
+    async submitBooking(body) {
+        const name = body.querySelector('#field-name').value.trim();
+        const phone = body.querySelector('#field-phone').value.trim();
+        const email = body.querySelector('#field-email').value.trim();
+
+        if (!name || !phone) {
+            alert("Please provide your full name and phone number.");
+            return;
+        }
+
+        this.bookingData.name = name;
+        this.bookingData.phone = phone;
+        this.bookingData.email = email;
+
+        // Save contact info to localStorage
+        localStorage.setItem('mt_customer_info', JSON.stringify({ name, phone, email }));
+
+        const btn = body.querySelector('#btn-submit-res');
+        btn.textContent = "Submitting...";
+        btn.disabled = true;
+
+        if (!this.supabase) await this.initSupabase();
+
+        try {
+            const domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
+            const payload = {
+                user_id: this.settings.user_id,
+                domain: domain,
+                customer_name: name,
+                customer_phone: phone,
+                customer_email: email,
+                guests_count: this.bookingData.guests,
+                reservation_date: this.bookingData.date,
+                reservation_time: this.bookingData.time,
+                comments: this.bookingData.comments,
+                preorder_items: this.preorderCart,
+                status: 'pending'
+            };
+
+            const { error } = await this.supabase.from('menutech_reservations').insert(payload);
+            if (error) throw error;
+
+            this.step = 4;
+            this.renderStep();
+        } catch (e) {
+            alert("Error creating table reservation: " + e.message);
+            btn.textContent = "Make Table Reservation Now";
+            btn.disabled = false;
+        }
+    }
+}
+
+if (!customElements.get('menutech-reservations')) {
+    customElements.define('menutech-reservations', MenutechReservations);
+}
