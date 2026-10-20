@@ -818,10 +818,7 @@
                                 <button class="btn btn-reject" onclick="updateOrderStatus('${item.id}', 'rejected')">Reject</button>
                                 <button class="btn btn-accept" onclick="updateOrderStatus('${item.id}', 'accepted')">Accept</button>
                             ` : ''}
-                            ${item.status === 'accepted' ? `
-                                <button class="btn btn-finish" onclick="updateOrderStatus('${item.id}', 'preparing')">Prepare</button>
-                            ` : ''}
-                            ${item.status === 'preparing' ? `
+                            ${(item.status === 'accepted' || item.status === 'preparing') ? `
                                 <button class="btn btn-finish" onclick="updateOrderStatus('${item.id}', 'finished')">Ready</button>
                             ` : ''}
                             ${item.status === 'finished' ? `
@@ -948,6 +945,21 @@
                 loadAllData();
             } else {
                 showToast(`Order marked as ${status}`);
+
+                // If accepted, automatically transition to preparing after brief delay
+                if (status === 'accepted') {
+                    setTimeout(async () => {
+                        const autoUpdates = { status: 'preparing', preparing_at: new Date().toISOString() };
+                        const idx = unifiedItems.findIndex(i => i.id === id && i.entryType === 'order');
+                        if (idx !== -1 && unifiedItems[idx].status === 'accepted') {
+                            Object.assign(unifiedItems[idx], autoUpdates);
+                            updateCounts();
+                            renderList();
+                            if (selectedItemId === id) renderDetails(unifiedItems[idx]);
+                        }
+                        await sb.from('menutech_orders').update(autoUpdates).eq('id', id);
+                    }, 1500);
+                }
             }
         };
 

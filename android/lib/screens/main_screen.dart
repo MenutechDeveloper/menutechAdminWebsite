@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dashboard_screen.dart';
+import 'orders_screen.dart';
 import 'settings_menu_screen.dart';
 import '../services/order_notification_service.dart';
 import '../widgets/chatbot_widget.dart';
@@ -15,7 +15,7 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
-    const DashboardScreen(),
+    const OrdersScreen(),
     const SettingsMenuScreen(),
   ];
 
@@ -60,7 +60,7 @@ class _MainScreenState extends State<MainScreen> {
         child: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
-              icon: Icon(Icons.restaurant_menu),
+              icon: Icon(Icons.receipt_long_rounded),
               label: '',
             ),
             BottomNavigationBarItem(
