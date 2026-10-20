@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orders Management | Menutech</title>
+    <title>Orders & Reservations | Menutech</title>
     <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
@@ -16,9 +16,9 @@
             --text: #1a1c1e;
             --text-dim: #4a5568;
             --border: #f8e8d8;
-            --success: #ff9533;
+            --success: #10b981;
             --error: #dc2626;
-            --info: #f59e0b; /* Amber/Dark Orange instead of Blue */
+            --info: #f59e0b;
             --dev: #8b5cf6;
         }
 
@@ -39,7 +39,7 @@
         .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 80px 24px; animation: fadeIn 1s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        header { text-align: center; margin-bottom: 40px; }
+        header { text-align: center; margin-bottom: 25px; }
         .logo-main { width: 100%; max-width: 200px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
 
         .dashboard-layout { display: flex; min-height: calc(100vh - 160px); gap: 20px; position: relative; }
@@ -140,21 +140,23 @@
         .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
         .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
 
-        .btn-copy {
-            background: #fff5eb;
-            border: 1px solid #ffd8b0;
-            color: var(--orange);
-            padding: 12px 24px;
-            border-radius: 16px;
-            font-size: 0.8rem;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            width: 100%;
+        /* Main Section Toggle (Orders vs Reservations) */
+        .section-selector {
+            display: flex; gap: 12px; justify-content: center; margin-bottom: 20px;
         }
-        .btn-copy:hover { background: var(--orange); color: #fff; }
+        .section-btn {
+            background: var(--card); border: 2px solid var(--border); color: var(--text-dim);
+            padding: 12px 28px; border-radius: 20px; font-weight: 800; font-size: 0.95rem; font-family: 'Outfit', sans-serif;
+            cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 10px;
+        }
+        .section-btn:hover { border-color: var(--orange); color: var(--orange); }
+        .section-btn.active {
+            background: var(--orange); color: #ffffff; border-color: var(--orange);
+            box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3);
+        }
+        .section-btn .badge-alert {
+            background: #ffffff; color: var(--orange); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 800;
+        }
 
         /* Tabs Styling */
         .tabs-container {
@@ -173,11 +175,11 @@
 
         /* Layout Split */
         .orders-split-view { display: flex; gap: 24px; min-height: 500px; align-items: flex-start; }
-        .orders-list-pane { flex: 0 0 380px; max-height: calc(100vh - 200px); overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 10px; }
+        .orders-list-pane { flex: 0 0 380px; max-height: calc(100vh - 220px); overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 10px; }
         .order-details-pane {
-            flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 20px;
+            flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px;
             display: flex; flex-direction: column; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.02);
-            overflow: hidden; min-height: 200px;
+            overflow: hidden; min-height: 300px;
         }
 
         /* Compact Card */
@@ -189,55 +191,56 @@
         .order-card-compact.active { border-color: var(--orange); background: rgba(255, 149, 51, 0.04); border-width: 2px; }
         .order-card-compact .status-dot { width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 20px; right: 20px; }
         .order-card-compact.pending .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
-        .order-card-compact.accepted .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
-        .order-card-compact.preparing .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
-        .order-card-compact.finished .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
+        .order-card-compact.accepted .status-dot, .order-card-compact.confirmed .status-dot { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        .order-card-compact.preparing .status-dot, .order-card-compact.attended .status-dot { background: var(--info); }
+        .order-card-compact.finished .status-dot { background: var(--orange); }
         .order-card-compact.delivered .status-dot { background: var(--orange); opacity: 0.6; }
-        .order-card-compact.rejected .status-dot { background: var(--error); }
+        .order-card-compact.rejected .status-dot, .order-card-compact.cancelled .status-dot { background: var(--error); }
 
         .order-card-compact h4 { font-size: 1rem; font-family: 'Outfit'; margin-bottom: 4px; }
         .order-card-compact p { font-size: 0.8rem; color: var(--text-dim); }
         .order-card-compact .order-time { font-size: 0.75rem; font-weight: 600; margin-top: 10px; display: block; color: var(--orange); }
 
         /* Full Details Styling */
-        .details-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .details-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
         .details-header h2 { font-family: 'Outfit'; font-size: 1.3rem; }
         .details-header .status-tag { padding: 6px 16px; border-radius: 30px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
         .status-tag.pending { background: rgba(255,149,51,0.1); color: var(--orange); }
-        .status-tag.accepted { background: rgba(255,149,51,0.1); color: var(--orange); }
-        .status-tag.preparing { background: rgba(255,149,51,0.1); color: var(--orange); }
+        .status-tag.accepted, .status-tag.confirmed { background: rgba(16,185,129,0.1); color: var(--success); }
+        .status-tag.preparing, .status-tag.attended { background: rgba(245,158,11,0.1); color: var(--info); }
         .status-tag.finished { background: rgba(255,149,51,0.1); color: var(--orange); }
         .status-tag.delivered { background: rgba(255,149,51,0.05); color: var(--orange); opacity: 0.8; }
-        .status-tag.rejected { background: rgba(220,38,38,0.1); color: var(--error); }
+        .status-tag.rejected, .status-tag.cancelled { background: rgba(220,38,38,0.1); color: var(--error); }
 
-        .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 15px; }
-        .info-group label { display: block; font-size: 0.55rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.5px; }
-        .info-group p { font-size: 0.8rem; font-weight: 600; }
+        .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px; }
+        .info-group label { display: block; font-size: 0.6rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 3px; letter-spacing: 0.5px; }
+        .info-group p { font-size: 0.85rem; font-weight: 600; }
         .info-group a { color: var(--orange); text-decoration: none; border-bottom: 1px dashed var(--orange); }
 
-        .items-section { background: var(--input); border-radius: 16px; padding: 15px; margin-bottom: 15px; max-height: 400px; overflow-y: auto; }
+        .items-section { background: var(--input); border-radius: 16px; padding: 15px; margin-bottom: 18px; max-height: 320px; overflow-y: auto; border: 1px solid var(--border); }
         .items-section h3 { font-family: 'Outfit'; margin-bottom: 10px; font-size: 0.95rem; }
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
         .item-row:last-child { border-bottom: none; }
         .item-row:hover { opacity: 0.7; }
         .item-row.crossed .item-name { text-decoration: line-through; opacity: 0.5; }
-        .item-name { font-weight: 600; }
-        .item-price { font-weight: 700; color: var(--orange); }
-        .item-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; padding-left: 0; }
+        .item-name { font-weight: 600; font-size: 0.85rem; }
+        .item-price { font-weight: 700; color: var(--orange); font-size: 0.85rem; }
+        .item-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
 
-        .details-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px; }
+        .details-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 15px; margin-top: auto; }
         .total-amount { font-size: 1.3rem; font-weight: 800; font-family: 'Outfit'; color: var(--orange); }
 
-        .actions-bar { display: flex; gap: 15px; }
-        .btn { padding: 14px 32px; border-radius: 18px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; letter-spacing: 1px; }
+        .actions-bar { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn { padding: 12px 24px; border-radius: 18px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.85rem; letter-spacing: 1px; }
         .btn-accept { background: var(--orange); color: #fff; }
+        .btn-success { background: var(--success); color: #fff; }
         .btn-finish { background: var(--orange); color: #fff; }
         .btn-delivered { background: var(--orange); color: #fff; }
         .btn-reject { background: var(--error); color: #fff; }
         .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 
-        .empty-details { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); text-align: center; }
-        .empty-details svg { width: 80px; height: 80px; opacity: 0.1; margin-bottom: 20px; }
+        .empty-details { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); text-align: center; padding: 40px 0; }
+        .empty-details svg { width: 80px; height: 80px; opacity: 0.15; margin-bottom: 20px; }
 
         /* History Filters */
         .history-filters {
@@ -254,8 +257,8 @@
         /* Responsive Mobile Styles */
         @media (max-width: 1024px) {
             .orders-split-view { flex-direction: column; height: auto; }
-            .orders-list-pane { flex: none; height: auto; max-height: 400px; }
-            .order-details-pane { min-height: 400px; padding: 20px; }
+            .orders-list-pane { flex: none; height: auto; max-height: 400px; width: 100%; }
+            .order-details-pane { min-height: 400px; padding: 20px; width: 100%; }
             .container { padding: 60px 15px; }
         }
 
@@ -308,6 +311,7 @@
                 </div>
                 <div class="pill-menu">
                     <a href="index.html" class="pill-menu-item">Home</a>
+                    <a href="reservations.html" class="pill-menu-item">Reservation Settings</a>
                     <div class="pill-menu-item danger" onclick="logout()">Logout</div>
                 </div>
             </div>
@@ -318,6 +322,17 @@
         <header>
             <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
         </header>
+
+        <div class="section-selector">
+            <button class="section-btn active" id="sec-orders-btn" onclick="switchMainSection('orders')">
+                <span>Orders</span>
+                <span class="badge-alert hidden" id="badge-orders-pending">0</span>
+            </button>
+            <button class="section-btn" id="sec-reservations-btn" onclick="switchMainSection('reservations')">
+                <span>Reservations</span>
+                <span class="badge-alert hidden" id="badge-res-pending">0</span>
+            </button>
+        </div>
 
         <div class="dashboard-layout">
             <div class="sidebar-container hidden" id="sidebar-container">
@@ -336,11 +351,20 @@
             </div>
 
             <div class="main-content">
-                <div class="tabs-container">
+                <!-- Orders Subtabs -->
+                <div class="tabs-container" id="orders-subtabs">
                     <button class="tab-btn active" data-tab="pending" onclick="switchTab('pending')">Pending <span class="count" id="count-pending">0</span></button>
                     <button class="tab-btn" data-tab="accepted" onclick="switchTab('accepted')">In Process <span class="count" id="count-accepted">0</span></button>
                     <button class="tab-btn" data-tab="finished" onclick="switchTab('finished')">Ready <span class="count" id="count-finished">0</span></button>
                     <button class="tab-btn" data-tab="history" onclick="switchTab('history')">History <span class="count" id="count-history">0</span></button>
+                </div>
+
+                <!-- Reservations Subtabs -->
+                <div class="tabs-container hidden" id="reservations-subtabs">
+                    <button class="tab-btn active" data-tab="res-pending" onclick="switchResTab('pending')">Pending <span class="count" id="count-res-pending">0</span></button>
+                    <button class="tab-btn" data-tab="res-confirmed" onclick="switchResTab('confirmed')">Confirmed <span class="count" id="count-res-confirmed">0</span></button>
+                    <button class="tab-btn" data-tab="res-attended" onclick="switchResTab('attended')">Attended <span class="count" id="count-res-attended">0</span></button>
+                    <button class="tab-btn" data-tab="res-history" onclick="switchResTab('history')">Cancelled / Rejected <span class="count" id="count-res-history">0</span></button>
                 </div>
 
                 <div id="history-filters" class="history-filters hidden">
@@ -351,13 +375,13 @@
 
                 <div class="orders-split-view">
                     <div id="orders-list" class="orders-list-pane">
-                        <!-- Compact orders will appear here -->
+                        <!-- Compact orders / reservations list -->
                     </div>
                     <div id="order-details" class="order-details-pane">
                         <div class="empty-details">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
-                            <h3>Select an order to view details</h3>
-                            <p>All the order information will appear here</p>
+                            <h3 id="empty-title">Select an order or reservation to view details</h3>
+                            <p id="empty-sub">All details will appear here</p>
                         </div>
                     </div>
                 </div>
@@ -370,11 +394,16 @@
 
         let user = null, userRole = null, activeOwnerId = null;
         let orders = [];
+        let reservations = [];
         let allOwners = [];
         let ordersChannel = null;
+        let resChannel = null;
+
+        let mainSection = 'orders'; // 'orders' | 'reservations'
         let currentTab = 'pending';
+        let currentResTab = 'pending';
         let historyFilter = 'today';
-        let selectedOrderId = null;
+        let selectedItemId = null;
         let crossedItems = new Set();
         let alertAudio = null;
 
@@ -391,8 +420,8 @@
                 userRole = 'owner';
                 activeOwnerId = user.id;
                 showApp(null);
-                loadOrders();
-                subscribeToOrders();
+                loadAllData();
+                subscribeRealtime();
                 return;
             }
 
@@ -406,8 +435,8 @@
             }
 
             showApp(profile);
-            loadOrders();
-            subscribeToOrders();
+            loadAllData();
+            subscribeRealtime();
         }
 
         async function showApp(profile) {
@@ -457,87 +486,157 @@
             renderOwners(allOwners);
 
             if (ordersChannel) sb.removeChannel(ordersChannel);
+            if (resChannel) sb.removeChannel(resChannel);
 
-            loadOrders();
-            subscribeToOrders();
-        }
+            loadAllData();
+            subscribeRealtime();
+        };
 
         function mapOrder(o) {
             return {
                 ...o,
-                items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
+                items: typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []),
                 total: parseFloat(o.total_amount || o.total || 0)
             };
         }
 
+        function mapReservation(r) {
+            const preorderItems = typeof r.preorder_items === 'string' ? JSON.parse(r.preorder_items) : (r.preorder_items || []);
+            const calculatedTotal = preorderItems.reduce((sum, item) => sum + ((parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1)), 0);
+            return {
+                ...r,
+                party_size: r.party_size || r.guests_count || 2,
+                preorder_items: preorderItems,
+                total: parseFloat(r.preorder_total || calculatedTotal || 0)
+            };
+        }
+
+        async function loadAllData() {
+            await Promise.all([loadOrders(), loadReservations()]);
+            updateCounts();
+            renderList();
+        }
+
         async function loadOrders() {
-            const { data, error } = await sb.from('menutech_orders')
+            const { data } = await sb.from('menutech_orders')
                 .select('*')
                 .eq('user_id', activeOwnerId)
                 .order('created_at', { ascending: false });
 
             if (data) {
                 orders = data.map(mapOrder);
-                updateCounts();
-                renderOrders();
             }
         }
 
-        function subscribeToOrders() {
-            // Use a clean channel name
-            const channelName = 'orders_realtime_' + activeOwnerId.substring(0, 8);
-            ordersChannel = sb.channel(channelName)
-                .on('postgres_changes', {
-                    event: '*', // Listen to all events for better reliability
-                    schema: 'public',
-                    table: 'menutech_orders'
-                }, (payload) => {
-                    // Filter by ownerId in JS to avoid subscription filter issues
+        async function loadReservations() {
+            const { data } = await sb.from('menutech_reservations')
+                .select('*')
+                .eq('user_id', activeOwnerId)
+                .order('created_at', { ascending: false });
+
+            if (data) {
+                reservations = data.map(mapReservation);
+            }
+        }
+
+        function subscribeRealtime() {
+            const ordChanName = 'orders_rt_' + activeOwnerId.substring(0, 8);
+            ordersChannel = sb.channel(ordChanName)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'menutech_orders' }, (payload) => {
                     if (payload.new && payload.new.user_id === activeOwnerId) {
                         if (payload.eventType === 'INSERT') {
-                            const newOrder = mapOrder(payload.new);
-                            // Avoid duplicates
-                            if (!orders.find(o => o.id === newOrder.id)) {
-                                orders.unshift(newOrder);
+                            const newOrd = mapOrder(payload.new);
+                            if (!orders.find(o => o.id === newOrd.id)) {
+                                orders.unshift(newOrd);
                                 updateCounts();
-                                renderOrders();
-                                // Ensure sound alert starts
-                                toggleAlertSound(true);
+                                if (mainSection === 'orders') renderList();
                             }
                         } else if (payload.eventType === 'UPDATE') {
                             const idx = orders.findIndex(o => o.id === payload.new.id);
                             if (idx !== -1) {
                                 orders[idx] = mapOrder(payload.new);
                                 updateCounts();
-                                renderOrders();
-                                if (selectedOrderId === payload.new.id) renderDetails(orders[idx]);
+                                if (mainSection === 'orders') {
+                                    renderList();
+                                    if (selectedItemId === payload.new.id) renderDetails(orders[idx]);
+                                }
                             }
                         } else if (payload.eventType === 'DELETE') {
                             orders = orders.filter(o => o.id !== payload.old.id);
                             updateCounts();
-                            renderOrders();
+                            if (mainSection === 'orders') renderList();
                         }
                     }
-                })
-                .subscribe((status) => {
-                    if (status === 'SUBSCRIBED') {
-                        console.log('Realtime subscription active for owner:', activeOwnerId);
+                }).subscribe();
+
+            const resChanName = 'res_rt_' + activeOwnerId.substring(0, 8);
+            resChannel = sb.channel(resChanName)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'menutech_reservations' }, (payload) => {
+                    if (payload.new && payload.new.user_id === activeOwnerId) {
+                        if (payload.eventType === 'INSERT') {
+                            const newRes = mapReservation(payload.new);
+                            if (!reservations.find(r => r.id === newRes.id)) {
+                                reservations.unshift(newRes);
+                                updateCounts();
+                                if (mainSection === 'reservations') renderList();
+                            }
+                        } else if (payload.eventType === 'UPDATE') {
+                            const idx = reservations.findIndex(r => r.id === payload.new.id);
+                            if (idx !== -1) {
+                                reservations[idx] = mapReservation(payload.new);
+                                updateCounts();
+                                if (mainSection === 'reservations') {
+                                    renderList();
+                                    if (selectedItemId === payload.new.id) renderDetails(reservations[idx]);
+                                }
+                            }
+                        } else if (payload.eventType === 'DELETE') {
+                            reservations = reservations.filter(r => r.id !== payload.old.id);
+                            updateCounts();
+                            if (mainSection === 'reservations') renderList();
+                        }
                     }
-                });
+                }).subscribe();
         }
 
         function updateCounts() {
-            const pending = orders.filter(o => o.status === 'pending').length;
-            const accepted = orders.filter(o => o.status === 'accepted' || o.status === 'preparing').length;
-            const finished = orders.filter(o => o.status === 'finished').length;
-            const history = orders.filter(o => o.status === 'delivered' || o.status === 'rejected').length;
+            const ordPending = orders.filter(o => o.status === 'pending').length;
+            const ordAccepted = orders.filter(o => o.status === 'accepted' || o.status === 'preparing').length;
+            const ordFinished = orders.filter(o => o.status === 'finished').length;
+            const ordHistory = orders.filter(o => o.status === 'delivered' || o.status === 'rejected').length;
 
-            document.getElementById('count-pending').textContent = pending;
-            document.getElementById('count-accepted').textContent = accepted;
-            document.getElementById('count-finished').textContent = finished;
-            document.getElementById('count-history').textContent = history;
+            document.getElementById('count-pending').textContent = ordPending;
+            document.getElementById('count-accepted').textContent = ordAccepted;
+            document.getElementById('count-finished').textContent = ordFinished;
+            document.getElementById('count-history').textContent = ordHistory;
 
-            if (pending > 0) {
+            const resPending = reservations.filter(r => r.status === 'pending').length;
+            const resConfirmed = reservations.filter(r => r.status === 'confirmed').length;
+            const resAttended = reservations.filter(r => r.status === 'attended').length;
+            const resHistory = reservations.filter(r => r.status === 'cancelled' || r.status === 'rejected').length;
+
+            document.getElementById('count-res-pending').textContent = resPending;
+            document.getElementById('count-res-confirmed').textContent = resConfirmed;
+            document.getElementById('count-res-attended').textContent = resAttended;
+            document.getElementById('count-res-history').textContent = resHistory;
+
+            const badgeOrd = document.getElementById('badge-orders-pending');
+            if (ordPending > 0) {
+                badgeOrd.textContent = ordPending;
+                badgeOrd.classList.remove('hidden');
+            } else {
+                badgeOrd.classList.add('hidden');
+            }
+
+            const badgeRes = document.getElementById('badge-res-pending');
+            if (resPending > 0) {
+                badgeRes.textContent = resPending;
+                badgeRes.classList.remove('hidden');
+            } else {
+                badgeRes.classList.add('hidden');
+            }
+
+            if (ordPending > 0 || resPending > 0) {
                 toggleAlertSound(true);
             } else {
                 toggleAlertSound(false);
@@ -550,13 +649,10 @@
                     alertAudio = new Audio('https://menutech.services/assets/audio/notification.mp3');
                     alertAudio.loop = true;
                 }
-
-                // If it's already playing, don't restart
                 if (alertAudio.paused) {
                     alertAudio.play().catch(e => {
-                        // If blocked, we'll try again on next interaction
                         const retry = () => {
-                            if (orders.some(o => o.status === 'pending')) {
+                            if (orders.some(o => o.status === 'pending') || reservations.some(r => r.status === 'pending')) {
                                 alertAudio.play();
                             }
                             document.removeEventListener('click', retry);
@@ -572,10 +668,36 @@
             }
         }
 
+        window.switchMainSection = (sec) => {
+            mainSection = sec;
+            selectedItemId = null;
+            document.getElementById('sec-orders-btn').classList.toggle('active', sec === 'orders');
+            document.getElementById('sec-reservations-btn').classList.toggle('active', sec === 'reservations');
+
+            const ordSub = document.getElementById('orders-subtabs');
+            const resSub = document.getElementById('reservations-subtabs');
+            const filters = document.getElementById('history-filters');
+
+            if (sec === 'orders') {
+                ordSub.classList.remove('hidden');
+                resSub.classList.add('hidden');
+                if (currentTab === 'history') filters.classList.remove('hidden');
+                else filters.classList.add('hidden');
+            } else {
+                ordSub.classList.add('hidden');
+                resSub.classList.remove('hidden');
+                if (currentResTab === 'history') filters.classList.remove('hidden');
+                else filters.classList.add('hidden');
+            }
+
+            renderList();
+            renderDetails(null);
+        };
+
         window.switchTab = (tab) => {
             currentTab = tab;
-            selectedOrderId = null;
-            document.querySelectorAll('.tab-btn').forEach(btn => {
+            selectedItemId = null;
+            document.querySelectorAll('#orders-subtabs .tab-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
             });
 
@@ -583,7 +705,22 @@
             if (tab === 'history') filters.classList.remove('hidden');
             else filters.classList.add('hidden');
 
-            renderOrders();
+            renderList();
+            renderDetails(null);
+        };
+
+        window.switchResTab = (tab) => {
+            currentResTab = tab;
+            selectedItemId = null;
+            document.querySelectorAll('#reservations-subtabs .tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-tab') === 'res-' + tab);
+            });
+
+            const filters = document.getElementById('history-filters');
+            if (tab === 'history') filters.classList.remove('hidden');
+            else filters.classList.add('hidden');
+
+            renderList();
             renderDetails(null);
         };
 
@@ -592,167 +729,281 @@
             document.querySelectorAll('.filter-chip').forEach(btn => {
                 btn.classList.toggle('active', btn.textContent.toLowerCase().includes(filter));
             });
-            renderOrders();
+            renderList();
         };
 
-        function renderOrders() {
+        function renderList() {
             const list = document.getElementById('orders-list');
             let filtered = [];
 
-            if (currentTab === 'history') {
-                const now = new Date();
-                const todayStr = now.toLocaleDateString();
-                const todayTs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-                const lastWeekTs = todayTs - (7 * 24 * 60 * 60 * 1000);
-                const lastMonthTs = todayTs - (30 * 24 * 60 * 60 * 1000);
+            if (mainSection === 'orders') {
+                if (currentTab === 'history') {
+                    const now = new Date();
+                    const todayStr = now.toLocaleDateString();
+                    const todayTs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                    const lastWeekTs = todayTs - (7 * 24 * 60 * 60 * 1000);
+                    const lastMonthTs = todayTs - (30 * 24 * 60 * 60 * 1000);
 
-                filtered = orders.filter(o => {
-                    if (o.status !== 'delivered' && o.status !== 'rejected') return false;
-                    const oDate = new Date(o.created_at);
-                    const oTs = oDate.getTime();
-                    if (historyFilter === 'today') return oDate.toLocaleDateString() === todayStr;
-                    if (historyFilter === 'week') return oTs >= lastWeekTs;
-                    if (historyFilter === 'month') return oTs >= lastMonthTs;
-                    return true;
-                });
-            } else if (currentTab === 'accepted') {
-                filtered = orders.filter(o => o.status === 'accepted' || o.status === 'preparing');
+                    filtered = orders.filter(o => {
+                        if (o.status !== 'delivered' && o.status !== 'rejected') return false;
+                        const oDate = new Date(o.created_at);
+                        const oTs = oDate.getTime();
+                        if (historyFilter === 'today') return oDate.toLocaleDateString() === todayStr;
+                        if (historyFilter === 'week') return oTs >= lastWeekTs;
+                        if (historyFilter === 'month') return oTs >= lastMonthTs;
+                        return true;
+                    });
+                } else if (currentTab === 'accepted') {
+                    filtered = orders.filter(o => o.status === 'accepted' || o.status === 'preparing');
+                } else {
+                    filtered = orders.filter(o => o.status === currentTab);
+                }
+
+                if (filtered.length === 0) {
+                    list.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-dim); opacity:0.5;">No orders in this stage</div>`;
+                    return;
+                }
+
+                list.innerHTML = filtered.map(order => `
+                    <div class="order-card-compact ${order.status} ${selectedItemId === order.id ? 'active' : ''}" onclick="selectItem('${order.id}')">
+                        <div class="status-dot"></div>
+                        <h4>${order.customer_name}</h4>
+                        <p>${order.items.length} items • $${order.total.toFixed(2)}</p>
+                        <span class="order-time">${new Date(order.created_at).toLocaleDateString()} ${new Date(order.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                `).join('');
+
             } else {
-                filtered = orders.filter(o => o.status === currentTab);
-            }
+                // Reservations List
+                if (currentResTab === 'history') {
+                    const now = new Date();
+                    const todayStr = now.toLocaleDateString();
+                    const todayTs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                    const lastWeekTs = todayTs - (7 * 24 * 60 * 60 * 1000);
+                    const lastMonthTs = todayTs - (30 * 24 * 60 * 60 * 1000);
 
-            if (filtered.length === 0) {
-                list.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-dim); opacity:0.5;">No orders in this stage</div>`;
-                return;
-            }
+                    filtered = reservations.filter(r => {
+                        if (r.status !== 'cancelled' && r.status !== 'rejected') return false;
+                        const rDate = new Date(r.created_at);
+                        const rTs = rDate.getTime();
+                        if (historyFilter === 'today') return rDate.toLocaleDateString() === todayStr;
+                        if (historyFilter === 'week') return rTs >= lastWeekTs;
+                        if (historyFilter === 'month') return rTs >= lastMonthTs;
+                        return true;
+                    });
+                } else {
+                    filtered = reservations.filter(r => r.status === currentResTab);
+                }
 
-            list.innerHTML = filtered.map(order => `
-                <div class="order-card-compact ${order.status} ${selectedOrderId === order.id ? 'active' : ''}" onclick="selectOrder('${order.id}')">
-                    <div class="status-dot"></div>
-                    <h4>${order.customer_name}</h4>
-                    <p>${order.items.length} items • $${order.total.toFixed(2)}</p>
-                    <span class="order-time">${new Date(order.created_at).toLocaleDateString()} ${new Date(order.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                </div>
-            `).join('');
+                if (filtered.length === 0) {
+                    list.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-dim); opacity:0.5;">No reservations in this stage</div>`;
+                    return;
+                }
+
+                list.innerHTML = filtered.map(res => `
+                    <div class="order-card-compact ${res.status} ${selectedItemId === res.id ? 'active' : ''}" onclick="selectItem('${res.id}')">
+                        <div class="status-dot"></div>
+                        <h4>${res.customer_name}</h4>
+                        <p>📅 ${res.reservation_date} • ⏰ ${res.reservation_time} • 👥 ${res.party_size} guests</p>
+                        <span class="order-time">Booked: ${new Date(res.created_at).toLocaleDateString()} ${new Date(res.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                `).join('');
+            }
         }
 
-        window.selectOrder = (id) => {
-            selectedOrderId = id;
-            const order = orders.find(o => o.id === id);
-            renderOrders();
-            renderDetails(order);
+        window.selectItem = (id) => {
+            selectedItemId = id;
+            renderList();
+            if (mainSection === 'orders') {
+                const order = orders.find(o => o.id === id);
+                renderDetails(order);
+            } else {
+                const res = reservations.find(r => r.id === id);
+                renderDetails(res);
+            }
             if (window.innerWidth <= 768) {
                 document.getElementById('order-details').classList.add('open');
             }
         };
 
-        function renderDetails(order) {
+        function renderDetails(item) {
             const pane = document.getElementById('order-details');
-            if (!order) {
-                pane.innerHTML = `<div class="empty-details"><h3>Select an order</h3></div>`;
+            if (!item) {
+                pane.innerHTML = `<div class="empty-details"><h3>Select an ${mainSection === 'orders' ? 'order' : 'reservation'} to view details</h3></div>`;
                 return;
             }
 
-            const dateStr = new Date(order.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
-            const deliveryType = order.order_type === 'delivery' ? 'Delivery' : 'Pickup';
-            const paymentMethod = (order.payment_method || 'N/A').charAt(0).toUpperCase() + (order.payment_method || 'N/A').slice(1);
-            let statusLabel = order.status.charAt(0).toUpperCase() + order.status.slice(1);
-            if (order.status === 'accepted') statusLabel = 'Accepted';
-            if (order.status === 'preparing') statusLabel = 'Preparing';
-            if (order.status === 'finished') statusLabel = 'Ready';
+            if (mainSection === 'orders') {
+                const dateStr = new Date(item.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+                const deliveryType = item.order_type === 'delivery' ? 'Delivery' : 'Pickup';
+                const paymentMethod = (item.payment_method || 'N/A').charAt(0).toUpperCase() + (item.payment_method || 'N/A').slice(1);
+                let statusLabel = item.status.charAt(0).toUpperCase() + item.status.slice(1);
+                if (item.status === 'accepted') statusLabel = 'Accepted';
+                if (item.status === 'preparing') statusLabel = 'Preparing';
+                if (item.status === 'finished') statusLabel = 'Ready';
 
-            const isPending = order.status === 'pending';
-            const isAccepted = order.status === 'accepted';
-            const isFinished = order.status === 'finished';
-            const isDelivered = order.status === 'delivered';
-            const isRejected = order.status === 'rejected';
-
-            pane.innerHTML = `
-                <button class="close-details" onclick="closeDetails()">✕</button>
-                <div class="details-header">
-                    <div>
-                        <h2>${order.customer_name}</h2>
-                        <p style="color:var(--text-dim); margin-top:5px; font-size:0.8rem;">${dateStr}</p>
-                    </div>
-                    <div class="status-tag ${order.status}">${statusLabel}</div>
-                </div>
-
-                <div class="details-grid">
-                    <div class="info-group">
-                        <label>Phone Number</label>
-                        <p><a href="tel:${order.customer_phone}">${order.customer_phone}</a></p>
-                    </div>
-                    <div class="info-group">
-                        <label>Email</label>
-                        <p>${order.customer_email ? `<a href="mailto:${order.customer_email}">${order.customer_email}</a>` : 'N/A'}</p>
-                    </div>
-                    <div class="info-group">
-                        <label>Order Type</label>
-                        <p>${deliveryType}</p>
-                    </div>
-                    <div class="info-group">
-                        <label>Payment Method</label>
-                        <p>${paymentMethod}</p>
-                    </div>
-                    <div class="info-group">
-                        <label>Expected Time</label>
-                        <p>${order.delivery_time_mode === 'later' ? `${order.delivery_date} ${order.delivery_time}` : 'As soon as possible'}</p>
-                    </div>
-                    ${order.order_type === 'delivery' ? `
-                        <div class="info-group" style="grid-column: 1 / -1;">
-                            <label>Delivery Address</label>
-                            <p>${order.address}</p>
-                            ${order.reference ? `<p style="font-size:0.85rem; color:var(--text-dim); margin-top:5px;"><strong>Ref:</strong> ${order.reference}</p>` : ''}
+                pane.innerHTML = `
+                    <button class="close-details" onclick="closeDetails()">✕</button>
+                    <div class="details-header">
+                        <div>
+                            <h2>${item.customer_name}</h2>
+                            <p style="color:var(--text-dim); margin-top:5px; font-size:0.8rem;">${dateStr}</p>
                         </div>
-                    ` : ''}
-                    ${order.customer_notes ? `
-                         <div class="info-group" style="grid-column: 1 / -1;">
-                            <label>Customer Notes</label>
-                            <p style="font-style:italic; font-weight:400;">"${order.customer_notes}"</p>
-                        </div>
-                    ` : ''}
-                </div>
+                        <div class="status-tag ${item.status}">${statusLabel}</div>
+                    </div>
 
-                <div class="items-section">
-                    <h3>Order Items</h3>
-                    ${order.items.map((item, idx) => {
-                        const itemId = `${order.id}-${idx}`;
-                        const isCrossed = crossedItems.has(itemId);
-                        return `
-                            <div class="item-row ${isCrossed ? 'crossed' : ''}" onclick="toggleItem('${itemId}')">
-                                <div>
-                                    <span class="item-name">${item.quantity > 1 ? item.quantity + 'x ' : ''}${item.name}</span>
-                                    <div class="item-meta">
-                                        ${item.size ? `Size: ${item.size} • ` : ''}
-                                        ${item.toppings && item.toppings.length > 0 ? `Toppings: ${item.toppings.join(', ')} • ` : ''}
-                                        ${item.instructions ? `<span style="color:var(--orange)">Note: "${item.instructions}"</span>` : ''}
-                                    </div>
-                                </div>
-                                <div class="item-price">$${(item.total || (item.price * (item.quantity || 1))).toFixed(2)}</div>
+                    <div class="details-grid">
+                        <div class="info-group">
+                            <label>Phone Number</label>
+                            <p><a href="tel:${item.customer_phone}">${item.customer_phone}</a></p>
+                        </div>
+                        <div class="info-group">
+                            <label>Email</label>
+                            <p>${item.customer_email ? `<a href="mailto:${item.customer_email}">${item.customer_email}</a>` : 'N/A'}</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Order Type</label>
+                            <p>${deliveryType}</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Payment Method</label>
+                            <p>${paymentMethod}</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Expected Time</label>
+                            <p>${item.delivery_time_mode === 'later' ? `${item.delivery_date} ${item.delivery_time}` : 'As soon as possible'}</p>
+                        </div>
+                        ${item.order_type === 'delivery' ? `
+                            <div class="info-group" style="grid-column: 1 / -1;">
+                                <label>Delivery Address</label>
+                                <p>${item.address}</p>
+                                ${item.reference ? `<p style="font-size:0.85rem; color:var(--text-dim); margin-top:5px;"><strong>Ref:</strong> ${item.reference}</p>` : ''}
                             </div>
-                        `;
-                    }).join('')}
-                </div>
-
-                <div class="details-footer">
-                    <div class="total-amount">Total: $${order.total.toFixed(2)}</div>
-                    <div class="actions-bar">
-                        ${order.status === 'pending' ? `
-                            <button class="btn btn-reject" onclick="updateOrderStatus('${order.id}', 'rejected')">Reject</button>
-                            <button class="btn btn-accept" onclick="updateOrderStatus('${order.id}', 'accepted')">Accept</button>
                         ` : ''}
-                        ${order.status === 'accepted' ? `
-                            <button class="btn btn-finish" onclick="updateOrderStatus('${order.id}', 'preparing')">Prepare</button>
-                        ` : ''}
-                        ${order.status === 'preparing' ? `
-                            <button class="btn btn-finish" onclick="updateOrderStatus('${order.id}', 'finished')">Ready</button>
-                        ` : ''}
-                        ${order.status === 'finished' ? `
-                            <button class="btn btn-delivered" onclick="updateOrderStatus('${order.id}', 'delivered')">Mark as Delivered</button>
+                        ${item.customer_notes ? `
+                             <div class="info-group" style="grid-column: 1 / -1;">
+                                <label>Customer Notes</label>
+                                <p style="font-style:italic; font-weight:400;">"${item.customer_notes}"</p>
+                            </div>
                         ` : ''}
                     </div>
-                </div>
-            `;
+
+                    <div class="items-section">
+                        <h3>Order Items</h3>
+                        ${item.items.map((it, idx) => {
+                            const itemId = `${item.id}-${idx}`;
+                            const isCrossed = crossedItems.has(itemId);
+                            return `
+                                <div class="item-row ${isCrossed ? 'crossed' : ''}" onclick="toggleItem('${itemId}')">
+                                    <div>
+                                        <span class="item-name">${it.quantity > 1 ? it.quantity + 'x ' : ''}${it.name}</span>
+                                        <div class="item-meta">
+                                            ${it.size ? `Size: ${it.size} • ` : ''}
+                                            ${it.toppings && it.toppings.length > 0 ? `Toppings: ${it.toppings.join(', ')} • ` : ''}
+                                            ${it.instructions ? `<span style="color:var(--orange)">Note: "${it.instructions}"</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="item-price">$${(it.total || (it.price * (it.quantity || 1))).toFixed(2)}</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+
+                    <div class="details-footer">
+                        <div class="total-amount">Total: $${item.total.toFixed(2)}</div>
+                        <div class="actions-bar">
+                            ${item.status === 'pending' ? `
+                                <button class="btn btn-reject" onclick="updateOrderStatus('${item.id}', 'rejected')">Reject</button>
+                                <button class="btn btn-accept" onclick="updateOrderStatus('${item.id}', 'accepted')">Accept</button>
+                            ` : ''}
+                            ${item.status === 'accepted' ? `
+                                <button class="btn btn-finish" onclick="updateOrderStatus('${item.id}', 'preparing')">Prepare</button>
+                            ` : ''}
+                            ${item.status === 'preparing' ? `
+                                <button class="btn btn-finish" onclick="updateOrderStatus('${item.id}', 'finished')">Ready</button>
+                            ` : ''}
+                            ${item.status === 'finished' ? `
+                                <button class="btn btn-delivered" onclick="updateOrderStatus('${item.id}', 'delivered')">Mark as Delivered</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Reservation Details
+                const dateStr = new Date(item.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+                let statusLabel = item.status.charAt(0).toUpperCase() + item.status.slice(1);
+
+                pane.innerHTML = `
+                    <button class="close-details" onclick="closeDetails()">✕</button>
+                    <div class="details-header">
+                        <div>
+                            <h2>${item.customer_name}</h2>
+                            <p style="color:var(--text-dim); margin-top:5px; font-size:0.8rem;">Booked on ${dateStr}</p>
+                        </div>
+                        <div class="status-tag ${item.status}">${statusLabel}</div>
+                    </div>
+
+                    <div class="details-grid">
+                        <div class="info-group">
+                            <label>Guests</label>
+                            <p style="font-size:1rem; color:var(--orange);">${item.party_size} People</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Date</label>
+                            <p>${item.reservation_date}</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Time Slot</label>
+                            <p>${item.reservation_time}</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Phone Number</label>
+                            <p><a href="tel:${item.customer_phone}">${item.customer_phone}</a></p>
+                        </div>
+                        <div class="info-group">
+                            <label>Email</label>
+                            <p>${item.customer_email ? `<a href="mailto:${item.customer_email}">${item.customer_email}</a>` : 'N/A'}</p>
+                        </div>
+                        ${item.comments ? `
+                             <div class="info-group" style="grid-column: 1 / -1;">
+                                <label>Special Requests / Comments</label>
+                                <p style="font-style:italic; font-weight:400;">"${item.comments}"</p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    ${item.preorder_items && item.preorder_items.length > 0 ? `
+                        <div class="items-section">
+                            <h3>Pre-ordered Food & Drinks</h3>
+                            ${item.preorder_items.map((it) => `
+                                <div class="item-row">
+                                    <div>
+                                        <span class="item-name">${it.quantity > 1 ? it.quantity + 'x ' : ''}${it.name}</span>
+                                        <div class="item-meta">
+                                            ${it.instructions ? `<span style="color:var(--orange)">Note: "${it.instructions}"</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="item-price">$${(it.price * (it.quantity || 1)).toFixed(2)}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+
+                    <div class="details-footer">
+                        <div class="total-amount">${item.total > 0 ? `Pre-order Total: $${item.total.toFixed(2)}` : 'Standard Table Booking'}</div>
+                        <div class="actions-bar">
+                            ${item.status === 'pending' ? `
+                                <button class="btn btn-reject" onclick="updateResStatus('${item.id}', 'rejected')">Reject</button>
+                                <button class="btn btn-success" onclick="updateResStatus('${item.id}', 'confirmed')">Confirm Booking</button>
+                            ` : ''}
+                            ${item.status === 'confirmed' ? `
+                                <button class="btn btn-reject" onclick="updateResStatus('${item.id}', 'cancelled')">Cancel</button>
+                                <button class="btn btn-success" onclick="updateResStatus('${item.id}', 'attended')">Mark Attended</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         window.closeDetails = () => {
@@ -762,8 +1013,8 @@
         window.toggleItem = (itemId) => {
             if (crossedItems.has(itemId)) crossedItems.delete(itemId);
             else crossedItems.add(itemId);
-            const order = orders.find(o => o.id === selectedOrderId);
-            renderDetails(order);
+            const item = orders.find(o => o.id === selectedItemId);
+            renderDetails(item);
         };
 
         window.updateOrderStatus = async (id, status) => {
@@ -780,42 +1031,45 @@
                 if (reason !== null && reason.trim() !== "") updates.rejection_reason = reason;
             }
 
-            // Optimistic update
             const orderIdx = orders.findIndex(o => o.id === id);
             if (orderIdx !== -1) {
                 Object.assign(orders[orderIdx], updates);
                 updateCounts();
-                renderOrders();
-                if (selectedOrderId === id) renderDetails(orders[orderIdx]);
+                renderList();
+                if (selectedItemId === id) renderDetails(orders[orderIdx]);
             }
 
-            const { error } = await sb.from('menutech_orders')
-                .update(updates)
-                .eq('id', id);
+            const { error } = await sb.from('menutech_orders').update(updates).eq('id', id);
 
             if (error) {
                 showToast('Error updating order: ' + error.message, 'error');
                 loadOrders();
             } else {
-                let statusMsg = status;
-                if (status === 'accepted') statusMsg = 'Accepted';
-                if (status === 'preparing') statusMsg = 'In Preparation';
-                if (status === 'finished') statusMsg = 'Ready';
-                if (status === 'delivered') statusMsg = 'Delivered';
-                showToast(`Order marked as ${statusMsg}`);
+                showToast(`Order status updated to ${status}`);
+            }
+        };
 
-                if (status === 'history' || status === 'delivered' || status === 'rejected') {
-                    switchTab('history');
-                } else if (status === 'accepted' || status === 'preparing') {
-                    switchTab('accepted');
-                } else {
-                    switchTab(status);
-                }
+        window.updateResStatus = async (id, status) => {
+            const updates = { status, updated_at: new Date().toISOString() };
 
-                if (status === 'rejected' || status === 'delivered') {
-                    selectedOrderId = null;
-                    if (window.innerWidth <= 768) closeDetails();
-                }
+            const resIdx = reservations.findIndex(r => r.id === id);
+            if (resIdx !== -1) {
+                Object.assign(reservations[resIdx], updates);
+                updateCounts();
+                renderList();
+                if (selectedItemId === id) renderDetails(reservations[resIdx]);
+            }
+
+            const { error } = await sb.from('menutech_reservations').update(updates).eq('id', id);
+
+            if (error) {
+                showToast('Error updating reservation: ' + error.message, 'error');
+                loadReservations();
+            } else {
+                showToast(`Reservation marked as ${status}`);
+                if (status === 'confirmed') switchResTab('confirmed');
+                else if (status === 'attended') switchResTab('attended');
+                else if (status === 'cancelled' || status === 'rejected') switchResTab('history');
             }
         };
 
@@ -831,7 +1085,6 @@
             }, 6000);
         }
 
-
         function initTheme() {
             if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
             document.getElementById('theme-toggle').onclick = () => {
@@ -846,7 +1099,6 @@
             pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
             document.addEventListener('click', () => pill.classList.remove('active'));
             window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
-
         }
 
         init();
