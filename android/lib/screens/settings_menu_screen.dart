@@ -16,6 +16,13 @@ class SettingsMenuScreen extends StatelessWidget {
         children: [
           _buildMenuOption(
             context,
+            icon: Icons.restaurant_menu_outlined,
+            title: 'My Menu',
+            onTap: () => Navigator.pushNamed(context, '/menus'),
+          ),
+          const SizedBox(height: 16),
+          _buildMenuOption(
+            context,
             icon: Icons.print_outlined,
             title: 'Printer Settings',
             onTap: () => Navigator.pushNamed(context, '/printer-settings'),
@@ -42,13 +49,6 @@ class SettingsMenuScreen extends StatelessWidget {
                 }
               }
             },
-          ),
-          const SizedBox(height: 32),
-          const Center(
-            child: Text(
-              'More options coming soon',
-              style: TextStyle(color: Colors.grey, fontSize: 14, fontStyle: FontStyle.italic),
-            ),
           ),
         ],
       ),
