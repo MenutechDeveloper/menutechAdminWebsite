@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../main.dart';
 import '../models/order_model.dart';
+import '../models/unified_item.dart';
 import '../services/supabase_service.dart';
 
 class ChatbotWidget extends StatefulWidget {
@@ -10,38 +11,40 @@ class ChatbotWidget extends StatefulWidget {
 
   static _ChatbotWidgetState? _activeState;
 
-  static void showOrderBubble(String text, OrderModel order) {
+  static void showItemBubble(String text, UnifiedItem item) {
     final state = _activeState;
     if (state != null && state.mounted) {
-      final jsonOrder = jsonEncode({
-        'id': order.id,
-        'customerName': order.customerName,
-        'customerPhone': order.customerPhone,
-        'orderType': order.orderType,
-        'totalAmount': order.totalAmount,
-        'status': order.status,
-        'items': order.items.map((i) => {
-          'name': i.name,
-          'quantity': i.quantity,
-          'price': i.price,
-          'total': i.total,
-          'size': i.size,
-          'instructions': i.instructions,
-        }).toList(),
-        'createdAt': order.createdAt.toIso8601String(),
-        'paymentMethod': order.paymentMethod,
-        'address': order.address,
-        'reference': order.reference,
-        'customerNotes': order.customerNotes,
-      });
-
+      final jsonItem = jsonEncode(item.toJson());
       final jsonText = jsonEncode(text);
       state._controller.runJavaScript('''
         if (window.showOrderBubbleInWebView) {
-          window.showOrderBubbleInWebView($jsonText, $jsonOrder);
+          window.showOrderBubbleInWebView($jsonText, $jsonItem);
         }
       ''');
     }
+  }
+
+  static void showOrderBubble(String text, OrderModel order) {
+    final item = UnifiedItem(
+      id: order.id,
+      userId: order.userId,
+      entryType: EntryType.order,
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      status: order.status,
+      totalAmount: order.totalAmount,
+      createdAt: order.createdAt,
+      address: order.address,
+      reference: order.reference,
+      orderType: order.orderType,
+      items: order.items,
+      customerNotes: order.customerNotes,
+      paymentMethod: order.paymentMethod,
+      deliveryDate: order.deliveryDate,
+      deliveryTime: order.deliveryTime,
+      deliveryTimeMode: order.deliveryTimeMode,
+    );
+    showItemBubble(text, item);
   }
 
   static void notifyNewOrder(Map<String, dynamic> orderJson) {
@@ -116,8 +119,9 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
             } else if (event == 'open_order') {
               final orderData = data['orderData'];
               if (orderData != null) {
-                final order = OrderModel.fromJson(Map<String, dynamic>.from(orderData));
-                navigatorKey.currentState?.pushNamed('/order-detail', arguments: order);
+                final map = Map<String, dynamic>.from(orderData);
+                final item = UnifiedItem.fromJson(map);
+                navigatorKey.currentState?.pushNamed('/order-detail', arguments: item);
               }
             }
           } catch (e) {
