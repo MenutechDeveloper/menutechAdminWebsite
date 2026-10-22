@@ -123,6 +123,57 @@ class UnifiedItem {
     );
   }
 
+  factory UnifiedItem.fromJson(Map<String, dynamic> json) {
+    final entryTypeStr = json['entry_type'] ?? json['entryType'];
+    if (entryTypeStr == 'reservation' || json.containsKey('reservation_date')) {
+      return UnifiedItem.fromReservationJson(json);
+    } else {
+      return UnifiedItem.fromOrderJson(json);
+    }
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'entry_type': entryType == EntryType.reservation ? 'reservation' : 'order',
+      'customer_name': customerName,
+      'customer_phone': customerPhone,
+      'customer_email': customerEmail,
+      'status': status,
+      'total_amount': totalAmount,
+      'created_at': createdAt.toIso8601String(),
+      'address': address,
+      'reference': reference,
+      'order_type': orderType,
+      'items': items.map((i) => {
+        'name': i.name,
+        'quantity': i.quantity,
+        'price': i.price,
+        'total': i.total,
+        'size': i.size,
+        'instructions': i.instructions,
+      }).toList(),
+      'customer_notes': customerNotes,
+      'payment_method': paymentMethod,
+      'delivery_date': deliveryDate,
+      'delivery_time': deliveryTime,
+      'delivery_time_mode': deliveryTimeMode,
+      'reservation_date': reservationDate,
+      'reservation_time': reservationTime,
+      'party_size': partySize,
+      'comments': comments,
+      'preorder_items': preorderItems.map((i) => {
+        'name': i.name,
+        'quantity': i.quantity,
+        'price': i.price,
+        'total': i.total,
+        'size': i.size,
+        'instructions': i.instructions,
+      }).toList(),
+    };
+  }
+
   OrderModel toOrderModel() {
     return OrderModel(
       id: id,

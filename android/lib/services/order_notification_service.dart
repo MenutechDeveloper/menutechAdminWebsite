@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
-import '../models/order_model.dart';
+import '../models/unified_item.dart';
 import 'supabase_service.dart';
 import '../widgets/chatbot_widget.dart';
 
@@ -10,10 +10,15 @@ class OrderNotificationService {
   OrderNotificationService._internal();
 
   StreamSubscription? _ordersSubscription;
-  final Set<String> _knownPendingOrderIds = {};
+  StreamSubscription? _reservationsSubscription;
+
+  final Set<String> _knownPendingKeys = {};
   final Map<String, Timer> _periodicReminders = {};
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _chimePlayer = AudioPlayer();
+  final AudioPlayer _speechPlayer = AudioPlayer();
   bool _isInitialized = false;
+
+  final Map<String, UnifiedItem> _pendingItemsMap = {};
 
   void init() {
     final user = SupabaseService().currentUser;
@@ -22,83 +27,133 @@ class OrderNotificationService {
     if (_isInitialized) return;
     _isInitialized = true;
 
-    _ordersSubscription?.cancel();
+    _stopSubscriptions();
+
     _ordersSubscription = SupabaseService()
         .client
         .from('menutech_orders')
         .stream(primaryKey: ['id'])
         .eq('user_id', user.id)
         .listen((dataList) {
-      _processOrders(dataList);
+      _processItems(dataList, isReservation: false);
+    });
+
+    _reservationsSubscription = SupabaseService()
+        .client
+        .from('menutech_reservations')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', user.id)
+        .listen((dataList) {
+      _processItems(dataList, isReservation: true);
     });
   }
 
   void stop() {
-    _ordersSubscription?.cancel();
-    _ordersSubscription = null;
+    _stopSubscriptions();
     for (var timer in _periodicReminders.values) {
       timer.cancel();
     }
     _periodicReminders.clear();
-    _knownPendingOrderIds.clear();
+    _knownPendingKeys.clear();
+    _pendingItemsMap.clear();
     _isInitialized = false;
   }
 
-  void _processOrders(List<Map<String, dynamic>> rawOrders) {
-    final currentPendingOrders = <OrderModel>[];
-    final currentPendingIds = <String>{};
+  void _stopSubscriptions() {
+    _ordersSubscription?.cancel();
+    _ordersSubscription = null;
+    _reservationsSubscription?.cancel();
+    _reservationsSubscription = null;
+  }
 
-    for (var map in rawOrders) {
-      final order = OrderModel.fromJson(map);
-      if (order.status.toLowerCase() == 'pending') {
-        currentPendingOrders.add(order);
-        currentPendingIds.add(order.id);
+  void _processItems(List<Map<String, dynamic>> rawList, {required bool isReservation}) {
+    final prefix = isReservation ? 'res_' : 'order_';
+    final currentPendingKeysForType = <String>{};
+
+    for (var map in rawList) {
+      final item = isReservation
+          ? UnifiedItem.fromReservationJson(map)
+          : UnifiedItem.fromOrderJson(map);
+
+      final key = '$prefix${item.id}';
+      if (item.status.toLowerCase() == 'pending') {
+        currentPendingKeysForType.add(key);
+        _pendingItemsMap[key] = item;
+      } else {
+        _pendingItemsMap.remove(key);
       }
     }
 
-    // Cancel reminders for orders that are no longer pending
-    final removedIds = _knownPendingOrderIds.difference(currentPendingIds);
-    for (var removedId in removedIds) {
-      _periodicReminders[removedId]?.cancel();
-      _periodicReminders.remove(removedId);
-      _knownPendingOrderIds.remove(removedId);
+    // Cancel reminders for keys of this type that are no longer pending
+    final existingKeysForType = _knownPendingKeys.where((k) => k.startsWith(prefix)).toSet();
+    final removedKeys = existingKeysForType.difference(currentPendingKeysForType);
+
+    for (var removedKey in removedKeys) {
+      _periodicReminders[removedKey]?.cancel();
+      _periodicReminders.remove(removedKey);
+      _knownPendingKeys.remove(removedKey);
+      _pendingItemsMap.remove(removedKey);
     }
 
-    // Handle new pending orders
-    for (var order in currentPendingOrders) {
-      if (!_knownPendingOrderIds.contains(order.id)) {
-        _knownPendingOrderIds.add(order.id);
-        _handleNewPendingOrder(order);
+    // Handle new pending items
+    for (var key in currentPendingKeysForType) {
+      if (!_knownPendingKeys.contains(key)) {
+        _knownPendingKeys.add(key);
+        final item = _pendingItemsMap[key];
+        if (item != null) {
+          _handleNewPendingItem(key, item);
+        }
       }
     }
   }
 
-  void _handleNewPendingOrder(OrderModel order) {
-    // Immediate notification
-    _notifyOrderWithGemini(order, isReminder: false);
+  void _handleNewPendingItem(String key, UnifiedItem item) {
+    // Immediate notification in real time
+    _notifyWithGemini(item, isReminder: false);
 
     // Schedule periodic reminders every 35 seconds if unanswered
-    _periodicReminders[order.id]?.cancel();
-    _periodicReminders[order.id] = Timer.periodic(
+    _periodicReminders[key]?.cancel();
+    _periodicReminders[key] = Timer.periodic(
       const Duration(seconds: 35),
       (_) {
-        if (_knownPendingOrderIds.contains(order.id)) {
-          _notifyOrderWithGemini(order, isReminder: true);
+        if (_knownPendingKeys.contains(key)) {
+          final currentItem = _pendingItemsMap[key] ?? item;
+          _notifyWithGemini(currentItem, isReminder: true);
         } else {
-          _periodicReminders[order.id]?.cancel();
-          _periodicReminders.remove(order.id);
+          _periodicReminders[key]?.cancel();
+          _periodicReminders.remove(key);
         }
       },
     );
   }
 
-  Future<void> _notifyOrderWithGemini(OrderModel order, {required bool isReminder}) async {
-    final customerName = order.customerName.isEmpty ? 'un cliente' : order.customerName;
-    final totalAmount = order.totalAmount.toStringAsFixed(2);
+  Future<void> _notifyWithGemini(UnifiedItem item, {required bool isReminder}) async {
+    final customerName = item.customerName.isEmpty || item.customerName == 'N/A'
+        ? 'a customer'
+        : item.customerName;
 
-    final prompt = isReminder
-        ? "Genera una frase muy corta, cercana y atenta en español (máximo 12 palabras), como un amigo recordando amablemente al usuario que la orden de $customerName por \$$totalAmount sigue pendiente y necesita respuesta. No incluyas emojis, ni iconos, ni símbolos, ni comillas, solo texto plano."
-        : "Genera una frase muy corta, amable y amigable en español (máximo 12 palabras), como un amigo cercano al usuario notificándole que acaba de llegar una nueva orden de $customerName por \$$totalAmount. No incluyas emojis, ni iconos, ni símbolos, ni comillas, solo texto plano.";
+    String prompt;
+    String fallbackPhrase;
+
+    if (item.entryType == EntryType.order) {
+      final totalAmount = item.totalAmount.toStringAsFixed(2);
+      if (isReminder) {
+        prompt = "Generate a very short, polite, and friendly sentence in English (maximum 12 words), as a helpful assistant reminding the user that the pending order from $customerName for \$$totalAmount is still waiting for a response. Do not include emojis, icons, symbols, quotes, or markdown, plain text only.";
+        fallbackPhrase = "Reminder: You have a pending order from $customerName for \$$totalAmount";
+      } else {
+        prompt = "Generate a very short, polite, and friendly sentence in English (maximum 12 words), as a helpful assistant notifying the user that a new order from $customerName for \$$totalAmount has just arrived. Do not include emojis, icons, symbols, quotes, or markdown, plain text only.";
+        fallbackPhrase = "You have a new order from $customerName for \$$totalAmount";
+      }
+    } else {
+      final partySize = item.partySize;
+      if (isReminder) {
+        prompt = "Generate a very short, polite, and friendly sentence in English (maximum 12 words), as a helpful assistant reminding the user that the pending table reservation from $customerName for $partySize guests is still waiting for a response. Do not include emojis, icons, symbols, quotes, or markdown, plain text only.";
+        fallbackPhrase = "Reminder: You have a pending reservation from $customerName";
+      } else {
+        prompt = "Generate a very short, polite, and friendly sentence in English (maximum 12 words), as a helpful assistant notifying the user that a new table reservation from $customerName for $partySize guests has just arrived. Do not include emojis, icons, symbols, quotes, or markdown, plain text only.";
+        fallbackPhrase = "You have a new reservation from $customerName for $partySize guests";
+      }
+    }
 
     String rawPhrase = '';
     try {
@@ -114,18 +169,19 @@ class OrderNotificationService {
     }
 
     if (rawPhrase.trim().isEmpty) {
-      rawPhrase = isReminder
-          ? "Recuerda que tienes la orden pendiente de $customerName por \$$totalAmount"
-          : "Tienes una nueva orden de $customerName por \$$totalAmount";
+      rawPhrase = fallbackPhrase;
     }
 
     final cleanPhrase = _sanitizeText(rawPhrase);
 
-    // Speak voice announcement
+    // 1. Play alert chime sound so client hears audio notification
+    await _playAlertChime();
+
+    // 2. Speak Gemini AI announcement in English
     _speakText(cleanPhrase);
 
-    // Display plain text thought bubble
-    ChatbotWidget.showOrderBubble(cleanPhrase, order);
+    // 3. Display plain text thought bubble on 3D character
+    ChatbotWidget.showItemBubble(cleanPhrase, item);
   }
 
   String _sanitizeText(String input) {
@@ -134,7 +190,7 @@ class OrderNotificationService {
     text = text.replaceAll(RegExp(r'<[^>]*>'), '');
     text = text.replaceAll(
       RegExp(
-        r'[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]',
+        r'[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1FA00}-\u{1FA6F}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]',
         unicode: true,
       ),
       '',
@@ -143,11 +199,19 @@ class OrderNotificationService {
     return text;
   }
 
+  Future<void> _playAlertChime() async {
+    try {
+      await _chimePlayer.stop();
+      await _chimePlayer.play(UrlSource('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
+      await Future.delayed(const Duration(milliseconds: 600));
+    } catch (_) {}
+  }
+
   void _speakText(String phrase) async {
     try {
-      final url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es&q=${Uri.encodeComponent(phrase)}';
-      await _audioPlayer.stop();
-      await _audioPlayer.play(UrlSource(url));
+      final url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${Uri.encodeComponent(phrase)}';
+      await _speechPlayer.stop();
+      await _speechPlayer.play(UrlSource(url));
     } catch (_) {}
   }
 }
