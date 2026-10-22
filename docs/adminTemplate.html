@@ -1063,14 +1063,35 @@
             const t = TRANSLATIONS[pageData.lang];
             showSaveStatus(t.saving);
             try {
+                const now = new Date().toISOString();
                 const { error } = await sb.from('menutech_web_templates')
                     .upsert({
                         user_id: activeOwnerId,
                         config: pageData,
-                        updated_at: new Date()
+                        updated_at: now
                     }, { onConflict: 'user_id' });
 
                 if (error) throw error;
+
+                if (activeOwnerId) {
+                    try {
+                        const { data: existingRes } = await sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle();
+                        const resPayload = {
+                            user_id: activeOwnerId,
+                            name: pageData.title || existingRes?.name || "",
+                            owner_name: existingRes?.owner_name || "",
+                            phone: pageData.contact?.phone || existingRes?.phone || "",
+                            address: pageData.contact?.address || existingRes?.address || "",
+                            logo_url: pageData.logoImg || existingRes?.logo_url || null,
+                            social_media: existingRes?.social_media || [],
+                            schedule: existingRes?.schedule || [],
+                            updated_at: now
+                        };
+                        await sb.from('menutech_restaurants').upsert(resPayload, { onConflict: 'user_id' });
+                    } catch (syncErr) {
+                        console.error("Sync to restaurantInfo error:", syncErr);
+                    }
+                }
 
                 showSaveStatus(t.saved);
                 setTimeout(() => hideSaveStatus(), 2000);
@@ -1361,16 +1382,33 @@
             window.updateIframe();
 
             try {
-                const { data, error } = await sb.from('menutech_web_templates')
-                    .select('*')
-                    .eq('user_id', ownerId)
-                    .single();
+                const [templateRes, resRes] = await Promise.all([
+                    sb.from('menutech_web_templates').select('*').eq('user_id', ownerId).maybeSingle(),
+                    sb.from('menutech_restaurants').select('*').eq('user_id', ownerId).maybeSingle()
+                ]);
+
+                const data = templateRes.data;
+                const resData = resRes.data;
 
                 if (data && data.config) {
                     pageData = migrateData(data.config);
                 } else {
-                    // Keep the reset state + account name if no template exists
                     pageData.title = document.getElementById('current-account-name').value;
+                }
+
+                const templateTime = data?.updated_at ? new Date(data.updated_at).getTime() : 0;
+                const resTime = resData?.updated_at ? new Date(resData.updated_at).getTime() : 0;
+
+                // Sync from menutech_restaurants if menutech_restaurants was updated more recently
+                if (resData && resTime > templateTime) {
+                    if (resData.name) pageData.title = resData.name;
+                    if (resData.logo_url) pageData.logoImg = resData.logo_url;
+                    if (!pageData.contact) pageData.contact = {};
+                    if (resData.phone) pageData.contact.phone = resData.phone;
+                    if (resData.address) pageData.contact.address = resData.address;
+                    if (resData.schedule && Array.isArray(resData.schedule) && resData.schedule.length > 0) {
+                        pageData.contact.hours = resData.schedule.map(s => `${s.day}: ${s.hours}`).join(', ');
+                    }
                 }
             } catch (e) {
                 console.error("MT: Error loading template", e);

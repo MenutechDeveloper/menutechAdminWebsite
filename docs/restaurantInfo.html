@@ -561,7 +561,6 @@
 
         async function loadRestaurantInfo() {
             if (!activeOwnerId) return;
-            const { data, error } = await sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle();
 
             // Reset fields
             document.getElementById('res-name').value = "";
@@ -574,27 +573,62 @@
             document.getElementById('logo-preview-img').classList.add('hidden');
             document.getElementById('logo-placeholder').classList.remove('hidden');
 
-            if (data) {
-                document.getElementById('res-name').value = data.name || "";
-                document.getElementById('res-owner').value = data.owner_name || "";
-                document.getElementById('res-phone').value = data.phone || "";
-                document.getElementById('res-address').value = data.address || "";
+            const [resRes, webRes, menuRes, reservationRes] = await Promise.all([
+                sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle(),
+                sb.from('menutech_web_templates').select('*').eq('user_id', activeOwnerId).maybeSingle(),
+                sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle(),
+                sb.from('menutech_reservation_settings').select('*').eq('user_id', activeOwnerId).maybeSingle()
+            ]);
 
-                if (data.logo_url) {
-                    const img = document.getElementById('logo-preview-img');
-                    // Bandwidth optimization: w_500,h_500,c_fill
-                    img.src = data.logo_url.replace('/upload/', '/upload/w_500,h_500,c_fill/');
-                    img.classList.remove('hidden');
-                    document.getElementById('logo-placeholder').classList.add('hidden');
-                }
+            const resData = resRes.data;
+            const webData = webRes.data;
+            const menuData = menuRes.data;
+            const reservationData = reservationRes.data;
 
-                if (data.social_media && Array.isArray(data.social_media)) {
-                    data.social_media.forEach(s => addSocial(s.platform, s.url));
-                }
+            let mergedInfo = {
+                name: resData?.name || "",
+                owner_name: resData?.owner_name || "",
+                phone: resData?.phone || "",
+                address: resData?.address || "",
+                logo_url: resData?.logo_url || "",
+                social_media: resData?.social_media || [],
+                schedule: resData?.schedule || []
+            };
 
-                if (data.schedule && Array.isArray(data.schedule)) {
-                    data.schedule.forEach(s => addSchedule(s.day, s.hours));
-                }
+            const resTime = resData?.updated_at ? new Date(resData.updated_at).getTime() : 0;
+            const webTime = webData?.updated_at ? new Date(webData.updated_at).getTime() : 0;
+            const menuTime = menuData?.updated_at ? new Date(menuData.updated_at).getTime() : 0;
+
+            // Check if Web Templates or Menus was updated more recently than menutech_restaurants
+            if (webData && webTime > resTime) {
+                if (webData.config?.title) mergedInfo.name = webData.config.title;
+                if (webData.config?.logoImg) mergedInfo.logo_url = webData.config.logoImg;
+                if (webData.config?.contact?.phone) mergedInfo.phone = webData.config.contact.phone;
+                if (webData.config?.contact?.address) mergedInfo.address = webData.config.contact.address;
+            }
+
+            if (menuData && menuTime > resTime && menuTime > webTime) {
+                if (menuData.config?.restaurant_name) mergedInfo.name = menuData.config.restaurant_name;
+            }
+
+            document.getElementById('res-name').value = mergedInfo.name;
+            document.getElementById('res-owner').value = mergedInfo.owner_name;
+            document.getElementById('res-phone').value = mergedInfo.phone;
+            document.getElementById('res-address').value = mergedInfo.address;
+
+            if (mergedInfo.logo_url) {
+                const img = document.getElementById('logo-preview-img');
+                img.src = mergedInfo.logo_url.replace('/upload/', '/upload/w_500,h_500,c_fill/');
+                img.classList.remove('hidden');
+                document.getElementById('logo-placeholder').classList.add('hidden');
+            }
+
+            if (Array.isArray(mergedInfo.social_media)) {
+                mergedInfo.social_media.forEach(s => addSocial(s.platform, s.url));
+            }
+
+            if (Array.isArray(mergedInfo.schedule)) {
+                mergedInfo.schedule.forEach(s => addSchedule(s.day, s.hours));
             }
 
             await loadGallery();
@@ -603,84 +637,66 @@
         async function syncToOtherModules(payload) {
             const { user_id, name, logo_url, phone, address, schedule } = payload;
             const openingHours = schedule && Array.isArray(schedule) ? schedule.map(s => `${s.day}: ${s.hours}`).join(', ') : '';
-            const defaultLogo = 'https://menutech.services/assets/img/logomt.png';
+            const now = new Date().toISOString();
 
-            console.log("MT: Starting sync for user:", user_id);
+            console.log("MT: Propagating updated restaurant info to all modules for user:", user_id);
 
-            // 1. Sync to Tickets (Granular)
+            // 1. Sync to Web Templates
             try {
-                const { data: ticketData, error: tErr } = await sb.from('menutech_tickets').select('*').eq('user_id', user_id).maybeSingle();
-                if (tErr) throw tErr;
-
-                let ticketConfig = ticketData?.config || { show_logo: true, footer_text: "", header_text: "MENUTECH" };
-                let modified = false;
-
-                // Sync name if default
-                if (!ticketConfig.header_text || ticketConfig.header_text.trim().toUpperCase() === 'MENUTECH') {
-                    if (name) { ticketConfig.header_text = name; modified = true; }
-                }
-
-                // Sync logo if missing or default
-                if (!ticketConfig.logo_url || ticketConfig.logo_url === defaultLogo) {
-                    if (logo_url) { ticketConfig.logo_url = logo_url; modified = true; }
-                }
-
-                if (modified) {
-                    console.log("MT: Syncing Tickets configuration...");
-                    const { error: upErr } = await sb.from('menutech_tickets').upsert({
-                        user_id,
-                        domain: activeDomain || ticketData?.domain || null,
-                        config: ticketConfig,
-                        updated_at: new Date().toISOString()
-                    });
-                    if (upErr) console.error("MT: Error syncing Tickets:", upErr);
-                    else console.log("MT: Tickets synced successfully.");
-                } else {
-                    console.log("MT: Tickets already configured, skipping.");
-                }
-            } catch (e) {
-                console.error("MT: Ticket sync process failed:", e);
-            }
-
-            // 2. Sync to Web Templates (Granular)
-            try {
-                const { data: webData, error: wErr } = await sb.from('menutech_web_templates').select('*').eq('user_id', user_id).maybeSingle();
-                if (wErr) throw wErr;
-
-                let webConfig = webData?.config || { title: "Template Menutech", logoImg: defaultLogo, contact: {} };
-                let modified = false;
-
-                // Sync title if default
-                if (!webConfig.title || webConfig.title === "Template Menutech" || webConfig.title === "Your Store") {
-                    if (name) { webConfig.title = name; modified = true; }
-                }
-
-                // Sync logo if missing or default
-                if (!webConfig.logoImg || webConfig.logoImg === defaultLogo) {
-                    if (logo_url) { webConfig.logoImg = logo_url; modified = true; }
-                }
-
-                // Sync contact info if missing
+                const { data: webData } = await sb.from('menutech_web_templates').select('*').eq('user_id', user_id).maybeSingle();
+                let webConfig = webData?.config || { title: "", logoImg: "", contact: {} };
+                if (name) webConfig.title = name;
+                if (logo_url) webConfig.logoImg = logo_url;
                 if (!webConfig.contact) webConfig.contact = {};
-                if (!webConfig.contact.phone && phone) { webConfig.contact.phone = phone; modified = true; }
-                if (!webConfig.contact.address && address) { webConfig.contact.address = address; modified = true; }
-                if (!webConfig.contact.hours && openingHours) { webConfig.contact.hours = openingHours; modified = true; }
+                if (phone) webConfig.contact.phone = phone;
+                if (address) webConfig.contact.address = address;
+                if (openingHours) webConfig.contact.hours = openingHours;
 
-                if (modified) {
-                    console.log("MT: Syncing Web Template configuration...");
-                    const { error: upErr } = await sb.from('menutech_web_templates').upsert({
+                await sb.from('menutech_web_templates').upsert({
+                    user_id,
+                    config: webConfig,
+                    updated_at: now
+                }, { onConflict: 'user_id' });
+            } catch (e) { console.error("MT: Sync Web Template error:", e); }
+
+            // 2. Sync to Menus
+            try {
+                const { data: menuData } = await sb.from('menutech_menus').select('*').eq('user_id', user_id).maybeSingle();
+                if (menuData) {
+                    let menuConfig = menuData.config || {};
+                    if (name) menuConfig.restaurant_name = name;
+                    await sb.from('menutech_menus').upsert({
                         user_id,
-                        config: webConfig,
-                        updated_at: new Date().toISOString()
-                    });
-                    if (upErr) console.error("MT: Error syncing Web Template:", upErr);
-                    else console.log("MT: Web Template synced successfully.");
-                } else {
-                    console.log("MT: Web Template already configured, skipping.");
+                        config: menuConfig,
+                        updated_at: now
+                    }, { onConflict: 'user_id' });
                 }
-            } catch (e) {
-                console.error("MT: Web Template sync process failed:", e);
-            }
+            } catch (e) { console.error("MT: Sync Menus error:", e); }
+
+            // 3. Sync to Reservation Settings
+            try {
+                const { data: resData } = await sb.from('menutech_reservation_settings').select('*').eq('user_id', user_id).maybeSingle();
+                if (resData && schedule && Array.isArray(schedule)) {
+                    await sb.from('menutech_reservation_settings').upsert({
+                        user_id,
+                        custom_schedule: schedule,
+                        updated_at: now
+                    }, { onConflict: 'user_id' });
+                }
+            } catch (e) { console.error("MT: Sync Reservation Settings error:", e); }
+
+            // 4. Sync to Tickets
+            try {
+                const { data: ticketData } = await sb.from('menutech_tickets').select('*').eq('user_id', user_id).maybeSingle();
+                let ticketConfig = ticketData?.config || { show_logo: true, footer_text: "", header_text: "" };
+                if (name) ticketConfig.header_text = name;
+                if (logo_url) ticketConfig.logo_url = logo_url;
+                await sb.from('menutech_tickets').upsert({
+                    user_id,
+                    config: ticketConfig,
+                    updated_at: now
+                }, { onConflict: 'user_id' });
+            } catch (e) { console.error("MT: Sync Tickets error:", e); }
         }
 
         async function saveRestaurantInfo() {
