@@ -423,8 +423,14 @@
         async function loadReservationSettings() {
             if (!activeOwnerId) return;
 
-            // Fetch reservation settings
-            const { data, error } = await sb.from('menutech_reservation_settings').select('*').eq('user_id', activeOwnerId).maybeSingle();
+            // Fetch reservation settings and restaurant info in parallel
+            const [resSettingsRes, resRes] = await Promise.all([
+                sb.from('menutech_reservation_settings').select('*').eq('user_id', activeOwnerId).maybeSingle(),
+                sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle()
+            ]);
+
+            const data = resSettingsRes.data;
+            const resData = resRes.data;
 
             document.getElementById('res-enabled').checked = data ? (data.enabled !== false) : true;
             document.getElementById('min-guests').value = data ? (data.min_guests || 2) : 2;
@@ -439,12 +445,12 @@
 
             let customSched = data && data.custom_schedule && Array.isArray(data.custom_schedule) ? data.custom_schedule : [];
 
-            // If custom schedule is empty, try auto-importing from restaurantInfo schedule
-            if (customSched.length === 0) {
-                const { data: resData } = await sb.from('menutech_restaurants').select('schedule').eq('user_id', activeOwnerId).maybeSingle();
-                if (resData && resData.schedule && Array.isArray(resData.schedule)) {
-                    customSched = resData.schedule;
-                }
+            const resSettingsTime = data?.updated_at ? new Date(data.updated_at).getTime() : 0;
+            const resTime = resData?.updated_at ? new Date(resData.updated_at).getTime() : 0;
+
+            // If restaurantInfo was updated more recently or custom schedule is empty, import from restaurantInfo schedule
+            if (resData && resData.schedule && Array.isArray(resData.schedule) && (resTime > resSettingsTime || customSched.length === 0)) {
+                customSched = resData.schedule;
             }
 
             customSched.forEach(s => addSchedule(s.day, s.hours));

@@ -799,7 +799,13 @@
             document.getElementById('menu-editor').classList.add('hidden');
             document.getElementById('no-menu-container').classList.add('hidden');
 
-            const { data } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
+            const [menuRes, resRes] = await Promise.all([
+                sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle(),
+                sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle()
+            ]);
+
+            const data = menuRes.data;
+            const resData = resRes.data;
 
             // Find the active owner profile to refresh UI
             const owner = allOwners.find(o => o.id === activeOwnerId);
@@ -809,6 +815,15 @@
             if (data) {
                 menuData = data;
                 if (!menuData.config) menuData.config = { categories: [], toppings: [] };
+
+                const menuTime = data?.updated_at ? new Date(data.updated_at).getTime() : 0;
+                const resTime = resData?.updated_at ? new Date(resData.updated_at).getTime() : 0;
+
+                if (resData && (resTime > menuTime || !menuData.config.restaurant_name)) {
+                    if (resData.name) menuData.config.restaurant_name = resData.name;
+                    if (resData.logo_url && !menuData.cover_url) menuData.cover_url = resData.logo_url;
+                }
+
                 if (!menuData.config.restaurant_name && restName) {
                     menuData.config.restaurant_name = restName;
                 }
@@ -1267,6 +1282,7 @@
             }
 
             try {
+                const now = new Date().toISOString();
                 const { error } = await sb.from('menutech_menus').upsert({
                     user_id: activeOwnerId,
                     domain: activeDomain || 'undetermined',
@@ -1274,9 +1290,31 @@
                     menu_style: menuData.menu_style,
                     cover_url: menuData.cover_url,
                     cover_type: menuData.cover_type,
-                    config: menuData.config
+                    config: menuData.config,
+                    updated_at: now
                 }, { onConflict: 'user_id' });
                 if (error) throw error;
+
+                if (activeOwnerId && menuData.config?.restaurant_name) {
+                    try {
+                        const { data: existingRes } = await sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle();
+                        const resPayload = {
+                            user_id: activeOwnerId,
+                            name: menuData.config.restaurant_name,
+                            owner_name: existingRes?.owner_name || "",
+                            phone: existingRes?.phone || "",
+                            address: existingRes?.address || "",
+                            logo_url: menuData.cover_url || existingRes?.logo_url || null,
+                            social_media: existingRes?.social_media || [],
+                            schedule: existingRes?.schedule || [],
+                            updated_at: now
+                        };
+                        await sb.from('menutech_restaurants').upsert(resPayload, { onConflict: 'user_id' });
+                    } catch (syncErr) {
+                        console.error("Sync to restaurantInfo error:", syncErr);
+                    }
+                }
+
                 showToast("Menu saved successfully!");
                 setChanges(false);
             } catch (e) { showToast(e.message, "error"); }
