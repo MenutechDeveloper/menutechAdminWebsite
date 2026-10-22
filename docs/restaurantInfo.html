@@ -261,6 +261,60 @@
             background: var(--error);
         }
 
+        /* Schedule Item Visual Card & Clock Time Picker Popup */
+        .schedule-item-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 20px; padding: 20px; width: 100%;
+            display: flex; flex-direction: column; gap: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            animation: slideIn 0.3s ease-out;
+        }
+        .schedule-header { display: flex; justify-content: space-between; align-items: center; }
+        .schedule-title { font-size: 0.8rem; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; }
+        .schedule-sublabel { display: block; font-size: 0.7rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
+        .day-presets { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .preset-btn { background: var(--input); border: 1px solid var(--border); color: var(--text-dim); font-size: 0.75rem; font-weight: 700; padding: 6px 12px; border-radius: 20px; cursor: pointer; transition: 0.2s; }
+        .preset-btn:hover { border-color: var(--orange); color: var(--orange); }
+        .day-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+        .day-pill { flex: 1; min-width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--border); background: var(--input); color: var(--text-dim); font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); display: flex; align-items: center; justify-content: center; }
+        .day-pill:hover { border-color: var(--orange); color: var(--orange); }
+        .day-pill.active { background: var(--orange); color: #ffffff; border-color: var(--orange); box-shadow: 0 4px 12px rgba(255, 149, 51, 0.3); transform: translateY(-1px); }
+        .time-range-picker { display: flex; align-items: center; gap: 12px; }
+        .time-box { flex: 1; background: var(--input); border: 1.5px solid var(--border); border-radius: 16px; padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .time-box:hover { border-color: var(--orange); background: rgba(255, 149, 51, 0.05); }
+        .time-box-icon { font-size: 1.1rem; }
+        .time-box-val { font-size: 0.95rem; font-weight: 800; color: var(--text); }
+        .time-range-sep { font-weight: 700; color: var(--text-dim); font-size: 0.85rem; }
+
+        .mt-clock-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(6px); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 16px; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+        .mt-clock-modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .mt-clock-modal-card { background: var(--card); border: 1px solid var(--border); border-radius: 28px; width: 100%; max-width: 340px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); transform: scale(0.9); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        .mt-clock-modal-overlay.active .mt-clock-modal-card { transform: scale(1); }
+        .mt-clock-header { background: linear-gradient(135deg, var(--orange) 0%, #e07a1e 100%); color: #ffffff; padding: 24px 20px; display: flex; align-items: center; justify-content: space-between; }
+        .mt-clock-time-display { font-size: 3.2rem; font-weight: 800; font-family: 'Outfit', sans-serif; line-height: 1; display: flex; align-items: center; gap: 2px; letter-spacing: -1px; }
+        .mt-clock-digit { cursor: pointer; padding: 2px 6px; border-radius: 12px; transition: background 0.2s, opacity 0.2s; opacity: 0.65; }
+        .mt-clock-digit.active { opacity: 1; background: rgba(255, 255, 255, 0.22); }
+        .mt-clock-colon { opacity: 0.8; font-weight: 600; }
+        .mt-clock-ampm-group { display: flex; flex-direction: column; gap: 6px; }
+        .mt-clock-ampm-btn { background: rgba(255, 255, 255, 0.15); border: none; color: #ffffff; font-size: 0.75rem; font-weight: 800; padding: 6px 12px; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+        .mt-clock-ampm-btn.active { background: #ffffff; color: var(--orange); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .mt-clock-body { padding: 20px 16px; display: flex; flex-direction: column; align-items: center; }
+        .mt-clock-mode-indicator { font-size: 0.75rem; font-weight: 700; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        .mt-clock-dial-container { width: 230px; height: 230px; border-radius: 50%; background: var(--input); border: 1px solid var(--border); position: relative; user-select: none; touch-action: none; cursor: pointer; }
+        .mt-clock-center-dot { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: var(--orange); border-radius: 50%; transform: translate(-50%, -50%); z-index: 3; }
+        .mt-clock-hand { position: absolute; top: 50%; left: 50%; width: 2px; height: 90px; background: var(--orange); transform-origin: top center; transform: rotate(0deg); z-index: 2; pointer-events: none; transition: transform 0.15s ease-out; }
+        .mt-clock-hand.dragging { transition: none; }
+        .mt-clock-hand-head { position: absolute; bottom: -18px; left: 50%; width: 36px; height: 36px; background: var(--orange); border-radius: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(255, 149, 51, 0.4); }
+        .mt-clock-numbers { position: absolute; inset: 0; pointer-events: none; }
+        .mt-clock-num { position: absolute; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; color: var(--text); transform: translate(-50%, -50%); pointer-events: none; transition: color 0.2s; }
+        .mt-clock-num.selected { color: #ffffff; font-weight: 800; }
+        .mt-clock-footer { padding: 16px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border); background: var(--card); }
+        .mt-clock-btn { padding: 10px 20px; border-radius: 14px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; border: none; }
+        .mt-clock-btn.cancel { background: transparent; color: var(--text-dim); }
+        .mt-clock-btn.cancel:hover { background: var(--input); color: var(--text); }
+        .mt-clock-btn.confirm { background: var(--orange); color: #ffffff; box-shadow: 0 6px 18px rgba(255, 149, 51, 0.3); }
+        .mt-clock-btn.confirm:hover { transform: translateY(-2px); filter: brightness(1.05); }
+
         @media (max-width: 768px) { .dashboard-layout { flex-direction: column; } .sidebar-container { position: relative; top: 0; transform: none !important; width: 100%; margin-bottom: 20px; } .sidebar { width: 100%; height: auto; } }
     </style>
 </head>
@@ -712,8 +766,8 @@
             })).filter(s => s.url);
 
             const schedule = Array.from(document.querySelectorAll('.schedule-item')).map(item => ({
-                day: item.querySelector('input[type="text"]').value,
-                hours: item.querySelector('input[type="text"]:last-of-type').value
+                day: item.querySelector('.schedule-day-input')?.value || item.querySelector('input[type="text"]')?.value || '',
+                hours: item.querySelector('.schedule-hours-input')?.value || item.querySelector('input[type="text"]:last-of-type')?.value || ''
             }));
 
             const payload = {
@@ -765,16 +819,399 @@
             list.appendChild(item);
         };
 
-        window.addSchedule = (day = '', hours = '') => {
-            const list = document.getElementById('schedule-list');
-            const item = document.createElement('div');
-            item.className = 'dynamic-item schedule-item';
-            item.innerHTML = `
-                <input type="text" placeholder="Day (e.g. Mon-Fri)" value="${day}" style="flex:1">
-                <input type="text" placeholder="Hours (e.g. 9:00 - 20:00)" value="${hours}" style="flex:1">
-                <button class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+        // --- Clock Time Picker Modal Logic ---
+        let clockState = {
+            targetInput: null,
+            hour: 9,
+            minute: 0,
+            ampm: 'AM',
+            mode: 'hour' // 'hour' or 'minute'
+        };
+
+        function initClockPickerModal() {
+            if (document.getElementById('mt-clock-modal-overlay')) return;
+
+            const modalHtml = `
+                <div id="mt-clock-modal-overlay" class="mt-clock-modal-overlay">
+                    <div class="mt-clock-modal-card">
+                        <div class="mt-clock-header">
+                            <div class="mt-clock-time-display">
+                                <span id="mt-clock-hour-display" class="mt-clock-digit active">09</span>
+                                <span class="mt-clock-colon">:</span>
+                                <span id="mt-clock-minute-display" class="mt-clock-digit">00</span>
+                            </div>
+                            <div class="mt-clock-ampm-group">
+                                <button type="button" id="mt-clock-am-btn" class="mt-clock-ampm-btn active">A. M.</button>
+                                <button type="button" id="mt-clock-pm-btn" class="mt-clock-ampm-btn">P. M.</button>
+                            </div>
+                        </div>
+                        <div class="mt-clock-body">
+                            <div id="mt-clock-mode-indicator" class="mt-clock-mode-indicator">Seleccionar Hora</div>
+                            <div id="mt-clock-dial" class="mt-clock-dial-container">
+                                <div class="mt-clock-center-dot"></div>
+                                <div id="mt-clock-hand" class="mt-clock-hand">
+                                    <div id="mt-clock-hand-head" class="mt-clock-hand-head">9</div>
+                                </div>
+                                <div id="mt-clock-numbers" class="mt-clock-numbers"></div>
+                            </div>
+                        </div>
+                        <div class="mt-clock-footer">
+                            <button type="button" id="mt-clock-cancel-btn" class="mt-clock-btn cancel">Cancelar</button>
+                            <button type="button" id="mt-clock-confirm-btn" class="mt-clock-btn confirm">Establecer</button>
+                        </div>
+                    </div>
+                </div>
             `;
-            list.appendChild(item);
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            const overlay = document.getElementById('mt-clock-modal-overlay');
+            const hourDisplay = document.getElementById('mt-clock-hour-display');
+            const minDisplay = document.getElementById('mt-clock-minute-display');
+            const amBtn = document.getElementById('mt-clock-am-btn');
+            const pmBtn = document.getElementById('mt-clock-pm-btn');
+            const cancelBtn = document.getElementById('mt-clock-cancel-btn');
+            const confirmBtn = document.getElementById('mt-clock-confirm-btn');
+            const dial = document.getElementById('mt-clock-dial');
+
+            hourDisplay.onclick = () => setClockMode('hour');
+            minDisplay.onclick = () => setClockMode('minute');
+
+            amBtn.onclick = () => {
+                clockState.ampm = 'AM';
+                amBtn.classList.add('active');
+                pmBtn.classList.remove('active');
+            };
+            pmBtn.onclick = () => {
+                clockState.ampm = 'PM';
+                pmBtn.classList.add('active');
+                amBtn.classList.remove('active');
+            };
+
+            cancelBtn.onclick = closeClockPickerModal;
+            overlay.onclick = (e) => {
+                if (e.target === overlay) closeClockPickerModal();
+            };
+
+            confirmBtn.onclick = () => {
+                if (clockState.targetInput) {
+                    const formattedHour = clockState.hour.toString().padStart(2, '0');
+                    const formattedMin = clockState.minute.toString().padStart(2, '0');
+                    const timeStr = `${formattedHour}:${formattedMin} ${clockState.ampm}`;
+                    clockState.targetInput.value = timeStr;
+                    clockState.targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                closeClockPickerModal();
+            };
+
+            // Dial Drag & Touch Handling
+            let isDragging = false;
+
+            const handlePointer = (e) => {
+                const rect = dial.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                const dx = clientX - centerX;
+                const dy = clientY - centerY;
+
+                // Angle relative to 12 o'clock in degrees (0..360)
+                let deg = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+                if (deg < 0) deg += 360;
+
+                if (clockState.mode === 'hour') {
+                    let hour = Math.round(deg / 30);
+                    if (hour === 0) hour = 12;
+                    clockState.hour = hour;
+                } else {
+                    let minute = Math.round(deg / 6);
+                    if (minute === 60) minute = 0;
+                    // Snap to 5 minutes unless dragging closely
+                    clockState.minute = minute;
+                }
+                updateClockUI();
+            };
+
+            dial.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                document.getElementById('mt-clock-hand').classList.add('dragging');
+                handlePointer(e);
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (isDragging) handlePointer(e);
+            });
+            window.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    document.getElementById('mt-clock-hand').classList.remove('dragging');
+                    if (clockState.mode === 'hour') {
+                        setClockMode('minute');
+                    }
+                }
+            });
+
+            dial.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                document.getElementById('mt-clock-hand').classList.add('dragging');
+                handlePointer(e);
+            }, { passive: true });
+            window.addEventListener('touchmove', (e) => {
+                if (isDragging) handlePointer(e);
+            }, { passive: true });
+            window.addEventListener('touchend', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    document.getElementById('mt-clock-hand').classList.remove('dragging');
+                    if (clockState.mode === 'hour') {
+                        setClockMode('minute');
+                    }
+                }
+            });
+        }
+
+        function setClockMode(mode) {
+            clockState.mode = mode;
+            document.getElementById('mt-clock-mode-indicator').textContent = mode === 'hour' ? 'Seleccionar Hora' : 'Seleccionar Minutos';
+            document.getElementById('mt-clock-hour-display').classList.toggle('active', mode === 'hour');
+            document.getElementById('mt-clock-minute-display').classList.toggle('active', mode === 'minute');
+            renderClockNumbers();
+            updateClockUI();
+        }
+
+        function renderClockNumbers() {
+            const container = document.getElementById('mt-clock-numbers');
+            container.innerHTML = '';
+
+            const isHour = clockState.mode === 'hour';
+            const total = isHour ? 12 : 12; // 12 marks for hours and 5-min increments
+            const radius = 90; // px from center
+
+            for (let i = 1; i <= total; i++) {
+                const val = isHour ? i : (i === 12 ? '00' : (i * 5).toString().padStart(2, '0'));
+                const angle = (i * 30 - 90) * (Math.PI / 180);
+                const x = 115 + radius * Math.cos(angle);
+                const y = 115 + radius * Math.sin(angle);
+
+                const numEl = document.createElement('div');
+                numEl.className = 'mt-clock-num';
+                numEl.style.left = `${x}px`;
+                numEl.style.top = `${y}px`;
+                numEl.dataset.val = isHour ? i : (i * 5 % 60);
+                numEl.textContent = val;
+
+                container.appendChild(numEl);
+            }
+        }
+
+        function updateClockUI() {
+            document.getElementById('mt-clock-hour-display').textContent = clockState.hour.toString().padStart(2, '0');
+            document.getElementById('mt-clock-minute-display').textContent = clockState.minute.toString().padStart(2, '0');
+
+            const isHour = clockState.mode === 'hour';
+            const hand = document.getElementById('mt-clock-hand');
+            const head = document.getElementById('mt-clock-hand-head');
+
+            let deg = 0;
+            if (isHour) {
+                deg = (clockState.hour % 12) * 30;
+                head.textContent = clockState.hour;
+            } else {
+                deg = clockState.minute * 6;
+                head.textContent = clockState.minute.toString().padStart(2, '0');
+            }
+
+            hand.style.transform = `rotate(${deg}deg)`;
+
+            const nums = document.querySelectorAll('.mt-clock-num');
+            nums.forEach(num => {
+                const targetVal = isHour ? clockState.hour : Math.round(clockState.minute / 5) * 5 % 60;
+                num.classList.toggle('selected', parseInt(num.dataset.val) === targetVal);
+            });
+        }
+
+        function openClockPickerModal(inputElement) {
+            initClockPickerModal();
+            clockState.targetInput = inputElement;
+
+            // Parse existing value if present e.g. "09:00 AM" or "09:00"
+            const val = (inputElement.value || '09:00 AM').trim();
+            const timeMatch = val.match(/^(\d{1,2}):(\d{2})\s*(AM|PM|a\.m\.|p\.m\.|A\.M\.|P\.M\.)?$/i);
+
+            if (timeMatch) {
+                let h = parseInt(timeMatch[1]);
+                let m = parseInt(timeMatch[2]);
+                let ampm = (timeMatch[3] || 'AM').toUpperCase().replace(/\./g, '');
+                if (h > 12) { h = h - 12; ampm = 'PM'; }
+                if (h === 0) h = 12;
+                clockState.hour = h;
+                clockState.minute = m;
+                clockState.ampm = ampm.includes('P') ? 'PM' : 'AM';
+            } else {
+                clockState.hour = 9;
+                clockState.minute = 0;
+                clockState.ampm = 'AM';
+            }
+
+            document.getElementById('mt-clock-am-btn').classList.toggle('active', clockState.ampm === 'AM');
+            document.getElementById('mt-clock-pm-btn').classList.toggle('active', clockState.ampm === 'PM');
+
+            setClockMode('hour');
+            document.getElementById('mt-clock-modal-overlay').classList.add('active');
+        }
+
+        function closeClockPickerModal() {
+            const overlay = document.getElementById('mt-clock-modal-overlay');
+            if (overlay) overlay.classList.remove('active');
+        }
+
+        window.addSchedule = (dayStr = '', hoursStr = '') => {
+            const list = document.getElementById('schedule-list');
+            const card = document.createElement('div');
+            card.className = 'schedule-item-card schedule-item';
+
+            // Parse initial days
+            let activeDays = [];
+            const dayMap = { 'Lun': 'Lun', 'Mar': 'Mar', 'Mié': 'Mié', 'Mie': 'Mie', 'Jue': 'Jue', 'Vie': 'Vie', 'Sáb': 'Sáb', 'Sab': 'Sab', 'Dom': 'Dom' };
+
+            if (dayStr.includes('Lun-Vie') || dayStr.includes('Mon-Fri')) {
+                activeDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
+            } else if (dayStr.includes('Sáb-Dom') || dayStr.includes('Sab-Dom') || dayStr.includes('Sat-Sun')) {
+                activeDays = ['Sáb', 'Dom'];
+            } else if (dayStr.toLowerCase().includes('todos') || dayStr.toLowerCase().includes('all')) {
+                activeDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+            } else if (dayStr) {
+                const parts = dayStr.split(/[\s,,-]+/);
+                parts.forEach(p => {
+                    const clean = p.trim();
+                    if (clean) activeDays.push(clean);
+                });
+            } else {
+                activeDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
+            }
+
+            // Parse initial hours (e.g. "09:00 AM - 06:00 PM" or "09:00 - 18:00")
+            let startT = '09:00 AM';
+            let endT = '06:00 PM';
+            if (hoursStr.includes('-')) {
+                const hParts = hoursStr.split('-');
+                if (hParts[0]) startT = hParts[0].trim();
+                if (hParts[1]) endT = hParts[1].trim();
+            }
+
+            card.innerHTML = `
+                <div class="schedule-header">
+                    <span class="schedule-title">Horario de Atención</span>
+                    <button class="btn-remove" title="Eliminar entrada">✕</button>
+                </div>
+
+                <input type="hidden" class="schedule-day-input" value="${dayStr || 'Lun-Vie'}">
+                <input type="hidden" class="schedule-hours-input" value="${hoursStr || '09:00 AM - 06:00 PM'}">
+
+                <div>
+                    <span class="schedule-sublabel">Días de Atención</span>
+                    <div class="day-presets">
+                        <button type="button" class="preset-btn" data-preset="lun-vie">Lun - Vie</button>
+                        <button type="button" class="preset-btn" data-preset="sab-dom">Sáb - Dom</button>
+                        <button type="button" class="preset-btn" data-preset="todos">Todos los días</button>
+                    </div>
+                    <div class="day-pills">
+                        ${['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(d => `<div class="day-pill ${activeDays.some(ad => ad.toLowerCase().startsWith(d.substring(0,3).toLowerCase())) ? 'active' : ''}" data-day="${d}">${d}</div>`).join('')}
+                    </div>
+                </div>
+
+                <div>
+                    <span class="schedule-sublabel">Horas (Apertura y Cierre)</span>
+                    <div class="time-range-picker">
+                        <div class="time-box" id="time-box-start">
+                            <span class="time-box-icon">🕒</span>
+                            <span class="time-box-val" id="time-val-start">${startT}</span>
+                        </div>
+                        <span class="time-range-sep">a</span>
+                        <div class="time-box" id="time-box-end">
+                            <span class="time-box-icon">🕒</span>
+                            <span class="time-box-val" id="time-val-end">${endT}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const dayInput = card.querySelector('.schedule-day-input');
+            const hoursInput = card.querySelector('.schedule-hours-input');
+            const pills = card.querySelectorAll('.day-pill');
+            const presetBtns = card.querySelectorAll('.preset-btn');
+            const startBox = card.querySelector('#time-box-start');
+            const endBox = card.querySelector('#time-box-end');
+            const startValEl = card.querySelector('#time-val-start');
+            const endValEl = card.querySelector('#time-val-end');
+            const removeBtn = card.querySelector('.btn-remove');
+
+            removeBtn.onclick = () => card.remove();
+
+            const syncDayString = () => {
+                const selected = Array.from(pills).filter(p => p.classList.contains('active')).map(p => p.dataset.day);
+                if (selected.length === 5 && selected.join(',') === 'Lun,Mar,Mié,Jue,Vie') {
+                    dayInput.value = 'Lun-Vie';
+                } else if (selected.length === 2 && selected.join(',') === 'Sáb,Dom') {
+                    dayInput.value = 'Sáb-Dom';
+                } else if (selected.length === 7) {
+                    dayInput.value = 'Lun-Dom';
+                } else {
+                    dayInput.value = selected.join(', ');
+                }
+            };
+
+            const syncHoursString = () => {
+                hoursInput.value = `${startValEl.textContent} - ${endValEl.textContent}`;
+            };
+
+            pills.forEach(pill => {
+                pill.onclick = () => {
+                    pill.classList.toggle('active');
+                    syncDayString();
+                };
+            });
+
+            presetBtns.forEach(btn => {
+                btn.onclick = () => {
+                    const preset = btn.dataset.preset;
+                    pills.forEach(p => {
+                        const d = p.dataset.day;
+                        if (preset === 'lun-vie') p.classList.toggle('active', ['Lun','Mar','Mié','Jue','Vie'].includes(d));
+                        else if (preset === 'sab-dom') p.classList.toggle('active', ['Sáb','Dom'].includes(d));
+                        else if (preset === 'todos') p.classList.add('active');
+                    });
+                    syncDayString();
+                };
+            });
+
+            startBox.onclick = () => {
+                const tempInput = {
+                    value: startValEl.textContent,
+                    dispatchEvent: () => {
+                        startValEl.textContent = tempInput.value;
+                        syncHoursString();
+                    }
+                };
+                openClockPickerModal(tempInput);
+            };
+
+            endBox.onclick = () => {
+                const tempInput = {
+                    value: endValEl.textContent,
+                    dispatchEvent: () => {
+                        endValEl.textContent = tempInput.value;
+                        syncHoursString();
+                    }
+                };
+                openClockPickerModal(tempInput);
+            };
+
+            // Initial sync
+            syncDayString();
+            syncHoursString();
+
+            list.appendChild(card);
         };
 
         async function handleLogoUpload(file) {
