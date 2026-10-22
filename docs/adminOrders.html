@@ -818,8 +818,11 @@
                                 <button class="btn btn-reject" onclick="updateOrderStatus('${item.id}', 'rejected')">Reject</button>
                                 <button class="btn btn-accept" onclick="updateOrderStatus('${item.id}', 'accepted')">Accept</button>
                             ` : ''}
-                            ${(item.status === 'accepted' || item.status === 'preparing') ? `
-                                <button class="btn btn-finish" onclick="updateOrderStatus('${item.id}', 'finished')">Ready</button>
+                            ${item.status === 'accepted' ? `
+                                <button class="btn btn-purple" onclick="updateOrderStatus('${item.id}', 'preparing')">Start Preparing</button>
+                            ` : ''}
+                            ${item.status === 'preparing' ? `
+                                <button class="btn btn-finish" onclick="updateOrderStatus('${item.id}', 'finished')">Order Ready</button>
                             ` : ''}
                             ${item.status === 'finished' ? `
                                 <button class="btn btn-delivered" onclick="updateOrderStatus('${item.id}', 'delivered')">Mark as Delivered</button>
@@ -896,8 +899,11 @@
                                 <button class="btn btn-purple" onclick="updateResStatus('${item.id}', 'confirmed')">Confirm Booking</button>
                             ` : ''}
                             ${item.status === 'confirmed' ? `
+                                <button class="btn btn-success" onclick="updateResStatus('${item.id}', 'attended')">Table Ready / Attended</button>
+                            ` : ''}
+                            ${item.status === 'attended' ? `
                                 <button class="btn btn-reject" onclick="updateResStatus('${item.id}', 'cancelled')">Cancel</button>
-                                <button class="btn btn-success" onclick="updateResStatus('${item.id}', 'attended')">Mark Attended</button>
+                                <button class="btn btn-delivered" onclick="updateResStatus('${item.id}', 'finished')">Complete / Finish</button>
                             ` : ''}
                         </div>
                     </div>
@@ -915,6 +921,45 @@
             const item = unifiedItems.find(i => i.id === selectedItemId);
             renderDetails(item);
         };
+
+        async function sendMailgunNotification(item, type) {
+            const recipientEmail = item.customer_email || item.email;
+            if (!recipientEmail || !recipientEmail.includes('@')) {
+                showToast('El cliente no proporcionó un correo válido para notificación.', 'warning');
+                return;
+            }
+
+            try {
+                showToast('Enviando notificación por correo al cliente...', 'warning');
+
+                let restData = null;
+                if (activeOwnerId) {
+                    const { data } = await sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle();
+                    restData = data;
+                }
+
+                const response = await sb.functions.invoke('mailgun-email', {
+                    body: {
+                        type: type,
+                        item: item,
+                        restaurant: restData
+                    }
+                });
+
+                if (response.error) {
+                    console.error('Mailgun Edge Function error:', response.error);
+                    showToast('No se pudo enviar el correo: ' + (response.error.message || 'Error en Edge Function'), 'error');
+                } else if (response.data && response.data.error) {
+                    console.error('Mailgun API error:', response.data.error);
+                    showToast('Error Mailgun: ' + response.data.error, 'error');
+                } else {
+                    showToast('¡Correo de notificación enviado al cliente con éxito!', 'success');
+                }
+            } catch (err) {
+                console.error('Email exception:', err);
+                showToast('Excepción al enviar correo: ' + err.message, 'error');
+            }
+        }
 
         window.updateOrderStatus = async (id, status) => {
             const updates = { status };
@@ -934,8 +979,22 @@
             if (itemIdx !== -1) {
                 Object.assign(unifiedItems[itemIdx], updates);
                 updateCounts();
-                renderList();
-                if (selectedItemId === id) renderDetails(unifiedItems[itemIdx]);
+
+                if (status === 'accepted' || status === 'preparing') {
+                    switchTab('in_process');
+                    selectedItemId = id;
+                    renderList();
+                    renderDetails(unifiedItems[itemIdx]);
+                } else if (status === 'finished') {
+                    switchTab('ready');
+                    selectedItemId = id;
+                    renderList();
+                    renderDetails(unifiedItems[itemIdx]);
+                    sendMailgunNotification(unifiedItems[itemIdx], 'order');
+                } else {
+                    renderList();
+                    if (selectedItemId === id) renderDetails(unifiedItems[itemIdx]);
+                }
             }
 
             const { error } = await sb.from('menutech_orders').update(updates).eq('id', id);
@@ -945,21 +1004,6 @@
                 loadAllData();
             } else {
                 showToast(`Order marked as ${status}`);
-
-                // If accepted, automatically transition to preparing after brief delay
-                if (status === 'accepted') {
-                    setTimeout(async () => {
-                        const autoUpdates = { status: 'preparing', preparing_at: new Date().toISOString() };
-                        const idx = unifiedItems.findIndex(i => i.id === id && i.entryType === 'order');
-                        if (idx !== -1 && unifiedItems[idx].status === 'accepted') {
-                            Object.assign(unifiedItems[idx], autoUpdates);
-                            updateCounts();
-                            renderList();
-                            if (selectedItemId === id) renderDetails(unifiedItems[idx]);
-                        }
-                        await sb.from('menutech_orders').update(autoUpdates).eq('id', id);
-                    }, 1500);
-                }
             }
         };
 
@@ -970,8 +1014,22 @@
             if (itemIdx !== -1) {
                 Object.assign(unifiedItems[itemIdx], updates);
                 updateCounts();
-                renderList();
-                if (selectedItemId === id) renderDetails(unifiedItems[itemIdx]);
+
+                if (status === 'confirmed') {
+                    switchTab('in_process');
+                    selectedItemId = id;
+                    renderList();
+                    renderDetails(unifiedItems[itemIdx]);
+                } else if (status === 'attended') {
+                    switchTab('ready');
+                    selectedItemId = id;
+                    renderList();
+                    renderDetails(unifiedItems[itemIdx]);
+                    sendMailgunNotification(unifiedItems[itemIdx], 'reservation');
+                } else {
+                    renderList();
+                    if (selectedItemId === id) renderDetails(unifiedItems[itemIdx]);
+                }
             }
 
             const { error } = await sb.from('menutech_reservations').update(updates).eq('id', id);
