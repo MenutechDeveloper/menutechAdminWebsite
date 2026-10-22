@@ -64,6 +64,8 @@
         .bento-card p { color: var(--text-dim); font-size: 0.95rem; line-height: 1.6; font-weight: 500; }
         .bento-card .icon-box { width: 80px; height: 80px; background: rgba(255,149,51,0.1); border-radius: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 30px; color: var(--orange); font-size: 2rem; border: 1px solid rgba(255,149,51,0.2); }
 
+        .bento-divider { grid-column: 1 / -1; height: 1px; background: var(--border); margin: 10px 0; }
+
         #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
         #top-nav > * { pointer-events: auto; }
 
@@ -189,6 +191,7 @@
             <p>Select a module to manage your digital assets.</p>
         </header>
         <div class="bento-grid" id="main-bento">
+            <!-- Section 1 -->
             <a href="adminCustomer.html" class="bento-card" id="card-users">
                 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
                 <h3>Users</h3>
@@ -199,11 +202,56 @@
                 <h3>My Restaurant</h3>
                 <p>Manage your restaurant's profile, logo, social media and schedule.</p>
             </a>
+            <a href="adminMenus.html" class="bento-card" id="card-menus">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M3 11h18M3 16h18M3 6h18M16 12v1M16 8v1M6 12v1M6 8v1"/></svg></div>
+                <h3>My Menu</h3>
+                <p>Create and manage digital menus for your restaurant.</p>
+            </a>
+            <a href="reservations.html" class="bento-card" id="card-reservations">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/></svg></div>
+                <h3>My Reservations</h3>
+                <p>Configure table booking parameters and widget options.</p>
+            </a>
+            <a href="adminOrders.html" class="bento-card" id="card-orders">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+                <h3>Orders & Reservations</h3>
+                <p>Manage incoming restaurant orders and table bookings in real-time.</p>
+            </a>
+            <a href="tickets.html" class="bento-card" id="card-tickets">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M2 18V2h20v16l-2-2-2 2-2-2-2 2-2-2-2 2-2-2-2 2-2-2ZM9 7h6M9 11h6"/></svg></div>
+                <h3>Tickets</h3>
+                <p>Configure the design and information for your printed tickets.</p>
+            </a>
+
+            <!-- Divider 1 -->
+            <div class="bento-divider" id="divider-1"></div>
+
+            <!-- Section 2 -->
             <a href="adminWeb.html" class="bento-card" id="card-web">
                 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
                 <h3>Deluxe Website</h3>
                 <p>Customize your gallery, upload images, and manage domain content.</p>
             </a>
+            <a href="adminTemplate.html" class="bento-card" id="card-template">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div>
+                <h3>Template Web</h3>
+                <p>Customize and export your professional restaurant website.</p>
+            </a>
+            <a href="adminButtons.html" class="bento-card hidden" id="card-buttons">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg></div>
+                <h3>Menutech Widget</h3>
+                <p>Configure and copy custom button snippets for your website.</p>
+            </a>
+            <a href="laboratorio.html" class="bento-card hidden" id="card-lab">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M10 2v8L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45L14 10V2M8.5 2h7M7 16h10"/></svg></div>
+                <h3>Laboratorio</h3>
+                <p>Scanea QR y compila código</p>
+            </a>
+
+            <!-- Divider 2 -->
+            <div class="bento-divider" id="divider-2"></div>
+
+            <!-- Section 3 -->
             <a href="QRmenutech.html" class="bento-card" id="card-qr-gen">
                 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M7 7h4v4H7zM7 13h4v4H7zM13 7h4v4h-4zM13 13h1v1h-1zM16 13h1v1h-1zM15 14h1v1h-1zM13 15h1v1h-1zM14 16h1v1h-1zM16 16h1v1h-1z"/></svg></div>
                 <h3>QR Generator</h3>
@@ -214,46 +262,6 @@
                 <h3>QR Manager</h3>
                 <p>Manage, track, and update your generated QR codes.</p>
             </a>
-            <a href="adminMenus.html" class="bento-card" id="card-menus">
-                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M3 11h18M3 16h18M3 6h18M16 12v1M16 8v1M6 12v1M6 8v1"/></svg></div>
-                <h3>Menus</h3>
-                <p>Create and manage digital menus for your restaurant.</p>
-            </a>
-            <a href="adminOrders.html" class="bento-card" id="card-orders">
-                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
-                <h3>Orders & Reservations</h3>
-                <p>Manage incoming restaurant orders and table bookings in real-time.</p>
-            </a>
-            <a href="reservations.html" class="bento-card" id="card-reservations">
-                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/></svg></div>
-                <h3>Reservations Settings</h3>
-                <p>Configure table booking parameters and widget options.</p>
-            </a>
-            <a href="adminTemplate.html" class="bento-card" id="card-template">
-                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div>
-                <h3>Template Web</h3>
-                <p>Customize and export your professional restaurant website.</p>
-            </a>
-            <a href="adminCustomerWebsite.html" class="bento-card" id="card-customer-website">
-                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-                <h3>Customer Website</h3>
-                <p>Manage website types and completion status.</p>
-            </a>
-            <a href="adminButtons.html" class="bento-card hidden" id="card-buttons">
-                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg></div>
-                <h3>Menutech Buttons</h3>
-                <p>Configure and copy custom button snippets for your website.</p>
-            </a>
-            <a href="laboratorio.html" class="bento-card hidden" id="card-lab">
-                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M10 2v8L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45L14 10V2M8.5 2h7M7 16h10"/></svg></div>
-                <h3>Laboratorio</h3>
-                <p>Scanea QR y compila código</p>
-            </a>
-            <a href="tickets.html" class="bento-card" id="card-tickets">
-                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M2 18V2h20v16l-2-2-2 2-2-2-2 2-2-2-2 2-2-2-2 2-2-2ZM9 7h6M9 11h6"/></svg></div>
-                <h3>Tickets</h3>
-                <p>Configure the design and information for your printed tickets.</p>
-            </a>
             <a href="extractor.html" class="bento-card" id="card-scanner-gmaps">
                 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
                 <h3>Scanner Google Maps</h3>
@@ -263,6 +271,11 @@
                 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
                 <h3>Scanner menus</h3>
                 <p>Scan and extract structured digital menus instantly.</p>
+            </a>
+            <a href="adminCustomerWebsite.html" class="bento-card hidden" id="card-customer-website">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+                <h3>Customer Website</h3>
+                <p>Manage website types and completion status.</p>
             </a>
         </div>
     </div>
@@ -325,17 +338,17 @@
 
                     if (role === 'OWNER') {
                         document.getElementById('card-users').classList.add('hidden');
-                        document.getElementById('card-qr-gen').classList.add('hidden');
-                        document.getElementById('card-qr-admin').classList.add('hidden');
-                        document.getElementById('card-customer-website').classList.add('hidden');
                         document.getElementById('card-web').classList.add('hidden');
                         document.getElementById('card-template').classList.add('hidden');
-
-                        document.getElementById('card-restaurants').style.order = "1";
-                        document.getElementById('card-menus').style.order = "2";
-                        document.getElementById('card-orders').style.order = "3";
-                        document.getElementById('card-reservations').style.order = "4";
-                        document.getElementById('card-tickets').style.order = "5";
+                        document.getElementById('card-buttons').classList.add('hidden');
+                        document.getElementById('card-lab').classList.add('hidden');
+                        document.getElementById('card-qr-gen').classList.add('hidden');
+                        document.getElementById('card-qr-admin').classList.add('hidden');
+                        document.getElementById('card-scanner-gmaps').classList.add('hidden');
+                        document.getElementById('card-scanner-menus').classList.add('hidden');
+                        document.getElementById('card-customer-website').classList.add('hidden');
+                        document.getElementById('divider-1').classList.add('hidden');
+                        document.getElementById('divider-2').classList.add('hidden');
 
                         const grid = document.getElementById('main-bento');
                         grid.style.maxWidth = '800px';
@@ -343,22 +356,35 @@
                     } else if (csRoles.includes(role)) {
                         // CS roles only see Deluxe Web and Template Web slots
                         document.getElementById('card-users').classList.add('hidden');
+                        document.getElementById('card-restaurants').classList.add('hidden');
+                        document.getElementById('card-menus').classList.add('hidden');
+                        document.getElementById('card-reservations').classList.add('hidden');
+                        document.getElementById('card-orders').classList.add('hidden');
+                        document.getElementById('card-tickets').classList.add('hidden');
                         document.getElementById('card-qr-gen').classList.add('hidden');
                         document.getElementById('card-qr-admin').classList.add('hidden');
-                        document.getElementById('card-menus').classList.add('hidden');
-                        document.getElementById('card-orders').classList.add('hidden');
-                        document.getElementById('card-reservations').classList.add('hidden');
+                        document.getElementById('card-scanner-gmaps').classList.add('hidden');
+                        document.getElementById('card-scanner-menus').classList.add('hidden');
                         document.getElementById('card-customer-website').classList.add('hidden');
                         document.getElementById('card-lab').classList.add('hidden');
+                        document.getElementById('divider-1').classList.add('hidden');
+                        document.getElementById('divider-2').classList.add('hidden');
                     } else if (qrRoles.includes(role)) {
                         document.getElementById('card-users').classList.add('hidden');
-                        document.getElementById('card-web').classList.add('hidden');
+                        document.getElementById('card-restaurants').classList.add('hidden');
                         document.getElementById('card-menus').classList.add('hidden');
-                        document.getElementById('card-orders').classList.add('hidden');
                         document.getElementById('card-reservations').classList.add('hidden');
+                        document.getElementById('card-orders').classList.add('hidden');
+                        document.getElementById('card-tickets').classList.add('hidden');
+                        document.getElementById('card-web').classList.add('hidden');
                         document.getElementById('card-template').classList.add('hidden');
-                        document.getElementById('card-customer-website').classList.add('hidden');
+                        document.getElementById('card-buttons').classList.add('hidden');
                         document.getElementById('card-lab').classList.add('hidden');
+                        document.getElementById('card-scanner-gmaps').classList.add('hidden');
+                        document.getElementById('card-scanner-menus').classList.add('hidden');
+                        document.getElementById('card-customer-website').classList.add('hidden');
+                        document.getElementById('divider-1').classList.add('hidden');
+                        document.getElementById('divider-2').classList.add('hidden');
                         // QR Generator and QR Manager stay visible
                     } else if (role !== 'ADMIN' && role !== 'DEVELOPER') {
                         // Default fallback for other roles if any
