@@ -229,9 +229,9 @@
         .mt-clock-mode-indicator { font-size: 0.75rem; font-weight: 700; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
         .mt-clock-dial-container { width: 230px; height: 230px; border-radius: 50%; background: var(--input); border: 1px solid var(--border); position: relative; user-select: none; touch-action: none; cursor: pointer; }
         .mt-clock-center-dot { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: var(--orange); border-radius: 50%; transform: translate(-50%, -50%); z-index: 3; }
-        .mt-clock-hand { position: absolute; top: 50%; left: 50%; width: 2px; height: 90px; background: var(--orange); transform-origin: top center; transform: rotate(0deg); z-index: 2; pointer-events: none; transition: transform 0.15s ease-out; }
+        .mt-clock-hand { position: absolute; bottom: 50%; left: calc(50% - 1px); width: 2px; height: 75px; background: var(--orange); transform-origin: bottom center; transform: rotate(0deg); z-index: 2; pointer-events: none; transition: transform 0.15s ease-out; }
         .mt-clock-hand.dragging { transition: none; }
-        .mt-clock-hand-head { position: absolute; bottom: -18px; left: 50%; width: 36px; height: 36px; background: var(--orange); border-radius: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(255, 149, 51, 0.4); }
+        .mt-clock-hand-head { position: absolute; top: -18px; left: 50%; width: 36px; height: 36px; background: var(--orange); border-radius: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(255, 149, 51, 0.4); }
         .mt-clock-numbers { position: absolute; inset: 0; pointer-events: none; }
         .mt-clock-num { position: absolute; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; color: var(--text); transform: translate(-50%, -50%); pointer-events: none; transition: color 0.2s; }
         .mt-clock-num.selected { color: #ffffff; font-weight: 800; }
@@ -546,7 +546,7 @@
                             </div>
                         </div>
                         <div class="mt-clock-body">
-                            <div id="mt-clock-mode-indicator" class="mt-clock-mode-indicator">Seleccionar Hora</div>
+                            <div id="mt-clock-mode-indicator" class="mt-clock-mode-indicator">Select Hour</div>
                             <div id="mt-clock-dial" class="mt-clock-dial-container">
                                 <div class="mt-clock-center-dot"></div>
                                 <div id="mt-clock-hand" class="mt-clock-hand">
@@ -556,8 +556,8 @@
                             </div>
                         </div>
                         <div class="mt-clock-footer">
-                            <button type="button" id="mt-clock-cancel-btn" class="mt-clock-btn cancel">Cancelar</button>
-                            <button type="button" id="mt-clock-confirm-btn" class="mt-clock-btn confirm">Establecer</button>
+                            <button type="button" id="mt-clock-cancel-btn" class="mt-clock-btn cancel">Cancel</button>
+                            <button type="button" id="mt-clock-confirm-btn" class="mt-clock-btn confirm">Set</button>
                         </div>
                     </div>
                 </div>
@@ -671,7 +671,7 @@
 
         function setClockMode(mode) {
             clockState.mode = mode;
-            document.getElementById('mt-clock-mode-indicator').textContent = mode === 'hour' ? 'Seleccionar Hora' : 'Seleccionar Minutos';
+            document.getElementById('mt-clock-mode-indicator').textContent = mode === 'hour' ? 'Select Hour' : 'Select Minutes';
             document.getElementById('mt-clock-hour-display').classList.toggle('active', mode === 'hour');
             document.getElementById('mt-clock-minute-display').classList.toggle('active', mode === 'minute');
             renderClockNumbers();
@@ -831,33 +831,33 @@
 
             card.innerHTML = `
                 <div class="schedule-header">
-                    <span class="schedule-title">Horario Especial de Reservaciones</span>
-                    <button class="btn-remove" title="Eliminar entrada">✕</button>
+                    <span class="schedule-title">Special Reservation Schedule</span>
+                    <button class="btn-remove" title="Remove entry">✕</button>
                 </div>
 
-                <input type="hidden" class="schedule-day-input" value="${dayStr || 'Lun-Vie'}">
+                <input type="hidden" class="schedule-day-input" value="${dayStr || 'Mon-Fri'}">
                 <input type="hidden" class="schedule-hours-input" value="${hoursStr || '10:00 AM - 10:00 PM'}">
 
                 <div>
-                    <span class="schedule-sublabel">Días de Atención</span>
+                    <span class="schedule-sublabel">Opening Days</span>
                     <div class="day-presets">
-                        <button type="button" class="preset-btn" data-preset="lun-vie">Lun - Vie</button>
-                        <button type="button" class="preset-btn" data-preset="sab-dom">Sáb - Dom</button>
-                        <button type="button" class="preset-btn" data-preset="todos">Todos los días</button>
+                        <button type="button" class="preset-btn" data-preset="mon-fri">Mon - Fri</button>
+                        <button type="button" class="preset-btn" data-preset="sat-sun">Sat - Sun</button>
+                        <button type="button" class="preset-btn" data-preset="all">All Days</button>
                     </div>
                     <div class="day-pills">
-                        ${['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(d => `<div class="day-pill ${activeDays.some(ad => ad.toLowerCase().startsWith(d.substring(0,3).toLowerCase())) ? 'active' : ''}" data-day="${d}">${d}</div>`).join('')}
+                        ${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="day-pill ${activeDays.some(ad => ad.toLowerCase().startsWith(d.substring(0,3).toLowerCase()) || (d==='Mon' && ad.toLowerCase().startsWith('lun')) || (d==='Tue' && ad.toLowerCase().startsWith('mar')) || (d==='Wed' && (ad.toLowerCase().startsWith('mié') || ad.toLowerCase().startsWith('mie'))) || (d==='Thu' && ad.toLowerCase().startsWith('jue')) || (d==='Fri' && ad.toLowerCase().startsWith('vie')) || (d==='Sat' && (ad.toLowerCase().startsWith('sáb') || ad.toLowerCase().startsWith('sab'))) || (d==='Sun' && ad.toLowerCase().startsWith('dom'))) ? 'active' : ''}" data-day="${d}">${d}</div>`).join('')}
                     </div>
                 </div>
 
                 <div>
-                    <span class="schedule-sublabel">Horas (Apertura y Cierre)</span>
+                    <span class="schedule-sublabel">Hours (Opening & Closing)</span>
                     <div class="time-range-picker">
                         <div class="time-box" id="time-box-start">
                             <span class="time-box-icon">🕒</span>
                             <span class="time-box-val" id="time-val-start">${startT}</span>
                         </div>
-                        <span class="time-range-sep">a</span>
+                        <span class="time-range-sep">to</span>
                         <div class="time-box" id="time-box-end">
                             <span class="time-box-icon">🕒</span>
                             <span class="time-box-val" id="time-val-end">${endT}</span>
@@ -880,12 +880,12 @@
 
             const syncDayString = () => {
                 const selected = Array.from(pills).filter(p => p.classList.contains('active')).map(p => p.dataset.day);
-                if (selected.length === 5 && selected.join(',') === 'Lun,Mar,Mié,Jue,Vie') {
-                    dayInput.value = 'Lun-Vie';
-                } else if (selected.length === 2 && selected.join(',') === 'Sáb,Dom') {
-                    dayInput.value = 'Sáb-Dom';
+                if (selected.length === 5 && selected.join(',') === 'Mon,Tue,Wed,Thu,Fri') {
+                    dayInput.value = 'Mon-Fri';
+                } else if (selected.length === 2 && selected.join(',') === 'Sat,Sun') {
+                    dayInput.value = 'Sat-Sun';
                 } else if (selected.length === 7) {
-                    dayInput.value = 'Lun-Dom';
+                    dayInput.value = 'Mon-Sun';
                 } else {
                     dayInput.value = selected.join(', ');
                 }
@@ -907,9 +907,9 @@
                     const preset = btn.dataset.preset;
                     pills.forEach(p => {
                         const d = p.dataset.day;
-                        if (preset === 'lun-vie') p.classList.toggle('active', ['Lun','Mar','Mié','Jue','Vie'].includes(d));
-                        else if (preset === 'sab-dom') p.classList.toggle('active', ['Sáb','Dom'].includes(d));
-                        else if (preset === 'todos') p.classList.add('active');
+                        if (preset === 'mon-fri') p.classList.toggle('active', ['Mon','Tue','Wed','Thu','Fri'].includes(d));
+                        else if (preset === 'sat-sun') p.classList.toggle('active', ['Sat','Sun'].includes(d));
+                        else if (preset === 'all') p.classList.add('active');
                     });
                     syncDayString();
                 };
