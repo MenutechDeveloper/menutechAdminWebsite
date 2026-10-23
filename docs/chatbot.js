@@ -64,8 +64,8 @@
 
         /* 3D Trigger Widget - Completely transparent container */
         #mt-bot-trigger {
-            width: 105px;
-            height: 105px;
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
             background: transparent !important;
             box-shadow: none !important;
@@ -514,7 +514,7 @@
         /* Admin Thought Bubble above trigger */
         #mt-admin-thought-bubble {
             position: absolute;
-            bottom: 175px;
+            bottom: 185px;
             right: 15px;
             width: 230px;
             background: linear-gradient(135deg, #ff9533 0%, #f97316 100%);
@@ -687,8 +687,9 @@
                 camera-controls
                 disable-zoom
                 disable-pan
-                bounds="tight"
-                camera-target="0m 0m 0m"
+                bounds="auto"
+                camera-target="auto auto auto"
+                field-of-view="auto"
                 shadow-intensity="0"
                 interaction-prompt="none">
             </model-viewer>
@@ -1561,16 +1562,33 @@
                 // Show on page load, auto-hide after 6s if ignored
                 setTimeout(showBubble, 1000);
 
-                // Show on hover over GLTF or bubble, hide on leave
+                // Show on hover over GLTF or bubble, hide with grace delay on leave
+                let graceLeaveTimer = null;
+
+                function scheduleHideBubble() {
+                    if (graceLeaveTimer) clearTimeout(graceLeaveTimer);
+                    graceLeaveTimer = setTimeout(() => {
+                        hideBubble();
+                    }, 400);
+                }
+
+                function cancelGraceLeave() {
+                    if (graceLeaveTimer) clearTimeout(graceLeaveTimer);
+                }
+
                 if (triggerEl) {
-                    triggerEl.addEventListener('mouseenter', showBubble);
-                    triggerEl.addEventListener('mouseleave', hideBubble);
+                    triggerEl.addEventListener('mouseenter', () => {
+                        cancelGraceLeave();
+                        showBubble();
+                    });
+                    triggerEl.addEventListener('mouseleave', scheduleHideBubble);
                 }
                 bubbleEl.addEventListener('mouseenter', () => {
+                    cancelGraceLeave();
                     if (hideTimer) clearTimeout(hideTimer);
                     bubbleEl.classList.remove('hidden');
                 });
-                bubbleEl.addEventListener('mouseleave', hideBubble);
+                bubbleEl.addEventListener('mouseleave', scheduleHideBubble);
             }
         }
     }
