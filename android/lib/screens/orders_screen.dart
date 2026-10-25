@@ -12,13 +12,14 @@ class OrdersScreen extends StatefulWidget {
   State<OrdersScreen> createState() => _OrdersScreenState();
 }
 
-class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderStateMixin {
+class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
   final SupabaseService _supabase = SupabaseService();
   UnifiedItem? _selectedItem;
 
   StreamSubscription? _ordersSub;
   StreamSubscription? _resSub;
+  Timer? _pollTimer;
   List<UnifiedItem> _ordersList = [];
   List<UnifiedItem> _resList = [];
   final StreamController<List<UnifiedItem>> _combinedController = StreamController<List<UnifiedItem>>.broadcast();
@@ -26,10 +27,51 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 4, vsync: this);
     final userId = _supabase.currentUser?.id;
     if (userId != null) {
+      _fetchLatestData(userId);
       _initStreams(userId);
+      _pollTimer?.cancel();
+      _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+        if (_supabase.currentUser?.id != null) {
+          _fetchLatestData(_supabase.currentUser!.id);
+        }
+      });
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final userId = _supabase.currentUser?.id;
+      if (userId != null) {
+        _fetchLatestData(userId);
+        _initStreams(userId);
+      }
+    }
+  }
+
+  Future<void> _fetchLatestData(String userId) async {
+    try {
+      final ordersData = await _supabase.client
+          .from('menutech_orders')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      final resData = await _supabase.client
+          .from('menutech_reservations')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      _ordersList = (ordersData as List).map((json) => UnifiedItem.fromOrderJson(json)).toList();
+      _resList = (resData as List).map((json) => UnifiedItem.fromReservationJson(json)).toList();
+      _emitCombined();
+    } catch (e) {
+      debugPrint("Error fetching latest orders/reservations: $e");
     }
   }
 
@@ -72,6 +114,8 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _pollTimer?.cancel();
     _tabController.dispose();
     _ordersSub?.cancel();
     _resSub?.cancel();
@@ -130,8 +174,9 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                               orElse: () => _selectedItem!
                             ),
                             isTablet: true,
-                            onStatusChanged: () {
+                            onStatusChanged: (targetTab) {
                               setState(() {});
+                              _tabController.animateTo(targetTab);
                             },
                           ),
                     ),
@@ -192,10 +237,13 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           color: isSelected ? badgeColor.withOpacity(0.05) : Colors.white,
           child: ListTile(
             contentPadding: const EdgeInsets.all(16),
-            onTap: () {
+            onTap: () async {
               setState(() => _selectedItem = item);
               if (MediaQuery.of(context).size.width <= 720) {
-                Navigator.of(context).pushNamed('/order-detail', arguments: item);
+                final targetTab = await Navigator.of(context).pushNamed('/order-detail', arguments: item);
+                if (targetTab is int && mounted) {
+                  _tabController.animateTo(targetTab);
+                }
               }
             },
             leading: Container(

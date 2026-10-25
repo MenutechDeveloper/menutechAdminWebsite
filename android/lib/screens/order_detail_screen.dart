@@ -51,7 +51,7 @@ class OrderDetailScreen extends StatelessWidget {
 class OrderDetailView extends StatefulWidget {
   final UnifiedItem item;
   final bool isTablet;
-  final VoidCallback? onStatusChanged;
+  final void Function(int targetTab)? onStatusChanged;
 
   const OrderDetailView({
     super.key,
@@ -68,6 +68,60 @@ class _OrderDetailViewState extends State<OrderDetailView> {
   final SupabaseService _supabase = SupabaseService();
   final PrintService _printService = PrintService();
   bool _isUpdating = false;
+
+  int _getTargetTab(String status) {
+    switch (status) {
+      case 'accepted':
+      case 'preparing':
+      case 'confirmed':
+        return 1;
+      case 'finished':
+      case 'ready':
+      case 'attended':
+        return 2;
+      case 'delivered':
+      case 'rejected':
+      case 'cancelled':
+        return 3;
+      default:
+        return 0;
+    }
+  }
+
+  Future<void> _sendMailgunEmailIfNeeded(UnifiedItem item, String status) async {
+    final isOrderReady = item.entryType == EntryType.order && (status == 'finished' || status == 'ready');
+    final isResAttended = item.entryType == EntryType.reservation && (status == 'attended' || status == 'finished');
+
+    if (!isOrderReady && !isResAttended) return;
+
+    try {
+      final userId = _supabase.currentUser?.id ?? item.userId;
+      Map<String, dynamic>? restaurantData;
+      if (userId.isNotEmpty) {
+        final res = await _supabase.client
+            .from('menutech_restaurants')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+        restaurantData = res;
+      }
+
+      final payload = {
+        'type': item.entryType == EntryType.order ? 'order' : 'reservation',
+        'item': item.toJson(),
+        'restaurant': restaurantData,
+      };
+
+      debugPrint("Invoking mailgun-email Edge Function...");
+      final response = await _supabase.client.functions.invoke(
+        'mailgun-email',
+        body: payload,
+      );
+      debugPrint("Mailgun edge function response: ${response.data}");
+    } catch (e) {
+      debugPrint("Error sending Mailgun notification email: $e");
+    }
+  }
 
   Future<void> _updateOrderStatus(String id, String status) async {
     setState(() => _isUpdating = true);
@@ -88,7 +142,11 @@ class _OrderDetailViewState extends State<OrderDetailView> {
 
     try {
       await _supabase.client.from('menutech_orders').update(updates).eq('id', id);
-      if (widget.onStatusChanged != null) widget.onStatusChanged!();
+
+      await _sendMailgunEmailIfNeeded(widget.item, status);
+
+      final targetTab = _getTargetTab(status);
+      if (widget.onStatusChanged != null) widget.onStatusChanged!(targetTab);
 
       if (status == 'accepted') {
         Future.delayed(const Duration(milliseconds: 1500), () async {
@@ -98,12 +156,14 @@ class _OrderDetailViewState extends State<OrderDetailView> {
           };
           try {
             await _supabase.client.from('menutech_orders').update(autoUpdates).eq('id', id);
-            if (widget.onStatusChanged != null) widget.onStatusChanged!();
+            if (widget.onStatusChanged != null) widget.onStatusChanged!(1);
           } catch (_) {}
         });
       }
 
-      if (!widget.isTablet && mounted) Navigator.of(context).pop();
+      if (!widget.isTablet && mounted) {
+        Navigator.of(context).pop(targetTab);
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
@@ -120,8 +180,15 @@ class _OrderDetailViewState extends State<OrderDetailView> {
 
     try {
       await _supabase.client.from('menutech_reservations').update(updates).eq('id', id);
-      if (widget.onStatusChanged != null) widget.onStatusChanged!();
-      if (!widget.isTablet && mounted) Navigator.of(context).pop();
+
+      await _sendMailgunEmailIfNeeded(widget.item, status);
+
+      final targetTab = _getTargetTab(status);
+      if (widget.onStatusChanged != null) widget.onStatusChanged!(targetTab);
+
+      if (!widget.isTablet && mounted) {
+        Navigator.of(context).pop(targetTab);
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));

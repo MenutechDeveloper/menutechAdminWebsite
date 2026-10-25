@@ -59,7 +59,7 @@ class OrderModel {
       status: json['status'] ?? 'pending',
       totalAmount: (json['total_amount'] ?? json['total'] ?? 0).toDouble(),
       items: itemsList,
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: DateTime.parse(json['created_at']).toLocal(),
       customerNotes: json['customer_notes'],
       paymentMethod: json['payment_method'],
       deliveryDate: json['delivery_date'],
