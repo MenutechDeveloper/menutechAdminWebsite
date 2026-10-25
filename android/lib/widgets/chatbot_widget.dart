@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import '../main.dart';
 import '../models/order_model.dart';
 import '../models/unified_item.dart';
 import '../services/supabase_service.dart';
@@ -19,6 +18,20 @@ class ChatbotWidget extends StatefulWidget {
       state._controller.runJavaScript('''
         if (window.showOrderBubbleInWebView) {
           window.showOrderBubbleInWebView($jsonText, $jsonItem);
+        }
+      ''');
+    }
+  }
+
+  static void hideBubble() {
+    final state = _activeState;
+    if (state != null && state.mounted) {
+      state._controller.runJavaScript('''
+        if (window.hideBubbleInWebView) {
+          window.hideBubbleInWebView();
+        } else {
+          var b = document.getElementById('mt-admin-thought-bubble');
+          if (b) b.classList.add('hidden');
         }
       ''');
     }
@@ -116,13 +129,6 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
               if (mounted) setState(() => _isExpanded = true);
             } else if (event == 'chat_closed') {
               if (mounted) setState(() => _isExpanded = false);
-            } else if (event == 'open_order') {
-              final orderData = data['orderData'];
-              if (orderData != null) {
-                final map = Map<String, dynamic>.from(orderData);
-                final item = UnifiedItem.fromJson(map);
-                navigatorKey.currentState?.pushNamed('/order-detail', arguments: item);
-              }
             }
           } catch (e) {
             // Error parsing message from JS
@@ -288,6 +294,9 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       width: 230px !important;
       z-index: 9999 !important;
     }
+    .mt-bubble-link {
+      display: none !important;
+    }
   </style>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -303,19 +312,23 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       if (!bubbleEl || !msgEl) return;
       if (win && win.classList.contains('active')) return;
 
+      var linkEl = bubbleEl.querySelector('.mt-bubble-link');
+      if (linkEl) linkEl.style.display = 'none';
+
       msgEl.innerText = text;
       bubbleEl.classList.remove('hidden');
 
       bubbleEl.onclick = function(e) {
         e.stopPropagation();
         bubbleEl.classList.add('hidden');
-        if (window.FlutterChatbotChannel && window.FlutterChatbotChannel.postMessage) {
-          window.FlutterChatbotChannel.postMessage(JSON.stringify({
-            event: 'open_order',
-            orderData: orderData
-          }));
-        }
       };
+    };
+
+    window.hideBubbleInWebView = function() {
+      var bubbleEl = document.getElementById('mt-admin-thought-bubble');
+      if (bubbleEl) {
+        bubbleEl.classList.add('hidden');
+      }
     };
   </script>
   <script src="https://menutech.io/chatbot.js"></script>

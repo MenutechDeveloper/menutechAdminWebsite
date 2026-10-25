@@ -126,6 +126,10 @@ class OrderNotificationService {
       _pendingItemsMap.remove(removedKey);
     }
 
+    if (removedKeys.isNotEmpty) {
+      ChatbotWidget.hideBubble();
+    }
+
     // Handle new pending items
     for (var key in currentPendingKeysForType) {
       if (!_knownPendingKeys.contains(key)) {
