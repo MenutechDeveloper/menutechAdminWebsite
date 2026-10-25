@@ -11,6 +11,7 @@ class OrderNotificationService {
 
   StreamSubscription? _ordersSubscription;
   StreamSubscription? _reservationsSubscription;
+  Timer? _syncTimer;
 
   final Set<String> _knownPendingKeys = {};
   final Map<String, Timer> _periodicReminders = {};
@@ -28,6 +29,15 @@ class OrderNotificationService {
     _isInitialized = true;
 
     _stopSubscriptions();
+
+    _pollLatestPending(user.id);
+    _syncTimer?.cancel();
+    _syncTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      final u = SupabaseService().currentUser;
+      if (u != null) {
+        _pollLatestPending(u.id);
+      }
+    });
 
     _ordersSubscription = SupabaseService()
         .client
@@ -48,8 +58,29 @@ class OrderNotificationService {
     });
   }
 
+  Future<void> _pollLatestPending(String userId) async {
+    try {
+      final ordersData = await SupabaseService()
+          .client
+          .from('menutech_orders')
+          .select()
+          .eq('user_id', userId);
+
+      final resData = await SupabaseService()
+          .client
+          .from('menutech_reservations')
+          .select()
+          .eq('user_id', userId);
+
+      _processItems(List<Map<String, dynamic>>.from(ordersData as List), isReservation: false);
+      _processItems(List<Map<String, dynamic>>.from(resData as List), isReservation: true);
+    } catch (_) {}
+  }
+
   void stop() {
     _stopSubscriptions();
+    _syncTimer?.cancel();
+    _syncTimer = null;
     for (var timer in _periodicReminders.values) {
       timer.cancel();
     }

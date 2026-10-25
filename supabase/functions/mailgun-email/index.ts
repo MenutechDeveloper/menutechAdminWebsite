@@ -46,7 +46,7 @@ serve(async (req: Request) => {
       "mg.menutech.io"
     ).trim();
 
-    const recipientEmail = item.customer_email || item.email;
+    const recipientEmail = item.customer_email || item.email || item.customerEmail;
     if (!recipientEmail) {
       return new Response(
         JSON.stringify({ error: "El cliente no cuenta con una dirección de correo válida." }),
@@ -152,9 +152,13 @@ function renderOrderEmailTemplate(data: {
 }): string {
   const { item, restName, restLogo, brandColor, restPhone, restAddress } = data;
   const items = Array.isArray(item.items) ? item.items : [];
-  const total = parseFloat(item.total || item.total_amount || 0).toFixed(2);
-  const deliveryType = item.order_type === "delivery" ? "Entrega a Domicilio / Delivery" : "Recoger en Local / Pickup";
-  const paymentMethod = (item.payment_method || "Efectivo").toUpperCase();
+  const total = parseFloat(item.total || item.total_amount || item.totalAmount || 0).toFixed(2);
+  const orderType = item.order_type || item.orderType;
+  const deliveryType = orderType === "delivery" ? "Entrega a Domicilio / Delivery" : "Recoger en Local / Pickup";
+  const paymentMethod = (item.payment_method || item.paymentMethod || "Efectivo").toUpperCase();
+  const customerName = item.customer_name || item.customerName || "Cliente";
+  const customerPhone = item.customer_phone || item.customerPhone || "N/A";
+  const customerNotes = item.customer_notes || item.customerNotes;
 
   const itemsRowsHtml = items.map((it: any) => {
     const qty = it.quantity || 1;
@@ -215,7 +219,7 @@ function renderOrderEmailTemplate(data: {
           <tr>
             <td style="padding: 32px 28px;">
               <p style="font-size: 16px; color: #2d3748; margin-top: 0; margin-bottom: 20px; line-height: 1.6;">
-                Hola <strong style="color: #1a202c;">${item.customer_name || "Cliente"}</strong>,
+                Hola <strong style="color: #1a202c;">${customerName}</strong>,
               </p>
               <p style="font-size: 15px; color: #4a5568; margin-bottom: 24px; line-height: 1.6;">
                 ¡Buenas noticias! Tu pedido ha sido preparado con dedicación y ya se encuentra <strong style="color: #10b981;">listo para recoger o entregar</strong>.
@@ -231,11 +235,11 @@ function renderOrderEmailTemplate(data: {
                 <tr>
                   <td style="font-size: 14px; color: #2d3748; line-height: 1.8;">
                     <strong>Modalidad:</strong> ${deliveryType}<br>
-                    <strong>Teléfono:</strong> ${item.customer_phone || "N/A"}<br>
+                    <strong>Teléfono:</strong> ${customerPhone}<br>
                     <strong>Método de pago:</strong> ${paymentMethod}<br>
                     ${item.address ? `<strong>Dirección:</strong> ${item.address}<br>` : ""}
                     ${item.reference ? `<strong>Referencia:</strong> ${item.reference}<br>` : ""}
-                    ${item.customer_notes ? `<strong>Instrucciones:</strong> <em>"${item.customer_notes}"</em><br>` : ""}
+                    ${customerNotes ? `<strong>Instrucciones:</strong> <em>"${customerNotes}"</em><br>` : ""}
                   </td>
                 </tr>
               </table>
@@ -309,10 +313,14 @@ function renderReservationEmailTemplate(data: {
   restAddress: string;
 }): string {
   const { item, restName, restLogo, brandColor, restPhone, restAddress } = data;
-  const preorderItems = Array.isArray(item.preorder_items) ? item.preorder_items : [];
-  const partySize = item.party_size || item.guests_count || 2;
-  const resDate = item.reservation_date || "Hoy";
-  const resTime = item.reservation_time || "Por llegar";
+  const preorderItems = Array.isArray(item.preorder_items)
+    ? item.preorder_items
+    : (Array.isArray(item.preorderItems) ? item.preorderItems : []);
+  const partySize = item.party_size || item.partySize || item.guests_count || 2;
+  const resDate = item.reservation_date || item.reservationDate || "Hoy";
+  const resTime = item.reservation_time || item.reservationTime || "Por llegar";
+  const customerName = item.customer_name || item.customerName || "Comensal";
+  const customerPhone = item.customer_phone || item.customerPhone || "N/A";
 
   const preorderRowsHtml = preorderItems.map((it: any) => {
     const qty = it.quantity || 1;
@@ -375,7 +383,7 @@ function renderReservationEmailTemplate(data: {
           <tr>
             <td style="padding: 36px 32px; background-color: #1e293b;">
               <p style="font-size: 17px; color: #f8fafc; margin-top: 0; margin-bottom: 18px; line-height: 1.6;">
-                Estimado/a <strong style="color: #f59e0b;">${item.customer_name || "Comensal"}</strong>,
+                Estimado/a <strong style="color: #f59e0b;">${customerName}</strong>,
               </p>
               <p style="font-size: 15px; color: #cbd5e1; margin-bottom: 28px; line-height: 1.7;">
                 Nos complace informarte que tu mesa está preparada y lista para recibirte en <strong style="color: #ffffff;">${restName}</strong>. Nuestro equipo te espera para brindarte una experiencia inolvidable.
@@ -404,7 +412,7 @@ function renderReservationEmailTemplate(data: {
                           👥 Personas: <strong style="color: #8b5cf6;">${partySize} invitados</strong>
                         </td>
                         <td width="50%" style="padding: 6px 0; font-size: 14px; color: #94a3b8;">
-                          📞 Teléfono: <strong style="color: #f8fafc;">${item.customer_phone || "N/A"}</strong>
+                          📞 Teléfono: <strong style="color: #f8fafc;">${customerPhone}</strong>
                         </td>
                       </tr>
                     </table>
