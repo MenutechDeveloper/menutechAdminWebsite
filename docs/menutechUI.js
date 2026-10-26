@@ -3366,7 +3366,10 @@ class MenutechReservations extends HTMLElement {
         this.restaurantInfo = null;
         this.menuData = null;
         this.preorderCart = [];
-        this.step = 1; // 1: DateTime, 2: Preorder Choice, 3: Contact/Review, 4: Success
+        this.step = 1; // 1: DateTime, 2: Preorder Choice, 3: Contact/Review, 4: Tracking/Success
+        this.reservationId = null;
+        this.reservationStatus = 'pending';
+        this.resTrackingChannel = null;
         this.bookingData = {
             guests: 2,
             date: '',
@@ -3918,20 +3921,75 @@ class MenutechReservations extends HTMLElement {
             body.querySelector('#btn-submit-res').onclick = () => this.submitBooking(body);
 
         } else if (this.step === 4) {
-            title.textContent = "Reservation Confirmed";
-            body.innerHTML = `
-                <div style="text-align:center; padding:20px 0;">
-                    <div class="check-mark">✓</div>
-                    <h3 style="font-family:'Outfit'; font-size:1.5rem; margin-bottom:10px;">Reservation Received!</h3>
-                    <p style="color:#666; font-size:0.95rem; line-height:1.5; margin-bottom:25px;">Thank you ${this.bookingData.name}! We look forward to welcoming you for ${this.bookingData.guests} guests on <strong>${this.bookingData.date} at ${this.bookingData.time}</strong>.</p>
+            const isPending = this.reservationStatus === 'pending';
+            const isRejected = ['rejected', 'cancelled'].includes(this.reservationStatus);
 
-                    <button class="btn-action" id="btn-res-done">Done</button>
-                </div>
-            `;
+            if (isPending) {
+                title.textContent = "Confirming Reservation";
+                body.innerHTML = `
+                    <div style="text-align:center; padding:30px 10px;">
+                        <div style="width: 60px; height: 60px; border: 4px solid #fff2e5; border-top-color: #ff9533; border-radius: 50%; margin: 0 auto 20px auto; animation: spinRes 1s infinite linear;"></div>
+                        <style>@keyframes spinRes { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+                        <h3 style="font-family:'Outfit'; font-size:1.4rem; margin-bottom:12px; color:#1a1c1e;">Espera un momento...</h3>
+                        <p style="color:#666; font-size:0.95rem; line-height:1.5; margin-bottom:20px;">Estamos confirmando tu reservación en tiempo real con el restaurante.</p>
+                        <div style="font-size:0.75rem; color:#aaa; font-weight:700; text-transform:uppercase; letter-spacing:1px;">ID: ${this.reservationId ? this.reservationId.substring(0, 8) : ''}</div>
+                    </div>
+                `;
+            } else if (isRejected) {
+                title.textContent = "Reservación Cancelada";
+                body.innerHTML = `
+                    <div style="text-align:center; padding:20px 0;">
+                        <div style="width:70px; height:70px; background:#ef4444; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:36px; margin:0 auto 20px auto;">✕</div>
+                        <h3 style="font-family:'Outfit'; font-size:1.4rem; margin-bottom:10px; color:#1a1c1e;">Reservación No Confirmada</h3>
+                        <p style="color:#666; font-size:0.95rem; line-height:1.5; margin-bottom:20px;">Lo sentimos ${this.bookingData.name}, tu reservación no pudo ser aceptada en este momento.</p>
+                        <button class="btn-action" id="btn-res-done">DONE</button>
+                    </div>
+                `;
+                body.querySelector('#btn-res-done').onclick = () => this.handleDoneRedirect();
+            } else {
+                title.textContent = "Reservación Confirmada";
+                const preorderTotal = this.preorderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-            body.querySelector('#btn-res-done').onclick = () => {
-                this.shadowRoot.getElementById('res-modal').style.display = 'none';
-            };
+                body.innerHTML = `
+                    <div style="text-align:center; padding:10px 0;">
+                        <div class="check-mark">✓</div>
+                        <h3 style="font-family:'Outfit'; font-size:1.5rem; margin-bottom:8px; color:#1a1c1e;">¡Gracias por reservar!</h3>
+                        <p style="color:#666; font-size:0.92rem; line-height:1.5; margin-bottom:20px;">Tu reservación ha sido aceptada con éxito.</p>
+
+                        <div style="background:#fdfdfd; border:1px solid #f8e8d8; border-radius:18px; padding:20px; text-align:left; margin-bottom:20px;">
+                            <div style="font-size:0.75rem; font-weight:800; color:#ff9533; text-transform:uppercase; margin-bottom:12px; letter-spacing:0.5px;">Detalles de la Reserva</div>
+                            <div style="font-size:0.9rem; font-weight:700; color:#1a1c1e; margin-bottom:6px;">👤 ${this.bookingData.name}</div>
+                            <div style="font-size:0.85rem; color:#555; margin-bottom:4px;">👥 Personas: <strong>${this.bookingData.guests} invitados</strong></div>
+                            <div style="font-size:0.85rem; color:#555; margin-bottom:4px;">📅 Fecha: <strong>${this.bookingData.date}</strong></div>
+                            <div style="font-size:0.85rem; color:#555; margin-bottom:4px;">⏰ Hora: <strong>${this.formatTime12h(this.bookingData.time)}</strong></div>
+                            ${this.bookingData.phone ? `<div style="font-size:0.85rem; color:#555; margin-bottom:4px;">📞 Tel: ${this.bookingData.phone}</div>` : ''}
+                            ${this.bookingData.email ? `<div style="font-size:0.85rem; color:#555; margin-bottom:4px;">✉️ Email: ${this.bookingData.email}</div>` : ''}
+                            ${this.bookingData.comments ? `<div style="font-size:0.85rem; color:#777; margin-top:8px; font-style:italic;">💬 Nota: ${this.bookingData.comments}</div>` : ''}
+
+                            ${this.preorderCart.length > 0 ? `
+                                <div style="border-top: 1px dashed #eee; margin-top: 12px; padding-top: 10px;">
+                                    <div style="font-size:0.75rem; font-weight:800; color:#ff9533; text-transform:uppercase; margin-bottom:6px;">Pre-orden de Comida</div>
+                                    ${this.preorderCart.map(i => `<div style="font-size:0.82rem; color:#444; display:flex; justify-content:space-between;"><span>${i.quantity}x ${i.name}</span><span>$${(i.price * i.quantity).toFixed(2)}</span></div>`).join('')}
+                                    <div style="font-size:0.85rem; font-weight:800; color:#ff9533; margin-top:6px; text-align:right;">Total: $${preorderTotal.toFixed(2)}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <button class="btn-action" id="btn-res-done">DONE</button>
+                    </div>
+                `;
+
+                body.querySelector('#btn-res-done').onclick = () => this.handleDoneRedirect();
+            }
+        }
+    }
+
+    handleDoneRedirect() {
+        const domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
+        if (domain && !domain.includes('menutech.io') && !domain.includes('localhost')) {
+            window.location.href = `https://${domain}`;
+        } else {
+            window.location.href = `https://${domain}`;
         }
     }
 
@@ -4364,16 +4422,42 @@ class MenutechReservations extends HTMLElement {
                 status: 'pending'
             };
 
-            const { error } = await this.supabase.from('menutech_reservations').insert(payload);
+            const { data: inserted, error } = await this.supabase.from('menutech_reservations').insert(payload).select().single();
             if (error) throw error;
 
+            this.reservationId = inserted.id;
+            this.reservationStatus = inserted.status || 'pending';
             this.step = 4;
             this.renderStep();
+            this.startReservationTracking(inserted.id);
         } catch (e) {
             this.showModal("Reservation Error", "Error creating table reservation: " + e.message);
             btn.textContent = "Make Table Reservation Now";
             btn.disabled = false;
         }
+    }
+
+    startReservationTracking(resId) {
+        if (!this.supabase || !resId) return;
+        if (this.resTrackingChannel) {
+            this.supabase.removeChannel(this.resTrackingChannel);
+        }
+
+        this.resTrackingChannel = this.supabase.channel('res_tracking_' + resId.substring(0, 8))
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'menutech_reservations',
+                filter: 'id=eq.' + resId
+            }, (payload) => {
+                if (payload.new && payload.new.status) {
+                    this.reservationStatus = payload.new.status;
+                    if (this.step === 4) {
+                        this.renderStep();
+                    }
+                }
+            })
+            .subscribe();
     }
 }
 

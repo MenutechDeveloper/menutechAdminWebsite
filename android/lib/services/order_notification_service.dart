@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
+import '../main.dart';
 import '../models/unified_item.dart';
+import '../screens/main_screen.dart';
+import '../screens/orders_screen.dart';
 import 'supabase_service.dart';
 import '../widgets/chatbot_widget.dart';
 
@@ -195,11 +198,19 @@ class OrderNotificationService {
   }
 
   void _handleNewPendingItem(String key, UnifiedItem item) {
+    try {
+      navigatorKey.currentState?.popUntil((route) => route.isFirst);
+      MainScreen.selectOrdersTab();
+      OrdersScreen.selectPendingTab();
+    } catch (e) {
+      debugPrint("Auto-navigation to Pending tab failed: $e");
+    }
+
     _notifyItem(item, isReminder: false);
 
     _periodicReminders[key]?.cancel();
     _periodicReminders[key] = Timer.periodic(
-      const Duration(seconds: 30),
+      const Duration(seconds: 3),
       (_) {
         if (_knownPendingKeys.contains(key)) {
           final currentItem = _pendingItemsMap[key] ?? item;

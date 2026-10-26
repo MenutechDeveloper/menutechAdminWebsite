@@ -6,7 +6,15 @@ import '../services/supabase_service.dart';
 import 'order_detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
+  static _OrdersScreenState? activeState;
+
   const OrdersScreen({super.key});
+
+  static void selectPendingTab() {
+    if (activeState != null && activeState!.mounted) {
+      activeState!._tabController.animateTo(0);
+    }
+  }
 
   @override
   State<OrdersScreen> createState() => _OrdersScreenState();
@@ -27,6 +35,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
+    OrdersScreen.activeState = this;
     WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 4, vsync: this);
     final userId = _supabase.currentUser?.id;
@@ -114,6 +123,9 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
 
   @override
   void dispose() {
+    if (OrdersScreen.activeState == this) {
+      OrdersScreen.activeState = null;
+    }
     WidgetsBinding.instance.removeObserver(this);
     _pollTimer?.cancel();
     _tabController.dispose();
@@ -198,8 +210,8 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       children: [
         _buildItemList(allItems.where((i) => i.status == 'pending').toList()),
         _buildItemList(allItems.where((i) => i.status == 'accepted' || i.status == 'preparing' || i.status == 'confirmed').toList()),
-        _buildItemList(allItems.where((i) => i.status == 'finished' || i.status == 'attended').toList()),
-        _buildItemList(allItems.where((i) => i.status == 'delivered' || i.status == 'rejected' || i.status == 'cancelled').toList()),
+        _buildItemList(allItems.where((i) => i.status == 'finished' || i.status == 'ready').toList()),
+        _buildItemList(allItems.where((i) => i.status == 'delivered' || i.status == 'rejected' || i.status == 'cancelled' || i.status == 'attended').toList()),
       ],
     );
   }
@@ -217,16 +229,15 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
         final item = items[index];
         final isSelected = _selectedItem?.id == item.id && _selectedItem?.entryType == item.entryType;
         final isOrd = item.entryType == EntryType.order;
+        final isPending = item.status == 'pending';
 
         final badgeColor = isOrd ? const Color(0xFFFF9533) : const Color(0xFF8B5CF6);
-        final badgeLabel = isOrd ? '🛒 Order' : '📅 Reservation';
+        final badgeText = isOrd ? 'Order' : 'Reservation';
+        final badgeIcon = isOrd ? Icons.shopping_bag_outlined : Icons.calendar_month_outlined;
 
-        final subDetails = isOrd
-            ? "${item.items.length} items • \$${item.totalAmount.toStringAsFixed(2)}"
-            : "📅 ${item.reservationDate ?? ''} • ⏰ ${item.reservationTime ?? ''} • 👥 ${item.partySize} guests";
-
-        return Card(
+        final cardWidget = Card(
           elevation: 0,
+          margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
             side: BorderSide(
@@ -257,18 +268,25 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             title: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: badgeColor.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    badgeLabel,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: badgeColor,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(badgeIcon, size: 12, color: badgeColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        badgeText,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: badgeColor,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -285,8 +303,45 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 6),
-                Text(subDetails, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                const SizedBox(height: 4),
+                isOrd
+                    ? Row(
+                        children: [
+                          Icon(Icons.restaurant_menu_outlined, size: 13, color: Colors.grey[600]),
+                          const SizedBox(width: 4),
+                          Text("${item.items.length} items • \$${item.totalAmount.toStringAsFixed(2)}", style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                        ],
+                      )
+                    : Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.calendar_today_outlined, size: 12, color: badgeColor),
+                              const SizedBox(width: 3),
+                              Text(item.reservationDate ?? '', style: TextStyle(fontSize: 11, color: Colors.grey[800], fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.access_time_outlined, size: 12, color: badgeColor),
+                              const SizedBox(width: 3),
+                              Text(item.reservationTime ?? '', style: TextStyle(fontSize: 11, color: Colors.grey[800], fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.people_alt_outlined, size: 12, color: badgeColor),
+                              const SizedBox(width: 3),
+                              Text("${item.partySize} guests", style: TextStyle(fontSize: 11, color: Colors.grey[800], fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ],
+                      ),
+                const SizedBox(height: 6),
                 Text(
                   DateFormat('MMM d, h:mm a').format(item.createdAt),
                   style: TextStyle(color: badgeColor, fontWeight: FontWeight.w600, fontSize: 11),
@@ -294,6 +349,12 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
               ],
             ),
           ),
+        );
+
+        return PulsingPendingCard(
+          isPending: isPending,
+          pulseColor: badgeColor,
+          child: cardWidget,
         );
       },
     );
@@ -305,6 +366,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       case 'accepted':
       case 'confirmed': return Colors.green;
       case 'preparing':
+      case 'ready':
       case 'attended': return const Color(0xFFF59E0B);
       case 'finished': return const Color(0xFFFF9533);
       case 'delivered': return const Color(0xFFFF9533).withOpacity(0.6);
@@ -312,5 +374,85 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       case 'cancelled': return Colors.red;
       default: return Colors.grey;
     }
+  }
+}
+
+class PulsingPendingCard extends StatefulWidget {
+  final Widget child;
+  final bool isPending;
+  final Color pulseColor;
+
+  const PulsingPendingCard({
+    super.key,
+    required this.child,
+    required this.isPending,
+    required this.pulseColor,
+  });
+
+  @override
+  State<PulsingPendingCard> createState() => _PulsingPendingCardState();
+}
+
+class _PulsingPendingCardState extends State<PulsingPendingCard> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _animation = Tween<double>(begin: 1.0, end: 1.03).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    if (widget.isPending) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant PulsingPendingCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isPending && !_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    } else if (!widget.isPending && _controller.isAnimating) {
+      _controller.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.isPending) return widget.child;
+
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _animation.value,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: widget.pulseColor.withOpacity(0.35 * ((_animation.value - 1.0) / 0.03)),
+                  blurRadius: 10 * _animation.value,
+                  spreadRadius: 2 * _animation.value,
+                ),
+              ],
+            ),
+            child: widget.child,
+          ),
+        );
+      },
+    );
   }
 }

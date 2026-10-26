@@ -77,8 +77,8 @@ class _OrderDetailViewState extends State<OrderDetailView> {
         return 1;
       case 'finished':
       case 'ready':
-      case 'attended':
         return 2;
+      case 'attended':
       case 'delivered':
       case 'rejected':
       case 'cancelled':
@@ -311,7 +311,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
 
   bool _hasReservationActions(UnifiedItem item) {
     final s = item.status.toLowerCase();
-    return s == 'pending' || s == 'confirmed';
+    return s == 'pending' || s == 'confirmed' || s == 'ready' || s == 'finished';
   }
 
   Widget _buildOrderView(UnifiedItem item) {
@@ -614,7 +614,9 @@ class _OrderDetailViewState extends State<OrderDetailView> {
   Widget _buildReservationActionButtons(UnifiedItem item) {
     if (_isUpdating) return const Center(child: CircularProgressIndicator());
 
-    if (item.status == 'pending') {
+    final s = item.status.toLowerCase();
+
+    if (s == 'pending') {
       return Row(
         children: [
           Expanded(
@@ -627,23 +629,23 @@ class _OrderDetailViewState extends State<OrderDetailView> {
           const SizedBox(width: 16),
           Expanded(
             child: ElevatedButton(
-              onPressed: () => _updateResStatus(item.id, 'confirmed'),
+              onPressed: () => _updateResStatus(item.id, 'ready'),
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6), foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-              child: const Text("CONFIRM BOOKING"),
+              child: const Text("ACCEPT"),
             ),
           ),
         ],
       );
     }
 
-    if (item.status == 'confirmed') {
+    if (s == 'confirmed' || s == 'ready' || s == 'finished') {
       return Row(
         children: [
           Expanded(
             child: ElevatedButton(
               onPressed: () => _updateResStatus(item.id, 'cancelled'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-              child: const Text("CANCEL"),
+              child: const Text("CANCELÓ"),
             ),
           ),
           const SizedBox(width: 16),
@@ -651,7 +653,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
             child: ElevatedButton(
               onPressed: () => _updateResStatus(item.id, 'attended'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-              child: const Text("MARK ATTENDED"),
+              child: const Text("ASISTIÓ"),
             ),
           ),
         ],
