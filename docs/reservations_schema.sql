@@ -59,7 +59,23 @@ CREATE POLICY "Public select reservation settings" ON public.menutech_reservatio
 
 DROP POLICY IF EXISTS "Owner manage reservation settings" ON public.menutech_reservation_settings;
 CREATE POLICY "Owner manage reservation settings" ON public.menutech_reservation_settings
-    FOR ALL USING (auth.uid() = user_id OR auth.uid() IN (SELECT id FROM profiles WHERE role IN ('ADMIN', 'DEVELOPER', 'CS', 'ADMINCS')));
+    FOR ALL
+    USING (
+        auth.uid() = user_id OR
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE id = auth.uid()
+            AND UPPER(role) IN ('ADMIN', 'DEVELOPER', 'CS', 'ADMINCS')
+        )
+    )
+    WITH CHECK (
+        auth.uid() = user_id OR
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE id = auth.uid()
+            AND UPPER(role) IN ('ADMIN', 'DEVELOPER', 'CS', 'ADMINCS')
+        )
+    );
 
 -- RLS Policies for menutech_reservations
 DROP POLICY IF EXISTS "Public insert reservations" ON public.menutech_reservations;
@@ -72,7 +88,23 @@ CREATE POLICY "Public select own reservation by id" ON public.menutech_reservati
 
 DROP POLICY IF EXISTS "Owner manage reservations" ON public.menutech_reservations;
 CREATE POLICY "Owner manage reservations" ON public.menutech_reservations
-    FOR ALL USING (auth.uid() = user_id OR auth.uid() IN (SELECT id FROM profiles WHERE role IN ('ADMIN', 'DEVELOPER', 'CS', 'ADMINCS')));
+    FOR ALL
+    USING (
+        auth.uid() = user_id OR
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE id = auth.uid()
+            AND UPPER(role) IN ('ADMIN', 'DEVELOPER', 'CS', 'ADMINCS')
+        )
+    )
+    WITH CHECK (
+        auth.uid() = user_id OR
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE id = auth.uid()
+            AND UPPER(role) IN ('ADMIN', 'DEVELOPER', 'CS', 'ADMINCS')
+        )
+    );
 
 -- Realtime Publication for Reservations
 ALTER PUBLICATION supabase_realtime ADD TABLE public.menutech_reservations;
