@@ -3650,6 +3650,29 @@ class MenutechReservations extends HTMLElement {
                 .preorder-item-row:last-child { border-bottom: none; }
 
                 .check-mark { width: 70px; height: 70px; background: #059669; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 36px; margin: 0 auto 20px auto; }
+
+                .res-custom-modal-overlay {
+                    position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+                    backdrop-filter: blur(6px); z-index: 350000;
+                    display: none; align-items: center; justify-content: center;
+                    animation: fadeIn 0.25s ease;
+                    padding: 20px; box-sizing: border-box;
+                }
+                .res-custom-modal-card {
+                    background: #ffffff; border-radius: 24px; padding: 28px 24px;
+                    width: 100%; max-width: 380px; text-align: center;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+                    animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+                    box-sizing: border-box; color: #1a1c1e; border: 1px solid #f8e8d8;
+                }
+                .res-custom-modal-card h3 { margin: 0 0 10px; font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif; font-size: 1.25rem; font-weight: 800; color: #1a1c1e; text-transform: uppercase; letter-spacing: 0.5px; }
+                .res-custom-modal-card p { margin: 0 0 24px; color: #555555; line-height: 1.5; font-size: 0.95rem; font-weight: 500; }
+                .res-custom-modal-btn {
+                    background: #ff9533; color: #ffffff; border: none; padding: 14px 28px;
+                    border-radius: 16px; font-weight: 800; font-size: 0.9rem; cursor: pointer; width: 100%;
+                    transition: 0.25s; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 18px rgba(255, 149, 51, 0.3);
+                }
+                .res-custom-modal-btn:hover { background: #f08a28; transform: translateY(-2px); box-shadow: 0 10px 22px rgba(255, 149, 51, 0.4); }
             </style>
 
             <button class="btn-reserve-trigger" id="open-res-modal">
@@ -3668,7 +3691,28 @@ class MenutechReservations extends HTMLElement {
                     </div>
                 </div>
             </div>
+
+            <div class="res-custom-modal-overlay" id="res-custom-modal">
+                <div class="res-custom-modal-card">
+                    <h3 id="res-modal-msg-title">Notification</h3>
+                    <p id="res-modal-msg-body"></p>
+                    <button class="res-custom-modal-btn" id="res-modal-msg-close">Aceptar</button>
+                </div>
+            </div>
         `;
+
+        const customModal = this.shadowRoot.getElementById('res-custom-modal');
+        const customModalClose = this.shadowRoot.getElementById('res-modal-msg-close');
+        if (customModalClose) {
+            customModalClose.onclick = () => {
+                if (customModal) customModal.style.display = 'none';
+            };
+        }
+        if (customModal) {
+            customModal.onclick = (e) => {
+                if (e.target === customModal) customModal.style.display = 'none';
+            };
+        }
 
         if (!isStandalone) {
             this.shadowRoot.getElementById('open-res-modal').onclick = () => {
@@ -3690,6 +3734,16 @@ class MenutechReservations extends HTMLElement {
         } else {
             this.renderStep();
         }
+    }
+
+    showModal(title, message) {
+        const modal = this.shadowRoot.getElementById('res-custom-modal');
+        if (!modal) return;
+        const titleEl = this.shadowRoot.getElementById('res-modal-msg-title');
+        const bodyEl = this.shadowRoot.getElementById('res-modal-msg-body');
+        if (titleEl) titleEl.textContent = title || 'Notification';
+        if (bodyEl) bodyEl.textContent = message || '';
+        modal.style.display = 'flex';
     }
 
     renderStep() {
@@ -3764,7 +3818,7 @@ class MenutechReservations extends HTMLElement {
 
             body.querySelector('#btn-step1-next').onclick = () => {
                 if (!this.bookingData.time) {
-                    alert("Please select a valid reservation time slot.");
+                    this.showModal("Select Time", "Please select a valid reservation time slot.");
                     return;
                 }
 
@@ -3933,6 +3987,30 @@ class MenutechReservations extends HTMLElement {
         };
     }
 
+    parseTimeStringToMinutes(timeStr) {
+        if (!timeStr) return null;
+        const s = timeStr.trim().toUpperCase();
+        const isPM = s.includes('PM');
+        const isAM = s.includes('AM');
+        const clean = s.replace(/AM|PM/g, '').trim();
+        const parts = clean.split(':');
+        let hours = parseInt(parts[0], 10);
+        if (isNaN(hours)) return null;
+        let mins = parts[1] ? (parseInt(parts[1], 10) || 0) : 0;
+        if (isPM && hours < 12) hours += 12;
+        if (isAM && hours === 12) hours = 0;
+        return hours * 60 + mins;
+    }
+
+    formatMinutes12h(totalMins) {
+        if (totalMins === null || totalMins === undefined || isNaN(totalMins)) return '';
+        const h24 = Math.floor(totalMins / 60);
+        const m = totalMins % 60;
+        const ampm = h24 >= 12 ? 'PM' : 'AM';
+        const h12 = h24 % 12 || 12;
+        return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+    }
+
     formatTime12h(time24) {
         if (!time24) return '';
         const [hStr, mStr] = time24.split(':');
@@ -3945,7 +4023,7 @@ class MenutechReservations extends HTMLElement {
 
     openClockPicker(selectedDateStr, timeInputEl) {
         if (!selectedDateStr) {
-            alert("Please select a date first.");
+            this.showModal("Select Date", "Please select a date first.");
             return;
         }
 
@@ -3965,13 +4043,14 @@ class MenutechReservations extends HTMLElement {
             }
         });
 
-        let startHour = 10, endHour = 22;
+        let startMinutes = 10 * 60; // Default 10:00 AM
+        let endMinutes = 22 * 60;   // Default 10:00 PM
         if (dayHoursStr && dayHoursStr.includes('-')) {
             const parts = dayHoursStr.split('-');
-            const sH = parseInt(parts[0].trim().split(':')[0]);
-            const eH = parseInt(parts[1].trim().split(':')[0]);
-            if (!isNaN(sH)) startHour = sH;
-            if (!isNaN(eH)) endHour = eH;
+            const sM = this.parseTimeStringToMinutes(parts[0]);
+            const eM = this.parseTimeStringToMinutes(parts[1]);
+            if (sM !== null) startMinutes = sM;
+            if (eM !== null) endMinutes = eM;
         }
 
         let clockState = {
@@ -4140,10 +4219,21 @@ class MenutechReservations extends HTMLElement {
             if (clockState.ampm === 'AM' && h24 === 12) h24 = 0;
 
             const slotTime24 = `${String(h24).padStart(2, '0')}:${String(clockState.minute).padStart(2, '0')}`;
+            const selectedMinutes = h24 * 60 + clockState.minute;
 
             // Check store opening hours
-            if (h24 < startHour || h24 >= endHour) {
-                alert(`Selected time is outside operating hours (${this.formatTime12h(`${String(startHour).padStart(2, '0')}:00`)} - ${this.formatTime12h(`${String(endHour).padStart(2, '0')}:00`)}).`);
+            let isOpen = false;
+            if (startMinutes <= endMinutes) {
+                isOpen = selectedMinutes >= startMinutes && selectedMinutes < endMinutes;
+            } else {
+                // Overnight schedule
+                isOpen = selectedMinutes >= startMinutes || selectedMinutes < endMinutes;
+            }
+
+            if (!isOpen) {
+                const startStr = this.formatMinutes12h(startMinutes);
+                const endStr = this.formatMinutes12h(endMinutes);
+                this.showModal("Outside Operating Hours", `Selected time is outside operating hours (${startStr} - ${endStr}).`);
                 return;
             }
 
@@ -4154,7 +4244,7 @@ class MenutechReservations extends HTMLElement {
             const selectedTs = new Date(`${selectedDateStr}T${slotTime24}:00`).getTime();
 
             if (isToday && selectedTs < (now.getTime() + leadTimeMs)) {
-                alert(`Reservations require at least ${this.settings.min_lead_time_min} minutes advance notice.`);
+                this.showModal("Notice Required", `Reservations require at least ${this.settings.min_lead_time_min} minutes advance notice.`);
                 return;
             }
 
@@ -4241,7 +4331,7 @@ class MenutechReservations extends HTMLElement {
         const email = body.querySelector('#field-email').value.trim();
 
         if (!name || !phone) {
-            alert("Please provide your full name and phone number.");
+            this.showModal("Missing Information", "Please provide your full name and phone number.");
             return;
         }
 
@@ -4280,7 +4370,7 @@ class MenutechReservations extends HTMLElement {
             this.step = 4;
             this.renderStep();
         } catch (e) {
-            alert("Error creating table reservation: " + e.message);
+            this.showModal("Reservation Error", "Error creating table reservation: " + e.message);
             btn.textContent = "Make Table Reservation Now";
             btn.disabled = false;
         }
