@@ -3350,7 +3350,7 @@ if (!customElements.get('menutech-footer')) {
  */
 class MenutechReservations extends HTMLElement {
     static get observedAttributes() {
-        return ['domain', 'custom-label'];
+        return ['domain', 'custom-label', 'view'];
     }
 
     attributeChangedCallback() {
@@ -3380,7 +3380,7 @@ class MenutechReservations extends HTMLElement {
 
     async connectedCallback() {
         await this.initSupabase();
-        this.loadData();
+        await this.loadData();
         this.render();
     }
 
@@ -3400,21 +3400,41 @@ class MenutechReservations extends HTMLElement {
 
         try {
             // Find settings by domain or fallback profile
-            const { data: resSettings } = await this.supabase
+            let { data: resSettings } = await this.supabase
                 .from('menutech_reservation_settings')
                 .select('*')
                 .eq('domain', domain)
                 .maybeSingle();
 
-            // Find profile user_id by domain
+            // Find profile user_id by domain or username
             let userId = resSettings ? resSettings.user_id : null;
             if (!userId) {
                 const { data: prof } = await this.supabase
                     .from('profiles')
                     .select('id')
-                    .eq('domain', domain)
+                    .or(`domain.eq.${domain},username.eq.${domain}`)
                     .maybeSingle();
                 if (prof) userId = prof.id;
+            }
+
+            // Fallback: search in menutech_menus by slug or domain
+            if (!userId) {
+                const { data: menu } = await this.supabase
+                    .from('menutech_menus')
+                    .select('user_id')
+                    .or(`slug.eq.${domain},domain.eq.${domain}`)
+                    .maybeSingle();
+                if (menu) userId = menu.user_id;
+            }
+
+            // If userId was found but resSettings wasn't, fetch settings by user_id
+            if (userId && !resSettings) {
+                const { data: resSetByUserId } = await this.supabase
+                    .from('menutech_reservation_settings')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .maybeSingle();
+                if (resSetByUserId) resSettings = resSetByUserId;
             }
 
             // Fetch restaurant schedule
@@ -3461,13 +3481,18 @@ class MenutechReservations extends HTMLElement {
 
     render() {
         const customLabel = this.getAttribute('custom-label') || 'Book a Table';
+        const viewMode = this.getAttribute('view');
+        const isStandalone = viewMode === 'standalone';
+
         this.shadowRoot.innerHTML = `
             <style>
                 :host {
-                    display: inline-block;
+                    display: ${isStandalone ? 'block' : 'inline-block'};
                     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+                    ${isStandalone ? 'width: 100%; max-width: 520px; margin: 30px auto; padding: 0 15px; box-sizing: border-box;' : ''}
                 }
                 .btn-reserve-trigger {
+                    display: ${isStandalone ? 'none' : 'inline-flex'};
                     background: #ff9533;
                     color: #fff;
                     padding: 16px 32px;
@@ -3479,7 +3504,6 @@ class MenutechReservations extends HTMLElement {
                     text-transform: uppercase;
                     font-size: 0.95rem;
                     transition: 0.3s;
-                    display: inline-flex;
                     align-items: center;
                     gap: 10px;
                 }
@@ -3492,17 +3516,28 @@ class MenutechReservations extends HTMLElement {
 
                 /* Modal Overlay */
                 .res-modal-overlay {
-                    position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
-                    z-index: 200000; display: none; align-items: center; justify-content: center;
-                    animation: fadeIn 0.3s ease; padding: 15px; box-sizing: border-box;
+                    position: ${isStandalone ? 'relative' : 'fixed'};
+                    inset: ${isStandalone ? 'auto' : '0'};
+                    background: ${isStandalone ? 'transparent' : 'rgba(0,0,0,0.75)'};
+                    backdrop-filter: ${isStandalone ? 'none' : 'blur(8px)'};
+                    z-index: ${isStandalone ? '1' : '200000'};
+                    display: ${isStandalone ? 'flex' : 'none'};
+                    align-items: center;
+                    justify-content: center;
+                    animation: fadeIn 0.3s ease;
+                    padding: ${isStandalone ? '0' : '15px'};
+                    box-sizing: border-box;
+                    width: 100%;
                 }
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
                 .res-card {
                     background: #ffffff; width: 100%; max-width: 520px; border-radius: 28px;
-                    box-shadow: 0 25px 60px rgba(0,0,0,0.3); overflow: hidden; position: relative;
+                    box-shadow: ${isStandalone ? '0 20px 50px rgba(0,0,0,0.08)' : '0 25px 60px rgba(0,0,0,0.3)'};
+                    border: ${isStandalone ? '1.5px solid #f8e8d8' : 'none'};
+                    overflow: hidden; position: relative;
                     animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); color: #1a1c1e;
-                    max-height: 90vh; display: flex; flex-direction: column;
+                    max-height: ${isStandalone ? 'none' : '90vh'}; display: flex; flex-direction: column;
                 }
                 @keyframes scaleUp { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
@@ -3511,7 +3546,11 @@ class MenutechReservations extends HTMLElement {
                     display: flex; justify-content: space-between; align-items: center;
                 }
                 .res-card-header h3 { margin: 0; font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 800; text-transform: uppercase; color: #333; }
-                .close-btn { background: #f5f5f5; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+                .close-btn {
+                    display: ${isStandalone ? 'none' : 'flex'};
+                    background: #f5f5f5; border: none; width: 36px; height: 36px; border-radius: 50%;
+                    align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
+                }
                 .close-btn:hover { background: #eee; transform: scale(1.05); }
 
                 .res-card-body { padding: 28px; overflow-y: auto; flex: 1; }
@@ -3561,22 +3600,26 @@ class MenutechReservations extends HTMLElement {
             </div>
         `;
 
-        this.shadowRoot.getElementById('open-res-modal').onclick = () => {
-            if (!this.settings) this.loadData();
-            this.step = 1;
-            this.shadowRoot.getElementById('res-modal').style.display = 'flex';
-            this.renderStep();
-        };
+        if (!isStandalone) {
+            this.shadowRoot.getElementById('open-res-modal').onclick = () => {
+                if (!this.settings) this.loadData();
+                this.step = 1;
+                this.shadowRoot.getElementById('res-modal').style.display = 'flex';
+                this.renderStep();
+            };
 
-        this.shadowRoot.getElementById('close-res-modal').onclick = () => {
-            this.shadowRoot.getElementById('res-modal').style.display = 'none';
-        };
-
-        this.shadowRoot.getElementById('res-modal').onclick = (e) => {
-            if (e.target === this.shadowRoot.getElementById('res-modal')) {
+            this.shadowRoot.getElementById('close-res-modal').onclick = () => {
                 this.shadowRoot.getElementById('res-modal').style.display = 'none';
-            }
-        };
+            };
+
+            this.shadowRoot.getElementById('res-modal').onclick = (e) => {
+                if (e.target === this.shadowRoot.getElementById('res-modal')) {
+                    this.shadowRoot.getElementById('res-modal').style.display = 'none';
+                }
+            };
+        } else {
+            this.renderStep();
+        }
     }
 
     renderStep() {

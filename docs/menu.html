@@ -18,17 +18,30 @@
             const params = new URLSearchParams(window.location.search);
             const slug = params.get('n');
             const domain = params.get('domain');
+            const isRes = params.get('res') === 'true' || params.get('reservation') === 'true';
             const container = document.getElementById('menu-container');
 
-            const menuEl = document.createElement('menutech-platform-orders');
-            if (slug) {
-                menuEl.setAttribute('restaurant', slug);
-                container.appendChild(menuEl);
-            } else if (domain) {
-                menuEl.setAttribute('domain', domain);
-                container.appendChild(menuEl);
+            if (isRes) {
+                document.title = 'Table Reservation | Menutech';
+                const resEl = document.createElement('menutech-reservations');
+                resEl.setAttribute('view', 'standalone');
+                if (slug) {
+                    resEl.setAttribute('domain', slug);
+                } else if (domain) {
+                    resEl.setAttribute('domain', domain);
+                }
+                container.appendChild(resEl);
             } else {
-                container.innerHTML = '<div style="padding: 40px; text-align: center; font-family: sans-serif; color: #666;">Menu not found.</div>';
+                const menuEl = document.createElement('menutech-platform-orders');
+                if (slug) {
+                    menuEl.setAttribute('restaurant', slug);
+                    container.appendChild(menuEl);
+                } else if (domain) {
+                    menuEl.setAttribute('domain', domain);
+                    container.appendChild(menuEl);
+                } else {
+                    container.innerHTML = '<div style="padding: 40px; text-align: center; font-family: sans-serif; color: #666;">Menu not found.</div>';
+                }
             }
         });
     </script>
