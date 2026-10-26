@@ -3514,7 +3514,7 @@ class MenutechReservations extends HTMLElement {
                 }
                 .btn-reserve-trigger svg { width: 20px; height: 20px; }
 
-                /* Modal Overlay */
+                /* Modal Overlay & PC Centering */
                 .res-modal-overlay {
                     position: ${isStandalone ? 'relative' : 'fixed'};
                     inset: ${isStandalone ? 'auto' : '0'};
@@ -3531,6 +3531,39 @@ class MenutechReservations extends HTMLElement {
                 }
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+                @media (min-width: 769px) {
+                    ${isStandalone ? `
+                    :host {
+                        min-height: 100vh;
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        margin: 0 auto !important;
+                        box-sizing: border-box;
+                    }
+                    .res-modal-overlay {
+                        min-height: 100vh;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        margin: auto !important;
+                    }
+                    ` : ''}
+                }
+
+                @media (max-width: 768px) {
+                    ${isStandalone ? `
+                    :host {
+                        margin: 30px auto;
+                        min-height: auto;
+                        display: block;
+                    }
+                    .res-modal-overlay {
+                        min-height: auto;
+                        align-items: flex-start;
+                    }
+                    ` : ''}
+                }
+
                 .res-card {
                     background: #ffffff; width: 100%; max-width: 520px; border-radius: 28px;
                     box-shadow: ${isStandalone ? '0 20px 50px rgba(0,0,0,0.08)' : '0 25px 60px rgba(0,0,0,0.3)'};
@@ -3540,6 +3573,43 @@ class MenutechReservations extends HTMLElement {
                     max-height: ${isStandalone ? 'none' : '90vh'}; display: flex; flex-direction: column;
                 }
                 @keyframes scaleUp { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+                /* Clock Time Picker Modal */
+                .mt-clock-modal-overlay {
+                    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(6px);
+                    z-index: 300000; display: flex; align-items: center; justify-content: center; padding: 16px;
+                    opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+                }
+                .mt-clock-modal-overlay.active { opacity: 1; pointer-events: auto; }
+                .mt-clock-modal-card {
+                    background: #ffffff; border: 1px solid #f8e8d8; border-radius: 28px; width: 100%; max-width: 340px;
+                    overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); transform: scale(0.9); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); color: #1a1c1e;
+                }
+                .mt-clock-modal-overlay.active .mt-clock-modal-card { transform: scale(1); }
+                .mt-clock-header { background: linear-gradient(135deg, #ff9533 0%, #e07a1e 100%); color: #ffffff; padding: 24px 20px; display: flex; align-items: center; justify-content: space-between; }
+                .mt-clock-time-display { font-size: 3.2rem; font-weight: 800; font-family: 'Outfit', sans-serif; line-height: 1; display: flex; align-items: center; gap: 2px; letter-spacing: -1px; }
+                .mt-clock-digit { cursor: pointer; padding: 2px 6px; border-radius: 12px; transition: background 0.2s, opacity 0.2s; opacity: 0.65; }
+                .mt-clock-digit.active { opacity: 1; background: rgba(255, 255, 255, 0.22); }
+                .mt-clock-colon { opacity: 0.8; font-weight: 600; }
+                .mt-clock-ampm-group { display: flex; flex-direction: column; gap: 6px; }
+                .mt-clock-ampm-btn { background: rgba(255, 255, 255, 0.15); border: none; color: #ffffff; font-size: 0.75rem; font-weight: 800; padding: 6px 12px; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+                .mt-clock-ampm-btn.active { background: #ffffff; color: #ff9533; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+                .mt-clock-body { padding: 20px 16px; display: flex; flex-direction: column; align-items: center; }
+                .mt-clock-mode-indicator { font-size: 0.75rem; font-weight: 700; color: #ff9533; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+                .mt-clock-dial-container { width: 230px; height: 230px; border-radius: 50%; background: #fffef5; border: 1px solid #f8e8d8; position: relative; user-select: none; touch-action: none; cursor: pointer; }
+                .mt-clock-center-dot { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: #ff9533; border-radius: 50%; transform: translate(-50%, -50%); z-index: 3; }
+                .mt-clock-hand { position: absolute; bottom: 50%; left: calc(50% - 1px); width: 2px; height: 75px; background: #ff9533; transform-origin: bottom center; transform: rotate(0deg); z-index: 2; pointer-events: none; transition: transform 0.15s ease-out; }
+                .mt-clock-hand.dragging { transition: none; }
+                .mt-clock-hand-head { position: absolute; top: -18px; left: 50%; width: 36px; height: 36px; background: #ff9533; border-radius: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(255, 149, 51, 0.4); }
+                .mt-clock-numbers { position: absolute; inset: 0; pointer-events: none; }
+                .mt-clock-num { position: absolute; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; color: #1a1c1e; transform: translate(-50%, -50%); pointer-events: none; transition: color 0.2s; }
+                .mt-clock-num.selected { color: #ffffff; font-weight: 800; }
+                .mt-clock-footer { padding: 16px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f8e8d8; background: #ffffff; }
+                .mt-clock-btn { padding: 10px 20px; border-radius: 14px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; border: none; }
+                .mt-clock-btn.cancel { background: transparent; color: #4a5568; }
+                .mt-clock-btn.cancel:hover { background: #fffef5; color: #1a1c1e; }
+                .mt-clock-btn.confirm { background: #ff9533; color: #ffffff; box-shadow: 0 6px 18px rgba(255, 149, 51, 0.3); }
+                .mt-clock-btn.confirm:hover { transform: translateY(-2px); filter: brightness(1.05); }
 
                 .res-card-header {
                     padding: 22px 28px; background: #fff; border-bottom: 1px solid #f0f0f0;
@@ -3665,9 +3735,7 @@ class MenutechReservations extends HTMLElement {
 
                 <div class="field-group">
                     <label>Time</label>
-                    <select class="field-control" id="field-time">
-                        <option value="">Select Date First...</option>
-                    </select>
+                    <input type="text" class="field-control" id="field-time" readonly placeholder="Select reservation time..." value="${this.bookingData.time ? this.formatTime12h(this.bookingData.time) : ''}" style="cursor: pointer; background: #fffef5;">
                 </div>
 
                 <div class="field-group">
@@ -3683,83 +3751,25 @@ class MenutechReservations extends HTMLElement {
             `;
 
             const dateInput = body.querySelector('#field-date');
-            const timeSelect = body.querySelector('#field-time');
+            const timeInput = body.querySelector('#field-time');
 
-            const populateTimes = () => {
-                const selDateStr = dateInput.value;
-                if (!selDateStr) return;
-
-                const dateObj = new Date(selDateStr + 'T00:00:00');
-                const dayIndex = dateObj.getDay(); // 0 = Sun, 1 = Mon ...
-                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-                // Check schedule entry
-                const sched = this.settings.custom_schedule || [];
-                let dayHoursStr = '';
-                sched.forEach(s => {
-                    const dayLower = (s.day || '').toLowerCase();
-                    if (dayLower.includes(dayNames[dayIndex].toLowerCase()) || dayLower.includes('daily') || dayLower.includes('mon-sun') || dayLower.includes('mon-fri') && dayIndex >= 1 && dayIndex <= 5) {
-                        dayHoursStr = s.hours;
-                    }
-                });
-
-                // Default operating range 10:00 - 22:00 if not specified
-                let startHour = 10, endHour = 22;
-                if (dayHoursStr && dayHoursStr.includes('-')) {
-                    const parts = dayHoursStr.split('-');
-                    const sH = parseInt(parts[0].trim().split(':')[0]);
-                    const eH = parseInt(parts[1].trim().split(':')[0]);
-                    if (!isNaN(sH)) startHour = sH;
-                    if (!isNaN(eH)) endHour = eH;
-                }
-
-                timeSelect.innerHTML = '';
-                const now = new Date();
-                const isToday = selDateStr === now.toISOString().split('T')[0];
-                const leadTimeMs = (this.settings.min_lead_time_min || 15) * 60 * 1000;
-                const minAllowedTs = now.getTime() + leadTimeMs;
-
-                let count = 0;
-                for (let h = startHour; h < endHour; h++) {
-                    for (let m = 0; m < 60; m += 30) {
-                        const slotTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-                        const slotDate = new Date(`${selDateStr}T${slotTime}:00`);
-
-                        if (isToday && slotDate.getTime() < minAllowedTs) {
-                            continue; // Skip past or too-soon time slots
-                        }
-
-                        const hour12 = h % 12 || 12;
-                        const ampm = h < 12 ? 'AM' : 'PM';
-                        const displayTime = `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
-
-                        const opt = document.createElement('option');
-                        opt.value = slotTime;
-                        opt.textContent = displayTime;
-                        if (this.bookingData.time === slotTime) opt.selected = true;
-                        timeSelect.appendChild(opt);
-                        count++;
-                    }
-                }
-
-                if (count === 0) {
-                    timeSelect.innerHTML = '<option value="">Closed / No slots available for this date</option>';
-                }
+            timeInput.onclick = () => {
+                this.openClockPicker(dateInput.value, timeInput);
             };
 
-            populateTimes();
-            dateInput.onchange = populateTimes;
+            dateInput.onchange = () => {
+                timeInput.value = '';
+                this.bookingData.time = '';
+            };
 
             body.querySelector('#btn-step1-next').onclick = () => {
-                const selectedTime = timeSelect.value;
-                if (!selectedTime) {
+                if (!this.bookingData.time) {
                     alert("Please select a valid reservation time slot.");
                     return;
                 }
 
                 this.bookingData.guests = parseInt(body.querySelector('#field-guests').value);
                 this.bookingData.date = dateInput.value;
-                this.bookingData.time = selectedTime;
                 this.bookingData.comments = body.querySelector('#field-comments').value;
 
                 if (this.settings.allow_preorder && this.menuData) {
@@ -3774,7 +3784,13 @@ class MenutechReservations extends HTMLElement {
             title.textContent = "Pre-order Food";
             body.innerHTML = `
                 <div style="text-align:center; padding: 10px 0 20px 0;">
-                    <div style="font-size:3rem; margin-bottom:15px;">🍽️</div>
+                    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 15px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width: 56px; height: 56px; color: #1a1c1e;">
+                            <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>
+                            <path d="M7 2v20"/>
+                            <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>
+                        </svg>
+                    </div>
                     <h4 style="font-size:1.15rem; font-weight:800; margin-bottom:12px; color:#333;">Would you like to pre-order food?</h4>
                     <p style="font-size:0.9rem; color:#666; line-height:1.5;">Have your favorite dishes ready at the table as soon as you arrive at the restaurant.</p>
                 </div>
@@ -3915,6 +3931,308 @@ class MenutechReservations extends HTMLElement {
             this.step = 3;
             this.renderStep();
         };
+    }
+
+    formatTime12h(time24) {
+        if (!time24) return '';
+        const [hStr, mStr] = time24.split(':');
+        let h = parseInt(hStr);
+        const m = parseInt(mStr);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+    }
+
+    openClockPicker(selectedDateStr, timeInputEl) {
+        if (!selectedDateStr) {
+            alert("Please select a date first.");
+            return;
+        }
+
+        const interval = this.settings.min_lead_time_min > 0 ? this.settings.min_lead_time_min : 15;
+
+        // Calculate store opening and closing bounds for selected date
+        const dateObj = new Date(selectedDateStr + 'T00:00:00');
+        const dayIndex = dateObj.getDay();
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        const sched = this.settings.custom_schedule || [];
+        let dayHoursStr = '';
+        sched.forEach(s => {
+            const dayLower = (s.day || '').toLowerCase();
+            if (dayLower.includes(dayNames[dayIndex].toLowerCase()) || dayLower.includes('daily') || dayLower.includes('mon-sun') || (dayLower.includes('mon-fri') && dayIndex >= 1 && dayIndex <= 5)) {
+                dayHoursStr = s.hours;
+            }
+        });
+
+        let startHour = 10, endHour = 22;
+        if (dayHoursStr && dayHoursStr.includes('-')) {
+            const parts = dayHoursStr.split('-');
+            const sH = parseInt(parts[0].trim().split(':')[0]);
+            const eH = parseInt(parts[1].trim().split(':')[0]);
+            if (!isNaN(sH)) startHour = sH;
+            if (!isNaN(eH)) endHour = eH;
+        }
+
+        let clockState = {
+            hour: 9,
+            minute: 0,
+            ampm: 'AM',
+            mode: 'hour'
+        };
+
+        if (this.bookingData.time) {
+            const [h24, m24] = this.bookingData.time.split(':').map(Number);
+            clockState.hour = h24 % 12 || 12;
+            clockState.minute = Math.round(m24 / interval) * interval % 60;
+            clockState.ampm = h24 >= 12 ? 'PM' : 'AM';
+        } else {
+            clockState.hour = 12;
+            clockState.ampm = 'PM';
+            clockState.minute = 0;
+        }
+
+        let modalOverlay = this.shadowRoot.querySelector('#mt-clock-modal-overlay');
+        if (!modalOverlay) {
+            const modalHtml = `
+                <div id="mt-clock-modal-overlay" class="mt-clock-modal-overlay">
+                    <div class="mt-clock-modal-card">
+                        <div class="mt-clock-header">
+                            <div class="mt-clock-time-display">
+                                <span id="mt-clock-hour-display" class="mt-clock-digit active">09</span>
+                                <span class="mt-clock-colon">:</span>
+                                <span id="mt-clock-minute-display" class="mt-clock-digit">00</span>
+                            </div>
+                            <div class="mt-clock-ampm-group">
+                                <button type="button" id="mt-clock-am-btn" class="mt-clock-ampm-btn active">A. M.</button>
+                                <button type="button" id="mt-clock-pm-btn" class="mt-clock-ampm-btn">P. M.</button>
+                            </div>
+                        </div>
+                        <div class="mt-clock-body">
+                            <div id="mt-clock-mode-indicator" class="mt-clock-mode-indicator">Select Hour</div>
+                            <div id="mt-clock-dial" class="mt-clock-dial-container">
+                                <div class="mt-clock-center-dot"></div>
+                                <div id="mt-clock-hand" class="mt-clock-hand">
+                                    <div id="mt-clock-hand-head" class="mt-clock-hand-head">9</div>
+                                </div>
+                                <div id="mt-clock-numbers" class="mt-clock-numbers"></div>
+                            </div>
+                        </div>
+                        <div class="mt-clock-footer">
+                            <button type="button" id="mt-clock-cancel-btn" class="mt-clock-btn cancel">Cancel</button>
+                            <button type="button" id="mt-clock-confirm-btn" class="mt-clock-btn confirm">Set</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            this.shadowRoot.querySelector('.res-card').insertAdjacentHTML('beforeend', modalHtml);
+            modalOverlay = this.shadowRoot.querySelector('#mt-clock-modal-overlay');
+        }
+
+        const hourDisplay = modalOverlay.querySelector('#mt-clock-hour-display');
+        const minDisplay = modalOverlay.querySelector('#mt-clock-minute-display');
+        const amBtn = modalOverlay.querySelector('#mt-clock-am-btn');
+        const pmBtn = modalOverlay.querySelector('#mt-clock-pm-btn');
+        const cancelBtn = modalOverlay.querySelector('#mt-clock-cancel-btn');
+        const confirmBtn = modalOverlay.querySelector('#mt-clock-confirm-btn');
+        const dial = modalOverlay.querySelector('#mt-clock-dial');
+
+        const setClockMode = (mode) => {
+            clockState.mode = mode;
+            modalOverlay.querySelector('#mt-clock-mode-indicator').textContent = mode === 'hour' ? 'Select Hour' : `Select Minutes (${interval}m steps)`;
+            hourDisplay.classList.toggle('active', mode === 'hour');
+            minDisplay.classList.toggle('active', mode === 'minute');
+            renderClockNumbers();
+            updateClockUI();
+        };
+
+        const renderClockNumbers = () => {
+            const container = modalOverlay.querySelector('#mt-clock-numbers');
+            container.innerHTML = '';
+            const isHour = clockState.mode === 'hour';
+            const radius = 90;
+
+            if (isHour) {
+                for (let i = 1; i <= 12; i++) {
+                    const angle = (i * 30 - 90) * (Math.PI / 180);
+                    const x = 115 + radius * Math.cos(angle);
+                    const y = 115 + radius * Math.sin(angle);
+
+                    const numEl = document.createElement('div');
+                    numEl.className = 'mt-clock-num';
+                    numEl.style.left = `${x}px`;
+                    numEl.style.top = `${y}px`;
+                    numEl.dataset.val = i;
+                    numEl.textContent = i;
+                    container.appendChild(numEl);
+                }
+            } else {
+                const count = Math.floor(60 / interval);
+                for (let i = 0; i < count; i++) {
+                    const mVal = i * interval;
+                    const angle = (mVal * 6 - 90) * (Math.PI / 180);
+                    const x = 115 + radius * Math.cos(angle);
+                    const y = 115 + radius * Math.sin(angle);
+
+                    const numEl = document.createElement('div');
+                    numEl.className = 'mt-clock-num';
+                    numEl.style.left = `${x}px`;
+                    numEl.style.top = `${y}px`;
+                    numEl.dataset.val = mVal;
+                    numEl.textContent = mVal.toString().padStart(2, '0');
+                    container.appendChild(numEl);
+                }
+            }
+        };
+
+        const updateClockUI = () => {
+            hourDisplay.textContent = clockState.hour.toString().padStart(2, '0');
+            minDisplay.textContent = clockState.minute.toString().padStart(2, '0');
+
+            const isHour = clockState.mode === 'hour';
+            const hand = modalOverlay.querySelector('#mt-clock-hand');
+            const head = modalOverlay.querySelector('#mt-clock-hand-head');
+
+            let deg = 0;
+            if (isHour) {
+                deg = (clockState.hour % 12) * 30;
+                head.textContent = clockState.hour;
+            } else {
+                deg = clockState.minute * 6;
+                head.textContent = clockState.minute.toString().padStart(2, '0');
+            }
+
+            hand.style.transform = `rotate(${deg}deg)`;
+
+            const nums = modalOverlay.querySelectorAll('.mt-clock-num');
+            nums.forEach(num => {
+                const targetVal = isHour ? clockState.hour : clockState.minute;
+                num.classList.toggle('selected', parseInt(num.dataset.val) === targetVal);
+            });
+        };
+
+        hourDisplay.onclick = () => setClockMode('hour');
+        minDisplay.onclick = () => setClockMode('minute');
+
+        amBtn.onclick = () => {
+            clockState.ampm = 'AM';
+            amBtn.classList.add('active');
+            pmBtn.classList.remove('active');
+        };
+        pmBtn.onclick = () => {
+            clockState.ampm = 'PM';
+            pmBtn.classList.add('active');
+            amBtn.classList.remove('active');
+        };
+
+        amBtn.classList.toggle('active', clockState.ampm === 'AM');
+        pmBtn.classList.toggle('active', clockState.ampm === 'PM');
+
+        const closeClock = () => {
+            modalOverlay.classList.remove('active');
+        };
+
+        cancelBtn.onclick = closeClock;
+
+        confirmBtn.onclick = () => {
+            let h24 = clockState.hour;
+            if (clockState.ampm === 'PM' && h24 < 12) h24 += 12;
+            if (clockState.ampm === 'AM' && h24 === 12) h24 = 0;
+
+            const slotTime24 = `${String(h24).padStart(2, '0')}:${String(clockState.minute).padStart(2, '0')}`;
+
+            // Check store opening hours
+            if (h24 < startHour || h24 >= endHour) {
+                alert(`Selected time is outside operating hours (${this.formatTime12h(`${String(startHour).padStart(2, '0')}:00`)} - ${this.formatTime12h(`${String(endHour).padStart(2, '0')}:00`)}).`);
+                return;
+            }
+
+            // Check lead time if today
+            const now = new Date();
+            const isToday = selectedDateStr === now.toISOString().split('T')[0];
+            const leadTimeMs = (this.settings.min_lead_time_min || 15) * 60 * 1000;
+            const selectedTs = new Date(`${selectedDateStr}T${slotTime24}:00`).getTime();
+
+            if (isToday && selectedTs < (now.getTime() + leadTimeMs)) {
+                alert(`Reservations require at least ${this.settings.min_lead_time_min} minutes advance notice.`);
+                return;
+            }
+
+            this.bookingData.time = slotTime24;
+            timeInputEl.value = this.formatTime12h(slotTime24);
+            closeClock();
+        };
+
+        // Pointer / drag logic
+        let isDragging = false;
+        const handlePointer = (e) => {
+            const rect = dial.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const dx = clientX - centerX;
+            const dy = clientY - centerY;
+
+            let deg = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+            if (deg < 0) deg += 360;
+
+            if (clockState.mode === 'hour') {
+                let hour = Math.round(deg / 30);
+                if (hour === 0) hour = 12;
+                clockState.hour = hour;
+            } else {
+                let minuteRaw = Math.round(deg / 6);
+                if (minuteRaw === 60) minuteRaw = 0;
+                let minuteSnapped = Math.round(minuteRaw / interval) * interval;
+                if (minuteSnapped >= 60) minuteSnapped = 0;
+                clockState.minute = minuteSnapped;
+            }
+            updateClockUI();
+        };
+
+        dial.onmousedown = (e) => {
+            isDragging = true;
+            modalOverlay.querySelector('#mt-clock-hand').classList.add('dragging');
+            handlePointer(e);
+        };
+
+        const onMouseMove = (e) => {
+            if (isDragging) handlePointer(e);
+        };
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                modalOverlay.querySelector('#mt-clock-hand').classList.remove('dragging');
+                if (clockState.mode === 'hour') {
+                    setClockMode('minute');
+                }
+            }
+        });
+
+        dial.ontouchstart = (e) => {
+            isDragging = true;
+            modalOverlay.querySelector('#mt-clock-hand').classList.add('dragging');
+            handlePointer(e);
+        };
+        dial.ontouchmove = (e) => {
+            if (isDragging) handlePointer(e);
+        };
+        dial.ontouchend = () => {
+            if (isDragging) {
+                isDragging = false;
+                modalOverlay.querySelector('#mt-clock-hand').classList.remove('dragging');
+                if (clockState.mode === 'hour') {
+                    setClockMode('minute');
+                }
+            }
+        };
+
+        setClockMode('hour');
+        modalOverlay.classList.add('active');
     }
 
     async submitBooking(body) {
