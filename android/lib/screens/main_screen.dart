@@ -5,7 +5,13 @@ import '../services/order_notification_service.dart';
 import '../widgets/chatbot_widget.dart';
 
 class MainScreen extends StatefulWidget {
+  static _MainScreenState? activeState;
+
   const MainScreen({super.key});
+
+  static void selectOrdersTab() {
+    activeState?.switchTab(0);
+  }
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -22,13 +28,28 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+    MainScreen.activeState = this;
     OrderNotificationService.instance.init();
   }
 
+  @override
+  void dispose() {
+    if (MainScreen.activeState == this) {
+      MainScreen.activeState = null;
+    }
+    super.dispose();
+  }
+
+  void switchTab(int index) {
+    if (mounted) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+  }
+
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    switchTab(index);
   }
 
   @override
