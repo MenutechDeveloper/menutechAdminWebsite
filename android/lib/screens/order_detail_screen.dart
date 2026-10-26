@@ -106,18 +106,36 @@ class _OrderDetailViewState extends State<OrderDetailView> {
         restaurantData = res;
       }
 
+      var itemMap = item.toJson();
+      itemMap['status'] = status;
+
+      if (itemMap['customer_email'] == null || itemMap['customer_email'].toString().trim().isEmpty) {
+        final table = item.entryType == EntryType.order ? 'menutech_orders' : 'menutech_reservations';
+        final dbRow = await _supabase.client
+            .from(table)
+            .select('*')
+            .eq('id', item.id)
+            .maybeSingle();
+        if (dbRow != null) {
+          final fetchedEmail = dbRow['customer_email'] ?? dbRow['email'] ?? dbRow['customerEmail'];
+          if (fetchedEmail != null && fetchedEmail.toString().trim().isNotEmpty) {
+            itemMap['customer_email'] = fetchedEmail.toString().trim();
+          }
+        }
+      }
+
       final payload = {
         'type': item.entryType == EntryType.order ? 'order' : 'reservation',
-        'item': item.toJson(),
+        'item': itemMap,
         'restaurant': restaurantData,
       };
 
-      debugPrint("Invoking mailgun-email Edge Function...");
+      debugPrint("Invoking mailgun-email Edge Function with payload: $payload");
       final response = await _supabase.client.functions.invoke(
         'mailgun-email',
         body: payload,
       );
-      debugPrint("Mailgun edge function response: ${response.data}");
+      debugPrint("Mailgun edge function response status: ${response.status}, data: ${response.data}");
     } catch (e) {
       debugPrint("Error sending Mailgun notification email: $e");
     }
