@@ -139,64 +139,6 @@
         .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
         .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
 
-        .action-card-header {
-            background: var(--card);
-            border: 1.5px solid var(--border);
-            border-radius: 24px;
-            padding: 16px 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            margin-top: 5px;
-            flex-wrap: wrap;
-        }
-
-        .action-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 12px 24px;
-            border-radius: 16px;
-            font-size: 0.85rem;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            border: 1.5px solid var(--border);
-            height: 48px;
-        }
-
-        .action-btn.fb-action {
-            background: rgba(255, 149, 51, 0.08);
-            border-color: var(--orange);
-            color: var(--orange);
-        }
-
-        .action-btn.fb-action:hover {
-            background: var(--orange);
-            color: #ffffff;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 149, 51, 0.3);
-        }
-
-        .action-btn.code-action {
-            background: var(--input);
-            border-color: var(--border);
-            color: var(--text);
-        }
-
-        .action-btn.code-action:hover {
-            background: var(--orange);
-            border-color: var(--orange);
-            color: #ffffff;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 149, 51, 0.3);
-        }
-
         /* Card & Controls */
         .config-card { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
@@ -332,27 +274,6 @@
         <header>
             <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
             <p id="view-domain-title" style="font-weight: 700; color: var(--orange); font-size: 0.85rem; letter-spacing: 1px;"></p>
-
-            <div style="margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
-                <label id="header-domain-label" style="font-size: 0.9rem; font-weight: 800; color: var(--orange); text-transform: lowercase;">Workspace</label>
-                <input type="hidden" id="slug-input" value="">
-
-                <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; margin-top: 15px; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">Share on Facebook or Copy Code</h3>
-
-                <div class="action-card-header">
-                    <button class="action-btn fb-action" onclick="copySubdomain()" title="Share Link on Facebook">
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;">
-                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                        </svg>
-                        <span>Share on Facebook</span>
-                    </button>
-
-                    <button class="action-btn code-action" id="btn-copy-snippet" onclick="copySnippetAction()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-                        <span id="btn-copy-snippet-text">COPY CODE</span>
-                    </button>
-                </div>
-            </div>
         </header>
 
         <div class="dashboard-layout">
@@ -440,6 +361,17 @@
                     <button class="btn-save" id="btn-save">Save Settings</button>
                 </div>
 
+                <!-- Snippet Widget Card -->
+                <div class="config-card">
+                    <div class="card-header" style="margin-bottom: 12px; border-bottom: none; padding-bottom: 0;">
+                        <h2>Reservation Widget Snippet</h2>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-dim);">Copy and paste this HTML custom element into your external website or HTML domain to display the reservation booking button:</p>
+                    <div class="snippet-box">
+                        <button class="btn-copy" id="btn-copy-snippet">Copy Code</button>
+                        <code id="snippet-code">&lt;script src="https://menutech.io/menutechUI.js"&gt;&lt;/script&gt;<br>&lt;menutech-reservations domain="yoursite.com"&gt;&lt;/menutech-reservations&gt;</code>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -447,34 +379,8 @@
     <script type="module">
         import { supabase as sb } from './supabase.js';
 
-        let user = null, userRole = null, activeOwnerId = null, activeDomain = null, menuSlug = '';
+        let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
         let allOwners = [];
-
-        window.copySubdomain = () => {
-            let slug = menuSlug;
-            if (!slug) {
-                const inp = document.getElementById('slug-input');
-                slug = inp ? inp.value : '';
-            }
-            const domain = activeDomain || 'yoursite.com';
-            const url = slug ? `https://menutech.io/menu.html?n=${slug}` : `https://menutech.io/menu.html?domain=${domain}`;
-            navigator.clipboard.writeText(url).then(() => {
-                showToast("Reservation link copied to clipboard!");
-            });
-        };
-
-        window.copySnippetAction = () => {
-            const domain = activeDomain || 'yoursite.com';
-            const snippet = `<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-reservations domain="${domain}"></menutech-reservations>`;
-            navigator.clipboard.writeText(snippet).then(() => {
-                showToast("Reservation code copied to clipboard!");
-                const txt = document.getElementById('btn-copy-snippet-text');
-                if (txt) {
-                    txt.textContent = "COPIED!";
-                    setTimeout(() => txt.textContent = "COPY CODE", 2000);
-                }
-            });
-        };
 
         window.showToast = (message, type = 'success') => {
             const container = document.getElementById('toast-container');
@@ -546,9 +452,7 @@
             const owner = allOwners.find(o => o.id === ownerId);
             if (!owner) return;
             activeOwnerId = ownerId; activeDomain = owner.domain;
-            const domainLabel = document.getElementById('header-domain-label');
-            if (domainLabel) domainLabel.textContent = activeDomain || "Workspace";
-            document.getElementById('view-domain-title').textContent = "";
+            document.getElementById('view-domain-title').textContent = activeDomain || "No Domain Set";
             document.getElementById('active-project-name').textContent = owner.username || owner.email;
             document.getElementById('project-info').classList.remove('hidden');
             renderOwners(allOwners);
@@ -563,8 +467,6 @@
             if (profile) {
                 document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
                 document.getElementById('user-role-label').textContent = profile.role || 'User';
-                const domainLabel = document.getElementById('header-domain-label');
-                if (domainLabel) domainLabel.textContent = profile.domain || "Workspace";
                 const role = (profile.role || 'user').trim().toUpperCase();
                 if (role === 'ADMIN') pill.classList.add('admin-glow');
                 else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
@@ -576,25 +478,14 @@
         async function loadReservationSettings() {
             if (!activeOwnerId) return;
 
-            // Fetch reservation settings, restaurant info, and menu info in parallel
-            const [resSettingsRes, resRes, menuRes] = await Promise.all([
+            // Fetch reservation settings and restaurant info in parallel
+            const [resSettingsRes, resRes] = await Promise.all([
                 sb.from('menutech_reservation_settings').select('*').eq('user_id', activeOwnerId).maybeSingle(),
-                sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle(),
-                sb.from('menutech_menus').select('slug').eq('user_id', activeOwnerId).maybeSingle()
+                sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle()
             ]);
 
             const data = resSettingsRes.data;
             const resData = resRes.data;
-            const menuData = menuRes.data;
-
-            if (menuData && menuData.slug) {
-                menuSlug = menuData.slug;
-                const slugInput = document.getElementById('slug-input');
-                if (slugInput) slugInput.value = menuSlug;
-            }
-
-            const domainLabel = document.getElementById('header-domain-label');
-            if (domainLabel) domainLabel.textContent = activeDomain || "Workspace";
 
             document.getElementById('res-enabled').checked = data ? (data.enabled !== false) : true;
             document.getElementById('min-guests').value = data ? (data.min_guests || 2) : 2;
@@ -623,8 +514,9 @@
         }
 
         function updateSnippetCode() {
-            const domainLabel = document.getElementById('header-domain-label');
-            if (domainLabel) domainLabel.textContent = activeDomain || "Workspace";
+            const domain = activeDomain || 'yoursite.com';
+            const codeEl = document.getElementById('snippet-code');
+            codeEl.innerHTML = `&lt;script src="https://menutech.io/menutechUI.js"&gt;&lt;/script&gt;<br>&lt;menutech-reservations domain="${domain}"&gt;&lt;/menutech-reservations&gt;`;
         }
 
         // --- Clock Time Picker Modal Logic ---
@@ -1067,6 +959,13 @@
             window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
 
             document.getElementById('btn-save').onclick = saveReservationSettings;
+
+            document.getElementById('btn-copy-snippet').onclick = () => {
+                const domain = activeDomain || 'yoursite.com';
+                const snippet = `<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-reservations domain="${domain}"></menutech-reservations>`;
+                navigator.clipboard.writeText(snippet);
+                showToast("Snippet code copied to clipboard!");
+            };
         }
     </script>
     <script src="chatbot.js"></script>
