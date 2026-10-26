@@ -106,5 +106,15 @@ CREATE POLICY "Owner manage reservations" ON public.menutech_reservations
         )
     );
 
--- Realtime Publication for Reservations
-ALTER PUBLICATION supabase_realtime ADD TABLE public.menutech_reservations;
+-- Realtime Publication for Reservations (Idempotent)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables
+        WHERE pubname = 'supabase_realtime'
+        AND schemaname = 'public'
+        AND tablename = 'menutech_reservations'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.menutech_reservations;
+    END IF;
+END $$;
