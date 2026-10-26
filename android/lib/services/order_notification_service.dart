@@ -1,8 +1,14 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../models/unified_item.dart';
 import 'supabase_service.dart';
 import '../widgets/chatbot_widget.dart';
+
+// ====================================================================
+// STRICT RULE: NEVER include or display AI thinking process (<think>, <thought>, reasoning, drafting, etc.).
+// All notifications must be clean, direct, instant, and strictly in English.
+// ====================================================================
 
 class OrderNotificationService {
   static final OrderNotificationService instance = OrderNotificationService._internal();
@@ -16,12 +22,12 @@ class OrderNotificationService {
   final Set<String> _knownPendingKeys = {};
   final Map<String, Timer> _periodicReminders = {};
   final AudioPlayer _chimePlayer = AudioPlayer();
-  final AudioPlayer _speechPlayer = AudioPlayer();
   bool _isInitialized = false;
+  bool _isInitialSyncCompleted = false;
 
   final Map<String, UnifiedItem> _pendingItemsMap = {};
 
-  void init() {
+  void init() async {
     final user = SupabaseService().currentUser;
     if (user == null) return;
 
@@ -30,7 +36,18 @@ class OrderNotificationService {
 
     _stopSubscriptions();
 
-    _pollLatestPending(user.id);
+    try {
+      await _chimePlayer.setAudioContext(const AudioContext(
+        android: AudioContextAndroid(
+          usageType: AndroidUsageType.notification,
+          contentType: AndroidContentType.sonification,
+        ),
+      ));
+    } catch (_) {}
+
+    await _pollInitialPending(user.id);
+    _isInitialSyncCompleted = true;
+
     _syncTimer?.cancel();
     _syncTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       final u = SupabaseService().currentUser;
@@ -56,6 +73,42 @@ class OrderNotificationService {
         .listen((dataList) {
       _processItems(dataList, isReservation: true);
     });
+  }
+
+  Future<void> _pollInitialPending(String userId) async {
+    try {
+      final ordersData = await SupabaseService()
+          .client
+          .from('menutech_orders')
+          .select()
+          .eq('user_id', userId);
+
+      final resData = await SupabaseService()
+          .client
+          .from('menutech_reservations')
+          .select()
+          .eq('user_id', userId);
+
+      _seedPendingKeys(List<Map<String, dynamic>>.from(ordersData as List), isReservation: false);
+      _seedPendingKeys(List<Map<String, dynamic>>.from(resData as List), isReservation: true);
+    } catch (e) {
+      debugPrint("Error polling initial pending items: $e");
+    }
+  }
+
+  void _seedPendingKeys(List<Map<String, dynamic>> rawList, {required bool isReservation}) {
+    final prefix = isReservation ? 'res_' : 'order_';
+    for (var map in rawList) {
+      final item = isReservation
+          ? UnifiedItem.fromReservationJson(map)
+          : UnifiedItem.fromOrderJson(map);
+
+      final key = '$prefix${item.id}';
+      if (item.status.toLowerCase() == 'pending') {
+        _knownPendingKeys.add(key);
+        _pendingItemsMap[key] = item;
+      }
+    }
   }
 
   Future<void> _pollLatestPending(String userId) async {
@@ -88,6 +141,7 @@ class OrderNotificationService {
     _knownPendingKeys.clear();
     _pendingItemsMap.clear();
     _isInitialized = false;
+    _isInitialSyncCompleted = false;
   }
 
   void _stopSubscriptions() {
@@ -115,7 +169,6 @@ class OrderNotificationService {
       }
     }
 
-    // Cancel reminders for keys of this type that are no longer pending
     final existingKeysForType = _knownPendingKeys.where((k) => k.startsWith(prefix)).toSet();
     final removedKeys = existingKeysForType.difference(currentPendingKeysForType);
 
@@ -130,12 +183,11 @@ class OrderNotificationService {
       ChatbotWidget.hideBubble();
     }
 
-    // Handle new pending items
     for (var key in currentPendingKeysForType) {
       if (!_knownPendingKeys.contains(key)) {
         _knownPendingKeys.add(key);
         final item = _pendingItemsMap[key];
-        if (item != null) {
+        if (item != null && _isInitialSyncCompleted) {
           _handleNewPendingItem(key, item);
         }
       }
@@ -143,17 +195,15 @@ class OrderNotificationService {
   }
 
   void _handleNewPendingItem(String key, UnifiedItem item) {
-    // Immediate notification in real time
-    _notifyWithGemini(item, isReminder: false);
+    _notifyItem(item, isReminder: false);
 
-    // Schedule periodic reminders every 35 seconds if unanswered
     _periodicReminders[key]?.cancel();
     _periodicReminders[key] = Timer.periodic(
-      const Duration(seconds: 35),
+      const Duration(seconds: 30),
       (_) {
         if (_knownPendingKeys.contains(key)) {
           final currentItem = _pendingItemsMap[key] ?? item;
-          _notifyWithGemini(currentItem, isReminder: true);
+          _notifyItem(currentItem, isReminder: true);
         } else {
           _periodicReminders[key]?.cancel();
           _periodicReminders.remove(key);
@@ -162,65 +212,45 @@ class OrderNotificationService {
     );
   }
 
-  Future<void> _notifyWithGemini(UnifiedItem item, {required bool isReminder}) async {
+  // STRICT RULE: NEVER include or display AI thinking process (<think>, <thought>, reasoning, drafting, etc.).
+  // All notifications must be clean, direct, instant, and strictly in English.
+  Future<void> _notifyItem(UnifiedItem item, {required bool isReminder}) async {
     final customerName = item.customerName.isEmpty || item.customerName == 'N/A'
         ? 'a customer'
         : item.customerName;
 
-    String prompt;
-    String fallbackPhrase;
+    String cleanPhrase;
 
     if (item.entryType == EntryType.order) {
       final totalAmount = item.totalAmount.toStringAsFixed(2);
       if (isReminder) {
-        prompt = "Generate a very short, polite, and friendly sentence in English (maximum 12 words), as a helpful assistant reminding the user that the pending order from $customerName for \$$totalAmount is still waiting for a response. Do not include emojis, icons, symbols, quotes, or markdown, plain text only.";
-        fallbackPhrase = "Reminder: You have a pending order from $customerName for \$$totalAmount";
+        cleanPhrase = "Reminder: Pending order from $customerName for \$$totalAmount is waiting!";
       } else {
-        prompt = "Generate a very short, polite, and friendly sentence in English (maximum 12 words), as a helpful assistant notifying the user that a new order from $customerName for \$$totalAmount has just arrived. Do not include emojis, icons, symbols, quotes, or markdown, plain text only.";
-        fallbackPhrase = "You have a new order from $customerName for \$$totalAmount";
+        cleanPhrase = "You have a new order from $customerName for \$$totalAmount!";
       }
     } else {
       final partySize = item.partySize;
       if (isReminder) {
-        prompt = "Generate a very short, polite, and friendly sentence in English (maximum 12 words), as a helpful assistant reminding the user that the pending table reservation from $customerName for $partySize guests is still waiting for a response. Do not include emojis, icons, symbols, quotes, or markdown, plain text only.";
-        fallbackPhrase = "Reminder: You have a pending reservation from $customerName";
+        cleanPhrase = "Reminder: Pending reservation from $customerName for $partySize guests is waiting!";
       } else {
-        prompt = "Generate a very short, polite, and friendly sentence in English (maximum 12 words), as a helpful assistant notifying the user that a new table reservation from $customerName for $partySize guests has just arrived. Do not include emojis, icons, symbols, quotes, or markdown, plain text only.";
-        fallbackPhrase = "You have a new reservation from $customerName for $partySize guests";
+        cleanPhrase = "You have a new reservation from $customerName for $partySize guests!";
       }
     }
 
-    String rawPhrase = '';
-    try {
-      final res = await SupabaseService().client.functions.invoke(
-        'gemini-chat',
-        body: {'prompt': prompt},
-      );
-      if (res.data != null && res.data['reply'] != null) {
-        rawPhrase = res.data['reply'].toString();
-      }
-    } catch (_) {
-      // Fallback
-    }
+    cleanPhrase = _sanitizeText(cleanPhrase);
 
-    if (rawPhrase.trim().isEmpty) {
-      rawPhrase = fallbackPhrase;
-    }
-
-    final cleanPhrase = _sanitizeText(rawPhrase);
-
-    // 1. Play alert chime sound so client hears audio notification
+    // 1. Play alert chime sound
     await _playAlertChime();
 
-    // 2. Speak Gemini AI announcement in English
-    _speakText(cleanPhrase);
-
-    // 3. Display plain text thought bubble on 3D character
+    // 2. Display thought bubble and trigger US English TTS voice in WebView
     ChatbotWidget.showItemBubble(cleanPhrase, item);
   }
 
+  // STRICT RULE: Remove any reasoning artifacts, thought tags, or internal markdown
   String _sanitizeText(String input) {
     var text = input;
+    text = text.replaceAll(RegExp(r'<(thought|think)[\s\S]*?<\/\1>', caseSensitive: false), '');
+    text = text.replaceAll(RegExp(r'(thought|reasoning|proceso de pensamiento):[\s\S]*', caseSensitive: false), '');
     text = text.replaceAll(RegExp(r'[*_~`]'), '');
     text = text.replaceAll(RegExp(r'<[^>]*>'), '');
     text = text.replaceAll(
@@ -238,15 +268,9 @@ class OrderNotificationService {
     try {
       await _chimePlayer.stop();
       await _chimePlayer.play(UrlSource('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
-      await Future.delayed(const Duration(milliseconds: 600));
-    } catch (_) {}
-  }
-
-  void _speakText(String phrase) async {
-    try {
-      final url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${Uri.encodeComponent(phrase)}';
-      await _speechPlayer.stop();
-      await _speechPlayer.play(UrlSource(url));
-    } catch (_) {}
+      await Future.delayed(const Duration(milliseconds: 500));
+    } catch (e) {
+      debugPrint("Chime playback error: $e");
+    }
   }
 }
