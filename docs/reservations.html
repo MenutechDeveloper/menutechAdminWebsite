@@ -170,10 +170,64 @@
         .btn-remove { background: rgba(220, 38, 38, 0.1); color: var(--error); border: none; width: 42px; height: 42px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .btn-remove:hover { background: var(--error); color: #fff; }
 
-        /* Code Snippet Box */
-        .snippet-box { background: var(--input); border: 1px dashed var(--border); border-radius: 20px; padding: 20px; font-family: monospace; font-size: 0.85rem; color: var(--text); word-break: break-all; margin-top: 15px; position: relative; }
-        .btn-copy { background: var(--orange); color: #fff; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; position: absolute; top: 15px; right: 15px; font-size: 0.75rem; text-transform: uppercase; transition: 0.2s; }
-        .btn-copy:hover { transform: scale(1.05); }
+        /* Action Buttons & Card Header */
+        .action-card-header {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 24px;
+            padding: 16px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border: 1.5px solid var(--border);
+            height: 48px;
+        }
+
+        .action-btn.fb-action {
+            background: rgba(255, 149, 51, 0.08);
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+
+        .action-btn.fb-action:hover {
+            background: var(--orange);
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 149, 51, 0.3);
+        }
+
+        .action-btn.code-action {
+            background: var(--input);
+            border-color: var(--border);
+            color: var(--text);
+        }
+
+        .action-btn.code-action:hover {
+            background: var(--orange);
+            border-color: var(--orange);
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 149, 51, 0.3);
+        }
 
         #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
         .toast { min-width: 320px; max-width: 440px; padding: 18px 24px; border-radius: 24px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.9rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1), toastFadeOut 0.5s 5.5s forwards; line-height: 1.4; }
@@ -361,15 +415,21 @@
                     <button class="btn-save" id="btn-save">Save Settings</button>
                 </div>
 
-                <!-- Snippet Widget Card -->
-                <div class="config-card">
-                    <div class="card-header" style="margin-bottom: 12px; border-bottom: none; padding-bottom: 0;">
-                        <h2>Reservation Widget Snippet</h2>
-                    </div>
-                    <p style="font-size: 0.85rem; color: var(--text-dim);">Copy and paste this HTML custom element into your external website or HTML domain to display the reservation booking button:</p>
-                    <div class="snippet-box">
-                        <button class="btn-copy" id="btn-copy-snippet">Copy Code</button>
-                        <code id="snippet-code">&lt;script src="https://menutech.io/menutechUI.js"&gt;&lt;/script&gt;<br>&lt;menutech-reservations domain="yoursite.com"&gt;&lt;/menutech-reservations&gt;</code>
+                <!-- Share on Facebook or Copy Code Card -->
+                <div class="config-card" style="text-align: center;">
+                    <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; font-family: 'Outfit', sans-serif;">Share on Facebook or Copy Code</h3>
+                    <div class="action-card-header">
+                        <button class="action-btn fb-action" onclick="copyReservationLink()" title="Share Reservation Link on Facebook">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                            <span>Share on Facebook</span>
+                        </button>
+
+                        <button class="action-btn code-action" id="btn-copy-snippet" onclick="copySnippetAction()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                            <span id="btn-copy-snippet-text">COPY CODE</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -510,14 +570,34 @@
 
             customSched.forEach(s => addSchedule(s.day, s.hours));
 
-            updateSnippetCode();
         }
 
-        function updateSnippetCode() {
+        window.copyReservationLink = async () => {
+            let domain = activeDomain || 'yoursite.com';
+            let url = `https://menutech.io/menu.html?domain=${domain}&res=true`;
+            if (activeOwnerId) {
+                const { data: menu } = await sb.from('menutech_menus').select('slug').eq('user_id', activeOwnerId).maybeSingle();
+                if (menu && menu.slug) {
+                    url = `https://menutech.io/menu.html?n=${menu.slug}&res=true`;
+                }
+            }
+            navigator.clipboard.writeText(url).then(() => {
+                showToast("Reservation URL copied to clipboard!");
+            });
+        };
+
+        window.copySnippetAction = () => {
             const domain = activeDomain || 'yoursite.com';
-            const codeEl = document.getElementById('snippet-code');
-            codeEl.innerHTML = `&lt;script src="https://menutech.io/menutechUI.js"&gt;&lt;/script&gt;<br>&lt;menutech-reservations domain="${domain}"&gt;&lt;/menutech-reservations&gt;`;
-        }
+            const snippet = `<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-reservations domain="${domain}"></menutech-reservations>`;
+            navigator.clipboard.writeText(snippet).then(() => {
+                showToast("Reservation code copied to clipboard!");
+                const txt = document.getElementById('btn-copy-snippet-text');
+                if (txt) {
+                    txt.textContent = "COPIED!";
+                    setTimeout(() => txt.textContent = "COPY CODE", 2000);
+                }
+            });
+        };
 
         // --- Clock Time Picker Modal Logic ---
         let clockState = {
@@ -960,12 +1040,6 @@
 
             document.getElementById('btn-save').onclick = saveReservationSettings;
 
-            document.getElementById('btn-copy-snippet').onclick = () => {
-                const domain = activeDomain || 'yoursite.com';
-                const snippet = `<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-reservations domain="${domain}"></menutech-reservations>`;
-                navigator.clipboard.writeText(snippet);
-                showToast("Snippet code copied to clipboard!");
-            };
         }
     </script>
     <script src="chatbot.js"></script>
