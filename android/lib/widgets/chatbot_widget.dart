@@ -315,12 +315,33 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       var linkEl = bubbleEl.querySelector('.mt-bubble-link');
       if (linkEl) linkEl.style.display = 'none';
 
-      msgEl.innerText = text;
+      // STRICT RULE: Remove any thinking process or internal reasoning text before rendering
+      var cleanText = text || '';
+      cleanText = cleanText.replace(/<(thought|think)[\s\S]*?<\/\1>/gi, '');
+      cleanText = cleanText.replace(/(thought|reasoning|proceso de pensamiento):[\s\S]*/gi, '');
+      cleanText = cleanText.replace(/[*_~`]/g, '').trim();
+
+      msgEl.innerText = cleanText;
       bubbleEl.classList.remove('hidden');
+
+      // Speak in US English using native Web Speech API in WebView (100% reliable, no HTTP 403 blocks)
+      if ('speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+          var utterance = new SpeechSynthesisUtterance(cleanText);
+          utterance.lang = 'en-US';
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {}
+      }
 
       bubbleEl.onclick = function(e) {
         e.stopPropagation();
         bubbleEl.classList.add('hidden');
+        if ('speechSynthesis' in window) {
+          try { window.speechSynthesis.cancel(); } catch (e) {}
+        }
       };
     };
 
@@ -328,6 +349,9 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       var bubbleEl = document.getElementById('mt-admin-thought-bubble');
       if (bubbleEl) {
         bubbleEl.classList.add('hidden');
+      }
+      if ('speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch (e) {}
       }
     };
   </script>

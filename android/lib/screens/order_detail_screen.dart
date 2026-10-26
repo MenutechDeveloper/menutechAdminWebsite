@@ -90,9 +90,9 @@ class _OrderDetailViewState extends State<OrderDetailView> {
 
   Future<void> _sendMailgunEmailIfNeeded(UnifiedItem item, String status) async {
     final isOrderReady = item.entryType == EntryType.order && (status == 'finished' || status == 'ready');
-    final isResAttended = item.entryType == EntryType.reservation && (status == 'attended' || status == 'finished');
+    final isResReady = item.entryType == EntryType.reservation && (status == 'attended' || status == 'finished' || status == 'confirmed');
 
-    if (!isOrderReady && !isResAttended) return;
+    if (!isOrderReady && !isResReady) return;
 
     try {
       final userId = _supabase.currentUser?.id ?? item.userId;
@@ -109,7 +109,8 @@ class _OrderDetailViewState extends State<OrderDetailView> {
       var itemMap = item.toJson();
       itemMap['status'] = status;
 
-      if (itemMap['customer_email'] == null || itemMap['customer_email'].toString().trim().isEmpty) {
+      String? targetEmail = item.customerEmail;
+      if (targetEmail == null || targetEmail.trim().isEmpty) {
         final table = item.entryType == EntryType.order ? 'menutech_orders' : 'menutech_reservations';
         final dbRow = await _supabase.client
             .from(table)
@@ -119,9 +120,17 @@ class _OrderDetailViewState extends State<OrderDetailView> {
         if (dbRow != null) {
           final fetchedEmail = dbRow['customer_email'] ?? dbRow['email'] ?? dbRow['customerEmail'];
           if (fetchedEmail != null && fetchedEmail.toString().trim().isNotEmpty) {
-            itemMap['customer_email'] = fetchedEmail.toString().trim();
+            targetEmail = fetchedEmail.toString().trim();
           }
         }
+      }
+
+      if (targetEmail != null && targetEmail.trim().isNotEmpty) {
+        itemMap['customer_email'] = targetEmail.trim();
+        itemMap['email'] = targetEmail.trim();
+      } else {
+        debugPrint("Mailgun: No recipient email specified for ${item.entryType} #${item.id}");
+        return;
       }
 
       final payload = {
@@ -295,135 +304,197 @@ class _OrderDetailViewState extends State<OrderDetailView> {
     }
   }
 
+  bool _hasOrderActions(UnifiedItem item) {
+    final s = item.status.toLowerCase();
+    return s == 'pending' || s == 'accepted' || s == 'preparing' || s == 'finished';
+  }
+
+  bool _hasReservationActions(UnifiedItem item) {
+    final s = item.status.toLowerCase();
+    return s == 'pending' || s == 'confirmed';
+  }
+
   Widget _buildOrderView(UnifiedItem item) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.customerName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                  Text(DateFormat('MMM d, yyyy - h:mm a').format(item.createdAt), style: const TextStyle(color: Colors.grey)),
-                ],
-              ),
-              _buildStatusTag(item.status, isReservation: false),
-            ],
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton.icon(
-            onPressed: () => _showPrintDialog(item),
-            icon: const Icon(Icons.print),
-            label: const Text("PRINT TICKET"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF9533),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            ),
-          ),
-          const Divider(height: 40),
-          _buildInfoRow("Phone", item.customerPhone),
-          if (item.customerEmail != null) _buildInfoRow("Email", item.customerEmail!),
-          _buildInfoRow("Type", item.orderType.toUpperCase()),
-          _buildInfoRow("Payment", item.paymentMethod ?? 'N/A'),
-          if (item.address != null) _buildInfoRow("Address", item.address!),
-          if (item.reference != null) _buildInfoRow("Reference", item.reference!),
-          if (item.customerNotes != null) ...[
-            const SizedBox(height: 10),
-            const Text("Customer Notes:", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFFF9533))),
-            Text("\"${item.customerNotes}\"", style: const TextStyle(fontStyle: FontStyle.italic)),
-          ],
-          const SizedBox(height: 30),
-          const Text("Order Items", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFFEFEF5),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFF8E8D8)),
-            ),
+    final actionButtons = _buildOrderActionButtons(item);
+    final hasActions = _hasOrderActions(item);
+
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
             child: Column(
-              children: item.items.map((it) => _buildItemRow(it)).toList(),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(item.customerName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                        Text(DateFormat('MMM d, yyyy - h:mm a').format(item.createdAt), style: const TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                    _buildStatusTag(item.status, isReservation: false),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () => _showPrintDialog(item),
+                  icon: const Icon(Icons.print),
+                  label: const Text("PRINT TICKET"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF9533),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  ),
+                ),
+                const Divider(height: 40),
+                _buildInfoRow("Phone", item.customerPhone),
+                if (item.customerEmail != null) _buildInfoRow("Email", item.customerEmail!),
+                _buildInfoRow("Type", item.orderType.toUpperCase()),
+                _buildInfoRow("Payment", item.paymentMethod ?? 'N/A'),
+                if (item.address != null) _buildInfoRow("Address", item.address!),
+                if (item.reference != null) _buildInfoRow("Reference", item.reference!),
+                if (item.customerNotes != null) ...[
+                  const SizedBox(height: 10),
+                  const Text("Customer Notes:", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFFF9533))),
+                  Text("\"${item.customerNotes}\"", style: const TextStyle(fontStyle: FontStyle.italic)),
+                ],
+                const SizedBox(height: 30),
+                const Text("Order Items", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEFEF5),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFF8E8D8)),
+                  ),
+                  child: Column(
+                    children: item.items.map((it) => _buildItemRow(it)).toList(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Total", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                    Text("\$${item.totalAmount.toStringAsFixed(2)}",
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFFFF9533))),
+                  ],
+                ),
+                const SizedBox(height: 20),
+              ],
             ),
           ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("Total", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              Text("\$${item.totalAmount.toStringAsFixed(2)}",
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFFFF9533))),
-            ],
+        ),
+        if (hasActions)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, -4),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              top: false,
+              child: actionButtons,
+            ),
           ),
-          const SizedBox(height: 40),
-          _buildOrderActionButtons(item),
-        ],
-      ),
+      ],
     );
   }
 
   Widget _buildReservationView(UnifiedItem item) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.customerName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                  Text(DateFormat('MMM d, yyyy - h:mm a').format(item.createdAt), style: const TextStyle(color: Colors.grey)),
+    final actionButtons = _buildReservationActionButtons(item);
+    final hasActions = _hasReservationActions(item);
+
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(item.customerName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                        Text(DateFormat('MMM d, yyyy - h:mm a').format(item.createdAt), style: const TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                    _buildStatusTag(item.status, isReservation: true),
+                  ],
+                ),
+                const Divider(height: 40),
+                _buildInfoRow("Guests", "${item.partySize} People", color: const Color(0xFF8B5CF6)),
+                _buildInfoRow("Date", item.reservationDate ?? 'N/A'),
+                _buildInfoRow("Time Slot", item.reservationTime ?? 'N/A'),
+                _buildInfoRow("Phone", item.customerPhone),
+                if (item.customerEmail != null) _buildInfoRow("Email", item.customerEmail!),
+                if (item.comments != null) ...[
+                  const SizedBox(height: 10),
+                  const Text("Special Requests / Comments:", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF8B5CF6))),
+                  Text("\"${item.comments}\"", style: const TextStyle(fontStyle: FontStyle.italic)),
                 ],
-              ),
-              _buildStatusTag(item.status, isReservation: true),
-            ],
-          ),
-          const Divider(height: 40),
-          _buildInfoRow("Guests", "${item.partySize} People", color: const Color(0xFF8B5CF6)),
-          _buildInfoRow("Date", item.reservationDate ?? 'N/A'),
-          _buildInfoRow("Time Slot", item.reservationTime ?? 'N/A'),
-          _buildInfoRow("Phone", item.customerPhone),
-          if (item.customerEmail != null) _buildInfoRow("Email", item.customerEmail!),
-          if (item.comments != null) ...[
-            const SizedBox(height: 10),
-            const Text("Special Requests / Comments:", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF8B5CF6))),
-            Text("\"${item.comments}\"", style: const TextStyle(fontStyle: FontStyle.italic)),
-          ],
-          if (item.preorderItems.isNotEmpty) ...[
-            const SizedBox(height: 30),
-            const Text("Pre-ordered Food & Drinks", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEFEF5),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFF8E8D8)),
-              ),
-              child: Column(
-                children: item.preorderItems.map((it) => _buildItemRow(it)).toList(),
-              ),
+                if (item.preorderItems.isNotEmpty) ...[
+                  const SizedBox(height: 30),
+                  const Text("Pre-ordered Food & Drinks", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEFEF5),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFF8E8D8)),
+                    ),
+                    child: Column(
+                      children: item.preorderItems.map((it) => _buildItemRow(it)).toList(),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Total", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                    Text(item.totalAmount > 0 ? "\$${item.totalAmount.toStringAsFixed(2)}" : "Standard Booking",
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF8B5CF6))),
+                  ],
+                ),
+                const SizedBox(height: 20),
+              ],
             ),
-          ],
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("Total", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              Text(item.totalAmount > 0 ? "\$${item.totalAmount.toStringAsFixed(2)}" : "Standard Booking",
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF8B5CF6))),
-            ],
           ),
-          const SizedBox(height: 40),
-          _buildReservationActionButtons(item),
-        ],
-      ),
+        ),
+        if (hasActions)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, -4),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              top: false,
+              child: actionButtons,
+            ),
+          ),
+      ],
     );
   }
 
