@@ -116,6 +116,33 @@
         .btn-save { background: var(--orange); color: #000; }
         .btn-del { background: rgba(239, 68, 68, 0.1); color: var(--error); }
         .btn-access { background: rgba(139, 92, 246, 0.1); color: var(--dev); }
+        .btn-pass { background: rgba(255, 149, 51, 0.12); color: var(--orange); border: 1px solid rgba(255, 149, 51, 0.3); }
+        .btn-pass:hover { background: var(--orange); color: #000; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center; z-index: 9999;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-box {
+            background: var(--card); border: 1px solid var(--border); border-radius: 24px;
+            padding: 32px; width: 100%; max-width: 440px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-overlay.active .modal-box { transform: translateY(0); }
+        .modal-header { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+        .modal-subtitle { font-size: 0.85rem; color: var(--orange); font-weight: 600; margin-bottom: 20px; word-break: break-all; }
+        .modal-body { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
+        .modal-body label { font-size: 0.75rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+        .modal-body input {
+            width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px;
+            padding: 12px 16px; color: var(--text); font-size: 0.9rem; transition: border-color 0.2s;
+        }
+        .modal-body input:focus { border-color: var(--orange); outline: none; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+        .btn-cancel { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+        .btn-cancel:hover { background: rgba(0,0,0,0.05); color: var(--text); }
 
         .loader { width: 30px; height: 30px; border: 3px solid rgba(255, 149, 51, 0.1); border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite; margin: 40px auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -157,6 +184,27 @@
                     <a href="index.html" class="pill-menu-item">Home</a>
                     <div class="pill-menu-item danger" onclick="logout()">Logout</div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="reset-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">Restablecer Contraseña</div>
+            <div id="modal-user-info" class="modal-subtitle">Usuario</div>
+            <div class="modal-body">
+                <div>
+                    <label for="modal-new-pass">Nueva Contraseña</label>
+                    <input type="password" id="modal-new-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                </div>
+                <div>
+                    <label for="modal-confirm-pass">Confirmar Contraseña</label>
+                    <input type="password" id="modal-confirm-pass" placeholder="Repite la nueva contraseña" autocomplete="new-password">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeResetModal()">CANCELAR</button>
+                <button class="btn btn-save" id="btn-submit-reset" onclick="submitResetPassword()">GUARDAR</button>
             </div>
         </div>
     </div>
@@ -267,7 +315,7 @@
                             </select>
                         ` : `<span class="badge badge-${u.role}">${u.role}</span>`}
                     </div>
-                    <div class="actions">${isAdminView ? `<button class="btn btn-save" onclick="updateUser('${u.id}')">SAVE</button>` : ''}<button class="btn btn-access" onclick="manageGallery('${u.id}')">GALLERY</button></div>
+                    <div class="actions">${isAdminView ? `<button class="btn btn-save" onclick="updateUser('${u.id}')">SAVE</button><button class="btn btn-pass" onclick="openResetModal('${u.id}', '${(u.username || u.domain || u.id || 'Usuario').replace(/'/g, "\\'")}')">PASS</button>` : ''}<button class="btn btn-access" onclick="manageGallery('${u.id}')">GALLERY</button></div>
                 </div>`).join('');
         }
 
@@ -287,6 +335,63 @@
         window.manageGallery = (ownerId) => {
             sessionStorage.setItem('mt_edit_owner_id', ownerId);
             location.href = 'adminWeb.html';
+        };
+
+        let currentResetUserId = null;
+
+        window.openResetModal = (id, displayName) => {
+            currentResetUserId = id;
+            document.getElementById('modal-user-info').textContent = displayName || 'Usuario';
+            document.getElementById('modal-new-pass').value = '';
+            document.getElementById('modal-confirm-pass').value = '';
+            document.getElementById('reset-modal').classList.add('active');
+        };
+
+        window.closeResetModal = () => {
+            document.getElementById('reset-modal').classList.remove('active');
+            currentResetUserId = null;
+        };
+
+        window.submitResetPassword = async () => {
+            if (!currentResetUserId) return;
+            const newPass = document.getElementById('modal-new-pass').value.trim();
+            const confirmPass = document.getElementById('modal-confirm-pass').value.trim();
+
+            if (!newPass || newPass.length < 6) {
+                window.showToast("La contraseña debe tener al menos 6 caracteres", "error");
+                return;
+            }
+            if (newPass !== confirmPass) {
+                window.showToast("Las contraseñas no coinciden", "error");
+                return;
+            }
+
+            const submitBtn = document.getElementById('btn-submit-reset');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = "GUARDANDO...";
+
+            try {
+                const { data, error } = await sb.functions.invoke('admin-reset-password', {
+                    body: { userId: currentResetUserId, newPassword: newPass }
+                });
+
+                if (error) {
+                    window.showToast(error.message || "Error al comunicarse con el servidor", "error");
+                } else if (data && data.error) {
+                    window.showToast(data.error, "error");
+                } else if (data && data.success) {
+                    window.showToast("Contraseña restablecida exitosamente", "success");
+                    window.closeResetModal();
+                } else {
+                    window.showToast("Respuesta inesperada del servidor", "error");
+                }
+            } catch (err) {
+                window.showToast("Error: " + err.message, "error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         };
 
         function initTheme() {
