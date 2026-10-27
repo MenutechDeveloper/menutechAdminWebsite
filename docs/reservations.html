@@ -440,6 +440,7 @@
         import { supabase as sb } from './supabase.js';
 
         let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
+        let restaurantLang = 'en';
         let allOwners = [];
 
         window.showToast = (message, type = 'success') => {
@@ -547,6 +548,8 @@
             const data = resSettingsRes.data;
             const resData = resRes.data;
 
+            restaurantLang = resData?.language || 'en';
+
             document.getElementById('res-enabled').checked = data ? (data.enabled !== false) : true;
             document.getElementById('min-guests').value = data ? (data.min_guests || 2) : 2;
             document.getElementById('max-guests').value = data ? (data.max_guests || 8) : 8;
@@ -574,11 +577,12 @@
 
         window.copyReservationLink = async () => {
             let domain = activeDomain || 'yoursite.com';
-            let url = `https://menutech.io/menu.html?domain=${domain}&res=true`;
+            let langParam = (restaurantLang === 'es') ? '&lang=es' : '';
+            let url = `https://menutech.io/menu.html?domain=${domain}&res=true${langParam}`;
             if (activeOwnerId) {
                 const { data: menu } = await sb.from('menutech_menus').select('slug').eq('user_id', activeOwnerId).maybeSingle();
                 if (menu && menu.slug) {
-                    url = `https://menutech.io/menu.html?n=${menu.slug}&res=true`;
+                    url = `https://menutech.io/menu.html?n=${menu.slug}&res=true${langParam}`;
                 }
             }
             navigator.clipboard.writeText(url).then(() => {
@@ -588,7 +592,8 @@
 
         window.copySnippetAction = () => {
             const domain = activeDomain || 'yoursite.com';
-            const snippet = `<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-reservations domain="${domain}"></menutech-reservations>`;
+            const langAttr = (restaurantLang === 'es') ? ' lang="es"' : '';
+            const snippet = `<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-reservations domain="${domain}"${langAttr}></menutech-reservations>`;
             navigator.clipboard.writeText(snippet).then(() => {
                 showToast("Reservation code copied to clipboard!");
                 const txt = document.getElementById('btn-copy-snippet-text');
