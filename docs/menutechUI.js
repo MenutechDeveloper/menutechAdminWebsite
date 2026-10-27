@@ -3345,12 +3345,172 @@ if (!customElements.get('menutech-footer')) {
 }
 
 /**
+ * Menutech Reservations Web Component i18n
+ */
+const RES_I18N = {
+    en: {
+        trigger_default: "Book a Table",
+        modal_title: "Table Reservation",
+        res_unavailable_title: "Reservations Unavailable",
+        res_unavailable_body: "Table reservations are currently not available for this restaurant.",
+        step1_title: "Reserve a Table",
+        guests_label: "Number of Guests",
+        guests_unit: "Guests",
+        date_label: "Date",
+        time_label: "Time",
+        time_placeholder: "Select reservation time...",
+        comments_label: "Comments (Optional)",
+        comments_placeholder: "Allergies, high chairs, special seating preferences...",
+        hold_notice: "The table is held for {min} minutes after the reservation time. We appreciate arriving on time.",
+        next_btn: "Next",
+        select_time_title: "Select Time",
+        select_time_msg: "Please select a valid reservation time slot.",
+        step2_title: "Pre-order Food",
+        preorder_question: "Would you like to pre-order food?",
+        preorder_desc: "Have your favorite dishes ready at the table as soon as you arrive at the restaurant.",
+        selected_preorder_header: "Selected Pre-order Items:",
+        preorder_yes: "Yes, Order Food Now",
+        preorder_no: "No, Order at Restaurant",
+        step3_title: "Contact Information",
+        name_label: "Full Name *",
+        name_placeholder: "Your Full Name",
+        phone_label: "Phone Number *",
+        phone_placeholder: "Phone Number",
+        email_label: "Email Address",
+        email_placeholder: "Email Address",
+        summary_title: "Reservation Summary",
+        table_for_guests: "Table for {guests} Guests",
+        at: "at",
+        preorder_total: "Pre-order Total: ${total} ({items} items)",
+        submit_btn: "Make Table Reservation Now",
+        submitting: "Submitting...",
+        missing_info_title: "Missing Information",
+        missing_info_msg: "Please provide your full name and phone number.",
+        res_error_title: "Reservation Error",
+        res_error_msg: "Error creating table reservation: ",
+        confirming_title: "Confirming Reservation",
+        waiting_moment: "Waiting a moment...",
+        waiting_desc: "We are confirming your reservation in real time with the restaurant.",
+        id_label: "ID: ",
+        cancelled_title: "Reservation Cancelled",
+        not_confirmed_title: "Reservation Not Confirmed",
+        not_accepted_msg: "Sorry {name}, your reservation could not be accepted at this time.",
+        done_btn: "DONE",
+        confirmed_title: "Reservation Confirmed",
+        thanks_reserving: "Thank you for reserving!",
+        accepted_success_msg: "Your reservation has been successfully accepted.",
+        res_details_header: "Reservation Details",
+        guests_count_label: "guests",
+        date_item_label: "Date: ",
+        time_item_label: "Time: ",
+        tel_item_label: "Tel: ",
+        email_item_label: "Email: ",
+        note_item_label: "Note: ",
+        preorder_food_header: "Pre-ordered Food",
+        total_item_label: "Total: ",
+        preorder_picker_desc: "Select dishes to pre-order for your table reservation:",
+        confirm_preorder_btn: "Confirm Pre-order & Continue",
+        add_btn: "+ Add",
+        added_btn: "✓ Added",
+        select_date_title: "Select Date",
+        select_date_msg: "Please select a date first.",
+        select_hour: "Select Hour",
+        select_minutes: "Select Minutes ({step}m steps)",
+        cancel_btn: "Cancel",
+        set_btn: "Set",
+        outside_hours_title: "Outside Operating Hours",
+        outside_hours_msg: "Selected time is outside operating hours ({start} - {end}).",
+        lead_time_title: "Notice Required",
+        lead_time_msg: "Reservations require at least {min} minutes advance notice.",
+        accept_modal_btn: "OK",
+        notification_title: "Notification"
+    },
+    es: {
+        trigger_default: "Reservar una Mesa",
+        modal_title: "Reservación de Mesa",
+        res_unavailable_title: "Reservaciones No Disponibles",
+        res_unavailable_body: "Las reservaciones de mesa no están disponibles por el momento para este restaurante.",
+        step1_title: "Reservar una Mesa",
+        guests_label: "Número de Personas",
+        guests_unit: "Personas",
+        date_label: "Fecha",
+        time_label: "Hora",
+        time_placeholder: "Selecciona la hora de reservación...",
+        comments_label: "Comentarios (Opcional)",
+        comments_placeholder: "Alergias, sillas altas, preferencias de asiento...",
+        hold_notice: "La mesa se guardará durante {min} minutos después de la hora de reserva. Agradecemos llegar a tiempo.",
+        next_btn: "Siguiente",
+        select_time_title: "Seleccionar Hora",
+        select_time_msg: "Por favor selecciona un horario de reservación válido.",
+        step2_title: "Pre-ordenar Comida",
+        preorder_question: "¿Te gustaría ordenar tu comida por adelantado?",
+        preorder_desc: "Ten tus platillos favoritos listos en la mesa tan pronto como llegues al restaurante.",
+        selected_preorder_header: "Platillos Pre-ordenados Seleccionados:",
+        preorder_yes: "Sí, Ordenar Comida Ahora",
+        preorder_no: "No, Ordenar en el Restaurante",
+        step3_title: "Información de Contacto",
+        name_label: "Nombre Completo *",
+        name_placeholder: "Tu Nombre Completo",
+        phone_label: "Número de Teléfono *",
+        phone_placeholder: "Número de Teléfono",
+        email_label: "Correo Electrónico",
+        email_placeholder: "Correo Electrónico",
+        summary_title: "Resumen de la Reserva",
+        table_for_guests: "Mesa para {guests} Personas",
+        at: "a las",
+        preorder_total: "Total Pre-orden: ${total} ({items} platillos)",
+        submit_btn: "Hacer Reservación de Mesa Ahora",
+        submitting: "Enviando...",
+        missing_info_title: "Información Faltante",
+        missing_info_msg: "Por favor proporciona tu nombre completo y número de teléfono.",
+        res_error_title: "Error de Reservación",
+        res_error_msg: "Error al crear la reservación de mesa: ",
+        confirming_title: "Confirmando Reservación",
+        waiting_moment: "Espera un momento...",
+        waiting_desc: "Estamos confirmando tu reservación en tiempo real con el restaurante.",
+        id_label: "ID: ",
+        cancelled_title: "Reservación Cancelada",
+        not_confirmed_title: "Reservación No Confirmada",
+        not_accepted_msg: "Lo sentimos {name}, tu reservación no pudo ser aceptada en este momento.",
+        done_btn: "HECHO",
+        confirmed_title: "Reservación Confirmada",
+        thanks_reserving: "¡Gracias por reservar!",
+        accepted_success_msg: "Tu reservación ha sido aceptada con éxito.",
+        res_details_header: "Detalles de la Reserva",
+        guests_count_label: "invitados",
+        date_item_label: "Fecha: ",
+        time_item_label: "Hora: ",
+        tel_item_label: "Tel: ",
+        email_item_label: "Email: ",
+        note_item_label: "Nota: ",
+        preorder_food_header: "Pre-orden de Comida",
+        total_item_label: "Total: ",
+        preorder_picker_desc: "Selecciona platillos para pre-ordenar en tu reservación:",
+        confirm_preorder_btn: "Confirmar Pre-orden y Continuar",
+        add_btn: "+ Agregar",
+        added_btn: "✓ Agregado",
+        select_date_title: "Seleccionar Fecha",
+        select_date_msg: "Por favor selecciona una fecha primero.",
+        select_hour: "Seleccionar Hora",
+        select_minutes: "Seleccionar Minutos (pasos de {step}m)",
+        cancel_btn: "Cancelar",
+        set_btn: "Aceptar",
+        outside_hours_title: "Fuera de Horario",
+        outside_hours_msg: "La hora seleccionada está fuera del horario de atención ({start} - {end}).",
+        lead_time_title: "Anticipación Requerida",
+        lead_time_msg: "Las reservaciones requieren al menos {min} minutos de anticipación.",
+        accept_modal_btn: "Aceptar",
+        notification_title: "Notificación"
+    }
+};
+
+/**
  * Menutech Reservations Web Component
  * Usage: <menutech-reservations domain="yoursite.com"></menutech-reservations>
  */
 class MenutechReservations extends HTMLElement {
     static get observedAttributes() {
-        return ['domain', 'custom-label', 'view'];
+        return ['domain', 'custom-label', 'view', 'lang', 'language'];
     }
 
     attributeChangedCallback() {
@@ -3482,8 +3642,42 @@ class MenutechReservations extends HTMLElement {
         }
     }
 
+    getLang() {
+        const attrLang = this.getAttribute('lang') || this.getAttribute('language');
+        if (attrLang) {
+            const clean = attrLang.toLowerCase().trim();
+            if (clean.startsWith('es')) return 'es';
+            if (clean.startsWith('en')) return 'en';
+        }
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryLang = urlParams.get('lang');
+            if (queryLang) {
+                const clean = queryLang.toLowerCase().trim();
+                if (clean.startsWith('es')) return 'es';
+                if (clean.startsWith('en')) return 'en';
+            }
+        } catch (e) {}
+        if (this.restaurantInfo && this.restaurantInfo.language) {
+            const clean = this.restaurantInfo.language.toLowerCase().trim();
+            if (clean.startsWith('es')) return 'es';
+            if (clean.startsWith('en')) return 'en';
+        }
+        return 'en';
+    }
+
+    t(key, params = {}) {
+        const lang = this.getLang();
+        const dict = RES_I18N[lang] || RES_I18N.en;
+        let str = dict[key] || RES_I18N.en[key] || key;
+        Object.keys(params).forEach(p => {
+            str = str.replace(new RegExp(`\\{${p}\\}`, 'g'), params[p]);
+        });
+        return str;
+    }
+
     render() {
-        const customLabel = this.getAttribute('custom-label') || 'Book a Table';
+        const customLabel = this.getAttribute('custom-label') || this.t('trigger_default');
         const viewMode = this.getAttribute('view');
         const isStandalone = viewMode === 'standalone';
 
@@ -3686,7 +3880,7 @@ class MenutechReservations extends HTMLElement {
             <div class="res-modal-overlay" id="res-modal">
                 <div class="res-card">
                     <div class="res-card-header">
-                        <h3 id="res-modal-title">Table Reservation</h3>
+                        <h3 id="res-modal-title">${this.t('modal_title')}</h3>
                         <button class="close-btn" id="close-res-modal">✕</button>
                     </div>
                     <div class="res-card-body" id="res-modal-body">
@@ -3697,9 +3891,9 @@ class MenutechReservations extends HTMLElement {
 
             <div class="res-custom-modal-overlay" id="res-custom-modal">
                 <div class="res-custom-modal-card">
-                    <h3 id="res-modal-msg-title">Notification</h3>
+                    <h3 id="res-modal-msg-title">${this.t('notification_title')}</h3>
                     <p id="res-modal-msg-body"></p>
-                    <button class="res-custom-modal-btn" id="res-modal-msg-close">Aceptar</button>
+                    <button class="res-custom-modal-btn" id="res-modal-msg-close">${this.t('accept_modal_btn')}</button>
                 </div>
             </div>
         `;
@@ -3744,7 +3938,7 @@ class MenutechReservations extends HTMLElement {
         if (!modal) return;
         const titleEl = this.shadowRoot.getElementById('res-modal-msg-title');
         const bodyEl = this.shadowRoot.getElementById('res-modal-msg-body');
-        if (titleEl) titleEl.textContent = title || 'Notification';
+        if (titleEl) titleEl.textContent = title || this.t('notification_title');
         if (bodyEl) bodyEl.textContent = message || '';
         modal.style.display = 'flex';
     }
@@ -3754,18 +3948,18 @@ class MenutechReservations extends HTMLElement {
         const title = this.shadowRoot.getElementById('res-modal-title');
 
         if (!this.settings || !this.settings.enabled) {
-            title.textContent = "Reservations Unavailable";
-            body.innerHTML = `<div style="text-align:center; padding:40px; color:#666;">Table reservations are currently not available for this restaurant.</div>`;
+            title.textContent = this.t('res_unavailable_title');
+            body.innerHTML = `<div style="text-align:center; padding:40px; color:#666;">${this.t('res_unavailable_body')}</div>`;
             return;
         }
 
         if (this.step === 1) {
-            title.textContent = "Reserve a Table";
+            title.textContent = this.t('step1_title');
 
             // Guests options
             let guestsOptions = '';
             for (let g = this.settings.min_guests; g <= this.settings.max_guests; g++) {
-                guestsOptions += `<option value="${g}" ${this.bookingData.guests == g ? 'selected' : ''}>${g} Guests</option>`;
+                guestsOptions += `<option value="${g}" ${this.bookingData.guests == g ? 'selected' : ''}>${g} ${this.t('guests_unit')}</option>`;
             }
 
             // Min and max date
@@ -3779,32 +3973,32 @@ class MenutechReservations extends HTMLElement {
 
             body.innerHTML = `
                 <div class="field-group">
-                    <label>Number of Guests</label>
+                    <label>${this.t('guests_label')}</label>
                     <select class="field-control" id="field-guests">
                         ${guestsOptions}
                     </select>
                 </div>
 
                 <div class="field-group">
-                    <label>Date</label>
+                    <label>${this.t('date_label')}</label>
                     <input type="date" class="field-control" id="field-date" min="${minDateStr}" max="${maxDateStr}" value="${this.bookingData.date}">
                 </div>
 
                 <div class="field-group">
-                    <label>Time</label>
-                    <input type="text" class="field-control" id="field-time" readonly placeholder="Select reservation time..." value="${this.bookingData.time ? this.formatTime12h(this.bookingData.time) : ''}" style="cursor: pointer; background: #fffef5;">
+                    <label>${this.t('time_label')}</label>
+                    <input type="text" class="field-control" id="field-time" readonly placeholder="${this.t('time_placeholder')}" value="${this.bookingData.time ? this.formatTime12h(this.bookingData.time) : ''}" style="cursor: pointer; background: #fffef5;">
                 </div>
 
                 <div class="field-group">
-                    <label>Comments (Optional)</label>
-                    <textarea class="field-control" id="field-comments" placeholder="Allergies, high chairs, special seating preferences...">${this.bookingData.comments}</textarea>
+                    <label>${this.t('comments_label')}</label>
+                    <textarea class="field-control" id="field-comments" placeholder="${this.t('comments_placeholder')}">${this.bookingData.comments}</textarea>
                 </div>
 
                 <div class="info-notice">
-                    The table is held for ${this.settings.hold_duration_min} minutes after the reservation time. We appreciate arriving on time.
+                    ${this.t('hold_notice', { min: this.settings.hold_duration_min })}
                 </div>
 
-                <button class="btn-action" id="btn-step1-next">Next</button>
+                <button class="btn-action" id="btn-step1-next">${this.t('next_btn')}</button>
             `;
 
             const dateInput = body.querySelector('#field-date');
@@ -3821,7 +4015,7 @@ class MenutechReservations extends HTMLElement {
 
             body.querySelector('#btn-step1-next').onclick = () => {
                 if (!this.bookingData.time) {
-                    this.showModal("Select Time", "Please select a valid reservation time slot.");
+                    this.showModal(this.t('select_time_title'), this.t('select_time_msg'));
                     return;
                 }
 
@@ -3838,7 +4032,7 @@ class MenutechReservations extends HTMLElement {
             };
 
         } else if (this.step === 2) {
-            title.textContent = "Pre-order Food";
+            title.textContent = this.t('step2_title');
             body.innerHTML = `
                 <div style="text-align:center; padding: 10px 0 20px 0;">
                     <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 15px;">
@@ -3848,13 +4042,13 @@ class MenutechReservations extends HTMLElement {
                             <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>
                         </svg>
                     </div>
-                    <h4 style="font-size:1.15rem; font-weight:800; margin-bottom:12px; color:#333;">Would you like to pre-order food?</h4>
-                    <p style="font-size:0.9rem; color:#666; line-height:1.5;">Have your favorite dishes ready at the table as soon as you arrive at the restaurant.</p>
+                    <h4 style="font-size:1.15rem; font-weight:800; margin-bottom:12px; color:#333;">${this.t('preorder_question')}</h4>
+                    <p style="font-size:0.9rem; color:#666; line-height:1.5;">${this.t('preorder_desc')}</p>
                 </div>
 
                 ${this.preorderCart.length > 0 ? `
                     <div style="background:#f9f9f9; border-radius:16px; padding:15px; margin-bottom:20px;">
-                        <div style="font-size:0.75rem; font-weight:800; color:#ff9533; text-transform:uppercase; margin-bottom:10px;">Selected Pre-order Items:</div>
+                        <div style="font-size:0.75rem; font-weight:800; color:#ff9533; text-transform:uppercase; margin-bottom:10px;">${this.t('selected_preorder_header')}</div>
                         ${this.preorderCart.map(i => `
                             <div class="preorder-item-row">
                                 <span style="font-weight:600; font-size:0.9rem;">${i.quantity}x ${i.name}</span>
@@ -3864,8 +4058,8 @@ class MenutechReservations extends HTMLElement {
                     </div>
                 ` : ''}
 
-                <button class="btn-action" id="btn-preorder-yes">Yes, Order Food Now</button>
-                <button class="btn-action btn-secondary" id="btn-preorder-no">No, Order at Restaurant</button>
+                <button class="btn-action" id="btn-preorder-yes">${this.t('preorder_yes')}</button>
+                <button class="btn-action btn-secondary" id="btn-preorder-no">${this.t('preorder_no')}</button>
             `;
 
             body.querySelector('#btn-preorder-yes').onclick = () => {
@@ -3878,7 +4072,7 @@ class MenutechReservations extends HTMLElement {
             };
 
         } else if (this.step === 3) {
-            title.textContent = "Contact Information";
+            title.textContent = this.t('step3_title');
 
             // Saved contact info from localStorage
             const savedInfo = JSON.parse(localStorage.getItem('mt_customer_info') || '{}');
@@ -3890,32 +4084,32 @@ class MenutechReservations extends HTMLElement {
 
             body.innerHTML = `
                 <div class="field-group">
-                    <label>Full Name *</label>
-                    <input type="text" class="field-control" id="field-name" value="${name}" placeholder="Your Full Name">
+                    <label>${this.t('name_label')}</label>
+                    <input type="text" class="field-control" id="field-name" value="${name}" placeholder="${this.t('name_placeholder')}">
                 </div>
 
                 <div class="field-group">
-                    <label>Phone Number *</label>
-                    <input type="tel" class="field-control" id="field-phone" value="${phone}" placeholder="Phone Number">
+                    <label>${this.t('phone_label')}</label>
+                    <input type="tel" class="field-control" id="field-phone" value="${phone}" placeholder="${this.t('phone_placeholder')}">
                 </div>
 
                 <div class="field-group">
-                    <label>Email Address</label>
-                    <input type="email" class="field-control" id="field-email" value="${email}" placeholder="Email Address">
+                    <label>${this.t('email_label')}</label>
+                    <input type="email" class="field-control" id="field-email" value="${email}" placeholder="${this.t('email_placeholder')}">
                 </div>
 
                 <div style="background:#fdfdfd; border:1px solid #eee; border-radius:18px; padding:18px; margin-top:15px;">
-                    <div style="font-size:0.75rem; font-weight:800; color:#ff9533; text-transform:uppercase; margin-bottom:10px;">Reservation Summary</div>
-                    <p style="font-size:0.85rem; font-weight:600; margin:4px 0;">Table for ${this.bookingData.guests} Guests</p>
-                    <p style="font-size:0.85rem; color:#666; margin:4px 0;">${this.bookingData.date} at ${this.bookingData.time}</p>
-                    ${this.preorderCart.length > 0 ? `<p style="font-size:0.85rem; color:#ff9533; font-weight:700; margin-top:8px;">Pre-order Total: $${preorderTotal.toFixed(2)} (${this.preorderCart.length} items)</p>` : ''}
+                    <div style="font-size:0.75rem; font-weight:800; color:#ff9533; text-transform:uppercase; margin-bottom:10px;">${this.t('summary_title')}</div>
+                    <p style="font-size:0.85rem; font-weight:600; margin:4px 0;">${this.t('table_for_guests', { guests: this.bookingData.guests })}</p>
+                    <p style="font-size:0.85rem; color:#666; margin:4px 0;">${this.bookingData.date} ${this.t('at')} ${this.formatTime12h(this.bookingData.time)}</p>
+                    ${this.preorderCart.length > 0 ? `<p style="font-size:0.85rem; color:#ff9533; font-weight:700; margin-top:8px;">${this.t('preorder_total', { total: preorderTotal.toFixed(2), items: this.preorderCart.length })}</p>` : ''}
                 </div>
 
                 <div class="info-notice">
-                    The table is held for ${this.settings.hold_duration_min} minutes after the reservation time. We appreciate arriving on time.
+                    ${this.t('hold_notice', { min: this.settings.hold_duration_min })}
                 </div>
 
-                <button class="btn-action" id="btn-submit-res">Make Table Reservation Now</button>
+                <button class="btn-action" id="btn-submit-res">${this.t('submit_btn')}</button>
             `;
 
             body.querySelector('#btn-submit-res').onclick = () => this.submitBooking(body);
@@ -3925,57 +4119,57 @@ class MenutechReservations extends HTMLElement {
             const isRejected = ['rejected', 'cancelled'].includes(this.reservationStatus);
 
             if (isPending) {
-                title.textContent = "Confirming Reservation";
+                title.textContent = this.t('confirming_title');
                 body.innerHTML = `
                     <div style="text-align:center; padding:30px 10px;">
                         <div style="width: 60px; height: 60px; border: 4px solid #fff2e5; border-top-color: #ff9533; border-radius: 50%; margin: 0 auto 20px auto; animation: spinRes 1s infinite linear;"></div>
                         <style>@keyframes spinRes { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-                        <h3 style="font-family:'Outfit'; font-size:1.4rem; margin-bottom:12px; color:#1a1c1e;">Espera un momento...</h3>
-                        <p style="color:#666; font-size:0.95rem; line-height:1.5; margin-bottom:20px;">Estamos confirmando tu reservación en tiempo real con el restaurante.</p>
-                        <div style="font-size:0.75rem; color:#aaa; font-weight:700; text-transform:uppercase; letter-spacing:1px;">ID: ${this.reservationId ? this.reservationId.substring(0, 8) : ''}</div>
+                        <h3 style="font-family:'Outfit'; font-size:1.4rem; margin-bottom:12px; color:#1a1c1e;">${this.t('waiting_moment')}</h3>
+                        <p style="color:#666; font-size:0.95rem; line-height:1.5; margin-bottom:20px;">${this.t('waiting_desc')}</p>
+                        <div style="font-size:0.75rem; color:#aaa; font-weight:700; text-transform:uppercase; letter-spacing:1px;">${this.t('id_label')}${this.reservationId ? this.reservationId.substring(0, 8) : ''}</div>
                     </div>
                 `;
             } else if (isRejected) {
-                title.textContent = "Reservación Cancelada";
+                title.textContent = this.t('cancelled_title');
                 body.innerHTML = `
                     <div style="text-align:center; padding:20px 0;">
                         <div style="width:70px; height:70px; background:#ef4444; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:36px; margin:0 auto 20px auto;">✕</div>
-                        <h3 style="font-family:'Outfit'; font-size:1.4rem; margin-bottom:10px; color:#1a1c1e;">Reservación No Confirmada</h3>
-                        <p style="color:#666; font-size:0.95rem; line-height:1.5; margin-bottom:20px;">Lo sentimos ${this.bookingData.name}, tu reservación no pudo ser aceptada en este momento.</p>
-                        <button class="btn-action" id="btn-res-done">DONE</button>
+                        <h3 style="font-family:'Outfit'; font-size:1.4rem; margin-bottom:10px; color:#1a1c1e;">${this.t('not_confirmed_title')}</h3>
+                        <p style="color:#666; font-size:0.95rem; line-height:1.5; margin-bottom:20px;">${this.t('not_accepted_msg', { name: this.bookingData.name })}</p>
+                        <button class="btn-action" id="btn-res-done">${this.t('done_btn')}</button>
                     </div>
                 `;
                 body.querySelector('#btn-res-done').onclick = () => this.handleDoneRedirect();
             } else {
-                title.textContent = "Reservación Confirmada";
+                title.textContent = this.t('confirmed_title');
                 const preorderTotal = this.preorderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
                 body.innerHTML = `
                     <div style="text-align:center; padding:10px 0;">
                         <div class="check-mark">✓</div>
-                        <h3 style="font-family:'Outfit'; font-size:1.5rem; margin-bottom:8px; color:#1a1c1e;">¡Gracias por reservar!</h3>
-                        <p style="color:#666; font-size:0.92rem; line-height:1.5; margin-bottom:20px;">Tu reservación ha sido aceptada con éxito.</p>
+                        <h3 style="font-family:'Outfit'; font-size:1.5rem; margin-bottom:8px; color:#1a1c1e;">${this.t('thanks_reserving')}</h3>
+                        <p style="color:#666; font-size:0.92rem; line-height:1.5; margin-bottom:20px;">${this.t('accepted_success_msg')}</p>
 
                         <div style="background:#fdfdfd; border:1px solid #f8e8d8; border-radius:18px; padding:20px; text-align:left; margin-bottom:20px;">
-                            <div style="font-size:0.75rem; font-weight:800; color:#ff9533; text-transform:uppercase; margin-bottom:12px; letter-spacing:0.5px;">Detalles de la Reserva</div>
+                            <div style="font-size:0.75rem; font-weight:800; color:#ff9533; text-transform:uppercase; margin-bottom:12px; letter-spacing:0.5px;">${this.t('res_details_header')}</div>
                             <div style="font-size:0.9rem; font-weight:700; color:#1a1c1e; margin-bottom:6px;">👤 ${this.bookingData.name}</div>
-                            <div style="font-size:0.85rem; color:#555; margin-bottom:4px;">👥 Personas: <strong>${this.bookingData.guests} invitados</strong></div>
-                            <div style="font-size:0.85rem; color:#555; margin-bottom:4px;">📅 Fecha: <strong>${this.bookingData.date}</strong></div>
-                            <div style="font-size:0.85rem; color:#555; margin-bottom:4px;">⏰ Hora: <strong>${this.formatTime12h(this.bookingData.time)}</strong></div>
-                            ${this.bookingData.phone ? `<div style="font-size:0.85rem; color:#555; margin-bottom:4px;">📞 Tel: ${this.bookingData.phone}</div>` : ''}
-                            ${this.bookingData.email ? `<div style="font-size:0.85rem; color:#555; margin-bottom:4px;">✉️ Email: ${this.bookingData.email}</div>` : ''}
-                            ${this.bookingData.comments ? `<div style="font-size:0.85rem; color:#777; margin-top:8px; font-style:italic;">💬 Nota: ${this.bookingData.comments}</div>` : ''}
+                            <div style="font-size:0.85rem; color:#555; margin-bottom:4px;">👥 ${this.t('guests_label')}: <strong>${this.bookingData.guests} ${this.t('guests_count_label')}</strong></div>
+                            <div style="font-size:0.85rem; color:#555; margin-bottom:4px;">📅 ${this.t('date_item_label')}<strong>${this.bookingData.date}</strong></div>
+                            <div style="font-size:0.85rem; color:#555; margin-bottom:4px;">⏰ ${this.t('time_item_label')}<strong>${this.formatTime12h(this.bookingData.time)}</strong></div>
+                            ${this.bookingData.phone ? `<div style="font-size:0.85rem; color:#555; margin-bottom:4px;">📞 ${this.t('tel_item_label')}${this.bookingData.phone}</div>` : ''}
+                            ${this.bookingData.email ? `<div style="font-size:0.85rem; color:#555; margin-bottom:4px;">✉️ ${this.t('email_item_label')}${this.bookingData.email}</div>` : ''}
+                            ${this.bookingData.comments ? `<div style="font-size:0.85rem; color:#777; margin-top:8px; font-style:italic;">💬 ${this.t('note_item_label')}${this.bookingData.comments}</div>` : ''}
 
                             ${this.preorderCart.length > 0 ? `
                                 <div style="border-top: 1px dashed #eee; margin-top: 12px; padding-top: 10px;">
-                                    <div style="font-size:0.75rem; font-weight:800; color:#ff9533; text-transform:uppercase; margin-bottom:6px;">Pre-orden de Comida</div>
+                                    <div style="font-size:0.75rem; font-weight:800; color:#ff9533; text-transform:uppercase; margin-bottom:6px;">${this.t('preorder_food_header')}</div>
                                     ${this.preorderCart.map(i => `<div style="font-size:0.82rem; color:#444; display:flex; justify-content:space-between;"><span>${i.quantity}x ${i.name}</span><span>$${(i.price * i.quantity).toFixed(2)}</span></div>`).join('')}
-                                    <div style="font-size:0.85rem; font-weight:800; color:#ff9533; margin-top:6px; text-align:right;">Total: $${preorderTotal.toFixed(2)}</div>
+                                    <div style="font-size:0.85rem; font-weight:800; color:#ff9533; margin-top:6px; text-align:right;">${this.t('total_item_label')}$${preorderTotal.toFixed(2)}</div>
                                 </div>
                             ` : ''}
                         </div>
 
-                        <button class="btn-action" id="btn-res-done">DONE</button>
+                        <button class="btn-action" id="btn-res-done">${this.t('done_btn')}</button>
                     </div>
                 `;
 
@@ -4007,18 +4201,18 @@ class MenutechReservations extends HTMLElement {
                             <div style="font-weight:700; font-size:0.9rem;">${dish.name}</div>
                             <div style="font-weight:700; color:#ff9533; font-size:0.85rem;">$${dish.price}</div>
                         </div>
-                        <button class="btn-action" style="width:auto; padding:8px 16px; font-size:0.75rem; margin:0;" data-dish='${JSON.stringify(dish).replace(/'/g, "&apos;")}'>+ Add</button>
+                        <button class="btn-action" style="width:auto; padding:8px 16px; font-size:0.75rem; margin:0;" data-dish='${JSON.stringify(dish).replace(/'/g, "&apos;")}'>${this.t('add_btn')}</button>
                     </div>
                 `;
             });
         });
 
         body.innerHTML = `
-            <div style="font-size:0.85rem; color:#666; margin-bottom:15px;">Select dishes to pre-order for your table reservation:</div>
+            <div style="font-size:0.85rem; color:#666; margin-bottom:15px;">${this.t('preorder_picker_desc')}</div>
             <div style="max-height:300px; overflow-y:auto; padding-right:5px;">
                 ${dishesHtml}
             </div>
-            <button class="btn-action" id="btn-finish-preorder" style="margin-top:20px;">Confirm Pre-order & Continue</button>
+            <button class="btn-action" id="btn-finish-preorder" style="margin-top:20px;">${this.t('confirm_preorder_btn')}</button>
         `;
 
         body.querySelectorAll('button[data-dish]').forEach(btn => {
@@ -4034,8 +4228,8 @@ class MenutechReservations extends HTMLElement {
                         quantity: 1
                     });
                 }
-                btn.textContent = "✓ Added";
-                setTimeout(() => btn.textContent = "+ Add", 1000);
+                btn.textContent = this.t('added_btn');
+                setTimeout(() => btn.textContent = this.t('add_btn'), 1000);
             };
         });
 
@@ -4081,7 +4275,7 @@ class MenutechReservations extends HTMLElement {
 
     openClockPicker(selectedDateStr, timeInputEl) {
         if (!selectedDateStr) {
-            this.showModal("Select Date", "Please select a date first.");
+            this.showModal(this.t('select_date_title'), this.t('select_date_msg'));
             return;
         }
 
@@ -4156,8 +4350,8 @@ class MenutechReservations extends HTMLElement {
                             </div>
                         </div>
                         <div class="mt-clock-footer">
-                            <button type="button" id="mt-clock-cancel-btn" class="mt-clock-btn cancel">Cancel</button>
-                            <button type="button" id="mt-clock-confirm-btn" class="mt-clock-btn confirm">Set</button>
+                            <button type="button" id="mt-clock-cancel-btn" class="mt-clock-btn cancel">${this.t('cancel_btn')}</button>
+                            <button type="button" id="mt-clock-confirm-btn" class="mt-clock-btn confirm">${this.t('set_btn')}</button>
                         </div>
                     </div>
                 </div>
@@ -4291,7 +4485,7 @@ class MenutechReservations extends HTMLElement {
             if (!isOpen) {
                 const startStr = this.formatMinutes12h(startMinutes);
                 const endStr = this.formatMinutes12h(endMinutes);
-                this.showModal("Outside Operating Hours", `Selected time is outside operating hours (${startStr} - ${endStr}).`);
+                this.showModal(this.t('outside_hours_title'), this.t('outside_hours_msg', { start: startStr, end: endStr }));
                 return;
             }
 
@@ -4302,7 +4496,7 @@ class MenutechReservations extends HTMLElement {
             const selectedTs = new Date(`${selectedDateStr}T${slotTime24}:00`).getTime();
 
             if (isToday && selectedTs < (now.getTime() + leadTimeMs)) {
-                this.showModal("Notice Required", `Reservations require at least ${this.settings.min_lead_time_min} minutes advance notice.`);
+                this.showModal(this.t('lead_time_title'), this.t('lead_time_msg', { min: this.settings.min_lead_time_min }));
                 return;
             }
 
@@ -4389,7 +4583,7 @@ class MenutechReservations extends HTMLElement {
         const email = body.querySelector('#field-email').value.trim();
 
         if (!name || !phone) {
-            this.showModal("Missing Information", "Please provide your full name and phone number.");
+            this.showModal(this.t('missing_info_title'), this.t('missing_info_msg'));
             return;
         }
 
@@ -4401,7 +4595,7 @@ class MenutechReservations extends HTMLElement {
         localStorage.setItem('mt_customer_info', JSON.stringify({ name, phone, email }));
 
         const btn = body.querySelector('#btn-submit-res');
-        btn.textContent = "Submitting...";
+        btn.textContent = this.t('submitting');
         btn.disabled = true;
 
         if (!this.supabase) await this.initSupabase();
@@ -4431,8 +4625,8 @@ class MenutechReservations extends HTMLElement {
             this.renderStep();
             this.startReservationTracking(inserted.id);
         } catch (e) {
-            this.showModal("Reservation Error", "Error creating table reservation: " + e.message);
-            btn.textContent = "Make Table Reservation Now";
+            this.showModal(this.t('res_error_title'), this.t('res_error_msg') + e.message);
+            btn.textContent = this.t('submit_btn');
             btn.disabled = false;
         }
     }

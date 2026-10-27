@@ -401,6 +401,14 @@
                     </div>
 
                     <div class="group">
+                        <label>Language / Idioma</label>
+                        <select id="res-language">
+                            <option value="en">English (Default)</option>
+                            <option value="es">Español</option>
+                        </select>
+                    </div>
+
+                    <div class="group">
                         <label>Social Media</label>
                         <div id="social-list" class="dynamic-list"></div>
                         <button class="btn-add" onclick="addSocial()">+ Add Social Network</button>
@@ -621,6 +629,7 @@
             document.getElementById('res-owner').value = "";
             document.getElementById('res-phone').value = "";
             document.getElementById('res-address').value = "";
+            document.getElementById('res-language').value = "en";
             document.getElementById('social-list').innerHTML = "";
             document.getElementById('schedule-list').innerHTML = "";
             document.getElementById('logo-preview-img').src = "";
@@ -645,6 +654,7 @@
                 phone: resData?.phone || "",
                 address: resData?.address || "",
                 logo_url: resData?.logo_url || "",
+                language: resData?.language || "en",
                 social_media: resData?.social_media || [],
                 schedule: resData?.schedule || []
             };
@@ -669,6 +679,7 @@
             document.getElementById('res-owner').value = mergedInfo.owner_name;
             document.getElementById('res-phone').value = mergedInfo.phone;
             document.getElementById('res-address').value = mergedInfo.address;
+            document.getElementById('res-language').value = mergedInfo.language || "en";
 
             if (mergedInfo.logo_url) {
                 const img = document.getElementById('logo-preview-img');
@@ -777,6 +788,7 @@
                 phone: document.getElementById('res-phone').value,
                 address: document.getElementById('res-address').value,
                 logo_url: (logoUrlOriginal && !logoUrlOriginal.includes('restaurantInfo.html')) ? logoUrlOriginal : null,
+                language: document.getElementById('res-language').value || "en",
                 social_media: socials,
                 schedule: schedule,
                 updated_at: new Date().toISOString()
