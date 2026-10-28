@@ -698,7 +698,7 @@
                 phone: resData?.phone || "",
                 address: resData?.address || "",
                 logo_url: resData?.logo_url || "",
-                language: resData?.language || "en",
+                language: resData?.language || localStorage.getItem('menutech_restaurant_language') || "en",
                 social_media: resData?.social_media || [],
                 schedule: resData?.schedule || []
             };
@@ -825,6 +825,9 @@
                 hours: item.querySelector('.schedule-hours-input')?.value || item.querySelector('input[type="text"]:last-of-type')?.value || ''
             }));
 
+            const selectedLang = document.getElementById('res-language').value || "en";
+            localStorage.setItem('menutech_restaurant_language', selectedLang);
+
             const payload = {
                 user_id: activeOwnerId,
                 name: document.getElementById('res-name').value,
@@ -832,13 +835,20 @@
                 phone: document.getElementById('res-phone').value,
                 address: document.getElementById('res-address').value,
                 logo_url: (logoUrlOriginal && !logoUrlOriginal.includes('restaurantInfo.html')) ? logoUrlOriginal : null,
-                language: document.getElementById('res-language').value || "en",
+                language: selectedLang,
                 social_media: socials,
                 schedule: schedule,
                 updated_at: new Date().toISOString()
             };
 
-            const { error } = await sb.from('menutech_restaurants').upsert(payload);
+            let { error } = await sb.from('menutech_restaurants').upsert(payload);
+
+            if (error && (error.message || '').includes("'language' column")) {
+                console.warn("MT: PostgREST schema cache missing 'language' column, retrying without language column...");
+                delete payload.language;
+                const retryRes = await sb.from('menutech_restaurants').upsert(payload);
+                error = retryRes.error;
+            }
 
             if (error) {
                 showToast("Error saving info: " + error.message, "error");
