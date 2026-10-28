@@ -4,6 +4,7 @@ import '../models/order_model.dart';
 import '../models/unified_item.dart';
 import '../services/supabase_service.dart';
 import '../services/print_service.dart';
+import '../services/language_service.dart';
 
 class OrderDetailScreen extends StatelessWidget {
   const OrderDetailScreen({super.key});
@@ -297,11 +298,17 @@ class _OrderDetailViewState extends State<OrderDetailView> {
   Widget build(BuildContext context) {
     final item = widget.item;
 
-    if (item.entryType == EntryType.order) {
-      return _buildOrderView(item);
-    } else {
-      return _buildReservationView(item);
-    }
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.instance.currentLanguage,
+      builder: (context, lang, child) {
+        final isEs = lang == 'es';
+        if (item.entryType == EntryType.order) {
+          return _buildOrderView(item, isEs);
+        } else {
+          return _buildReservationView(item, isEs);
+        }
+      },
+    );
   }
 
   bool _hasOrderActions(UnifiedItem item) {
@@ -314,8 +321,8 @@ class _OrderDetailViewState extends State<OrderDetailView> {
     return s == 'pending' || s == 'confirmed' || s == 'ready' || s == 'finished';
   }
 
-  Widget _buildOrderView(UnifiedItem item) {
-    final actionButtons = _buildOrderActionButtons(item);
+  Widget _buildOrderView(UnifiedItem item, bool isEs) {
+    final actionButtons = _buildOrderActionButtons(item, isEs);
     final hasActions = _hasOrderActions(item);
 
     return Column(
@@ -343,7 +350,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
                 ElevatedButton.icon(
                   onPressed: () => _showPrintDialog(item),
                   icon: const Icon(Icons.print),
-                  label: const Text("PRINT TICKET"),
+                  label: Text(isEs ? "IMPRIMIR TICKET" : "PRINT TICKET"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFF9533),
                     foregroundColor: Colors.white,
@@ -351,19 +358,19 @@ class _OrderDetailViewState extends State<OrderDetailView> {
                   ),
                 ),
                 const Divider(height: 40),
-                _buildInfoRow("Phone", item.customerPhone),
-                if (item.customerEmail != null) _buildInfoRow("Email", item.customerEmail!),
-                _buildInfoRow("Type", item.orderType.toUpperCase()),
-                _buildInfoRow("Payment", item.paymentMethod ?? 'N/A'),
-                if (item.address != null) _buildInfoRow("Address", item.address!),
-                if (item.reference != null) _buildInfoRow("Reference", item.reference!),
+                _buildInfoRow(isEs ? "Teléfono" : "Phone", item.customerPhone),
+                if (item.customerEmail != null) _buildInfoRow(isEs ? "Correo" : "Email", item.customerEmail!),
+                _buildInfoRow(isEs ? "Tipo" : "Type", item.orderType.toUpperCase()),
+                _buildInfoRow(isEs ? "Pago" : "Payment", item.paymentMethod ?? 'N/A'),
+                if (item.address != null) _buildInfoRow(isEs ? "Dirección" : "Address", item.address!),
+                if (item.reference != null) _buildInfoRow(isEs ? "Referencia" : "Reference", item.reference!),
                 if (item.customerNotes != null) ...[
                   const SizedBox(height: 10),
-                  const Text("Customer Notes:", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFFF9533))),
+                  Text(isEs ? "Notas del Cliente:" : "Customer Notes:", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFFF9533))),
                   Text("\"${item.customerNotes}\"", style: const TextStyle(fontStyle: FontStyle.italic)),
                 ],
                 const SizedBox(height: 30),
-                const Text("Order Items", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                Text(isEs ? "Artículos del Pedido" : "Order Items", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 10),
                 Container(
                   decoration: BoxDecoration(
@@ -411,9 +418,11 @@ class _OrderDetailViewState extends State<OrderDetailView> {
     );
   }
 
-  Widget _buildReservationView(UnifiedItem item) {
-    final actionButtons = _buildReservationActionButtons(item);
+  Widget _buildReservationView(UnifiedItem item, bool isEs) {
+    final actionButtons = _buildReservationActionButtons(item, isEs);
     final hasActions = _hasReservationActions(item);
+
+    final guestsVal = isEs ? "${item.partySize} Personas" : "${item.partySize} People";
 
     return Column(
       children: [
@@ -437,19 +446,19 @@ class _OrderDetailViewState extends State<OrderDetailView> {
                   ],
                 ),
                 const Divider(height: 40),
-                _buildInfoRow("Guests", "${item.partySize} People", color: const Color(0xFF8B5CF6)),
-                _buildInfoRow("Date", item.reservationDate ?? 'N/A'),
-                _buildInfoRow("Time Slot", item.reservationTime ?? 'N/A'),
-                _buildInfoRow("Phone", item.customerPhone),
-                if (item.customerEmail != null) _buildInfoRow("Email", item.customerEmail!),
+                _buildInfoRow(isEs ? "Huéspedes" : "Guests", guestsVal, color: const Color(0xFF8B5CF6)),
+                _buildInfoRow(isEs ? "Fecha" : "Date", item.reservationDate ?? 'N/A'),
+                _buildInfoRow(isEs ? "Horario" : "Time Slot", item.reservationTime ?? 'N/A'),
+                _buildInfoRow(isEs ? "Teléfono" : "Phone", item.customerPhone),
+                if (item.customerEmail != null) _buildInfoRow(isEs ? "Correo" : "Email", item.customerEmail!),
                 if (item.comments != null) ...[
                   const SizedBox(height: 10),
-                  const Text("Special Requests / Comments:", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF8B5CF6))),
+                  Text(isEs ? "Solicitudes Especiales / Comentarios:" : "Special Requests / Comments:", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF8B5CF6))),
                   Text("\"${item.comments}\"", style: const TextStyle(fontStyle: FontStyle.italic)),
                 ],
                 if (item.preorderItems.isNotEmpty) ...[
                   const SizedBox(height: 30),
-                  const Text("Pre-ordered Food & Drinks", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text(isEs ? "Comida y Bebidas Pre-ordenadas" : "Pre-ordered Food & Drinks", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   Container(
                     decoration: BoxDecoration(
@@ -467,7 +476,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text("Total", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                    Text(item.totalAmount > 0 ? "\$${item.totalAmount.toStringAsFixed(2)}" : "Standard Booking",
+                    Text(item.totalAmount > 0 ? "\$${item.totalAmount.toStringAsFixed(2)}" : (isEs ? "Reserva Estándar" : "Standard Booking"),
                       style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF8B5CF6))),
                   ],
                 ),
@@ -561,7 +570,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
     );
   }
 
-  Widget _buildOrderActionButtons(UnifiedItem item) {
+  Widget _buildOrderActionButtons(UnifiedItem item, bool isEs) {
     if (_isUpdating) return const Center(child: CircularProgressIndicator());
 
     if (item.status == 'pending') {
@@ -571,7 +580,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
             child: ElevatedButton(
               onPressed: () => _updateOrderStatus(item.id, 'rejected'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-              child: const Text("REJECT"),
+              child: Text(isEs ? "RECHAZAR" : "REJECT"),
             ),
           ),
           const SizedBox(width: 16),
@@ -579,7 +588,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
             child: ElevatedButton(
               onPressed: () => _updateOrderStatus(item.id, 'accepted'),
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF9533), foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-              child: const Text("ACCEPT"),
+              child: Text(isEs ? "ACEPTAR" : "ACCEPT"),
             ),
           ),
         ],
@@ -592,7 +601,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
         child: ElevatedButton(
           onPressed: () => _updateOrderStatus(item.id, 'finished'),
           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF9533), foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-          child: const Text("READY"),
+          child: Text(isEs ? "LISTO" : "READY"),
         ),
       );
     }
@@ -603,7 +612,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
         child: ElevatedButton(
           onPressed: () => _updateOrderStatus(item.id, 'delivered'),
           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF9533), foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-          child: const Text("MARK AS DELIVERED"),
+          child: Text(isEs ? "MARCAR ENTREGADO" : "MARK AS DELIVERED"),
         ),
       );
     }
@@ -611,7 +620,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
     return Container();
   }
 
-  Widget _buildReservationActionButtons(UnifiedItem item) {
+  Widget _buildReservationActionButtons(UnifiedItem item, bool isEs) {
     if (_isUpdating) return const Center(child: CircularProgressIndicator());
 
     final s = item.status.toLowerCase();
@@ -623,7 +632,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
             child: ElevatedButton(
               onPressed: () => _updateResStatus(item.id, 'rejected'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-              child: const Text("REJECT"),
+              child: Text(isEs ? "RECHAZAR" : "REJECT"),
             ),
           ),
           const SizedBox(width: 16),
@@ -631,7 +640,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
             child: ElevatedButton(
               onPressed: () => _updateResStatus(item.id, 'ready'),
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6), foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-              child: const Text("ACCEPT"),
+              child: Text(isEs ? "ACEPTAR" : "ACCEPT"),
             ),
           ),
         ],
@@ -645,7 +654,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
             child: ElevatedButton(
               onPressed: () => _updateResStatus(item.id, 'cancelled'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-              child: const Text("CANCELÓ"),
+              child: Text(isEs ? "CANCELÓ" : "CANCELLED"),
             ),
           ),
           const SizedBox(width: 16),
@@ -653,7 +662,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
             child: ElevatedButton(
               onPressed: () => _updateResStatus(item.id, 'attended'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-              child: const Text("ASISTIÓ"),
+              child: Text(isEs ? "ASISTIÓ" : "ATTENDED"),
             ),
           ),
         ],

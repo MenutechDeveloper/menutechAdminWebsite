@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/supabase_service.dart';
+import '../services/language_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -39,120 +40,127 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final bool isPrivileged = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'].contains(role);
     final String restaurantName = _profile?['username'] ?? 'Restaurant';
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Image.network('https://menutech.io/assets/menutech.png', height: 45, errorBuilder: (c, e, s) => const Text('Menutech', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Outfit'))),
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: IconButton(
-              icon: const Icon(Icons.power_settings_new_rounded, color: Color(0xFFFF9533), size: 28),
-              onPressed: () async {
-                final confirmed = await _showLogoutDialog(context);
-                if (confirmed == true) {
-                  await SupabaseService().signOut();
-                  if (context.mounted) {
-                    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-                  }
-                }
-              },
-            ),
-          )
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF9533)))
-          : Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    restaurantName,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Outfit',
-                    ),
-                  ),
-                  const Text(
-                    'Welcome to your dashboard',
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
-                  const SizedBox(height: 30),
-                  Expanded(
-                    child: GridView.count(
-                      crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
-                      mainAxisSpacing: 20,
-                      crossAxisSpacing: 20,
-                      childAspectRatio: 2.5,
-                      padding: const EdgeInsets.only(bottom: 90),
-                      children: [
-                        if (isPrivileged)
-                          _buildBentoCard(
-                            context,
-                            title: 'Deluxe Website',
-                            description: 'Customize your gallery and manage domain content.',
-                            icon: Icons.web_outlined,
-                            route: '/placeholder',
-                          ),
-                        if (isPrivileged)
-                          _buildBentoCard(
-                            context,
-                            title: 'Template Web',
-                            description: 'Customize and export your professional website.',
-                            icon: Icons.language_outlined,
-                            route: '/placeholder',
-                          ),
-                        _buildBentoCard(
-                          context,
-                          title: 'My Menu',
-                          description: 'Create and manage digital menus.',
-                          icon: Icons.restaurant_menu_outlined,
-                          route: '/menus',
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.instance.currentLanguage,
+      builder: (context, lang, child) {
+        final isEs = lang == 'es';
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Image.network('https://menutech.io/assets/menutech.png', height: 45, errorBuilder: (c, e, s) => const Text('Menutech', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Outfit'))),
+            centerTitle: true,
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: IconButton(
+                  icon: const Icon(Icons.power_settings_new_rounded, color: Color(0xFFFF9533), size: 28),
+                  onPressed: () async {
+                    final confirmed = await _showLogoutDialog(context, isEs);
+                    if (confirmed == true) {
+                      await SupabaseService().signOut();
+                      if (context.mounted) {
+                        Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                      }
+                    }
+                  },
+                ),
+              )
+            ],
+          ),
+          body: _isLoading
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF9533)))
+              : Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        restaurantName,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Outfit',
                         ),
-                        _buildBentoCard(
-                          context,
-                          title: 'Orders',
-                          description: 'Manage incoming restaurant orders in real-time.',
-                          icon: Icons.shopping_bag_outlined,
-                          route: '/orders',
+                      ),
+                      Text(
+                        isEs ? 'Bienvenido a tu panel' : 'Welcome to your dashboard',
+                        style: const TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
+                      const SizedBox(height: 30),
+                      Expanded(
+                        child: GridView.count(
+                          crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
+                          mainAxisSpacing: 20,
+                          crossAxisSpacing: 20,
+                          childAspectRatio: 2.5,
+                          padding: const EdgeInsets.only(bottom: 90),
+                          children: [
+                            if (isPrivileged)
+                              _buildBentoCard(
+                                context,
+                                title: isEs ? 'Sitio Web Deluxe' : 'Deluxe Website',
+                                description: isEs ? 'Personaliza tu galería y administra el contenido del dominio.' : 'Customize your gallery and manage domain content.',
+                                icon: Icons.web_outlined,
+                                route: '/placeholder',
+                              ),
+                            if (isPrivileged)
+                              _buildBentoCard(
+                                context,
+                                title: isEs ? 'Plantilla Web' : 'Template Web',
+                                description: isEs ? 'Personaliza y exporta tu sitio web profesional.' : 'Customize and export your professional website.',
+                                icon: Icons.language_outlined,
+                                route: '/placeholder',
+                              ),
+                            _buildBentoCard(
+                              context,
+                              title: isEs ? 'Mi Menú' : 'My Menu',
+                              description: isEs ? 'Crea y administra tus menús digitales.' : 'Create and manage digital menus.',
+                              icon: Icons.restaurant_menu_outlined,
+                              route: '/menus',
+                            ),
+                            _buildBentoCard(
+                              context,
+                              title: isEs ? 'Pedidos' : 'Orders',
+                              description: isEs ? 'Administra los pedidos entrantes del restaurante en tiempo real.' : 'Manage incoming restaurant orders in real-time.',
+                              icon: Icons.shopping_bag_outlined,
+                              route: '/orders',
+                            ),
+                            _buildBentoCard(
+                              context,
+                              title: isEs ? 'Ajustes de Impresora' : 'Printer Settings',
+                              description: isEs ? 'Configura y administra tus impresoras Epson.' : 'Configure and manage your Epson printers.',
+                              icon: Icons.print_outlined,
+                              route: '/printer-settings',
+                            ),
+                          ],
                         ),
-                        _buildBentoCard(
-                          context,
-                          title: 'Printer Settings',
-                          description: 'Configure and manage your Epson printers.',
-                          icon: Icons.print_outlined,
-                          route: '/printer-settings',
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
+        );
+      },
     );
   }
 
-  Future<bool?> _showLogoutDialog(BuildContext context) {
+  Future<bool?> _showLogoutDialog(BuildContext context, bool isEs) {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Colors.white,
-        title: const Text(
-          'Sign Out',
-          style: TextStyle(
+        title: Text(
+          isEs ? 'Cerrar Sesión' : 'Sign Out',
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             fontFamily: 'Outfit',
             color: Color(0xFF2D2D2D),
           ),
         ),
-        content: const Text(
-          'Are you sure you want to sign out?',
-          style: TextStyle(
+        content: Text(
+          isEs ? '¿Estás seguro de que deseas cerrar sesión?' : 'Are you sure you want to sign out?',
+          style: const TextStyle(
             fontSize: 14,
             color: Color(0xFF4A5568),
           ),
@@ -161,7 +169,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              isEs ? 'Cancelar' : 'Cancel',
               style: TextStyle(
                 color: Colors.grey.shade700,
                 fontWeight: FontWeight.bold,
@@ -170,9 +178,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Sign Out',
-              style: TextStyle(
+            child: Text(
+              isEs ? 'Cerrar Sesión' : 'Sign Out',
+              style: const TextStyle(
                 color: Color(0xFFFF9533),
                 fontWeight: FontWeight.bold,
               ),

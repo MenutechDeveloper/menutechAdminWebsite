@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config.dart';
+import 'services/language_service.dart';
 import 'screens/login_screen.dart';
+import 'screens/language_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/orders_screen.dart';
 import 'screens/order_detail_screen.dart';
@@ -17,6 +19,8 @@ void main() async {
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
   );
+
+  await LanguageService.instance.init();
 
   runApp(const MenutechAdminApp());
 }
@@ -52,6 +56,7 @@ class MenutechAdminApp extends StatelessWidget {
         '/order-detail': (context) => const OrderDetailScreen(),
         '/printer-settings': (context) => const PrinterSettingsScreen(),
         '/menus': (context) => const MenuEditorScreen(),
+        '/language': (context) => const LanguageScreen(),
       },
     );
   }
