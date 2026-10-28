@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/unified_item.dart';
 import '../services/supabase_service.dart';
+import '../services/language_service.dart';
 import 'order_detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -140,85 +141,97 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     final userId = _supabase.currentUser?.id;
     if (userId == null) return const Scaffold(body: Center(child: Text("Not logged in")));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Orders & Reservations", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          labelColor: const Color(0xFFFF9533),
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: const Color(0xFFFF9533),
-          tabs: const [
-            Tab(text: "Pending"),
-            Tab(text: "In Process"),
-            Tab(text: "Ready"),
-            Tab(text: "History"),
-          ],
-        ),
-      ),
-      body: StreamBuilder<List<UnifiedItem>>(
-        stream: _combinedController.stream,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
-          if (!snapshot.hasData && _ordersList.isEmpty && _resList.isEmpty) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFFFF9533)));
-          }
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.instance.currentLanguage,
+      builder: (context, lang, child) {
+        final isEs = lang == 'es';
+        final titleText = isEs ? "Pedidos y Reservaciones" : "Orders & Reservations";
+        final tabPending = isEs ? "Pendientes" : "Pending";
+        final tabInProcess = isEs ? "En Proceso" : "In Process";
+        final tabReady = isEs ? "Listo" : "Ready";
+        final tabHistory = isEs ? "Historial" : "History";
 
-          final allItems = snapshot.data ?? [..._ordersList, ..._resList];
-
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth > 720) {
-                return Row(
-                  children: [
-                    SizedBox(
-                      width: 350,
-                      child: _buildTabViews(allItems),
-                    ),
-                    const VerticalDivider(width: 1, color: Color(0xFFF8E8D8)),
-                    Expanded(
-                      child: _selectedItem == null
-                        ? const Center(child: Text("Select an entry to view details"))
-                        : OrderDetailView(
-                            item: allItems.firstWhere(
-                              (i) => i.id == _selectedItem!.id && i.entryType == _selectedItem!.entryType,
-                              orElse: () => _selectedItem!
-                            ),
-                            isTablet: true,
-                            onStatusChanged: (targetTab) {
-                              setState(() {});
-                              _tabController.animateTo(targetTab);
-                            },
-                          ),
-                    ),
-                  ],
-                );
-              } else {
-                return _buildTabViews(allItems);
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(titleText, style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
+            bottom: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              labelColor: const Color(0xFFFF9533),
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: const Color(0xFFFF9533),
+              tabs: [
+                Tab(text: tabPending),
+                Tab(text: tabInProcess),
+                Tab(text: tabReady),
+                Tab(text: tabHistory),
+              ],
+            ),
+          ),
+          body: StreamBuilder<List<UnifiedItem>>(
+            stream: _combinedController.stream,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
+              if (!snapshot.hasData && _ordersList.isEmpty && _resList.isEmpty) {
+                return const Center(child: CircularProgressIndicator(color: Color(0xFFFF9533)));
               }
+
+              final allItems = snapshot.data ?? [..._ordersList, ..._resList];
+
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth > 720) {
+                    return Row(
+                      children: [
+                        SizedBox(
+                          width: 350,
+                          child: _buildTabViews(allItems, isEs),
+                        ),
+                        const VerticalDivider(width: 1, color: Color(0xFFF8E8D8)),
+                        Expanded(
+                          child: _selectedItem == null
+                            ? Center(child: Text(isEs ? "Selecciona un elemento para ver detalles" : "Select an entry to view details"))
+                            : OrderDetailView(
+                                item: allItems.firstWhere(
+                                  (i) => i.id == _selectedItem!.id && i.entryType == _selectedItem!.entryType,
+                                  orElse: () => _selectedItem!
+                                ),
+                                isTablet: true,
+                                onStatusChanged: (targetTab) {
+                                  setState(() {});
+                                  _tabController.animateTo(targetTab);
+                                },
+                              ),
+                        ),
+                      ],
+                    );
+                  } else {
+                    return _buildTabViews(allItems, isEs);
+                  }
+                },
+              );
             },
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildTabViews(List<UnifiedItem> allItems) {
+  Widget _buildTabViews(List<UnifiedItem> allItems, bool isEs) {
     return TabBarView(
       controller: _tabController,
       children: [
-        _buildItemList(allItems.where((i) => i.status == 'pending').toList()),
-        _buildItemList(allItems.where((i) => i.status == 'accepted' || i.status == 'preparing' || i.status == 'confirmed').toList()),
-        _buildItemList(allItems.where((i) => i.status == 'finished' || i.status == 'ready').toList()),
-        _buildItemList(allItems.where((i) => i.status == 'delivered' || i.status == 'rejected' || i.status == 'cancelled' || i.status == 'attended').toList()),
+        _buildItemList(allItems.where((i) => i.status == 'pending').toList(), isEs),
+        _buildItemList(allItems.where((i) => i.status == 'accepted' || i.status == 'preparing' || i.status == 'confirmed').toList(), isEs),
+        _buildItemList(allItems.where((i) => i.status == 'finished' || i.status == 'ready').toList(), isEs),
+        _buildItemList(allItems.where((i) => i.status == 'delivered' || i.status == 'rejected' || i.status == 'cancelled' || i.status == 'attended').toList(), isEs),
       ],
     );
   }
 
-  Widget _buildItemList(List<UnifiedItem> items) {
+  Widget _buildItemList(List<UnifiedItem> items, bool isEs) {
     if (items.isEmpty) {
-      return const Center(child: Text("No entries in this stage", style: TextStyle(color: Colors.grey)));
+      return Center(child: Text(isEs ? "No hay elementos en esta sección" : "No entries in this stage", style: const TextStyle(color: Colors.grey)));
     }
 
     return ListView.separated(
@@ -232,7 +245,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
         final isPending = item.status == 'pending';
 
         final badgeColor = isOrd ? const Color(0xFFFF9533) : const Color(0xFF8B5CF6);
-        final badgeText = isOrd ? 'Order' : 'Reservation';
+        final badgeText = isOrd ? (isEs ? 'Pedido' : 'Order') : (isEs ? 'Reserva' : 'Reservation');
         final badgeIcon = isOrd ? Icons.shopping_bag_outlined : Icons.calendar_month_outlined;
 
         final cardWidget = Card(
@@ -336,7 +349,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                             children: [
                               Icon(Icons.people_alt_outlined, size: 12, color: badgeColor),
                               const SizedBox(width: 3),
-                              Text("${item.partySize} guests", style: TextStyle(fontSize: 11, color: Colors.grey[800], fontWeight: FontWeight.w600)),
+                              Text(isEs ? "${item.partySize} pers." : "${item.partySize} guests", style: TextStyle(fontSize: 11, color: Colors.grey[800], fontWeight: FontWeight.w600)),
                             ],
                           ),
                         ],
