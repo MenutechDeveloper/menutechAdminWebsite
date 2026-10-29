@@ -316,38 +316,38 @@
         .mt-clock-btn.confirm:hover { transform: translateY(-2px); filter: brightness(1.05); }
 
         .orange-lang-dropdown {
-            background: var(--orange);
+            background: linear-gradient(135deg, #ff9533 0%, #e07a1e 100%);
             color: #ffffff;
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: 800;
             font-size: 0.85rem;
-            padding: 10px 20px;
+            padding: 10px 38px 10px 20px;
             border-radius: 20px;
             border: none;
             outline: none;
             cursor: pointer;
             box-shadow: 0 8px 25px rgba(255, 149, 51, 0.35);
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             text-transform: uppercase;
             letter-spacing: 1px;
             appearance: none;
             -webkit-appearance: none;
             -moz-appearance: none;
-            padding-right: 36px;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 12px center;
+            background-position: right 14px center;
         }
         .orange-lang-dropdown:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 30px rgba(255, 149, 51, 0.45);
-            filter: brightness(1.05);
+            box-shadow: 0 12px 30px rgba(255, 149, 51, 0.5);
+            filter: brightness(1.08);
         }
         .orange-lang-dropdown option {
             background: var(--card);
             color: var(--text);
             font-weight: 700;
             text-transform: none;
+            padding: 10px;
         }
 
         @media (max-width: 768px) { .dashboard-layout { flex-direction: column; } .sidebar-container { position: relative; top: 0; transform: none !important; width: 100%; margin-bottom: 20px; } .sidebar { width: 100%; height: auto; } header { flex-direction: column; gap: 15px; } header > div:last-child { position: static !important; transform: none !important; } }
@@ -487,6 +487,10 @@
         };
 
         document.addEventListener('DOMContentLoaded', async () => {
+            // Apply language immediately from local cache to prevent any dropdown flicker
+            const cachedLang = localStorage.getItem('menutech_restaurant_language') || 'en';
+            updateLanguageDropdownText(cachedLang);
+
             initTheme();
             initEvents();
             checkSession();
