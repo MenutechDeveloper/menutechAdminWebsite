@@ -62,11 +62,15 @@ class LanguageService {
       final user = SupabaseService().currentUser;
       if (user != null) {
         final now = DateTime.now().toIso8601String();
-        await SupabaseService().client.from('menutech_restaurants').upsert({
-          'user_id': user.id,
-          'language': lang,
-          'updated_at': now,
-        }, onConflict: 'user_id');
+        try {
+          await SupabaseService().client.from('menutech_restaurants').upsert({
+            'user_id': user.id,
+            'language': lang,
+            'updated_at': now,
+          }, onConflict: 'user_id');
+        } catch (dbErr) {
+          debugPrint('Notice: Could not persist language to menutech_restaurants ($dbErr). Saved locally.');
+        }
       }
     } catch (e) {
       debugPrint('Error saving language: $e');
