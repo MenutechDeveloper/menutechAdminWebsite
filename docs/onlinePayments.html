@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoría de Pagos en Línea | Menutech</title>
+    <script src="authGuard.js"></script>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #059669;
+            --error: #dc2626;
+            --info: #2563eb;
+            --warning: #d97706;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
+
+        .container { width: 100%; max-width: 1240px; margin: 0 auto; padding: 80px 24px; animation: fadeIn 1s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        header { text-align: center; margin-bottom: 30px; }
+        .logo-main { width: 100%; max-width: 240px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
+
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
+        #top-nav > * { pointer-events: auto; }
+
+        /* Premium User Pill */
+        #user-display-pill {
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; min-width: 220px; justify-content: flex-start;
+        }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
+
+        #user-display-pill.admin-glow {
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
+
+        #user-display-pill.dev-glow {
+            background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
+
+        #user-display-pill #user-name, #user-display-pill #user-role-label { color: var(--text); transition: color 0.3s; }
+
+        @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
+        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .pill-menu {
+            position: absolute; top: calc(100% + 12px); right: 0; background: var(--card) !important; border: 1px solid var(--border);
+            border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
+        }
+        #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .pill-menu-item {
+            padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text);
+            display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none;
+        }
+        .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
+        .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+
+        .theme-switch {
+            width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); pointer-events: auto;
+        }
+        .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
+
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
+        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 8px; }
+        .stat-card label { font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card .value { font-size: 1.6rem; font-weight: 800; color: var(--text); font-family: 'Outfit', sans-serif; }
+        .stat-card .subtext { font-size: 0.75rem; color: var(--text-dim); }
+
+        /* Main Card */
+        .config-card { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 36px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 15px; }
+        .card-header h2 { font-family: 'Outfit'; font-size: 1.6rem; font-weight: 700; color: var(--text); }
+
+        /* Filter Controls */
+        .filter-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 24px; background: var(--input); padding: 20px; border-radius: 20px; border: 1px solid var(--border); }
+        .filter-group { display: flex; flex-direction: column; gap: 6px; }
+        .filter-group label { font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; }
+        .filter-group select, .filter-group input { width: 100%; padding: 12px 16px; border-radius: 14px; background: var(--card); border: 1px solid var(--border); color: var(--text); font-size: 0.85rem; font-family: inherit; }
+
+        /* Table */
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 20px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+        th { background: var(--input); padding: 16px; font-weight: 800; color: var(--orange); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        td { padding: 16px; border-bottom: 1px solid var(--border); color: var(--text); white-space: nowrap; }
+        tr:last-child td { border-bottom: none; }
+
+        .status-pill { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+        .status-pill.succeeded { background: rgba(5, 150, 105, 0.12); color: var(--success); border: 1px solid rgba(5, 150, 105, 0.3); }
+        .status-pill.pending { background: rgba(217, 119, 6, 0.12); color: var(--warning); border: 1px solid rgba(217, 119, 6, 0.3); }
+        .status-pill.failed { background: rgba(220, 38, 38, 0.12); color: var(--error); border: 1px solid rgba(220, 38, 38, 0.3); }
+        .status-pill.refunded { background: rgba(37, 99, 235, 0.12); color: var(--info); border: 1px solid rgba(37, 99, 235, 0.3); }
+
+        .btn-action { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; border-radius: 14px; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; }
+        .btn-primary { background: var(--orange); color: #fff; }
+        .btn-primary:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast { min-width: 320px; max-width: 440px; padding: 18px 24px; border-radius: 24px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.9rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1), toastFadeOut 0.5s 5.5s forwards; line-height: 1.4; }
+        .toast.success { border-left: 6px solid var(--success); }
+        .toast.error { border-left: 6px solid var(--error); }
+        .toast.warning { border-left: 6px solid var(--orange); }
+        @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastFadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
+
+    <div id="top-nav" class="hidden">
+        <div><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="theme-switch" id="theme-toggle">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+            <div id="user-display-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div class="pill-info">
+                    <div id="user-name">&nbsp;</div>
+                    <div id="user-role-label">&nbsp;</div>
+                </div>
+                <div class="pill-menu">
+                    <a href="index.html" class="pill-menu-item">Home</a>
+                    <div class="pill-menu-item danger" onclick="logout()">Logout</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container hidden" id="main-app">
+        <header>
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
+            <p style="font-weight: 700; color: var(--orange); font-size: 0.85rem; letter-spacing: 1px;">Historial y Auditoría Global de Pagos Stripe Connect</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <label>Volumen Total Procesado</label>
+                <div class="value" id="stat-total-volume">$0.00 MXN</div>
+                <div class="subtext">Suma total acumulada en Stripe</div>
+            </div>
+            <div class="stat-card">
+                <label>Operaciones Exitosas</label>
+                <div class="value" id="stat-total-count">0</div>
+                <div class="subtext">Transacciones completadas</div>
+            </div>
+            <div class="stat-card">
+                <label>Total Reembolsado</label>
+                <div class="value" id="stat-total-refunded">$0.00 MXN</div>
+                <div class="subtext">Devoluciones procesadas</div>
+            </div>
+            <div class="stat-card">
+                <label>Restaurantes Activos</label>
+                <div class="value" id="stat-active-restaurants">0</div>
+                <div class="subtext">Recibiendo pagos en línea</div>
+            </div>
+        </div>
+
+        <div class="config-card">
+            <div class="card-header">
+                <div>
+                    <h2>Historial de Transacciones</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Consulta pagos en línea recibidos por todos los restaurantes directamente en sus cuentas conectadas de Stripe.</p>
+                </div>
+                <button class="btn-action btn-primary" onclick="loadPaymentLogs()">Refrescar Datos</button>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label>Restaurante</label>
+                    <select id="filter-restaurant" onchange="applyFilters()">
+                        <option value="">Todos los Restaurantes</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Estado de Pago</label>
+                    <select id="filter-status" onchange="applyFilters()">
+                        <option value="">Todos los Estados</option>
+                        <option value="succeeded">Exitoso</option>
+                        <option value="pending">Pendiente</option>
+                        <option value="failed">Fallido</option>
+                        <option value="refunded">Reembolsado</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Fecha Desde</label>
+                    <input type="date" id="filter-date-from" onchange="applyFilters()">
+                </div>
+                <div class="filter-group">
+                    <label>Fecha Hasta</label>
+                    <input type="date" id="filter-date-to" onchange="applyFilters()">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha y Hora</th>
+                            <th>Restaurante</th>
+                            <th>ID Pago Stripe</th>
+                            <th>Pedido / Reservación</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                            <th>Reembolsado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table-body">
+                        <tr><td colspan="7" style="text-align:center; padding: 30px;">Cargando historial de pagos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase as sb } from './supabase.js';
+
+        let user = null, userRole = null;
+        let rawLogs = [];
+        let profilesMap = new Map();
+
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const msg = document.createElement('div');
+            msg.textContent = message;
+            toast.appendChild(msg); container.appendChild(toast);
+            setTimeout(() => toast.remove(), 6000);
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
+            initEvents();
+            checkSession();
+        });
+
+        async function checkSession() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { location.href = 'index.html'; return; }
+            user = session.user;
+
+            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            userRole = (profile?.role || 'OWNER').trim().toUpperCase();
+
+            const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'];
+            if (!privilegedRoles.includes(userRole)) {
+                showToast("Acceso restringido: esta auditoría global es exclusiva para administradores.", "error");
+                setTimeout(() => location.href = 'index.html', 2000);
+                return;
+            }
+
+            showApp(profile);
+            await fetchProfilesMap();
+            await loadPaymentLogs();
+        }
+
+        function showApp(profile) {
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('top-nav').classList.remove('hidden');
+            const pill = document.getElementById('user-display-pill');
+
+            if (profile) {
+                document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
+                document.getElementById('user-role-label').textContent = profile.role || 'User';
+                const role = (profile.role || 'user').trim().toUpperCase();
+                if (role === 'ADMIN') pill.classList.add('admin-glow');
+                else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
+            }
+        }
+
+        async function fetchProfilesMap() {
+            const { data } = await sb.from('profiles').select('id, username, domain');
+            if (data) {
+                const selectEl = document.getElementById('filter-restaurant');
+                selectEl.innerHTML = '<option value="">Todos los Restaurantes</option>';
+
+                data.forEach(p => {
+                    profilesMap.set(p.id, p);
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = `${p.username || 'User'} (${p.domain || p.id.substring(0,8)})`;
+                    selectEl.appendChild(opt);
+                });
+            }
+        }
+
+        window.loadPaymentLogs = async () => {
+            showToast("Cargando historial de pagos...", "warning");
+
+            const { data, error } = await sb
+                .from('menutech_payment_logs')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                showToast("Error cargando auditoría: " + error.message, "error");
+                return;
+            }
+
+            rawLogs = data || [];
+            applyFilters();
+            showToast("Datos de pagos actualizados.", "success");
+        };
+
+        window.applyFilters = () => {
+            const restId = document.getElementById('filter-restaurant').value;
+            const status = document.getElementById('filter-status').value;
+            const dateFrom = document.getElementById('filter-date-from').value;
+            const dateTo = document.getElementById('filter-date-to').value;
+
+            let filtered = rawLogs.filter(log => {
+                if (restId && log.user_id !== restId) return false;
+                if (status && (log.status || '').toLowerCase() !== status.toLowerCase()) return false;
+                if (dateFrom && new Date(log.created_at) < new Date(dateFrom)) return false;
+                if (dateTo && new Date(log.created_at) > new Date(dateTo + 'T23:59:59')) return false;
+                return true;
+            });
+
+            renderStats(filtered);
+            renderLogsTable(filtered);
+        };
+
+        function renderStats(logs) {
+            let totalVol = 0;
+            let countSucceeded = 0;
+            let totalRefunded = 0;
+            const activeRests = new Set();
+            const restTotalsMap = new Map();
+
+            logs.forEach(l => {
+                const status = (l.status || '').toLowerCase();
+                const amt = parseFloat(l.amount) || 0;
+
+                if (l.user_id) activeRests.add(l.user_id);
+
+                if (status === 'succeeded') {
+                    totalVol += amt;
+                    countSucceeded++;
+
+                    const currRestVol = restTotalsMap.get(l.user_id) || 0;
+                    restTotalsMap.set(l.user_id, currRestVol + amt);
+                } else if (status === 'refunded') {
+                    const refAmt = parseFloat(l.payload?.amount_refunded ? l.payload.amount_refunded / 100 : amt) || amt;
+                    totalRefunded += refAmt;
+                }
+            });
+
+            document.getElementById('stat-total-volume').textContent = `$${totalVol.toFixed(2)}`;
+            document.getElementById('stat-total-count').textContent = countSucceeded;
+            document.getElementById('stat-total-refunded').textContent = `$${totalRefunded.toFixed(2)}`;
+            document.getElementById('stat-active-restaurants').textContent = activeRests.size;
+
+            renderPerRestaurantTotals(restTotalsMap);
+        }
+
+        function renderPerRestaurantTotals(restTotalsMap) {
+            let container = document.getElementById('per-restaurant-breakdown');
+            if (!container) {
+                const parent = document.querySelector('.stats-grid');
+                container = document.createElement('div');
+                container.id = 'per-restaurant-breakdown';
+                container.style.cssText = 'grid-column: 1 / -1; background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px; margin-bottom: 10px;';
+                parent.parentNode.insertBefore(container, parent.nextSibling);
+            }
+
+            if (!restTotalsMap.size) {
+                container.innerHTML = '<h3 style="font-size: 1rem; color: var(--orange); font-family:\'Outfit\'; margin-bottom:10px;">Totales Procesados por Restaurante</h3><p style="font-size:0.85rem; color:var(--text-dim);">No hay registros para mostrar totales por restaurante.</p>';
+                return;
+            }
+
+            let html = '<h3 style="font-size: 1rem; color: var(--orange); font-family:\'Outfit\'; margin-bottom:15px;">Totales Procesados por Restaurante</h3><div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">';
+            restTotalsMap.forEach((vol, restId) => {
+                const profile = profilesMap.get(restId);
+                const restName = profile ? `${profile.username}` : restId.substring(0,8);
+                const domainStr = profile?.domain ? ` (${profile.domain})` : '';
+                html += `<div style="background:var(--input); border:1px solid var(--border); border-radius:16px; padding:15px;">
+                    <div style="font-weight:700; font-size:0.85rem;">${restName}${domainStr}</div>
+                    <div style="font-size:1.2rem; font-weight:800; color:var(--orange); font-family:\'Outfit\'; margin-top:5px;">$${vol.toFixed(2)}</div>
+                </div>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function renderLogsTable(logs) {
+            const tbody = document.getElementById('logs-table-body');
+
+            if (!logs || !logs.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 30px; color: var(--text-dim);">No se encontraron registros de pagos con los filtros seleccionados.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map(l => {
+                const profile = profilesMap.get(l.user_id);
+                const restName = profile ? `${profile.username} (${profile.domain || ''})` : l.user_id.substring(0,8);
+                const dateStr = l.created_at ? new Date(l.created_at).toLocaleString('es-MX') : '-';
+                const status = (l.status || 'pending').toLowerCase();
+                const amt = parseFloat(l.amount) || 0;
+                const currency = (l.currency || 'usd').toUpperCase();
+
+                let relatedStr = '-';
+                if (l.order_id) relatedStr = `Pedido #${l.order_id.substring(0,8)}`;
+                else if (l.reservation_id) relatedStr = `Reserva #${l.reservation_id.substring(0,8)}`;
+
+                let refundStr = '$0.00';
+                if (status === 'refunded') {
+                    const refAmt = parseFloat(l.payload?.amount_refunded ? l.payload.amount_refunded / 100 : amt);
+                    refundStr = `$${refAmt.toFixed(2)} ${currency}`;
+                }
+
+                return `<tr>
+                    <td>${dateStr}</td>
+                    <td><strong>${restName}</strong></td>
+                    <td><code style="font-size:0.75rem; background: var(--input); padding: 4px 8px; border-radius: 8px;">${l.stripe_event_id || l.payload?.payment_intent || l.id.substring(0,8)}</code></td>
+                    <td>${relatedStr}</td>
+                    <td><strong>$${amt.toFixed(2)} ${currency}</strong></td>
+                    <td><span class="status-pill ${status}">${status}</span></td>
+                    <td>${refundStr}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function initTheme() {
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            document.getElementById('theme-toggle').onclick = () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            };
+        }
+
+        function initEvents() {
+            const pill = document.getElementById('user-display-pill');
+            pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
+            document.addEventListener('click', () => pill.classList.remove('active'));
+            window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
+        }
+    </script>
+    <script src="i18n.js"></script>
+    <script src="chatbot.js"></script>
+</body>
+</html>
