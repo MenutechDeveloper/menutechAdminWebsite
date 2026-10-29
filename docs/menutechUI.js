@@ -1702,6 +1702,22 @@ class MenutechPlatformOrders extends HTMLElement {
         if (data.config && data.config.restaurant_name && document.title.includes('Menutech')) {
             document.title = data.config.restaurant_name;
         }
+
+        // Check if restaurant has Stripe online payments enabled
+        this.onlinePaymentEnabled = false;
+        if (data.user_id && this.supabase) {
+            try {
+                const { data: stripeAcc } = await this.supabase
+                    .from('menutech_stripe_accounts')
+                    .select('charges_enabled')
+                    .eq('user_id', data.user_id)
+                    .maybeSingle();
+                if (stripeAcc && stripeAcc.charges_enabled) {
+                    this.onlinePaymentEnabled = true;
+                }
+            } catch(e) {}
+        }
+
         this.renderMenu();
     }
 
@@ -2648,17 +2664,19 @@ class MenutechPlatformOrders extends HTMLElement {
                                 <div class="payment-option active" data-pay="cash">
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-                                        CASH
+                                        PAY AT RESTAURANT
                                     </div>
                                     <div class="option-check">✓</div>
                                 </div>
-                                <div class="payment-option" data-pay="transfer">
-                                    <div style="display:flex; align-items:center; gap:12px;">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-                                        BANK TRANSFER
+                                ${this.onlinePaymentEnabled ? `
+                                    <div class="payment-option" data-pay="online">
+                                        <div style="display:flex; align-items:center; gap:12px;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                                            ONLINE PAYMENT (STRIPE)
+                                        </div>
+                                        <div class="option-check">✓</div>
                                     </div>
-                                    <div class="option-check">✓</div>
-                                </div>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -2869,6 +2887,7 @@ class MenutechPlatformOrders extends HTMLElement {
                 delivery_date: date,
                 delivery_time: time,
                 payment_method: payment,
+                payment_status: payment === 'online' ? 'unpaid' : 'unpaid',
                 status: 'pending'
             };
 
@@ -3005,6 +3024,10 @@ class MenutechPlatformOrders extends HTMLElement {
         if (status === 'delivered') currentMsg = "Order delivered. Enjoy!";
         if (status === 'rejected') currentMsg = "Order rejected: " + (order.rejection_reason || "Not specified");
 
+        const isOnlinePayment = order.payment_method === 'online';
+        const isPaid = order.payment_status === 'paid';
+        const canPayOnline = isOnlinePayment && !isPaid && status !== 'rejected' && status !== 'delivered';
+
         popupContent.innerHTML = `
             <style>
                 .tracking-container { padding: 40px 30px; font-family: 'Plus Jakarta Sans', sans-serif; text-align: center; }
@@ -3018,8 +3041,11 @@ class MenutechPlatformOrders extends HTMLElement {
                 .step.active .step-label { color: #1a1c1e; font-weight: 800; }
                 .step.error .step-dot { border-color: #ef4444; background: #ef4444; }
                 .step-label { color: #94a3b8; font-weight: 600; font-size: 0.95rem; }
-                .order-id { margin-top: 40px; font-size: 0.7rem; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; }
-                .btn-track-done { margin-top: 30px; width: 100%; padding: 16px; border-radius: 16px; border: none; background: #1a1c1e; color: #fff; font-weight: 700; cursor: pointer; }
+                .order-id { margin-top: 30px; font-size: 0.7rem; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; }
+                .btn-track-done { margin-top: 20px; width: 100%; padding: 16px; border-radius: 16px; border: none; background: #1a1c1e; color: #fff; font-weight: 700; cursor: pointer; }
+                .btn-pay-now { margin-top: 20px; width: 100%; padding: 18px; border-radius: 16px; border: none; background: #ff9533; color: #fff; font-weight: 800; font-size: 1rem; cursor: pointer; text-transform: uppercase; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); transition: 0.3s; }
+                .btn-pay-now:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); }
+                .paid-badge { margin-top: 20px; background: rgba(5, 150, 105, 0.12); color: #059669; border: 1px solid rgba(5, 150, 105, 0.3); padding: 12px 20px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 8px; }
             </style>
             <div class="tracking-container">
                 <button class="close-popup" style="right: 20px; top: 20px;">
@@ -3037,6 +3063,12 @@ class MenutechPlatformOrders extends HTMLElement {
                     `).join('')}
                 </div>
 
+                ${isPaid ? `
+                    <div><div class="paid-badge">✅ Payment Confirmed (Paid)</div></div>
+                ` : canPayOnline ? `
+                    <button class="btn-pay-now" id="btn-pay-online-now">PAY ONLINE NOW • $${(parseFloat(order.total || 0)).toFixed(2)}</button>
+                ` : ''}
+
                 <div class="order-id">Order ID: ${order.id.substring(0, 8)}</div>
                 ${(status === 'delivered' || status === 'rejected') ? `
                     <button class="btn-track-done" id="track-finish-btn">ORDER AGAIN</button>
@@ -3045,6 +3077,36 @@ class MenutechPlatformOrders extends HTMLElement {
                 `}
             </div>
         `;
+
+        const payNowBtn = popupContent.querySelector('#btn-pay-online-now');
+        if (payNowBtn) {
+            payNowBtn.onclick = async () => {
+                payNowBtn.textContent = 'PREPARING PAYMENT...';
+                payNowBtn.disabled = true;
+
+                try {
+                    const response = await this.supabase.functions.invoke('stripe-payment', {
+                        body: {
+                            action: 'create_order_checkout_session',
+                            order_id: order.id,
+                            origin_url: window.location.origin
+                        }
+                    });
+
+                    if (response.data && response.data.url) {
+                        window.location.href = response.data.url;
+                    } else if (response.data && response.data.error) {
+                        this.showModal('PAYMENT ERROR', response.data.error);
+                        payNowBtn.textContent = `PAY ONLINE NOW • $${(parseFloat(order.total || 0)).toFixed(2)}`;
+                        payNowBtn.disabled = false;
+                    }
+                } catch(e) {
+                    this.showModal('ERROR', 'Failed to initiate payment session: ' + e.message);
+                    payNowBtn.textContent = `PAY ONLINE NOW • $${(parseFloat(order.total || 0)).toFixed(2)}`;
+                    payNowBtn.disabled = false;
+                }
+            };
+        }
 
         popupContent.querySelector('.close-popup').onclick = () => {
             this.popupRoot.getElementById('popup').style.display = 'none';
@@ -4143,6 +4205,8 @@ class MenutechReservations extends HTMLElement {
             } else {
                 title.textContent = this.t('confirmed_title');
                 const preorderTotal = this.preorderCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const isPaid = this.reservationPaymentStatus === 'paid';
+                const canPayOnline = preorderTotal > 0 && !isPaid && this.reservationId;
 
                 body.innerHTML = `
                     <div style="text-align:center; padding:10px 0;">
@@ -4169,9 +4233,45 @@ class MenutechReservations extends HTMLElement {
                             ` : ''}
                         </div>
 
-                        <button class="btn-action" id="btn-res-done">${this.t('done_btn')}</button>
+                        ${isPaid ? `
+                            <div style="margin-bottom:20px; background:rgba(5, 150, 105, 0.12); color:#059669; border:1px solid rgba(5, 150, 105, 0.3); padding:12px 20px; border-radius:20px; font-weight:800; font-size:0.85rem; text-transform:uppercase; display:inline-block;">✅ PRE-ORDER PAID</div>
+                        ` : canPayOnline ? `
+                            <button class="btn-action" id="btn-pay-res-now" style="margin-bottom:15px;">PAY PRE-ORDER NOW • $${preorderTotal.toFixed(2)}</button>
+                        ` : ''}
+
+                        <button class="btn-action btn-secondary" id="btn-res-done">${this.t('done_btn')}</button>
                     </div>
                 `;
+
+                const payResBtn = body.querySelector('#btn-pay-res-now');
+                if (payResBtn) {
+                    payResBtn.onclick = async () => {
+                        payResBtn.textContent = 'PREPARING PAYMENT...';
+                        payResBtn.disabled = true;
+
+                        try {
+                            const response = await this.supabase.functions.invoke('stripe-payment', {
+                                body: {
+                                    action: 'create_reservation_checkout_session',
+                                    reservation_id: this.reservationId,
+                                    origin_url: window.location.origin
+                                }
+                            });
+
+                            if (response.data && response.data.url) {
+                                window.location.href = response.data.url;
+                            } else if (response.data && response.data.error) {
+                                this.showModal(this.t('res_error_title'), response.data.error);
+                                payResBtn.textContent = `PAY PRE-ORDER NOW • $${preorderTotal.toFixed(2)}`;
+                                payResBtn.disabled = false;
+                            }
+                        } catch(e) {
+                            this.showModal(this.t('res_error_title'), 'Error: ' + e.message);
+                            payResBtn.textContent = `PAY PRE-ORDER NOW • $${preorderTotal.toFixed(2)}`;
+                            payResBtn.disabled = false;
+                        }
+                    };
+                }
 
                 body.querySelector('#btn-res-done').onclick = () => this.handleDoneRedirect();
             }
@@ -4644,8 +4744,9 @@ class MenutechReservations extends HTMLElement {
                 table: 'menutech_reservations',
                 filter: 'id=eq.' + resId
             }, (payload) => {
-                if (payload.new && payload.new.status) {
-                    this.reservationStatus = payload.new.status;
+                if (payload.new) {
+                    if (payload.new.status) this.reservationStatus = payload.new.status;
+                    if (payload.new.payment_status) this.reservationPaymentStatus = payload.new.payment_status;
                     if (this.step === 4) {
                         this.renderStep();
                     }

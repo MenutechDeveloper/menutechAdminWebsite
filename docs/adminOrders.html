@@ -176,10 +176,13 @@
         /* Distinct Type Badges on Cards */
         .type-badge {
             display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 800;
-            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; margin-right: 4px;
         }
         .type-badge.order { background: rgba(255, 149, 51, 0.12); color: var(--orange); border: 1px solid rgba(255, 149, 51, 0.25); }
         .type-badge.reservation { background: rgba(139, 92, 246, 0.12); color: var(--purple); border: 1px solid rgba(139, 92, 246, 0.25); }
+        .type-badge.paid { background: rgba(16, 185, 129, 0.12); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.25); }
+        .type-badge.unpaid { background: rgba(245, 158, 11, 0.12); color: var(--info); border: 1px solid rgba(245, 158, 11, 0.25); }
+        .type-badge.failed { background: rgba(220, 38, 38, 0.12); color: var(--error); border: 1px solid rgba(220, 38, 38, 0.25); }
 
         .order-card-compact .status-dot { width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 20px; right: 20px; }
         .order-card-compact.pending .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
@@ -689,6 +692,10 @@
             list.innerHTML = filtered.map(item => {
                 const isOrd = item.entryType === 'order';
                 const badgeLabel = isOrd ? '🛒 Order' : '📅 Reservation';
+                const isPaid = item.payment_status === 'paid';
+                const isOnline = item.payment_method === 'online';
+                const payBadgeHtml = isPaid ? '<span class="type-badge paid">💳 Paid</span>' : (isOnline ? '<span class="type-badge unpaid">💳 Online Pending</span>' : '');
+
                 const subDetails = isOrd
                     ? `${item.items.length} items • $${item.total.toFixed(2)}`
                     : `📅 ${item.reservation_date} • ⏰ ${item.reservation_time} • 👥 ${item.party_size} guests`;
@@ -696,7 +703,10 @@
                 return `
                     <div class="order-card-compact ${item.status} ${selectedItemId === item.id ? 'active' : ''}" onclick="selectItem('${item.id}')">
                         <div class="status-dot"></div>
-                        <span class="type-badge ${item.entryType}">${badgeLabel}</span>
+                        <div>
+                            <span class="type-badge ${item.entryType}">${badgeLabel}</span>
+                            ${payBadgeHtml}
+                        </div>
                         <h4>${item.customer_name}</h4>
                         <p>${subDetails}</p>
                         <span class="order-time">${new Date(item.created_at).toLocaleDateString()} ${new Date(item.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
@@ -739,7 +749,11 @@
 
             if (isOrd) {
                 const deliveryType = item.order_type === 'delivery' ? 'Delivery' : 'Pickup';
-                const paymentMethod = (item.payment_method || 'N/A').charAt(0).toUpperCase() + (item.payment_method || 'N/A').slice(1);
+                const rawPay = item.payment_method || 'cash';
+                const paymentMethod = rawPay === 'online' ? 'Online Payment (Stripe)' : (rawPay === 'cash' ? 'Pay at Restaurant / Cash' : rawPay.toUpperCase());
+                const payStatus = item.payment_status || 'unpaid';
+                const payStatusLabel = payStatus === 'paid' ? 'Paid' : (payStatus === 'pending' || payStatus === 'unpaid' ? 'Unpaid' : payStatus.toUpperCase());
+                const payStatusClass = payStatus === 'paid' ? 'accepted' : (payStatus === 'failed' ? 'rejected' : 'pending');
 
                 pane.innerHTML = `
                     <button class="close-details" onclick="closeDetails()">✕</button>
@@ -751,6 +765,7 @@
                         <div class="header-badges">
                             <span class="type-badge order">🛒 Order</span>
                             <div class="status-tag ${item.status}">${statusLabel}</div>
+                            <div class="status-tag ${payStatusClass}">💳 ${payStatusLabel}</div>
                         </div>
                     </div>
 
@@ -976,24 +991,26 @@
             }
 
             const itemIdx = unifiedItems.findIndex(i => i.id === id && i.entryType === 'order');
-            if (itemIdx !== -1) {
-                Object.assign(unifiedItems[itemIdx], updates);
+            const targetOrder = itemIdx !== -1 ? unifiedItems[itemIdx] : null;
+
+            if (targetOrder) {
+                Object.assign(targetOrder, updates);
                 updateCounts();
 
                 if (status === 'accepted' || status === 'preparing') {
                     switchTab('in_process');
                     selectedItemId = id;
                     renderList();
-                    renderDetails(unifiedItems[itemIdx]);
+                    renderDetails(targetOrder);
                 } else if (status === 'finished') {
                     switchTab('ready');
                     selectedItemId = id;
                     renderList();
-                    renderDetails(unifiedItems[itemIdx]);
-                    sendMailgunNotification(unifiedItems[itemIdx], 'order');
+                    renderDetails(targetOrder);
+                    sendMailgunNotification(targetOrder, 'order');
                 } else {
                     renderList();
-                    if (selectedItemId === id) renderDetails(unifiedItems[itemIdx]);
+                    if (selectedItemId === id) renderDetails(targetOrder);
                 }
             }
 
@@ -1004,6 +1021,16 @@
                 loadAllData();
             } else {
                 showToast(`Order marked as ${status}`);
+                // If accepted and online payment, prepare Stripe checkout session in background
+                if (status === 'accepted' && targetOrder && targetOrder.payment_method === 'online') {
+                    sb.functions.invoke('stripe-payment', {
+                        body: {
+                            action: 'create_order_checkout_session',
+                            order_id: id,
+                            origin_url: window.location.origin
+                        }
+                    }).catch(e => console.error("Error creating checkout session:", e));
+                }
             }
         };
 
