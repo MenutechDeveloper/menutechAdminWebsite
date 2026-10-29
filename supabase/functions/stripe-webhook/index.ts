@@ -160,6 +160,37 @@ serve(async (req: Request) => {
         payload: eventData
       });
 
+    } else if (eventType === "charge.refunded" || eventType === "payment_intent.refunded") {
+      const chargeOrIntent = eventData;
+      const metadata = chargeOrIntent.metadata || {};
+      const orderId = metadata.order_id;
+      const reservationId = metadata.reservation_id;
+      const userId = metadata.user_id || "00000000-0000-0000-0000-000000000000";
+      const amountRefunded = (chargeOrIntent.amount_refunded || chargeOrIntent.amount || 0) / 100;
+      const currency = chargeOrIntent.currency || "usd";
+
+      if (orderId) {
+        await supabaseAdmin.from("menutech_orders").update({ payment_status: "refunded" }).eq("id", orderId);
+        console.log(`Order ${orderId} marked as REFUNDED.`);
+      }
+
+      if (reservationId) {
+        await supabaseAdmin.from("menutech_reservations").update({ payment_status: "refunded" }).eq("id", reservationId);
+        console.log(`Reservation ${reservationId} marked as REFUNDED.`);
+      }
+
+      await supabaseAdmin.from("menutech_payment_logs").insert({
+        user_id: userId,
+        order_id: orderId || null,
+        reservation_id: reservationId || null,
+        event_type: eventType,
+        stripe_event_id: eventId,
+        amount: amountRefunded,
+        currency: currency,
+        status: "refunded",
+        payload: eventData
+      });
+
     } else if (eventType === "checkout.session.expired") {
       const session = eventData;
       const metadata = session.metadata || {};
