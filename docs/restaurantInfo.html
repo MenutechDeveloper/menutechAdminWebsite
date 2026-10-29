@@ -315,13 +315,18 @@
         .mt-clock-btn.confirm { background: var(--orange); color: #ffffff; box-shadow: 0 6px 18px rgba(255, 149, 51, 0.3); }
         .mt-clock-btn.confirm:hover { transform: translateY(-2px); filter: brightness(1.05); }
 
-        .orange-lang-dropdown {
+        /* Custom Language Dropdown */
+        .custom-lang-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .custom-lang-btn {
             background: linear-gradient(135deg, #ff9533 0%, #e07a1e 100%);
             color: #ffffff;
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: 800;
             font-size: 0.85rem;
-            padding: 10px 38px 10px 20px;
+            padding: 10px 20px;
             border-radius: 20px;
             border: none;
             outline: none;
@@ -330,24 +335,74 @@
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             text-transform: uppercase;
             letter-spacing: 1px;
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .orange-lang-dropdown:hover {
+        .custom-lang-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 12px 30px rgba(255, 149, 51, 0.5);
             filter: brightness(1.08);
         }
-        .orange-lang-dropdown option {
+        .custom-lang-arrow {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .custom-lang-wrapper.active .custom-lang-arrow {
+            transform: rotate(180deg);
+        }
+        .custom-lang-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            min-width: 160px;
             background: var(--card);
-            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 8px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            backdrop-filter: blur(20px);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(8px) scale(0.96);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 100;
+        }
+        .custom-lang-wrapper.active .custom-lang-menu {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+        .custom-lang-option {
+            padding: 12px 16px;
+            border-radius: 14px;
+            font-size: 0.85rem;
             font-weight: 700;
-            text-transform: none;
-            padding: 10px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .custom-lang-option:hover {
+            background: rgba(255, 149, 51, 0.12);
+            color: var(--orange);
+        }
+        .custom-lang-option.selected {
+            background: rgba(255, 149, 51, 0.15);
+            color: var(--orange);
+        }
+        .option-check {
+            width: 16px;
+            height: 16px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            color: var(--orange);
+        }
+        .custom-lang-option.selected .option-check {
+            opacity: 1;
         }
 
         @media (max-width: 768px) { .dashboard-layout { flex-direction: column; } .sidebar-container { position: relative; top: 0; transform: none !important; width: 100%; margin-bottom: 20px; } .sidebar { width: 100%; height: auto; } header { flex-direction: column; gap: 15px; } header > div:last-child { position: static !important; transform: none !important; } }
@@ -385,7 +440,30 @@
                 <p id="view-domain-title" style="font-weight: 700; color: var(--orange); font-size: 0.85rem; letter-spacing: 1px;"></p>
             </div>
             <div style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); z-index: 10;">
-                <select id="res-language" class="orange-lang-dropdown">
+                <div class="custom-lang-wrapper" id="custom-lang-wrapper">
+                    <button type="button" class="custom-lang-btn" id="custom-lang-btn">
+                        <span id="custom-lang-btn-text">ENGLISH</span>
+                        <svg class="custom-lang-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="custom-lang-menu" id="custom-lang-menu">
+                        <div class="custom-lang-option" data-lang="en">
+                            <span class="option-label">English</span>
+                            <svg class="option-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="custom-lang-option" data-lang="es">
+                            <span class="option-label">Spanish</span>
+                            <svg class="option-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <!-- Hidden native select element for backward compatibility -->
+                <select id="res-language" style="display: none !important;">
                     <option value="en">English</option>
                     <option value="es">Spanish</option>
                 </select>
@@ -662,11 +740,33 @@
 
         function updateLanguageDropdownText(lang) {
             const select = document.getElementById('res-language');
-            if (!select) return;
+            if (select) {
+                const isEs = lang === 'es';
+                select.options[0].text = isEs ? 'Inglés' : 'English';
+                select.options[1].text = isEs ? 'Español' : 'Spanish';
+                select.value = lang;
+            }
+
+            // Sync custom dropdown UI
+            const btnText = document.getElementById('custom-lang-btn-text');
             const isEs = lang === 'es';
-            select.options[0].text = isEs ? 'Inglés' : 'English';
-            select.options[1].text = isEs ? 'Español' : 'Spanish';
-            select.value = lang;
+
+            if (btnText) {
+                if (lang === 'es') {
+                    btnText.textContent = isEs ? 'ESPAÑOL' : 'SPANISH';
+                } else {
+                    btnText.textContent = isEs ? 'INGLÉS' : 'ENGLISH';
+                }
+            }
+
+            const enLabel = document.querySelector('.custom-lang-option[data-lang="en"] .option-label');
+            const esLabel = document.querySelector('.custom-lang-option[data-lang="es"] .option-label');
+            if (enLabel) enLabel.textContent = isEs ? 'Inglés' : 'English';
+            if (esLabel) esLabel.textContent = isEs ? 'Español' : 'Spanish';
+
+            document.querySelectorAll('.custom-lang-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.dataset.lang === lang);
+            });
         }
 
         async function loadRestaurantInfo() {
@@ -1326,6 +1426,37 @@
                 langSelect.onchange = (e) => {
                     updateLanguageDropdownText(e.target.value);
                 };
+            }
+
+            // Custom Language Dropdown Events
+            const customLangWrapper = document.getElementById('custom-lang-wrapper');
+            const customLangBtn = document.getElementById('custom-lang-btn');
+
+            if (customLangBtn && customLangWrapper) {
+                customLangBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    customLangWrapper.classList.toggle('active');
+                };
+
+                document.querySelectorAll('.custom-lang-option').forEach(opt => {
+                    opt.onclick = (e) => {
+                        e.stopPropagation();
+                        const selectedLang = opt.dataset.lang;
+                        if (langSelect) {
+                            langSelect.value = selectedLang;
+                            langSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        } else {
+                            updateLanguageDropdownText(selectedLang);
+                        }
+                        customLangWrapper.classList.remove('active');
+                    };
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!customLangWrapper.contains(e.target)) {
+                        customLangWrapper.classList.remove('active');
+                    }
+                });
             }
 
             const dz = document.getElementById('logo-drop-zone'), fi = document.getElementById('logo-file-input');
