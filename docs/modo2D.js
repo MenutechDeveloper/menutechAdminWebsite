@@ -6,8 +6,11 @@
  */
 (function () {
     const STORAGE_KEY = 'menutech_modo_2d';
+    const MODE_3D_KEY = 'menutech_modo_3d';
     function is2DMode() {
-        return localStorage.getItem(STORAGE_KEY) !== 'false';
+        if (localStorage.getItem(MODE_3D_KEY) === 'true') return false;
+        if (localStorage.getItem(STORAGE_KEY) === 'false') return false;
+        return true;
     }
     function applyMode() {
         const mode2dActive = is2DMode();
@@ -22,7 +25,10 @@
             '../assets/img/modo2d.png',
             '../modo2d.png',
             '/assets/modo2d.png',
-            '/docs/assets/modo2d.png'
+            '/docs/assets/modo2d.png',
+            'https://menutech.io/docs/assets/modo2d.png',
+            'https://menutech.io/assets/modo2d.png',
+            'https://menutech.services/assets/img/modo2d.png'
         ].filter(Boolean);
         modelViewers.forEach((mv) => {
             const parent = mv.parentElement;
@@ -71,11 +77,13 @@
     }
     function enable2D() {
         localStorage.setItem(STORAGE_KEY, 'true');
+        localStorage.setItem(MODE_3D_KEY, 'false');
         applyMode();
         window.dispatchEvent(new CustomEvent('menutech-modo2d-changed', { detail: { mode2d: true } }));
     }
     function enable3D() {
         localStorage.setItem(STORAGE_KEY, 'false');
+        localStorage.setItem(MODE_3D_KEY, 'true');
         applyMode();
         window.dispatchEvent(new CustomEvent('menutech-modo2d-changed', { detail: { mode2d: false } }));
     }
