@@ -40,7 +40,17 @@
     // Dynamically inject modo2D.js if missing
     if (!document.querySelector('script[src*="modo2D.js"]')) {
         const m2dScript = document.createElement('script');
-        m2dScript.src = 'modo2D.js';
+        const chatbotScript = document.querySelector('script[src*="chatbot.js"]');
+        if (chatbotScript && chatbotScript.src) {
+            m2dScript.src = chatbotScript.src.replace('chatbot.js', 'modo2D.js');
+        } else {
+            m2dScript.src = 'modo2D.js';
+        }
+        m2dScript.onload = function () {
+            if (window.Modo2D && typeof window.Modo2D.applyMode === 'function') {
+                window.Modo2D.applyMode();
+            }
+        };
         document.head.appendChild(m2dScript);
     }
 
@@ -696,6 +706,9 @@
         </div>
     `;
     document.body.appendChild(botRoot);
+    if (window.Modo2D && typeof window.Modo2D.applyMode === 'function') {
+        window.Modo2D.applyMode();
+    }
 
     // --- STATE VARIABLES ---
     let chatHistory = [];
@@ -714,6 +727,7 @@
                 window.Modo2D.enable2D();
             } else {
                 localStorage.setItem('menutech_modo_2d', 'true');
+                localStorage.setItem('menutech_modo_3d', 'false');
             }
             return {
                 reply: "Está bien, cambiaré a modo plano."
@@ -725,6 +739,7 @@
                 window.Modo2D.enable3D();
             } else {
                 localStorage.setItem('menutech_modo_2d', 'false');
+                localStorage.setItem('menutech_modo_3d', 'true');
             }
             return {
                 reply: "¡Perfecto! Volveré a mi forma real."
