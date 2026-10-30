@@ -231,8 +231,8 @@
                     <div id="user-role-label">&nbsp;</div>
                 </div>
                 <div class="pill-menu">
-                    <a href="index.html" class="pill-menu-item">Home</a>
-                    <div class="pill-menu-item danger" onclick="logout()">Logout</div>
+                    <a href="index.html" class="pill-menu-item" id="lbl-pill-home">Home</a>
+                    <div class="pill-menu-item danger" id="lbl-pill-logout" onclick="logout()">Logout</div>
                 </div>
             </div>
         </div>
@@ -248,11 +248,11 @@
             <div class="sidebar-container hidden" id="sidebar-container">
                 <div class="sidebar" id="sidebar">
                     <div class="search-box">
-                        <label>Find Project</label>
+                        <label id="lbl-find-project-side">Find Project</label>
                         <input type="text" id="client-search" placeholder="Domain or Name...">
                         <div class="client-list" id="client-list"></div>
                         <div id="project-info" class="switcher-box hidden" style="width: 100%; margin: 0; padding-top: 15px; border-top: 1px solid var(--border); margin-top: auto;">
-                            <label>Active Project</label>
+                            <label id="lbl-active-project">Active Project</label>
                             <div id="active-project-name" style="font-weight: 700; padding: 12px; background: var(--input); border-radius: 14px; border: 1px solid var(--border); font-size: 0.8rem; margin-top: 8px;">None Selected</div>
                         </div>
                     </div>
@@ -264,31 +264,31 @@
                 <div class="config-card">
                     <div class="card-header">
                         <div>
-                            <h2>Stripe Connect Integration</h2>
-                            <p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Connect your Stripe account to receive online payments directly for customer orders and reservations.</p>
+                            <h2 id="lbl-stripe-integration-title">Stripe Integration</h2>
+                            <p id="lbl-stripe-integration-desc" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Connect your Stripe account to receive online payments directly for customer orders and reservations.</p>
                         </div>
                         <div id="account-status-badge" class="status-badge disconnected">Disconnected</div>
                     </div>
 
-                    <p style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6; margin-bottom: 24px;">
+                    <p id="lbl-stripe-express-text" style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6; margin-bottom: 24px;">
                         Menutech uses Stripe Connect Express to process online payments safely and securely. All bank account information, identity verification, and payouts are handled directly by Stripe. Menutech never collects or stores your bank credentials or secret keys.
                     </p>
 
                     <div class="info-grid">
                         <div class="info-box">
-                            <label>Stripe Account ID</label>
+                            <label id="lbl-acc-id">Stripe Account ID</label>
                             <div class="value" id="val-account-id">Not Connected</div>
                         </div>
                         <div class="info-box">
-                            <label>Details Submitted</label>
+                            <label id="lbl-details-sub">Details Submitted</label>
                             <div class="value" id="val-details-submitted">❌ No</div>
                         </div>
                         <div class="info-box">
-                            <label>Charges Enabled</label>
+                            <label id="lbl-charges-en">Charges Enabled</label>
                             <div class="value" id="val-charges-enabled">❌ No</div>
                         </div>
                         <div class="info-box">
-                            <label>Payouts Enabled</label>
+                            <label id="lbl-payouts-en">Payouts Enabled</label>
                             <div class="value" id="val-payouts-enabled">❌ No</div>
                         </div>
                     </div>
@@ -300,15 +300,15 @@
                         </button>
 
                         <button class="btn-action btn-secondary" id="btn-dashboard" onclick="openStripeDashboard()" style="display:none;">
-                            <span>Open Express Dashboard</span>
+                            <span id="lbl-btn-dashboard">Open Express Dashboard</span>
                         </button>
 
                         <button class="btn-action btn-secondary" onclick="checkAccountStatus()">
-                            <span>Refresh Status</span>
+                            <span id="lbl-btn-refresh-status">Refresh Status</span>
                         </button>
 
                         <button class="btn-action btn-danger" id="btn-disconnect" onclick="disconnectStripeAccount()" style="display:none; margin-left:auto;">
-                            <span>Disconnect Account</span>
+                            <span id="lbl-btn-disconnect">Disconnect Account</span>
                         </button>
                     </div>
 
@@ -316,47 +316,47 @@
                     <div class="movements-section">
                         <div class="movements-header">
                             <div>
-                                <h3>Movimientos e Historial de Pagos</h3>
-                                <p style="font-size: 0.8rem; color: var(--text-dim); margin-top:2px;">Transacciones y cobros procesados en línea para esta cuenta.</p>
+                                <h3 id="lbl-movements-title">Movements</h3>
+                                <p id="lbl-movements-desc" style="font-size: 0.8rem; color: var(--text-dim); margin-top:2px;">Transactions and charges processed online for this account.</p>
                             </div>
                             <div style="display: flex; gap: 10px;">
-                                <button class="btn-action btn-secondary" style="padding: 10px 18px; font-size: 0.8rem;" onclick="downloadCSVReport()">Descargar Reporte CSV</button>
-                                <button class="btn-action btn-secondary" style="padding: 10px 18px; font-size: 0.8rem;" onclick="loadRestaurantPaymentLogs()">Refrescar Movimientos</button>
+                                <button class="btn-action btn-secondary" style="padding: 10px 18px; font-size: 0.8rem;" id="lbl-btn-download-csv" onclick="downloadCSVReport()">Download CSV Report</button>
+                                <button class="btn-action btn-secondary" style="padding: 10px 18px; font-size: 0.8rem;" id="lbl-btn-refresh-logs" onclick="loadRestaurantPaymentLogs()">Refresh Movements</button>
                             </div>
                         </div>
 
                         <div class="stats-grid">
                             <div class="stat-box">
-                                <label>Total Recibido</label>
+                                <label id="lbl-stat-total-rec">Total Received</label>
                                 <div class="stat-val" id="res-stat-volume">$0.00</div>
                             </div>
                             <div class="stat-box">
-                                <label>Pagos Exitosos</label>
+                                <label id="lbl-stat-succ-pay">Successful Payments</label>
                                 <div class="stat-val" id="res-stat-count">0</div>
                             </div>
                             <div class="stat-box">
-                                <label>Total Reembolsado</label>
+                                <label id="lbl-stat-tot-ref">Total Refunded</label>
                                 <div class="stat-val" id="res-stat-refunded">$0.00</div>
                             </div>
                         </div>
 
                         <div class="filter-row">
                             <div class="filter-col">
-                                <label>Estado</label>
+                                <label id="lbl-filter-status">Status</label>
                                 <select id="res-filter-status" onchange="applyRestaurantFilters()">
-                                    <option value="">Todos</option>
-                                    <option value="succeeded">Exitoso</option>
-                                    <option value="pending">Pendiente</option>
-                                    <option value="failed">Fallido</option>
-                                    <option value="refunded">Reembolsado</option>
+                                    <option value="" id="opt-status-all">All</option>
+                                    <option value="succeeded" id="opt-status-succeeded">Succeeded</option>
+                                    <option value="pending" id="opt-status-pending">Pending</option>
+                                    <option value="failed" id="opt-status-failed">Failed</option>
+                                    <option value="refunded" id="opt-status-refunded">Refunded</option>
                                 </select>
                             </div>
                             <div class="filter-col">
-                                <label>Desde</label>
+                                <label id="lbl-filter-from">From</label>
                                 <input type="date" id="res-filter-from" onchange="applyRestaurantFilters()">
                             </div>
                             <div class="filter-col">
-                                <label>Hasta</label>
+                                <label id="lbl-filter-to">To</label>
                                 <input type="date" id="res-filter-to" onchange="applyRestaurantFilters()">
                             </div>
                         </div>
@@ -365,16 +365,16 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Fecha y Hora</th>
-                                        <th>ID Pago Stripe</th>
-                                        <th>Relacionado</th>
-                                        <th>Monto</th>
-                                        <th>Estado</th>
-                                        <th>Reembolsado</th>
+                                        <th id="th-date">Date & Time</th>
+                                        <th id="th-stripe-id">Stripe Payment ID</th>
+                                        <th id="th-related">Related</th>
+                                        <th id="th-amount">Amount</th>
+                                        <th id="th-status">Status</th>
+                                        <th id="th-refunded">Refunded</th>
                                     </tr>
                                 </thead>
                                 <tbody id="res-logs-body">
-                                    <tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-dim);">Cargando movimientos...</td></tr>
+                                    <tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-dim);" id="td-loading-logs">Loading movements...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -392,6 +392,199 @@
         let connectedAccountData = null;
         let allOwners = [];
         let rawRestaurantLogs = [];
+        let currentLang = 'en';
+
+        const I18N = {
+            en: {
+                stripeIntegrationTitle: "Stripe Integration",
+                stripeIntegrationDesc: "Connect your Stripe account to receive online payments directly for customer orders and reservations.",
+                stripeExpressText: "Menutech uses Stripe Connect Express to process online payments safely and securely. All bank account information, identity verification, and payouts are handled directly by Stripe. Menutech never collects or stores your bank credentials or secret keys.",
+                accId: "Stripe Account ID",
+                detailsSub: "Details Submitted",
+                chargesEn: "Charges Enabled",
+                payoutsEn: "Payouts Enabled",
+                btnConnect: "Connect with Stripe",
+                btnRecheckOnboarding: "Re-check Onboarding",
+                btnCompleteOnboarding: "Complete Onboarding",
+                btnDashboard: "Open Express Dashboard",
+                btnRefreshStatus: "Refresh Status",
+                btnDisconnect: "Disconnect Account",
+                movementsTitle: "Movements",
+                movementsDesc: "Transactions and charges processed online for this account.",
+                btnDownloadCsv: "Download CSV Report",
+                btnRefreshLogs: "Refresh Movements",
+                statTotalRec: "Total Received",
+                statSuccPay: "Successful Payments",
+                statTotRef: "Total Refunded",
+                filterStatus: "Status",
+                filterFrom: "From",
+                filterTo: "To",
+                optAll: "All",
+                optSucceeded: "Succeeded",
+                optPending: "Pending",
+                optFailed: "Failed",
+                optRefunded: "Refunded",
+                thDate: "Date & Time",
+                thStripeId: "Stripe Payment ID",
+                thRelated: "Related",
+                thAmount: "Amount",
+                thStatus: "Status",
+                thRefunded: "Refunded",
+                tdLoadingLogs: "Loading movements...",
+                tdNoLogs: "No movement records in this account.",
+                statusDisconnected: "Disconnected",
+                statusConnectedEnabled: "Connected & Enabled",
+                statusOnboardingPending: "Onboarding Pending",
+                notConnectedVal: "Not Connected",
+                yesVal: "✅ Yes",
+                noVal: "❌ No",
+                pendingVal: "❌ Pending",
+                activeVal: "✅ Active",
+                inactiveVal: "❌ Inactive",
+                findProjectSide: "Find Project",
+                activeProject: "Active Project",
+                noneSelected: "None Selected",
+                pillHome: "Home",
+                pillLogout: "Logout",
+                phDomainOrName: "Domain or Name...",
+                orderTag: "Order",
+                reservationTag: "Reservation",
+                toastReturnedStripe: "Returned from Stripe Onboarding. Updating account status...",
+                toastGeneratingLink: "Generating Stripe onboarding link...",
+                toastLinkError: "Failed to create onboarding link",
+                toastCheckingStatus: "Checking status with Stripe...",
+                toastStatusUpdated: "Account status updated!",
+                toastNoConnectedAcc: "No connected account found.",
+                toastOpeningDashboard: "Opening Express Dashboard...",
+                toastDisconnectConfirm: "Are you sure you want to disconnect this Stripe account? Online payments for your restaurant will be disabled.",
+                toastDisconnecting: "Disconnecting Stripe account...",
+                toastDisconnectedSucc: "Stripe account disconnected successfully.",
+                toastNoLogsExport: "No records to export.",
+                toastCsvDownloaded: "CSV report downloaded successfully."
+            },
+            es: {
+                stripeIntegrationTitle: "Integración con Stripe",
+                stripeIntegrationDesc: "Conecte su cuenta de Stripe para recibir pagos en línea directamente para pedidos y reservaciones.",
+                stripeExpressText: "Menutech utiliza Stripe Connect Express para procesar pagos en línea de forma segura. Toda la información bancaria, verificación de identidad y transferencias son gestionadas directamente por Stripe. Menutech nunca recopila ni almacena sus credenciales o claves secretas.",
+                accId: "ID de Cuenta Stripe",
+                detailsSub: "Detalles Enviados",
+                chargesEn: "Cobros Habilitados",
+                payoutsEn: "Transferencias Habilitadas",
+                btnConnect: "Conectar con Stripe",
+                btnRecheckOnboarding: "Recomprobar Registro",
+                btnCompleteOnboarding: "Completar Registro",
+                btnDashboard: "Abrir Panel Express",
+                btnRefreshStatus: "Actualizar Estado",
+                btnDisconnect: "Desconectar Cuenta",
+                movementsTitle: "Movimientos",
+                movementsDesc: "Transacciones y cobros procesados en línea para esta cuenta.",
+                btnDownloadCsv: "Descargar Reporte CSV",
+                btnRefreshLogs: "Refrescar Movimientos",
+                statTotalRec: "Total Recibido",
+                statSuccPay: "Pagos Exitosos",
+                statTotRef: "Total Reembolsado",
+                filterStatus: "Estado",
+                filterFrom: "Desde",
+                filterTo: "Hasta",
+                optAll: "Todos",
+                optSucceeded: "Exitoso",
+                optPending: "Pendiente",
+                optFailed: "Fallido",
+                optRefunded: "Reembolsado",
+                thDate: "Fecha y Hora",
+                thStripeId: "ID Pago Stripe",
+                thRelated: "Relacionado",
+                thAmount: "Monto",
+                thStatus: "Estado",
+                thRefunded: "Reembolsado",
+                tdLoadingLogs: "Cargando movimientos...",
+                tdNoLogs: "No hay registros de movimientos en esta cuenta.",
+                statusDisconnected: "Desconectado",
+                statusConnectedEnabled: "Conectado y Habilitado",
+                statusOnboardingPending: "Registro Pendiente",
+                notConnectedVal: "No Conectado",
+                yesVal: "✅ Sí",
+                noVal: "❌ No",
+                pendingVal: "❌ Pendiente",
+                activeVal: "✅ Activo",
+                inactiveVal: "❌ Inactivo",
+                findProjectSide: "Buscar Proyecto",
+                activeProject: "Proyecto Activo",
+                noneSelected: "Ninguno Seleccionado",
+                pillHome: "Inicio",
+                pillLogout: "Cerrar Sesión",
+                phDomainOrName: "Dominio o Nombre...",
+                orderTag: "Pedido",
+                reservationTag: "Reserva",
+                toastReturnedStripe: "Regresó del registro de Stripe. Actualizando estado de la cuenta...",
+                toastGeneratingLink: "Generando enlace de registro de Stripe...",
+                toastLinkError: "Error al generar enlace de registro",
+                toastCheckingStatus: "Verificando estado con Stripe...",
+                toastStatusUpdated: "¡Estado de la cuenta actualizado!",
+                toastNoConnectedAcc: "No se encontró ninguna cuenta conectada.",
+                toastOpeningDashboard: "Abriendo Panel Express...",
+                toastDisconnectConfirm: "¿Está seguro de que desea desconectar esta cuenta de Stripe? Se deshabilitarán los pagos en línea de su restaurante.",
+                toastDisconnecting: "Desconectando cuenta de Stripe...",
+                toastDisconnectedSucc: "Cuenta de Stripe desconectada con éxito.",
+                toastNoLogsExport: "No hay registros para exportar.",
+                toastCsvDownloaded: "Reporte CSV descargado con éxito."
+            }
+        };
+
+        function applyLanguage(lang) {
+            currentLang = (lang === 'es') ? 'es' : 'en';
+            const dict = I18N[currentLang];
+
+            // Static text updates
+            document.getElementById('lbl-stripe-integration-title').textContent = dict.stripeIntegrationTitle;
+            document.getElementById('lbl-stripe-integration-desc').textContent = dict.stripeIntegrationDesc;
+            document.getElementById('lbl-stripe-express-text').textContent = dict.stripeExpressText;
+            document.getElementById('lbl-acc-id').textContent = dict.accId;
+            document.getElementById('lbl-details-sub').textContent = dict.detailsSub;
+            document.getElementById('lbl-charges-en').textContent = dict.chargesEn;
+            document.getElementById('lbl-payouts-en').textContent = dict.payoutsEn;
+            document.getElementById('lbl-btn-dashboard').textContent = dict.btnDashboard;
+            document.getElementById('lbl-btn-refresh-status').textContent = dict.btnRefreshStatus;
+            document.getElementById('lbl-btn-disconnect').textContent = dict.btnDisconnect;
+            document.getElementById('lbl-movements-title').textContent = dict.movementsTitle;
+            document.getElementById('lbl-movements-desc').textContent = dict.movementsDesc;
+            document.getElementById('lbl-btn-download-csv').textContent = dict.btnDownloadCsv;
+            document.getElementById('lbl-btn-refresh-logs').textContent = dict.btnRefreshLogs;
+            document.getElementById('lbl-stat-total-rec').textContent = dict.statTotalRec;
+            document.getElementById('lbl-stat-succ-pay').textContent = dict.statSuccPay;
+            document.getElementById('lbl-stat-tot-ref').textContent = dict.statTotRef;
+            document.getElementById('lbl-filter-status').textContent = dict.filterStatus;
+            document.getElementById('lbl-filter-from').textContent = dict.filterFrom;
+            document.getElementById('lbl-filter-to').textContent = dict.filterTo;
+
+            document.getElementById('opt-status-all').textContent = dict.optAll;
+            document.getElementById('opt-status-succeeded').textContent = dict.optSucceeded;
+            document.getElementById('opt-status-pending').textContent = dict.optPending;
+            document.getElementById('opt-status-failed').textContent = dict.optFailed;
+            document.getElementById('opt-status-refunded').textContent = dict.optRefunded;
+
+            document.getElementById('th-date').textContent = dict.thDate;
+            document.getElementById('th-stripe-id').textContent = dict.thStripeId;
+            document.getElementById('th-related').textContent = dict.thRelated;
+            document.getElementById('th-amount').textContent = dict.thAmount;
+            document.getElementById('th-status').textContent = dict.thStatus;
+            document.getElementById('th-refunded').textContent = dict.thRefunded;
+
+            document.getElementById('lbl-find-project-side').textContent = dict.findProjectSide;
+            document.getElementById('sidebar-tab').textContent = dict.findProjectSide;
+            document.getElementById('lbl-active-project').textContent = dict.activeProject;
+            document.getElementById('client-search').placeholder = dict.phDomainOrName;
+            document.getElementById('lbl-pill-home').textContent = dict.pillHome;
+            document.getElementById('lbl-pill-logout').textContent = dict.pillLogout;
+
+            const activeProjEl = document.getElementById('active-project-name');
+            if (activeProjEl && activeProjEl.textContent === 'None Selected' || activeProjEl.textContent === 'Ninguno Seleccionado') {
+                activeProjEl.textContent = dict.noneSelected;
+            }
+
+            renderStripeUI();
+            applyRestaurantFilters();
+        }
 
         window.showToast = (message, type = 'success') => {
             const container = document.getElementById('toast-container');
@@ -459,7 +652,7 @@
             list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.username || 'User'}</span><span class="domain">${o.domain || o.id.substring(0,8)}</span></div>`).join('');
         }
 
-        window.switchContext = (ownerId) => {
+        window.switchContext = async (ownerId) => {
             const owner = allOwners.find(o => o.id === ownerId);
             if (!owner) return;
             activeOwnerId = ownerId; activeDomain = owner.domain;
@@ -467,9 +660,18 @@
             document.getElementById('active-project-name').textContent = owner.username || owner.email;
             document.getElementById('project-info').classList.remove('hidden');
             renderOwners(allOwners);
+
+            await syncLanguageForContext();
             loadStripeAccount();
             loadRestaurantPaymentLogs();
         };
+
+        async function syncLanguageForContext() {
+            if (!activeOwnerId) return;
+            const { data: resData } = await sb.from('menutech_restaurants').select('language').eq('user_id', activeOwnerId).maybeSingle();
+            const selectedLang = resData?.language || localStorage.getItem('menutech_restaurant_language') || 'en';
+            applyLanguage(selectedLang);
+        }
 
         async function showApp(profile) {
             document.getElementById('main-app').classList.remove('hidden');
@@ -485,10 +687,12 @@
                 else pill.classList.add('owner-glow');
             }
 
+            await syncLanguageForContext();
+
             // Check URL parameters for onboarding return/refresh
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('stripe_return') === 'true') {
-                showToast("Returned from Stripe Onboarding. Updating account status...", "warning");
+                showToast(I18N[currentLang].toastReturnedStripe, "warning");
             }
 
             await loadStripeAccount();
@@ -503,7 +707,6 @@
             renderStripeUI();
 
             if (data && data.stripe_account_id) {
-                // Background update check from Stripe API
                 checkAccountStatus(true);
             }
         }
@@ -517,15 +720,16 @@
             const btnConnectLabel = document.getElementById('btn-connect-label');
             const btnDashboard = document.getElementById('btn-dashboard');
             const btnDisconnect = document.getElementById('btn-disconnect');
+            const dict = I18N[currentLang];
 
             if (!connectedAccountData || !connectedAccountData.stripe_account_id) {
                 badge.className = 'status-badge disconnected';
-                badge.textContent = 'Disconnected';
-                valAccountId.textContent = 'Not Connected';
-                valDetails.textContent = '❌ No';
-                valCharges.textContent = '❌ No';
-                valPayouts.textContent = '❌ No';
-                btnConnectLabel.textContent = 'Connect with Stripe';
+                badge.textContent = dict.statusDisconnected;
+                valAccountId.textContent = dict.notConnectedVal;
+                valDetails.textContent = dict.noVal;
+                valCharges.textContent = dict.noVal;
+                valPayouts.textContent = dict.noVal;
+                btnConnectLabel.textContent = dict.btnConnect;
                 btnDashboard.style.display = 'none';
                 btnDisconnect.style.display = 'none';
                 return;
@@ -533,18 +737,18 @@
 
             const { stripe_account_id, details_submitted, charges_enabled, payouts_enabled } = connectedAccountData;
             valAccountId.textContent = stripe_account_id;
-            valDetails.textContent = details_submitted ? '✅ Yes' : '❌ Pending';
-            valCharges.textContent = charges_enabled ? '✅ Active' : '❌ Inactive';
-            valPayouts.textContent = payouts_enabled ? '✅ Active' : '❌ Inactive';
+            valDetails.textContent = details_submitted ? dict.yesVal : dict.pendingVal;
+            valCharges.textContent = charges_enabled ? dict.activeVal : dict.inactiveVal;
+            valPayouts.textContent = payouts_enabled ? dict.activeVal : dict.inactiveVal;
 
             if (charges_enabled && payouts_enabled) {
                 badge.className = 'status-badge connected';
-                badge.textContent = 'Connected & Enabled';
-                btnConnectLabel.textContent = 'Re-check Onboarding';
+                badge.textContent = dict.statusConnectedEnabled;
+                btnConnectLabel.textContent = dict.btnRecheckOnboarding;
             } else {
                 badge.className = 'status-badge pending';
-                badge.textContent = 'Onboarding Pending';
-                btnConnectLabel.textContent = 'Complete Onboarding';
+                badge.textContent = dict.statusOnboardingPending;
+                btnConnectLabel.textContent = dict.btnCompleteOnboarding;
             }
 
             btnDashboard.style.display = 'inline-flex';
@@ -554,7 +758,8 @@
         window.startStripeConnect = async () => {
             const btn = document.getElementById('btn-connect');
             btn.disabled = true;
-            showToast("Generating Stripe onboarding link...", "warning");
+            const dict = I18N[currentLang];
+            showToast(dict.toastGeneratingLink, "warning");
 
             try {
                 const response = await sb.functions.invoke('stripe-connect', {
@@ -565,7 +770,7 @@
                 });
 
                 if (response.error) {
-                    showToast("Error: " + (response.error.message || "Failed to create onboarding link"), "error");
+                    showToast("Error: " + (response.error.message || dict.toastLinkError), "error");
                 } else if (response.data && response.data.url) {
                     window.location.href = response.data.url;
                 } else if (response.data && response.data.error) {
@@ -580,7 +785,8 @@
 
         window.checkAccountStatus = async (silent = false) => {
             if (!activeOwnerId) return;
-            if (!silent) showToast("Checking status with Stripe...", "warning");
+            const dict = I18N[currentLang];
+            if (!silent) showToast(dict.toastCheckingStatus, "warning");
 
             try {
                 const response = await sb.functions.invoke('stripe-connect', {
@@ -593,21 +799,22 @@
                 if (response.data && response.data.account) {
                     connectedAccountData = response.data.account;
                     renderStripeUI();
-                    if (!silent) showToast("Account status updated!", "success");
+                    if (!silent) showToast(dict.toastStatusUpdated, "success");
                 } else if (response.data && response.data.not_connected) {
                     connectedAccountData = null;
                     renderStripeUI();
-                    if (!silent) showToast("No connected account found.", "warning");
+                    if (!silent) showToast(dict.toastNoConnectedAcc, "warning");
                 } else if (response.data && response.data.error && !silent) {
                     showToast("Error: " + response.data.error, "error");
                 }
             } catch (err) {
-                if (!silent) showToast("Error checking status: " + err.message, "error");
+                if (!silent) showToast("Error: " + err.message, "error");
             }
         };
 
         window.openStripeDashboard = async () => {
-            showToast("Opening Express Dashboard...", "warning");
+            const dict = I18N[currentLang];
+            showToast(dict.toastOpeningDashboard, "warning");
 
             try {
                 const response = await sb.functions.invoke('stripe-connect', {
@@ -628,11 +835,12 @@
         };
 
         window.disconnectStripeAccount = async () => {
-            if (!confirm("Are you sure you want to disconnect this Stripe account? Online payments for your restaurant will be disabled.")) {
+            const dict = I18N[currentLang];
+            if (!confirm(dict.toastDisconnectConfirm)) {
                 return;
             }
 
-            showToast("Disconnecting Stripe account...", "warning");
+            showToast(dict.toastDisconnecting, "warning");
 
             try {
                 const response = await sb.functions.invoke('stripe-connect', {
@@ -645,7 +853,7 @@
                 if (response.data && response.data.success) {
                     connectedAccountData = null;
                     renderStripeUI();
-                    showToast("Stripe account disconnected successfully.", "success");
+                    showToast(dict.toastDisconnectedSucc, "success");
                 } else if (response.data && response.data.error) {
                     showToast("Disconnect error: " + response.data.error, "error");
                 }
@@ -714,21 +922,23 @@
 
         function renderRestaurantLogsTable(logs) {
             const tbody = document.getElementById('res-logs-body');
+            const dict = I18N[currentLang];
 
             if (!logs || !logs.length) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-dim);">No hay registros de movimientos en esta cuenta.</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-dim);">${dict.tdNoLogs}</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = logs.map(l => {
-                const dateStr = l.created_at ? new Date(l.created_at).toLocaleString('es-MX') : '-';
+                const localeStr = currentLang === 'es' ? 'es-MX' : 'en-US';
+                const dateStr = l.created_at ? new Date(l.created_at).toLocaleString(localeStr) : '-';
                 const status = (l.status || 'pending').toLowerCase();
                 const amt = parseFloat(l.amount) || 0;
                 const currency = (l.currency || 'usd').toUpperCase();
 
                 let relatedStr = '-';
-                if (l.order_id) relatedStr = `Pedido #${l.order_id.substring(0,8)}`;
-                else if (l.reservation_id) relatedStr = `Reserva #${l.reservation_id.substring(0,8)}`;
+                if (l.order_id) relatedStr = `${dict.orderTag} #${l.order_id.substring(0,8)}`;
+                else if (l.reservation_id) relatedStr = `${dict.reservationTag} #${l.reservation_id.substring(0,8)}`;
 
                 let refundStr = '$0.00';
                 if (status === 'refunded') {
@@ -736,28 +946,36 @@
                     refundStr = `$${refAmt.toFixed(2)} ${currency}`;
                 }
 
+                let statusLabel = status;
+                if (status === 'succeeded') statusLabel = dict.optSucceeded;
+                else if (status === 'pending') statusLabel = dict.optPending;
+                else if (status === 'failed') statusLabel = dict.optFailed;
+                else if (status === 'refunded') statusLabel = dict.optRefunded;
+
                 return `<tr>
                     <td>${dateStr}</td>
                     <td><code style="font-size:0.75rem; background: var(--input); padding: 4px 8px; border-radius: 8px;">${l.stripe_event_id || l.payload?.payment_intent || l.id.substring(0,8)}</code></td>
                     <td>${relatedStr}</td>
                     <td><strong>$${amt.toFixed(2)} ${currency}</strong></td>
-                    <td><span class="status-pill ${status}">${status}</span></td>
+                    <td><span class="status-pill ${status}">${statusLabel}</span></td>
                     <td>${refundStr}</td>
                 </tr>`;
             }).join('');
         }
 
         window.downloadCSVReport = () => {
+            const dict = I18N[currentLang];
             if (!rawRestaurantLogs.length) {
-                showToast("No hay registros para exportar.", "warning");
+                showToast(dict.toastNoLogsExport, "warning");
                 return;
             }
 
-            const header = ["Fecha y Hora", "ID Evento / Intento Stripe", "Relacionado", "Monto", "Moneda", "Estado"];
+            const header = [dict.thDate, dict.thStripeId, dict.thRelated, dict.thAmount, "Moneda/Currency", dict.thStatus];
+            const localeStr = currentLang === 'es' ? 'es-MX' : 'en-US';
             const rows = rawRestaurantLogs.map(l => [
-                `"${l.created_at ? new Date(l.created_at).toLocaleString('es-MX') : ''}"`,
+                `"${l.created_at ? new Date(l.created_at).toLocaleString(localeStr) : ''}"`,
                 `"${l.stripe_event_id || l.id}"`,
-                `"${l.order_id ? 'Pedido #' + l.order_id : l.reservation_id ? 'Reserva #' + l.reservation_id : '-'}"`,
+                `"${l.order_id ? dict.orderTag + ' #' + l.order_id : l.reservation_id ? dict.reservationTag + ' #' + l.reservation_id : '-'}"`,
                 `"${l.amount || 0}"`,
                 `"${(l.currency || 'usd').toUpperCase()}"`,
                 `"${l.status || ''}"`
@@ -772,7 +990,7 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            showToast("Reporte CSV descargado con éxito.", "success");
+            showToast(dict.toastCsvDownloaded, "success");
         };
 
         function initTheme() {

@@ -1,0 +1,4 @@
+El botón "Conectar con Stripe" utiliza Stripe Connect Express para redirigir al usuario al flujo oficial de Stripe.
+Si el usuario ya tiene una cuenta existente, simplemente ingresa su correo registrado en el formulario para vincularla.
+Si no tiene cuenta, el mismo flujo lo guía paso a paso para completar sus datos y generar su nuevo ID de Stripe.
+No es necesario generarles el ID manualmente desde tu Stripe; el proceso automático asigna y vincula la cuenta de forma segura.
