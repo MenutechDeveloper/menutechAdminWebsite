@@ -8,7 +8,7 @@
     const STORAGE_KEY = 'menutech_modo_2d';
 
     function is2DMode(): boolean {
-        return localStorage.getItem(STORAGE_KEY) === 'true';
+        return localStorage.getItem(STORAGE_KEY) !== 'false';
     }
 
     function applyMode(): boolean {
