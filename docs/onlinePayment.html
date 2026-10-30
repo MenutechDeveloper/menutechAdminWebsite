@@ -171,6 +171,33 @@
 
         .actions-group { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 30px; }
 
+        /* Movements Section */
+        .movements-section { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 30px; }
+        .movements-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .movements-header h3 { font-family: 'Outfit'; font-size: 1.4rem; font-weight: 700; color: var(--text); }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 24px; }
+        .stat-box { background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 6px; }
+        .stat-box label { font-size: 0.65rem; font-weight: 800; color: var(--orange); text-transform: uppercase; }
+        .stat-box .stat-val { font-size: 1.3rem; font-weight: 800; color: var(--text); font-family: 'Outfit', sans-serif; }
+
+        .filter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; background: var(--input); padding: 16px; border-radius: 20px; border: 1px solid var(--border); }
+        .filter-col { display: flex; flex-direction: column; gap: 6px; }
+        .filter-col label { font-size: 0.65rem; font-weight: 800; color: var(--orange); text-transform: uppercase; }
+        .filter-col select, .filter-col input { padding: 10px 14px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); color: var(--text); font-size: 0.85rem; }
+
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 20px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+        th { background: var(--input); padding: 14px 16px; font-weight: 800; color: var(--orange); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        td { padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--text); white-space: nowrap; }
+        tr:last-child td { border-bottom: none; }
+
+        .status-pill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 16px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+        .status-pill.succeeded { background: rgba(5, 150, 105, 0.12); color: var(--success); border: 1px solid rgba(5, 150, 105, 0.3); }
+        .status-pill.pending { background: rgba(217, 119, 6, 0.12); color: var(--warning); border: 1px solid rgba(217, 119, 6, 0.3); }
+        .status-pill.failed { background: rgba(220, 38, 38, 0.12); color: var(--error); border: 1px solid rgba(220, 38, 38, 0.3); }
+        .status-pill.refunded { background: rgba(37, 99, 235, 0.12); color: var(--info); border: 1px solid rgba(37, 99, 235, 0.3); }
+
         #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
         .toast { min-width: 320px; max-width: 440px; padding: 18px 24px; border-radius: 24px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.9rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1), toastFadeOut 0.5s 5.5s forwards; line-height: 1.4; }
         .toast.success { border-left: 6px solid var(--success); }
@@ -284,6 +311,75 @@
                             <span>Disconnect Account</span>
                         </button>
                     </div>
+
+                    <!-- Individual Restaurant Payments History & Report Section -->
+                    <div class="movements-section">
+                        <div class="movements-header">
+                            <div>
+                                <h3>Movimientos e Historial de Pagos</h3>
+                                <p style="font-size: 0.8rem; color: var(--text-dim); margin-top:2px;">Transacciones y cobros procesados en línea para esta cuenta.</p>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-action btn-secondary" style="padding: 10px 18px; font-size: 0.8rem;" onclick="downloadCSVReport()">Descargar Reporte CSV</button>
+                                <button class="btn-action btn-secondary" style="padding: 10px 18px; font-size: 0.8rem;" onclick="loadRestaurantPaymentLogs()">Refrescar Movimientos</button>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <label>Total Recibido</label>
+                                <div class="stat-val" id="res-stat-volume">$0.00</div>
+                            </div>
+                            <div class="stat-box">
+                                <label>Pagos Exitosos</label>
+                                <div class="stat-val" id="res-stat-count">0</div>
+                            </div>
+                            <div class="stat-box">
+                                <label>Total Reembolsado</label>
+                                <div class="stat-val" id="res-stat-refunded">$0.00</div>
+                            </div>
+                        </div>
+
+                        <div class="filter-row">
+                            <div class="filter-col">
+                                <label>Estado</label>
+                                <select id="res-filter-status" onchange="applyRestaurantFilters()">
+                                    <option value="">Todos</option>
+                                    <option value="succeeded">Exitoso</option>
+                                    <option value="pending">Pendiente</option>
+                                    <option value="failed">Fallido</option>
+                                    <option value="refunded">Reembolsado</option>
+                                </select>
+                            </div>
+                            <div class="filter-col">
+                                <label>Desde</label>
+                                <input type="date" id="res-filter-from" onchange="applyRestaurantFilters()">
+                            </div>
+                            <div class="filter-col">
+                                <label>Hasta</label>
+                                <input type="date" id="res-filter-to" onchange="applyRestaurantFilters()">
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Fecha y Hora</th>
+                                        <th>ID Pago Stripe</th>
+                                        <th>Relacionado</th>
+                                        <th>Monto</th>
+                                        <th>Estado</th>
+                                        <th>Reembolsado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="res-logs-body">
+                                    <tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-dim);">Cargando movimientos...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -295,6 +391,7 @@
         let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
         let connectedAccountData = null;
         let allOwners = [];
+        let rawRestaurantLogs = [];
 
         window.showToast = (message, type = 'success') => {
             const container = document.getElementById('toast-container');
@@ -371,6 +468,7 @@
             document.getElementById('project-info').classList.remove('hidden');
             renderOwners(allOwners);
             loadStripeAccount();
+            loadRestaurantPaymentLogs();
         };
 
         async function showApp(profile) {
@@ -394,6 +492,7 @@
             }
 
             await loadStripeAccount();
+            await loadRestaurantPaymentLogs();
         }
 
         async function loadStripeAccount() {
@@ -553,6 +652,127 @@
             } catch (err) {
                 showToast("Exception: " + err.message, "error");
             }
+        };
+
+        // --- Individual Restaurant Payments History Logic ---
+        window.loadRestaurantPaymentLogs = async () => {
+            if (!activeOwnerId) return;
+
+            const { data, error } = await sb
+                .from('menutech_payment_logs')
+                .select('*')
+                .eq('user_id', activeOwnerId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Error loading payment logs:", error);
+                return;
+            }
+
+            rawRestaurantLogs = data || [];
+            applyRestaurantFilters();
+        };
+
+        window.applyRestaurantFilters = () => {
+            const status = document.getElementById('res-filter-status').value;
+            const fromDate = document.getElementById('res-filter-from').value;
+            const toDate = document.getElementById('res-filter-to').value;
+
+            let filtered = rawRestaurantLogs.filter(l => {
+                if (status && (l.status || '').toLowerCase() !== status.toLowerCase()) return false;
+                if (fromDate && new Date(l.created_at) < new Date(fromDate)) return false;
+                if (toDate && new Date(l.created_at) > new Date(toDate + 'T23:59:59')) return false;
+                return true;
+            });
+
+            renderRestaurantStats(filtered);
+            renderRestaurantLogsTable(filtered);
+        };
+
+        function renderRestaurantStats(logs) {
+            let totalVol = 0;
+            let countSucceeded = 0;
+            let totalRefunded = 0;
+
+            logs.forEach(l => {
+                const status = (l.status || '').toLowerCase();
+                const amt = parseFloat(l.amount) || 0;
+
+                if (status === 'succeeded') {
+                    totalVol += amt;
+                    countSucceeded++;
+                } else if (status === 'refunded') {
+                    const refAmt = parseFloat(l.payload?.amount_refunded ? l.payload.amount_refunded / 100 : amt) || amt;
+                    totalRefunded += refAmt;
+                }
+            });
+
+            document.getElementById('res-stat-volume').textContent = `$${totalVol.toFixed(2)}`;
+            document.getElementById('res-stat-count').textContent = countSucceeded;
+            document.getElementById('res-stat-refunded').textContent = `$${totalRefunded.toFixed(2)}`;
+        }
+
+        function renderRestaurantLogsTable(logs) {
+            const tbody = document.getElementById('res-logs-body');
+
+            if (!logs || !logs.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-dim);">No hay registros de movimientos en esta cuenta.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map(l => {
+                const dateStr = l.created_at ? new Date(l.created_at).toLocaleString('es-MX') : '-';
+                const status = (l.status || 'pending').toLowerCase();
+                const amt = parseFloat(l.amount) || 0;
+                const currency = (l.currency || 'usd').toUpperCase();
+
+                let relatedStr = '-';
+                if (l.order_id) relatedStr = `Pedido #${l.order_id.substring(0,8)}`;
+                else if (l.reservation_id) relatedStr = `Reserva #${l.reservation_id.substring(0,8)}`;
+
+                let refundStr = '$0.00';
+                if (status === 'refunded') {
+                    const refAmt = parseFloat(l.payload?.amount_refunded ? l.payload.amount_refunded / 100 : amt);
+                    refundStr = `$${refAmt.toFixed(2)} ${currency}`;
+                }
+
+                return `<tr>
+                    <td>${dateStr}</td>
+                    <td><code style="font-size:0.75rem; background: var(--input); padding: 4px 8px; border-radius: 8px;">${l.stripe_event_id || l.payload?.payment_intent || l.id.substring(0,8)}</code></td>
+                    <td>${relatedStr}</td>
+                    <td><strong>$${amt.toFixed(2)} ${currency}</strong></td>
+                    <td><span class="status-pill ${status}">${status}</span></td>
+                    <td>${refundStr}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        window.downloadCSVReport = () => {
+            if (!rawRestaurantLogs.length) {
+                showToast("No hay registros para exportar.", "warning");
+                return;
+            }
+
+            const header = ["Fecha y Hora", "ID Evento / Intento Stripe", "Relacionado", "Monto", "Moneda", "Estado"];
+            const rows = rawRestaurantLogs.map(l => [
+                `"${l.created_at ? new Date(l.created_at).toLocaleString('es-MX') : ''}"`,
+                `"${l.stripe_event_id || l.id}"`,
+                `"${l.order_id ? 'Pedido #' + l.order_id : l.reservation_id ? 'Reserva #' + l.reservation_id : '-'}"`,
+                `"${l.amount || 0}"`,
+                `"${(l.currency || 'usd').toUpperCase()}"`,
+                `"${l.status || ''}"`
+            ]);
+
+            const csvContent = "\uFEFF" + [header.join(","), ...rows.map(r => r.join(","))].join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", `reporte_pagos_${activeDomain || 'restaurante'}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Reporte CSV descargado con éxito.", "success");
         };
 
         function initTheme() {
