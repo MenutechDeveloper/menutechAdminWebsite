@@ -748,7 +748,13 @@
             if (item.status === 'attended') statusLabel = 'Attended';
 
             if (isOrd) {
-                const deliveryType = item.order_type === 'delivery' ? 'Delivery' : 'Pickup';
+                const deliveryFee = parseFloat(item.delivery_fee || 0);
+                const subtotal = item.subtotal !== undefined && item.subtotal !== null
+                    ? parseFloat(item.subtotal)
+                    : (deliveryFee > 0 ? (item.total - deliveryFee) : item.total);
+                const deliveryType = item.order_type === 'delivery'
+                    ? (item.delivery_zone_name ? `Delivery (${item.delivery_zone_name})` : 'Delivery')
+                    : 'Pickup';
                 const rawPay = item.payment_method || 'cash';
                 const paymentMethod = rawPay === 'online' ? 'Online Payment (Stripe)' : (rawPay === 'cash' ? 'Pay at Restaurant / Cash' : rawPay.toUpperCase());
                 const payStatus = item.payment_status || 'unpaid';
@@ -827,7 +833,13 @@
                     </div>
 
                     <div class="details-footer">
-                        <div class="total-amount">Total: $${item.total.toFixed(2)}</div>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            ${deliveryFee > 0 ? `
+                                <div style="font-size:0.8rem; color:var(--text-dim);">Subtotal: $${subtotal.toFixed(2)}</div>
+                                <div style="font-size:0.8rem; color:var(--orange); font-weight:600;">Delivery Fee: $${deliveryFee.toFixed(2)} ${item.delivery_zone_name ? `(${item.delivery_zone_name})` : ''}</div>
+                            ` : ''}
+                            <div class="total-amount">Total: $${item.total.toFixed(2)}</div>
+                        </div>
                         <div class="actions-bar">
                             ${item.status === 'pending' ? `
                                 <button class="btn btn-reject" onclick="updateOrderStatus('${item.id}', 'rejected')">Reject</button>
