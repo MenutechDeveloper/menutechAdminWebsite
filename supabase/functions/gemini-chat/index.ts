@@ -11,6 +11,7 @@
 // ====================================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
@@ -41,6 +42,96 @@ interface RequestBody {
   image_base64?: string;
   image_mime?: string;
   is_proactive?: boolean;
+  userSession?: any;
+}
+
+// Obtener contexto de facturación y mensualidades de Supabase para alimentar el asistente
+async function getBillingContext(userPrompt: string): Promise<string> {
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || "https://eemqyrysdgasfjlitads.supabase.co";
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY') || "";
+
+    if (!supabaseUrl || !supabaseKey) return '';
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Consultar información de clientes, paquetes, mensualidades y pagos
+    const [profilesRes, packagesRes, subsRes, paymentsRes] = await Promise.all([
+      supabase.from('profiles').select('id, username, email, domain, role, is_suspended, created_at'),
+      supabase.from('menutech_packages').select('id, name, price, billing_period, is_active'),
+      supabase.from('menutech_subscriptions').select('id, user_id, package_id, service_start_date, last_payment_date, next_due_date, status, notes, updated_at'),
+      supabase.from('menutech_subscription_payments').select('id, subscription_id, user_id, amount, payment_date, payment_method, reference, notes').order('payment_date', { ascending: false }).limit(50)
+    ]);
+
+    const profiles = profilesRes.data || [];
+    const packages = packagesRes.data || [];
+    const subscriptions = subsRes.data || [];
+    const payments = paymentsRes.data || [];
+
+    if (profiles.length === 0 && subscriptions.length === 0) return '';
+
+    const now = new Date();
+    const todayStr = now.toISOString().substring(0, 10);
+
+    const clientSummaries = profiles.map((p: any) => {
+      const sub = subscriptions.find((s: any) => s.user_id === p.id);
+      const pkg = packages.find((pkgItem: any) => pkgItem.id === sub?.package_id);
+      const userPayments = payments.filter((pay: any) => pay.user_id === p.id);
+
+      // Calcular próximo vencimiento si no está fijado: registro + 1 mes
+      let dueDateStr = sub?.next_due_date ? sub.next_due_date.substring(0, 10) : '';
+      if (!dueDateStr && p.created_at) {
+        const d = new Date(p.created_at);
+        d.setMonth(d.getMonth() + 1);
+        dueDateStr = d.toISOString().substring(0, 10);
+      }
+
+      let calcStatus = sub?.status || 'active';
+      if (p.is_suspended) {
+        calcStatus = 'suspended';
+      } else if (dueDateStr) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const due = new Date(dueDateStr);
+        due.setHours(0, 0, 0, 0);
+        const diffDays = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays < 0) calcStatus = 'overdue';
+        else if (diffDays <= 5) calcStatus = 'due_soon';
+        else calcStatus = 'active';
+      }
+
+      const statusDesc = calcStatus === 'suspended' ? 'SUSPENDIDO (servicio desactivado)'
+        : calcStatus === 'overdue' ? 'VENCIDA (pago pendiente/atrasado)'
+        : calcStatus === 'due_soon' ? 'PRÓXIMO A VENCER (vence en 5 días o menos)'
+        : 'AL CORRIENTE (al día/pagado)';
+
+      const lastPay = sub?.last_payment_date ? sub.last_payment_date.substring(0, 10) : (userPayments[0]?.payment_date ? userPayments[0].payment_date.substring(0, 10) : 'Ninguno registrado');
+
+      return `• Cliente: ${p.username || 'Sin nombre'} | Dominio: ${p.domain || 'N/A'} | Email: ${p.email || 'N/A'}
+  - Estado Servicio: ${p.is_suspended ? 'Suspendido' : 'Activo'}
+  - Paquete: ${pkg ? `${pkg.name} ($${pkg.price}/mes)` : 'Sin paquete asignado'}
+  - Estado Mensualidad: ${statusDesc}
+  - Último Pago: ${lastPay}
+  - Próximo Vencimiento: ${dueDateStr || 'No definido'}
+  - Notas: ${sub?.notes || 'Sin notas'}
+  - Historial de Pagos Recientes: ${userPayments.length > 0 ? userPayments.slice(0, 3).map((pay: any) => `$${pay.amount} el ${pay.payment_date?.substring(0, 10)} (${pay.payment_method || 'manual'}, ref: ${pay.reference || 's/r'})`).join('; ') : 'Sin pagos previos'}`;
+    });
+
+    const pkgsSummary = packages.map((pkg: any) => `${pkg.name} ($${pkg.price}/mes - ${pkg.is_active ? 'Activo' : 'Inactivo'})`).join(', ');
+
+    return `
+--- INFORMACIÓN DE FACTURACIÓN Y MENSUALIDADES EN TIEMPO REAL (BASE DE DATOS SUPABASE - adminBilling) ---
+Fecha actual de consulta: ${todayStr}
+Paquetes configurados: ${pkgsSummary || 'Ninguno'}
+
+Resumen detallado de cuentas, mensualidades y pagos:
+${clientSummaries.join('\n\n')}
+----------------------------------------------------------------------------------------------------------
+`;
+  } catch (err) {
+    console.warn("Error consultando información de facturación en Supabase:", err);
+    return '';
+  }
 }
 
 // Limpieza y sanitización estricta de las respuestas devueltas por el modelo
@@ -259,19 +350,29 @@ serve(async (req: Request) => {
       }
     }
 
+    // Obtener contexto de facturación en Supabase si aplica o para consultas administrativas
+    let billingContext = '';
+    try {
+      billingContext = await getBillingContext(userPrompt);
+    } catch (e) {
+      console.warn("No se pudo cargar contexto de facturación:", e);
+    }
+
     const systemInstruction = {
       parts: [
         {
           text: `Eres una Inteligencia Artificial extraordinariamente inteligente, capaz, brillante, empática, alegre y atenta (al estilo de ChatGPT / Gemini).
 Tienes conocimientos amplios y profundos sobre programación, matemáticas, física, tecnología, cocina, ciencias, historia, filosofía, arte, cine, música, desarrollo web, pasatiempos y conversación general.
+Tienes acceso total a la información de la base de datos de administración y facturación (adminBilling: paquetes, cuentas, estado de mensualidad, si un usuario ya pagó o no, si su mes está por vencerse, adeudos, suspensiones y registros de pago). Si te preguntan sobre pagos, cuentas, estados de clientes o vencimientos, consulta los datos provistos a continuación y responde con exactitud, claridad y precisión.
 
-REGLAS ABSOLUTAS E IMPERATIVAS:
+${billingContext ? `${billingContext}\n` : ''}REGLAS ABSOLUTAS E IMPERATIVAS:
 1. Hablas SIEMPRE Y ÚNICAMENTE en español de forma natural, fluida, cercana, clara y directa.
 2. Queda STRICTAMENTE PROHIBIDO incluir pensamientos internos, notas de razonamiento, traducciones al inglés, borradores de pasos, desgloses de preguntas o metacomentarios.
 3. Si te hacen preguntas matemáticas o de cálculo (por ejemplo "1 más 1"), responde el resultado directo ("El resultado de 1 + 1 es 2").
 4. Si te piden explicaciones, guías o recetas, entrega la información completa paso a paso con todos sus detalles directamente en español sin prefijos ni borradores.
 5. NUNCA respondas con plantillas ni mensajes evasivos como "Con mucho gusto te ayudo, ¿qué aspecto quieres profundizar?". RESPONDE DE UNA VEZ LA CONSULTA COMPLETA.
-6. Si te adjuntan una imagen, analízala con alta precisión y describe o responde detalladamente la consulta relacionada.`
+6. Si te adjuntan una imagen, analízala con alta precisión y describe o responde detalladamente la consulta relacionada.
+7. Al responder sobre pagos y mensualidades, indica directamente el nombre del cliente/restaurante, su dominio, si su mensualidad está al corriente, si está próxima a vencerse o vencida, la fecha de vencimiento y cuándo fue su último pago según los datos de la base de datos.`
         }
       ]
     };
