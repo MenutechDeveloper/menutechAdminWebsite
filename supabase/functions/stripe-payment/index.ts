@@ -181,7 +181,14 @@ serve(async (req: Request) => {
       const rawItems = typeof order.items === "string" ? JSON.parse(order.items) : (order.items || []);
       const { calculatedTotal } = recalculateOrderTotal(menu?.config, rawItems);
 
-      const finalAmount = calculatedTotal > 0 ? calculatedTotal : Math.max(1, parseFloat(order.total || order.total_amount || 0));
+      // Validate delivery fee for delivery orders
+      let deliveryFee = 0;
+      if (order.order_type === "delivery") {
+        deliveryFee = Math.max(0, parseFloat(order.delivery_fee || 0));
+      }
+
+      const productsTotal = calculatedTotal > 0 ? calculatedTotal : Math.max(0, parseFloat(order.subtotal || order.total || order.total_amount || 0));
+      const finalAmount = Math.round((productsTotal + deliveryFee) * 100) / 100;
       const currency = (stripeAcc.currency || "usd").toLowerCase();
       const amountInCents = Math.round(finalAmount * 100);
 
@@ -190,7 +197,7 @@ serve(async (req: Request) => {
       params.append("mode", "payment");
       params.append("payment_method_types[0]", "card");
       params.append("line_items[0][price_data][currency]", currency);
-      params.append("line_items[0][price_data][product_data][name]", `Order #${order.id.substring(0, 8)} - ${order.customer_name || 'Customer'}`);
+      params.append("line_items[0][price_data][product_data][name]", `Order #${order.id.substring(0, 8)} - ${order.customer_name || 'Customer'}${deliveryFee > 0 ? ' (incl. Delivery)' : ''}`);
       params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
       params.append("line_items[0][quantity]", "1");
 

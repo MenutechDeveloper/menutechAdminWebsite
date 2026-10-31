@@ -2616,11 +2616,15 @@ class MenutechPlatformOrders extends HTMLElement {
                                 <div id="delivery-fields" style="display:none; margin-top:15px;">
                                     <div class="cart-input-group">
                                         <label>FULL ADDRESS</label>
-                                        <input type="text" id="order-address" class="cart-input">
+                                        <div style="display:flex; gap:8px;">
+                                            <input type="text" id="order-address" class="cart-input" placeholder="Street, number, neighborhood...">
+                                            <button type="button" id="btn-verify-delivery-addr" style="background:#ff9533; color:#fff; border:none; border-radius:8px; padding:0 12px; font-weight:700; cursor:pointer; font-size:0.75rem;">CHECK</button>
+                                        </div>
                                     </div>
-                                    <div class="cart-input-group">
+                                    <div id="delivery-zone-status" style="margin-top:8px; font-size:0.75rem; font-weight:700; display:none;"></div>
+                                    <div class="cart-input-group" style="margin-top:10px;">
                                         <label>REFERENCE / INDICATIONS</label>
-                                        <input type="text" id="order-reference" class="cart-input">
+                                        <input type="text" id="order-reference" class="cart-input" placeholder="Apartment, gate code, landmarks...">
                                     </div>
                                 </div>
                             </div>
@@ -2710,9 +2714,9 @@ class MenutechPlatformOrders extends HTMLElement {
                         </div>
 
                         <div class="order-summary" style="margin:0; padding:20px; background:#f0f0f0; border-top:1.5px solid #eee;">
-                            <div class="summary-row"><span>SUBTOTAL</span><span>$${subtotal.toFixed(2)}</span></div>
-                            <div class="summary-row"><span>SHIPPING</span><span>$0.00</span></div>
-                            <div class="summary-row total" style="border-top-color:#ddd;"><span>TOTAL</span><span>$${total.toFixed(2)}</span></div>
+                            <div class="summary-row"><span>SUBTOTAL</span><span id="summary-subtotal-val">$${subtotal.toFixed(2)}</span></div>
+                            <div class="summary-row"><span id="summary-shipping-label">SHIPPING</span><span id="summary-shipping-val">$0.00</span></div>
+                            <div class="summary-row total" style="border-top-color:#ddd;"><span>TOTAL</span><span id="summary-total-val">$${total.toFixed(2)}</span></div>
                             <button class="add-to-cart" id="send-order-btn" style="margin-top:20px; width:100%;">SEND ORDER • $${total.toFixed(2)}</button>
                         </div>
                     </div>
@@ -2770,9 +2774,34 @@ class MenutechPlatformOrders extends HTMLElement {
             opt.onclick = () => {
                 typeOptions.forEach(o => o.classList.remove('active'));
                 opt.classList.add('active');
-                if (deliveryFields) deliveryFields.style.display = opt.dataset.type === 'delivery' ? 'block' : 'none';
+                const isDelivery = opt.dataset.type === 'delivery';
+                if (deliveryFields) deliveryFields.style.display = isDelivery ? 'block' : 'none';
+                if (!isDelivery) {
+                    this.appliedDeliveryFee = 0;
+                    this.appliedDeliveryZone = null;
+                    this.updateCartSummaryTotals();
+                } else {
+                    const currentAddr = popupContent.querySelector('#order-address')?.value;
+                    if (currentAddr && currentAddr.trim().length > 3) {
+                        this.validateDeliveryAddressCoverage(currentAddr.trim());
+                    }
+                }
             };
         });
+
+        // Delivery address check button
+        const checkAddrBtn = popupContent.querySelector('#btn-verify-delivery-addr');
+        const addrInput = popupContent.querySelector('#order-address');
+        if (checkAddrBtn && addrInput) {
+            checkAddrBtn.onclick = () => {
+                const addr = addrInput.value.trim();
+                if (addr) this.validateDeliveryAddressCoverage(addr);
+            };
+            addrInput.onchange = () => {
+                const addr = addrInput.value.trim();
+                if (addr) this.validateDeliveryAddressCoverage(addr);
+            };
+        }
 
         // Time selection toggles
         const timeOptions = popupContent.querySelectorAll('.time-option');
@@ -2820,6 +2849,153 @@ class MenutechPlatformOrders extends HTMLElement {
         });
     }
 
+    updateCartSummaryTotals() {
+        const popupContent = this.popupRoot.getElementById('popup-content');
+        if (!popupContent) return;
+
+        const subtotal = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
+        const fee = this.appliedDeliveryFee || 0;
+        const total = subtotal + fee;
+
+        const subtotalEl = popupContent.querySelector('#summary-subtotal-val');
+        const shipLabelEl = popupContent.querySelector('#summary-shipping-label');
+        const shipValEl = popupContent.querySelector('#summary-shipping-val');
+        const totalEl = popupContent.querySelector('#summary-total-val');
+        const sendBtn = popupContent.querySelector('#send-order-btn');
+
+        if (subtotalEl) subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+        if (shipLabelEl) shipLabelEl.textContent = this.appliedDeliveryZone ? `DELIVERY (${this.appliedDeliveryZone.name})` : 'SHIPPING';
+        if (shipValEl) shipValEl.textContent = `$${fee.toFixed(2)}`;
+        if (totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
+        if (sendBtn) sendBtn.textContent = `SEND ORDER • $${total.toFixed(2)}`;
+    }
+
+    async validateDeliveryAddressCoverage(address) {
+        const popupContent = this.popupRoot.getElementById('popup-content');
+        if (!popupContent) return false;
+
+        const statusEl = popupContent.querySelector('#delivery-zone-status');
+        if (statusEl) {
+            statusEl.style.display = 'block';
+            statusEl.style.color = '#ff9533';
+            statusEl.textContent = 'Checking delivery coverage...';
+        }
+
+        try {
+            if (!this.supabase) await this.initSupabase();
+
+            // Fetch active delivery zones for this restaurant
+            const { data: zones } = await this.supabase
+                .from('menutech_delivery_zones')
+                .select('*')
+                .eq('user_id', this.menuData.user_id)
+                .eq('is_active', true)
+                .order('fee', { ascending: true });
+
+            if (!zones || zones.length === 0) {
+                // No zones configured: delivery is available without fee restriction
+                this.appliedDeliveryFee = 0;
+                this.appliedDeliveryZone = null;
+                if (statusEl) {
+                    statusEl.style.color = '#059669';
+                    statusEl.textContent = '✓ Delivery available';
+                }
+                this.updateCartSummaryTotals();
+                return true;
+            }
+
+            // Geocode address via OpenStreetMap Nominatim
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+            const geoData = await geoRes.json();
+
+            if (!geoData || geoData.length === 0) {
+                if (statusEl) {
+                    statusEl.style.color = '#dc2626';
+                    statusEl.textContent = 'Address not recognized. Please provide a more specific street and number.';
+                }
+                this.appliedDeliveryFee = 0;
+                this.appliedDeliveryZone = null;
+                this.updateCartSummaryTotals();
+                return false;
+            }
+
+            const clientLng = parseFloat(geoData[0].lon);
+            const clientLat = parseFloat(geoData[0].lat);
+
+            // Find matching zone using Ray-Casting Point-in-Polygon
+            let matchedZone = null;
+
+            for (const zone of zones) {
+                let geom = zone.geojson;
+                if (typeof geom === 'string') {
+                    try { geom = JSON.parse(geom); } catch (e) {}
+                }
+                if (!geom) continue;
+
+                const coords = geom.coordinates;
+                if (!coords || !coords[0]) continue;
+
+                // Handle Polygon or MultiPolygon
+                let isInside = false;
+                if (geom.type === 'Polygon') {
+                    isInside = this.isPointInPolygon([clientLng, clientLat], coords[0]);
+                } else if (geom.type === 'MultiPolygon') {
+                    for (const poly of coords) {
+                        if (this.isPointInPolygon([clientLng, clientLat], poly[0])) {
+                            isInside = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isInside) {
+                    matchedZone = zone;
+                    break; // Priority to lowest fee due to order by fee ascending
+                }
+            }
+
+            if (matchedZone) {
+                this.appliedDeliveryFee = parseFloat(matchedZone.fee || 0);
+                this.appliedDeliveryZone = matchedZone;
+                if (statusEl) {
+                    statusEl.style.color = '#059669';
+                    statusEl.textContent = `✓ Coverage confirmed: ${matchedZone.name} (Delivery fee: $${this.appliedDeliveryFee.toFixed(2)})`;
+                }
+                this.updateCartSummaryTotals();
+                return true;
+            } else {
+                this.appliedDeliveryFee = 0;
+                this.appliedDeliveryZone = null;
+                if (statusEl) {
+                    statusEl.style.color = '#dc2626';
+                    statusEl.textContent = '✗ Out of delivery coverage area for this restaurant.';
+                }
+                this.updateCartSummaryTotals();
+                return false;
+            }
+
+        } catch (e) {
+            console.error('Delivery coverage check error:', e);
+            if (statusEl) {
+                statusEl.style.color = '#d97706';
+                statusEl.textContent = 'Could not verify delivery zone automatically. Proceeding with standard delivery.';
+            }
+            return true;
+        }
+    }
+
+    isPointInPolygon(point, ring) {
+        const x = point[0], y = point[1];
+        let inside = false;
+        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+            const xi = ring[i][0], yi = ring[i][1];
+            const xj = ring[j][0], yj = ring[j][1];
+            const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+        return inside;
+    }
+
     updateItemQuantity(index, delta) {
         if (this.cart[index]) {
             this.cart[index].quantity += delta;
@@ -2862,10 +3038,36 @@ class MenutechPlatformOrders extends HTMLElement {
         const time = popupContent.querySelector('#order-time')?.value || '';
         const payment = popupContent.querySelector('.payment-option.active').dataset.pay;
 
+        // If delivery order, validate delivery address and coverage
+        if (orderType === 'delivery') {
+            if (!address) {
+                this.showModal('MISSING ADDRESS', 'Please enter your delivery address.');
+                return;
+            }
+
+            const covered = await this.validateDeliveryAddressCoverage(address);
+            if (!covered && this.appliedDeliveryZone === null) {
+                const { data: hasZones } = await this.supabase
+                    .from('menutech_delivery_zones')
+                    .select('id')
+                    .eq('user_id', this.menuData.user_id)
+                    .eq('is_active', true)
+                    .limit(1);
+
+                if (hasZones && hasZones.length > 0) {
+                    this.showModal('OUT OF COVERAGE', 'The provided delivery address is outside of this restaurant\'s delivery zones.');
+                    return;
+                }
+            }
+        }
+
         // Save to localStorage
         localStorage.setItem('mt_customer_info', JSON.stringify({ name, phone, email, address, reference }));
 
-        const total = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
+        const subtotal = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
+        const deliveryFee = orderType === 'delivery' ? (this.appliedDeliveryFee || 0) : 0;
+        const total = subtotal + deliveryFee;
+
         const btn = popupContent.querySelector('#send-order-btn');
         btn.textContent = 'SENDING...';
         btn.disabled = true;
@@ -2876,13 +3078,16 @@ class MenutechPlatformOrders extends HTMLElement {
             const orderData = {
                 user_id: this.menuData.user_id,
                 items: this.cart,
+                subtotal: subtotal,
+                delivery_fee: deliveryFee,
+                delivery_zone_name: orderType === 'delivery' ? (this.appliedDeliveryZone?.name || null) : null,
                 total: total,
                 customer_name: name,
                 customer_phone: phone,
                 customer_email: email,
                 order_type: orderType,
-                address: address,
-                reference: reference,
+                address: orderType === 'delivery' ? address : null,
+                reference: orderType === 'delivery' ? reference : null,
                 delivery_time_mode: timeMode,
                 delivery_date: date,
                 delivery_time: time,

@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery & Zones | Menutech</title>
+    <script src="authGuard.js"></script>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+
+    <!-- MapLibre GL CSS & Mapbox GL Draw CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css" />
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #059669;
+            --error: #dc2626;
+            --info: #2563eb;
+            --warning: #d97706;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: -1;
+            background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%),
+                        radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%);
+        }
+
+        .container {
+            width: 100%; max-width: 1300px; margin: 0 auto;
+            padding: 80px 24px 60px 24px; animation: fadeIn 0.8s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        header { text-align: center; margin-bottom: 30px; }
+        .logo-main {
+            width: 100%; max-width: 220px; height: auto; margin: 0 auto 10px auto; display: block;
+            filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15));
+        }
+
+        .dashboard-layout { display: flex; min-height: calc(100vh - 160px); gap: 30px; }
+
+        /* Unified Sidebar Container matching onlinePayment.html */
+        .sidebar-container {
+            position: fixed; left: 0; top: 120px; z-index: 6000; pointer-events: none; display: flex; align-items: flex-start;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sidebar-container > * { pointer-events: auto; }
+        .sidebar-container.collapsed { transform: translateX(-340px) !important; }
+
+        .sidebar { width: 340px; height: 600px; display: flex; flex-direction: column; gap: 20px; }
+        .main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+
+        .search-box {
+            background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 24px;
+            position: relative; cursor: default; transition: opacity 0.3s; user-select: none; z-index: 100;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15); height: 100%; display: flex; flex-direction: column;
+        }
+        .search-box label {
+            display: block; font-size: 0.7rem; font-weight: 700; color: var(--orange);
+            text-transform: uppercase; margin-bottom: 15px; margin-left: 5px; pointer-events: none;
+        }
+        .search-box input {
+            width: 100%; margin-bottom: 15px; border-radius: 16px; padding: 14px;
+            background: var(--input); border: 1px solid var(--border); color: var(--text); outline: none;
+            font-family: inherit; font-size: 0.9rem;
+        }
+        .search-box input:focus { border-color: var(--orange); }
+
+        .client-list { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
+        .client-list::-webkit-scrollbar { width: 4px; }
+        .client-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .client-item {
+            padding: 14px 18px; border-radius: 16px; background: var(--input); border: 1px solid var(--border);
+            cursor: pointer; transition: 0.3s;
+        }
+        .client-item:hover { border-color: var(--orange); }
+        .client-item.active { border-color: var(--orange); background: rgba(255,149,51,0.08); }
+        .client-item .name { font-weight: 700; font-size: 0.85rem; display: block; }
+        .client-item .domain { font-size: 0.7rem; color: var(--text-dim); }
+
+        .sidebar-tab {
+            width: 45px; height: 160px; background: var(--orange); color: #fff; display: flex; align-items: center;
+            justify-content: center; border-radius: 0 16px 16px 0; cursor: pointer; writing-mode: vertical-lr;
+            text-orientation: mixed; font-weight: 800; font-size: 0.75rem; letter-spacing: 2px;
+            text-transform: uppercase; box-shadow: 10px 0 30px rgba(255, 149, 51, 0.2); transition: 0.4s;
+            margin-top: 40px; position: relative;
+        }
+        .sidebar-tab:hover { width: 55px; padding-left: 10px; }
+
+        #top-nav {
+            position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center;
+            justify-content: space-between; z-index: 5000; pointer-events: none;
+        }
+        #top-nav > * { pointer-events: auto; }
+
+        /* Premium User Pill */
+        #user-display-pill {
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px;
+            border: 1.5px solid var(--border); display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; min-width: 220px;
+            justify-content: flex-start;
+        }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
+
+        #user-display-pill.admin-glow {
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
+
+        #user-display-pill.dev-glow {
+            background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
+
+        #user-display-pill.owner-glow {
+            background: #000;
+            background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 20%, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 80%, rgba(255,255,255,0.1) 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.owner-glow #user-name, #user-display-pill.owner-glow #user-role-label { color: #fff !important; }
+
+        #user-display-pill #user-name, #user-display-pill #user-role-label { color: var(--text); transition: color 0.3s; }
+
+        @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
+        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .pill-menu {
+            position: absolute; top: calc(100% + 12px); right: 0; background: var(--card) !important;
+            border: 1px solid var(--border); border-radius: 24px; padding: 12px; min-width: 100%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2); opacity: 0; transform: translateY(10px);
+            pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
+        }
+        .pill-menu.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .pill-menu-item {
+            display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 14px;
+            color: var(--text); text-decoration: none; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .pill-menu-item:hover { background: var(--input); color: var(--orange); }
+
+        /* Workspace Header Card */
+        .workspace-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 16px;
+        }
+        .workspace-info h1 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; }
+        .workspace-info p { font-size: 0.85rem; color: var(--text-dim); margin-top: 4px; }
+
+        .card-box {
+            background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        }
+
+        /* Location Bar */
+        .location-grid {
+            display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 12px; align-items: end;
+        }
+        @media (max-width: 900px) {
+            .location-grid { grid-template-columns: 1fr; }
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-group label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); }
+        .input-field {
+            background: var(--input); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px;
+            color: var(--text); font-family: inherit; font-size: 0.85rem; outline: none; transition: border-color 0.2s;
+        }
+        .input-field:focus { border-color: var(--orange); }
+
+        .btn {
+            border: none; border-radius: 14px; padding: 12px 18px; font-weight: 700; font-size: 0.85rem;
+            cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;
+            gap: 8px; text-decoration: none; font-family: inherit;
+        }
+        .btn-primary { background: var(--orange); color: #fff; box-shadow: 0 6px 20px rgba(255, 149, 51, 0.25); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 149, 51, 0.35); }
+        .btn-outline { background: var(--input); color: var(--text); border: 1px solid var(--border); }
+        .btn-outline:hover { border-color: var(--orange); color: var(--orange); }
+        .btn-danger { background: rgba(220, 38, 38, 0.1); color: var(--error); border: 1px solid rgba(220, 38, 38, 0.2); }
+        .btn-danger:hover { background: var(--error); color: #fff; }
+        .btn-success { background: var(--success); color: #fff; }
+
+        /* Map and Zones Split View */
+        .delivery-layout {
+            display: grid; grid-template-columns: 360px 1fr; gap: 24px; min-height: 580px;
+        }
+        @media (max-width: 960px) {
+            .delivery-layout { grid-template-columns: 1fr; }
+        }
+
+        /* Zones Panel */
+        .zones-panel { display: flex; flex-direction: column; gap: 16px; height: 100%; }
+        .zones-header { display: flex; justify-content: space-between; align-items: center; }
+        .zones-header h3 { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 800; }
+        .zones-list {
+            display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: 480px; padding-right: 4px;
+        }
+        .zones-list::-webkit-scrollbar { width: 4px; }
+        .zones-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .zone-card {
+            background: var(--input); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px;
+            transition: all 0.2s; cursor: pointer; display: flex; flex-direction: column; gap: 10px;
+        }
+        .zone-card:hover { border-color: var(--orange); transform: translateY(-1px); }
+        .zone-card.active { border-color: var(--orange); background: rgba(255, 149, 51, 0.05); }
+
+        .zone-card-top { display: flex; align-items: center; justify-content: space-between; }
+        .zone-badge-wrap { display: flex; align-items: center; gap: 8px; }
+        .zone-color-dot { width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        .zone-title { font-weight: 700; font-size: 0.9rem; }
+        .zone-fee { font-family: 'Outfit', sans-serif; font-weight: 800; color: var(--orange); font-size: 1rem; }
+
+        .zone-card-bottom { display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim); }
+        .zone-actions { display: flex; gap: 8px; }
+        .zone-action-btn {
+            background: none; border: none; cursor: pointer; color: var(--text-dim); padding: 4px; border-radius: 6px;
+            display: inline-flex; align-items: center; justify-content: center; transition: color 0.2s;
+        }
+        .zone-action-btn:hover { color: var(--orange); }
+        .zone-action-btn.delete:hover { color: var(--error); }
+
+        /* Map Container */
+        .map-wrapper {
+            position: relative; border-radius: 24px; overflow: hidden; border: 1px solid var(--border);
+            min-height: 580px; display: flex; flex-direction: column;
+        }
+        #map-container { width: 100%; height: 100%; min-height: 580px; flex: 1; }
+
+        /* Map Overlay Controls */
+        .map-tools-bar {
+            position: absolute; top: 16px; left: 16px; z-index: 10; display: flex; gap: 10px; flex-wrap: wrap;
+        }
+        .map-tool-btn {
+            background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 12px;
+            padding: 8px 14px; font-size: 0.8rem; font-weight: 700; cursor: pointer; box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+            display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
+        }
+        .map-tool-btn:hover { border-color: var(--orange); color: var(--orange); }
+        .map-tool-btn.active { background: var(--orange); color: #fff; border-color: var(--orange); }
+
+        .map-hint {
+            position: absolute; bottom: 16px; left: 16px; right: 16px; background: rgba(28, 31, 38, 0.85);
+            color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 0.75rem; backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: space-between; z-index: 10; pointer-events: none;
+        }
+
+        /* Modal Dialog */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            z-index: 9000; display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 28px;
+            width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); display: flex;
+            flex-direction: column; gap: 18px; animation: modalIn 0.3s ease-out;
+        }
+        @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-card h3 { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+
+        /* Color Picker Row */
+        .color-palette { display: flex; gap: 8px; margin-top: 4px; }
+        .color-choice {
+            width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .color-choice:hover { transform: scale(1.15); }
+        .color-choice.selected { border-color: var(--text); transform: scale(1.15); }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center; padding: 40px 20px; color: var(--text-dim); display: flex;
+            flex-direction: column; align-items: center; gap: 12px;
+        }
+        .empty-state svg { width: 44px; height: 44px; color: var(--border); }
+        .empty-state p { font-size: 0.85rem; line-height: 1.5; }
+
+        /* Toast notifications */
+        #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
+            font-weight: 600; color: var(--text); animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes toastIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--error); }
+        .toast.warning { border-left: 4px solid var(--warning); }
+
+        /* Custom restaurant pin on MapLibre */
+        .restaurant-marker-pin {
+            width: 38px; height: 38px; background: #ff9533; border: 3px solid #ffffff; border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg); display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.3); cursor: grab;
+        }
+        .restaurant-marker-pin:active { cursor: grabbing; transform: rotate(-45deg) scale(1.1); }
+        .restaurant-marker-pin-inner {
+            transform: rotate(45deg); color: #ffffff; font-weight: 800; font-size: 14px;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+
+    <div id="toast-container"></div>
+
+    <!-- Top Navigation -->
+    <div id="top-nav" class="hidden">
+        <div></div>
+        <div id="user-display-pill">
+            <div class="pill-info">
+                <span id="user-name">Loading...</span>
+                <span id="user-role-label">OWNER</span>
+            </div>
+            <div class="pill-menu" id="user-menu">
+                <a href="index.html" class="pill-menu-item">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                    <span id="lbl-pill-home">Home</span>
+                </a>
+                <div class="pill-menu-item" id="btn-logout" style="color:var(--error);">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <span id="lbl-pill-logout">Logout</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collapsible Sidebar Container for Privileged Roles (Admin/Dev/CS) -->
+    <div class="sidebar-container hidden" id="sidebar-container">
+        <aside class="sidebar">
+            <div class="search-box">
+                <label id="lbl-find-project-side">FIND PROJECT</label>
+                <input type="text" id="client-search" placeholder="Domain or Name...">
+                <div class="client-list" id="client-list">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+        </aside>
+        <div class="sidebar-tab" id="sidebar-tab">
+            FIND PROJECT
+        </div>
+    </div>
+
+    <div class="container hidden" id="main-app">
+        <header>
+            <img src="https://menutech.services/assets/img/logomt.png" alt="Menutech" class="logo-main">
+        </header>
+
+        <div class="dashboard-layout">
+            <div class="main-content">
+                <!-- Workspace Info Card -->
+                <div class="workspace-card">
+                    <div class="workspace-info">
+                        <h1 id="lbl-delivery-title">Delivery & Coverage Zones</h1>
+                        <p id="lbl-delivery-desc">Configure your restaurant location, custom polygon delivery zones, and fees.</p>
+                        <div id="project-info" class="hidden" style="margin-top:6px; font-size:0.75rem; color:var(--orange); font-weight:700;">
+                            <span id="lbl-active-project">Active Project:</span> <span id="active-project-name">None Selected</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <span id="view-domain-title" style="font-size:0.85rem; font-weight:700; color:var(--text-dim); background:var(--input); padding:8px 14px; border-radius:12px; border:1px solid var(--border);">
+                            Workspace
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Location & Geocoding Bar -->
+                <div class="card-box">
+                    <div class="location-grid">
+                        <div class="input-group">
+                            <label id="lbl-restaurant-address">Restaurant Address</label>
+                            <input type="text" id="input-address" class="input-field" placeholder="Search address or street...">
+                        </div>
+                        <div class="input-group">
+                            <label id="lbl-latitude">Latitude</label>
+                            <input type="number" step="0.000001" id="input-lat" class="input-field" placeholder="e.g. 40.7128">
+                        </div>
+                        <div class="input-group">
+                            <label id="lbl-longitude">Longitude</label>
+                            <input type="number" step="0.000001" id="input-lng" class="input-field" placeholder="e.g. -74.0060">
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-outline" id="btn-detect-loc" title="Detect current GPS location">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+                                <span id="lbl-btn-locate">Locate</span>
+                            </button>
+                            <button class="btn btn-primary" id="btn-save-loc">
+                                <span id="lbl-btn-save-loc">Save Pin</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Split Map & Delivery Zones View -->
+                <div class="delivery-layout">
+                    <!-- Zones Sidebar -->
+                    <div class="card-box zones-panel">
+                        <div class="zones-header">
+                            <div>
+                                <h3 id="lbl-zones-title">Delivery Zones</h3>
+                                <p style="font-size:0.75rem; color:var(--text-dim);" id="lbl-zones-subtitle">Polygons & delivery rates</p>
+                            </div>
+                            <button class="btn btn-primary" id="btn-create-zone" style="padding:8px 12px; font-size:0.75rem;">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                <span id="lbl-btn-add-zone">Add Zone</span>
+                            </button>
+                        </div>
+
+                        <div class="zones-list" id="zones-list">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Map Area -->
+                    <div class="map-wrapper">
+                        <div class="map-tools-bar">
+                            <button class="map-tool-btn" id="tool-draw-polygon">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 8.5 4 18 20 18 22 8.5 12 2"/></svg>
+                                <span id="lbl-tool-draw">Draw Polygon</span>
+                            </button>
+                            <button class="map-tool-btn" id="tool-delete-shape">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                <span id="lbl-tool-delete">Delete Shape</span>
+                            </button>
+                            <button class="map-tool-btn" id="tool-recenter">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                                <span id="lbl-tool-center">Center Restaurant</span>
+                            </button>
+                        </div>
+
+                        <div id="map-container"></div>
+
+                        <div class="map-hint" id="map-hint">
+                            <span id="lbl-map-hint">💡 Click 'Draw Polygon' to draw a zone on the map. Click first vertex to close shape.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zone Configuration Modal -->
+    <div class="modal-overlay" id="zone-modal">
+        <div class="modal-card">
+            <h3 id="lbl-modal-zone-title">Zone Configuration</h3>
+
+            <div class="input-group">
+                <label id="lbl-zone-name">Zone Name</label>
+                <input type="text" id="modal-zone-name" class="input-field" placeholder="e.g. Nearby / Zona Centro">
+            </div>
+
+            <div class="input-group">
+                <label id="lbl-zone-fee">Delivery Fee ($)</label>
+                <input type="number" step="0.01" min="0" id="modal-zone-fee" class="input-field" placeholder="e.g. 2.50">
+            </div>
+
+            <div class="input-group">
+                <label id="lbl-zone-color">Zone Color</label>
+                <div class="color-palette" id="color-palette">
+                    <div class="color-choice selected" data-color="#ff9533" style="background:#ff9533;"></div>
+                    <div class="color-choice" data-color="#10b981" style="background:#10b981;"></div>
+                    <div class="color-choice" data-color="#3b82f6" style="background:#3b82f6;"></div>
+                    <div class="color-choice" data-color="#8b5cf6" style="background:#8b5cf6;"></div>
+                    <div class="color-choice" data-color="#ec4899" style="background:#ec4899;"></div>
+                    <div class="color-choice" data-color="#f59e0b" style="background:#f59e0b;"></div>
+                </div>
+            </div>
+
+            <div class="input-group" style="flex-direction:row; align-items:center; justify-content:space-between; margin-top:6px;">
+                <label id="lbl-zone-active" style="margin:0;">Active Coverage</label>
+                <input type="checkbox" id="modal-zone-active" checked style="width:20px; height:20px; accent-color:var(--orange);">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-outline" id="btn-modal-cancel">
+                    <span id="lbl-modal-cancel">Cancel</span>
+                </button>
+                <button class="btn btn-primary" id="btn-modal-save">
+                    <span id="lbl-modal-save">Save Zone</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts: MapLibre, MapboxDraw, Turf.js -->
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js"></script>
+    <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+
+    <script type="module">
+        import { MT_CONFIG } from './config.js';
+        import { supabase as sb } from './supabase.js';
+
+        // State
+        let user = null;
+        let userRole = null;
+        let activeOwnerId = null;
+        let activeDomain = null;
+        let allOwners = [];
+        let currentLang = 'en';
+
+        let map = null;
+        let draw = null;
+        let restaurantMarker = null;
+        let currentRestaurantLocation = null;
+        let deliveryZones = [];
+        let editingZone = null;
+        let pendingDrawFeature = null;
+
+        const I18N = {
+            en: {
+                pageTitle: "Delivery & Zones | Menutech",
+                deliveryTitle: "Delivery & Coverage Zones",
+                deliveryDesc: "Configure your restaurant location, custom polygon delivery zones, and fees.",
+                restaurantAddress: "Restaurant Address",
+                latitude: "Latitude",
+                longitude: "Longitude",
+                btnLocate: "Locate",
+                btnSaveLoc: "Save Pin",
+                zonesTitle: "Delivery Zones",
+                zonesSubtitle: "Polygons & delivery rates",
+                btnAddZone: "Add Zone",
+                toolDraw: "Draw Polygon",
+                toolDelete: "Delete Shape",
+                toolCenter: "Center Restaurant",
+                mapHintDraw: "💡 Click 'Draw Polygon' to draw a zone on the map. Click the first vertex to close the shape.",
+                mapHintSelect: "💡 Click a polygon on the map or edit points to reshape.",
+                modalZoneTitle: "Zone Configuration",
+                zoneName: "Zone Name",
+                zoneFee: "Delivery Fee ($)",
+                zoneColor: "Zone Color",
+                zoneActive: "Active Coverage",
+                modalCancel: "Cancel",
+                modalSave: "Save Zone",
+                findProjectSide: "Find Project",
+                activeProject: "Active Project:",
+                noneSelected: "None Selected",
+                pillHome: "Home",
+                pillLogout: "Logout",
+                phDomainOrName: "Domain or Name...",
+                emptyZones: "No delivery zones created yet. Click 'Add Zone' to draw custom polygon coverage and set delivery fees.",
+                statusActive: "Active",
+                statusInactive: "Inactive",
+                toastLocSaved: "Restaurant location saved successfully!",
+                toastLocError: "Error saving restaurant location: ",
+                toastZoneSaved: "Delivery zone saved successfully!",
+                toastZoneDeleted: "Delivery zone deleted successfully!",
+                toastZoneToggled: "Delivery zone status updated!",
+                toastDrawPolygonFirst: "Please draw a polygon on the map first, or click 'Add Zone'.",
+                toastGeolocSuccess: "Location detected from your browser!",
+                toastGeolocError: "Unable to detect browser location.",
+                confirmDeleteZone: "Are you sure you want to delete this delivery zone?",
+                geocodingNotFound: "Address not found. Please try another query or drag the pin on the map."
+            },
+            es: {
+                pageTitle: "Delivery y Zonas | Menutech",
+                deliveryTitle: "Delivery y Zonas de Cobertura",
+                deliveryDesc: "Configura la ubicación de tu restaurante, zonas poligonales de entrega y tarifas.",
+                restaurantAddress: "Dirección del Restaurante",
+                latitude: "Latitud",
+                longitude: "Longitud",
+                btnLocate: "Ubicar",
+                btnSaveLoc: "Guardar Pin",
+                zonesTitle: "Zonas de Entrega",
+                zonesSubtitle: "Polígonos y tarifas de envío",
+                btnAddZone: "Agregar Zona",
+                toolDraw: "Dibujar Polígono",
+                toolDelete: "Eliminar Trazo",
+                toolCenter: "Centrar Restaurante",
+                mapHintDraw: "💡 Haz clic en 'Dibujar Polígono' para crear una zona. Haz clic en el primer punto para cerrar el polígono.",
+                mapHintSelect: "💡 Haz clic en un polígono en el mapa para editar sus puntos o ver detalles.",
+                modalZoneTitle: "Configuración de Zona",
+                zoneName: "Nombre de la Zona",
+                zoneFee: "Tarifa de Entrega ($)",
+                zoneColor: "Color de la Zona",
+                zoneActive: "Cobertura Activa",
+                modalCancel: "Cancelar",
+                modalSave: "Guardar Zona",
+                findProjectSide: "Buscar Proyecto",
+                activeProject: "Proyecto Activo:",
+                noneSelected: "Ninguno Seleccionado",
+                pillHome: "Inicio",
+                pillLogout: "Cerrar Sesión",
+                phDomainOrName: "Dominio o Nombre...",
+                emptyZones: "Aún no hay zonas de entrega configuradas. Haz clic en 'Agregar Zona' para dibujar el polígono de cobertura.",
+                statusActive: "Activa",
+                statusInactive: "Inactiva",
+                toastLocSaved: "¡Ubicación del restaurante guardada con éxito!",
+                toastLocError: "Error al guardar ubicación del restaurante: ",
+                toastZoneSaved: "¡Zona de entrega guardada con éxito!",
+                toastZoneDeleted: "¡Zona de entrega eliminada con éxito!",
+                toastZoneToggled: "¡Estado de la zona actualizado!",
+                toastDrawPolygonFirst: "Por favor dibuja un polígono en el mapa primero o haz clic en 'Agregar Zona'.",
+                toastGeolocSuccess: "¡Ubicación detectada por el navegador!",
+                toastGeolocError: "No se pudo obtener la ubicación del navegador.",
+                confirmDeleteZone: "¿Estás seguro de que deseas eliminar esta zona de entrega?",
+                geocodingNotFound: "Dirección no encontrada. Intenta otra búsqueda o arrastra el marcador."
+            }
+        };
+
+        function applyLanguage(lang) {
+            currentLang = (lang === 'es') ? 'es' : 'en';
+            const dict = I18N[currentLang];
+
+            document.title = dict.pageTitle;
+            document.getElementById('lbl-delivery-title').textContent = dict.deliveryTitle;
+            document.getElementById('lbl-delivery-desc').textContent = dict.deliveryDesc;
+            document.getElementById('lbl-restaurant-address').textContent = dict.restaurantAddress;
+            document.getElementById('lbl-latitude').textContent = dict.latitude;
+            document.getElementById('lbl-longitude').textContent = dict.longitude;
+            document.getElementById('lbl-btn-locate').textContent = dict.btnLocate;
+            document.getElementById('lbl-btn-save-loc').textContent = dict.btnSaveLoc;
+            document.getElementById('lbl-zones-title').textContent = dict.zonesTitle;
+            document.getElementById('lbl-zones-subtitle').textContent = dict.zonesSubtitle;
+            document.getElementById('lbl-btn-add-zone').textContent = dict.btnAddZone;
+            document.getElementById('lbl-tool-draw').textContent = dict.toolDraw;
+            document.getElementById('lbl-tool-delete').textContent = dict.toolDelete;
+            document.getElementById('lbl-tool-center').textContent = dict.toolCenter;
+            document.getElementById('lbl-map-hint').textContent = dict.mapHintDraw;
+            document.getElementById('lbl-modal-zone-title').textContent = dict.modalZoneTitle;
+            document.getElementById('lbl-zone-name').textContent = dict.zoneName;
+            document.getElementById('lbl-zone-fee').textContent = dict.zoneFee;
+            document.getElementById('lbl-zone-color').textContent = dict.zoneColor;
+            document.getElementById('lbl-zone-active').textContent = dict.zoneActive;
+            document.getElementById('lbl-modal-cancel').textContent = dict.modalCancel;
+            document.getElementById('lbl-modal-save').textContent = dict.modalSave;
+            document.getElementById('lbl-find-project-side').textContent = dict.findProjectSide;
+            document.getElementById('sidebar-tab').textContent = dict.findProjectSide;
+            document.getElementById('lbl-active-project').textContent = dict.activeProject;
+            document.getElementById('client-search').placeholder = dict.phDomainOrName;
+            document.getElementById('lbl-pill-home').textContent = dict.pillHome;
+            document.getElementById('lbl-pill-logout').textContent = dict.pillLogout;
+
+            const activeProjEl = document.getElementById('active-project-name');
+            if (activeProjEl && (activeProjEl.textContent === 'None Selected' || activeProjEl.textContent === 'Ninguno Seleccionado')) {
+                activeProjEl.textContent = dict.noneSelected;
+            }
+
+            renderZonesList();
+        }
+
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const msg = document.createElement('div');
+            msg.textContent = message;
+            toast.appendChild(msg); container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
+            initEvents();
+            await checkSession();
+        });
+
+        function initTheme() {
+            if (localStorage.getItem('menutech_theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+            }
+        }
+
+        function initEvents() {
+            // User pill toggle
+            const pill = document.getElementById('user-display-pill');
+            const pillMenu = document.getElementById('user-menu');
+            pill.addEventListener('click', (e) => {
+                if (e.target.closest('.pill-menu')) return;
+                pillMenu.classList.toggle('active');
+            });
+            document.addEventListener('click', (e) => {
+                if (!pill.contains(e.target)) pillMenu.classList.remove('active');
+            });
+
+            // Logout
+            document.getElementById('btn-logout').onclick = async () => {
+                await sb.auth.signOut();
+                location.href = 'index.html';
+            };
+
+            // Sidebar toggle
+            const sidebarTab = document.getElementById('sidebar-tab');
+            const sidebarContainer = document.getElementById('sidebar-container');
+            sidebarTab.onclick = () => sidebarContainer.classList.toggle('collapsed');
+
+            // Location buttons
+            document.getElementById('btn-detect-loc').onclick = detectCurrentLocation;
+            document.getElementById('btn-save-loc').onclick = saveRestaurantLocation;
+
+            // Address search with Enter key or blur
+            const inputAddress = document.getElementById('input-address');
+            inputAddress.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    geocodeAddress(inputAddress.value);
+                }
+            });
+
+            // Map tools
+            document.getElementById('tool-draw-polygon').onclick = () => {
+                if (!draw) return;
+                draw.changeMode('draw_polygon');
+                document.getElementById('tool-draw-polygon').classList.add('active');
+            };
+
+            document.getElementById('tool-delete-shape').onclick = () => {
+                if (!draw) return;
+                const selected = draw.getSelected();
+                if (selected && selected.features.length > 0) {
+                    draw.delete(selected.features.map(f => f.id));
+                }
+            };
+
+            document.getElementById('tool-recenter').onclick = () => {
+                if (!map || !currentRestaurantLocation) return;
+                map.flyTo({
+                    center: [currentRestaurantLocation.longitude, currentRestaurantLocation.latitude],
+                    zoom: 14
+                });
+            };
+
+            // Modal events
+            document.getElementById('btn-create-zone').onclick = () => openZoneModal();
+            document.getElementById('btn-modal-cancel').onclick = closeZoneModal;
+            document.getElementById('btn-modal-save').onclick = saveZoneFromModal;
+
+            // Color choice selection in modal
+            const colorChoices = document.querySelectorAll('.color-choice');
+            colorChoices.forEach(choice => {
+                choice.onclick = () => {
+                    colorChoices.forEach(c => c.classList.remove('selected'));
+                    choice.classList.add('selected');
+                };
+            });
+        }
+
+        async function checkSession() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { location.href = 'index.html'; return; }
+            user = session.user;
+
+            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            if (!profile) {
+                userRole = 'OWNER'; activeOwnerId = user.id; showApp(null); return;
+            }
+
+            userRole = (profile.role || 'OWNER').trim().toUpperCase();
+            const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'];
+
+            if (privilegedRoles.includes(userRole)) {
+                const sidebarContainer = document.getElementById('sidebar-container');
+                sidebarContainer.classList.remove('hidden');
+                sidebarContainer.classList.add('collapsed');
+
+                await setupContextSwitcher();
+                if (!activeOwnerId) {
+                    activeOwnerId = user.id;
+                    activeDomain = profile.domain;
+                    document.getElementById('view-domain-title').textContent = activeDomain || "Admin Workspace";
+                }
+                showApp(profile);
+            } else {
+                activeOwnerId = user.id;
+                activeDomain = profile.domain;
+                showApp(profile);
+            }
+        }
+
+        async function setupContextSwitcher() {
+            const search = document.getElementById('client-search');
+            const { data } = await sb.from('profiles').select('*');
+            allOwners = data || [];
+
+            renderOwners(allOwners);
+            search.oninput = () => {
+                const term = search.value.toLowerCase();
+                const filtered = allOwners.filter(o =>
+                    (o.username || '').toLowerCase().includes(term) ||
+                    (o.domain || '').toLowerCase().includes(term)
+                );
+                renderOwners(filtered);
+            };
+        }
+
+        function renderOwners(owners) {
+            const list = document.getElementById('client-list');
+            list.innerHTML = owners.map(o => `
+                <div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')">
+                    <span class="name">${o.username || 'User'}</span>
+                    <span class="domain">${o.domain || o.id.substring(0,8)}</span>
+                </div>
+            `).join('');
+        }
+
+        window.switchContext = async (ownerId) => {
+            const owner = allOwners.find(o => o.id === ownerId);
+            if (!owner) return;
+            activeOwnerId = ownerId;
+            activeDomain = owner.domain;
+            document.getElementById('view-domain-title').textContent = activeDomain || "No Domain Set";
+            document.getElementById('active-project-name').textContent = owner.username || owner.email;
+            document.getElementById('project-info').classList.remove('hidden');
+            renderOwners(allOwners);
+
+            await syncLanguageForContext();
+            await loadRestaurantLocation();
+            await loadDeliveryZones();
+        };
+
+        async function syncLanguageForContext() {
+            if (!activeOwnerId) return;
+            const { data: resData } = await sb.from('menutech_restaurants').select('language').eq('user_id', activeOwnerId).maybeSingle();
+            const selectedLang = resData?.language || localStorage.getItem('menutech_restaurant_language') || 'en';
+            applyLanguage(selectedLang);
+        }
+
+        async function showApp(profile) {
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('top-nav').classList.remove('hidden');
+            const pill = document.getElementById('user-display-pill');
+
+            if (profile) {
+                document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
+                document.getElementById('user-role-label').textContent = profile.role || 'User';
+                const role = (profile.role || 'user').trim().toUpperCase();
+                if (role === 'ADMIN') pill.classList.add('admin-glow');
+                else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
+                else pill.classList.add('owner-glow');
+            }
+
+            await syncLanguageForContext();
+            initMap();
+            await loadRestaurantLocation();
+            await loadDeliveryZones();
+        }
+
+        // ==========================================
+        // MAPLIBRE GL JS & MAPBOX DRAW INTEGRATION
+        // ==========================================
+        function initMap() {
+            if (map) return;
+
+            map = new maplibregl.Map({
+                container: 'map-container',
+                style: {
+                    version: 8,
+                    sources: {
+                        'osm': {
+                            type: 'raster',
+                            tiles: [
+                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+                            ],
+                            tileSize: 256,
+                            attribution: '&copy; OpenStreetMap Contributors'
+                        }
+                    },
+                    layers: [
+                        {
+                            id: 'osm-tiles',
+                            type: 'raster',
+                            source: 'osm',
+                            minzoom: 0,
+                            maxzoom: 19
+                        }
+                    ]
+                },
+                center: [-74.006, 40.7128], // Default NYC
+                zoom: 12
+            });
+
+            map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+            // Mapbox Draw Plugin
+            draw = new MapboxDraw({
+                displayControlsDefault: false,
+                controls: {},
+                userProperties: true
+            });
+
+            map.addControl(draw, 'top-left');
+
+            map.on('draw.create', (e) => {
+                document.getElementById('tool-draw-polygon').classList.remove('active');
+                if (e.features && e.features.length > 0) {
+                    const feature = e.features[0];
+                    pendingDrawFeature = feature;
+                    openZoneModal(null, feature);
+                }
+            });
+
+            map.on('draw.update', async (e) => {
+                if (e.features && e.features.length > 0) {
+                    const updatedFeature = e.features[0];
+                    const zone = deliveryZones.find(z => z.id === updatedFeature.id);
+                    if (zone) {
+                        zone.geojson = updatedFeature.geometry;
+                        await updateZoneInSupabase(zone);
+                    }
+                }
+            });
+
+            map.on('draw.selectionchange', (e) => {
+                if (e.features && e.features.length > 0) {
+                    const selectedId = e.features[0].id;
+                    highlightZoneInList(selectedId);
+                }
+            });
+        }
+
+        // ==========================================
+        // RESTAURANT LOCATION MANAGEMENT
+        // ==========================================
+        async function loadRestaurantLocation() {
+            if (!activeOwnerId) return;
+
+            // Fetch from menutech_restaurant_locations or fallback to menutech_restaurants address
+            const { data: locData } = await sb
+                .from('menutech_restaurant_locations')
+                .select('*')
+                .eq('user_id', activeOwnerId)
+                .maybeSingle();
+
+            const { data: resData } = await sb
+                .from('menutech_restaurants')
+                .select('name, address')
+                .eq('user_id', activeOwnerId)
+                .maybeSingle();
+
+            if (locData && locData.latitude && locData.longitude) {
+                currentRestaurantLocation = {
+                    address: locData.address || resData?.address || '',
+                    latitude: parseFloat(locData.latitude),
+                    longitude: parseFloat(locData.longitude)
+                };
+            } else if (resData?.address) {
+                currentRestaurantLocation = {
+                    address: resData.address,
+                    latitude: 40.7128,
+                    longitude: -74.006
+                };
+                // Try geocoding address
+                geocodeAddress(resData.address, false);
+            } else {
+                currentRestaurantLocation = {
+                    address: '',
+                    latitude: 40.7128,
+                    longitude: -74.006
+                };
+            }
+
+            updateLocationUI();
+            setRestaurantMapMarker(currentRestaurantLocation.longitude, currentRestaurantLocation.latitude);
+        }
+
+        function updateLocationUI() {
+            if (!currentRestaurantLocation) return;
+            document.getElementById('input-address').value = currentRestaurantLocation.address || '';
+            document.getElementById('input-lat').value = currentRestaurantLocation.latitude.toFixed(6);
+            document.getElementById('input-lng').value = currentRestaurantLocation.longitude.toFixed(6);
+        }
+
+        function setRestaurantMapMarker(lng, lat) {
+            if (!map) return;
+
+            if (!restaurantMarker) {
+                const el = document.createElement('div');
+                el.className = 'restaurant-marker-pin';
+                el.innerHTML = '<div class="restaurant-marker-pin-inner">🍽️</div>';
+
+                restaurantMarker = new maplibregl.Marker({ element: el, draggable: true })
+                    .setLngLat([lng, lat])
+                    .addTo(map);
+
+                restaurantMarker.on('dragend', () => {
+                    const newLngLat = restaurantMarker.getLngLat();
+                    currentRestaurantLocation.latitude = newLngLat.lat;
+                    currentRestaurantLocation.longitude = newLngLat.lng;
+                    updateLocationUI();
+                    reverseGeocode(newLngLat.lat, newLngLat.lng);
+                });
+            } else {
+                restaurantMarker.setLngLat([lng, lat]);
+            }
+
+            map.flyTo({ center: [lng, lat], zoom: 13 });
+        }
+
+        async function saveRestaurantLocation() {
+            if (!activeOwnerId) return;
+
+            const lat = parseFloat(document.getElementById('input-lat').value);
+            const lng = parseFloat(document.getElementById('input-lng').value);
+            const address = document.getElementById('input-address').value.trim();
+
+            if (isNaN(lat) || isNaN(lng)) {
+                showToast(I18N[currentLang].geocodingNotFound, "warning");
+                return;
+            }
+
+            currentRestaurantLocation = { address, latitude: lat, longitude: lng };
+
+            const { error } = await sb.from('menutech_restaurant_locations').upsert({
+                user_id: activeOwnerId,
+                address: address,
+                latitude: lat,
+                longitude: lng,
+                updated_at: new Date().toISOString()
+            });
+
+            if (error) {
+                showToast(I18N[currentLang].toastLocError + error.message, "error");
+            } else {
+                showToast(I18N[currentLang].toastLocSaved, "success");
+                setRestaurantMapMarker(lng, lat);
+            }
+        }
+
+        function detectCurrentLocation() {
+            if (!navigator.geolocation) {
+                showToast(I18N[currentLang].toastGeolocError, "error");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    currentRestaurantLocation.latitude = lat;
+                    currentRestaurantLocation.longitude = lng;
+                    updateLocationUI();
+                    setRestaurantMapMarker(lng, lat);
+                    reverseGeocode(lat, lng);
+                    showToast(I18N[currentLang].toastGeolocSuccess, "success");
+                },
+                (err) => {
+                    showToast(I18N[currentLang].toastGeolocError, "warning");
+                },
+                { enableHighAccuracy: true, timeout: 8000 }
+            );
+        }
+
+        async function geocodeAddress(query, showToasts = true) {
+            if (!query) return;
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`, {
+                    headers: { 'Accept-Language': currentLang }
+                });
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lng = parseFloat(data[0].lon);
+                    currentRestaurantLocation.latitude = lat;
+                    currentRestaurantLocation.longitude = lng;
+                    updateLocationUI();
+                    setRestaurantMapMarker(lng, lat);
+                    if (showToasts) showToast(I18N[currentLang].toastGeolocSuccess, "success");
+                } else if (showToasts) {
+                    showToast(I18N[currentLang].geocodingNotFound, "warning");
+                }
+            } catch (e) {
+                console.error("Geocoding error:", e);
+            }
+        }
+
+        async function reverseGeocode(lat, lng) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+                    headers: { 'Accept-Language': currentLang }
+                });
+                const data = await res.json();
+                if (data && data.display_name) {
+                    currentRestaurantLocation.address = data.display_name;
+                    document.getElementById('input-address').value = data.display_name;
+                }
+            } catch (e) {
+                console.error("Reverse geocoding error:", e);
+            }
+        }
+
+        // ==========================================
+        // DELIVERY ZONES MANAGEMENT
+        // ==========================================
+        async function loadDeliveryZones() {
+            if (!activeOwnerId) return;
+
+            const { data, error } = await sb
+                .from('menutech_delivery_zones')
+                .select('*')
+                .eq('user_id', activeOwnerId)
+                .order('fee', { ascending: true });
+
+            if (error) {
+                console.error("Error loading delivery zones:", error);
+                deliveryZones = [];
+            } else {
+                deliveryZones = data || [];
+            }
+
+            renderZonesList();
+            renderZonesOnMap();
+        }
+
+        function renderZonesList() {
+            const container = document.getElementById('zones-list');
+            const dict = I18N[currentLang];
+
+            if (!deliveryZones || deliveryZones.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 2 8.5 4 18 20 18 22 8.5 12 2"/>
+                        </svg>
+                        <p>${dict.emptyZones}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = deliveryZones.map(zone => `
+                <div class="zone-card ${editingZone?.id === zone.id ? 'active' : ''}" id="zone-card-${zone.id}" onclick="selectZone('${zone.id}')">
+                    <div class="zone-card-top">
+                        <div class="zone-badge-wrap">
+                            <div class="zone-color-dot" style="background:${zone.color || '#ff9533'};"></div>
+                            <span class="zone-title">${zone.name}</span>
+                        </div>
+                        <span class="zone-fee">$${parseFloat(zone.fee || 0).toFixed(2)}</span>
+                    </div>
+                    <div class="zone-card-bottom">
+                        <span style="display:flex; align-items:center; gap:4px; font-weight:700; color:${zone.is_active ? 'var(--success)' : 'var(--text-dim)'};">
+                            ${zone.is_active ? '● ' + dict.statusActive : '○ ' + dict.statusInactive}
+                        </span>
+                        <div class="zone-actions">
+                            <button class="zone-action-btn" title="Edit Zone" onclick="event.stopPropagation(); openZoneModal('${zone.id}')">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>
+                            <button class="zone-action-btn" title="Toggle Active" onclick="event.stopPropagation(); toggleZoneActive('${zone.id}')">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                            </button>
+                            <button class="zone-action-btn delete" title="Delete Zone" onclick="event.stopPropagation(); deleteZone('${zone.id}')">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderZonesOnMap() {
+            if (!draw || !map) return;
+
+            // Clear previous draw features
+            draw.deleteAll();
+
+            // Populate MapboxDraw with all existing zone polygons
+            const features = deliveryZones.map(zone => {
+                let geom = zone.geojson;
+                if (typeof geom === 'string') {
+                    try { geom = JSON.parse(geom); } catch(e){}
+                }
+                return {
+                    id: zone.id,
+                    type: 'Feature',
+                    properties: {
+                        name: zone.name,
+                        fee: zone.fee,
+                        color: zone.color,
+                        is_active: zone.is_active
+                    },
+                    geometry: geom
+                };
+            }).filter(f => f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon'));
+
+            features.forEach(f => {
+                try { draw.add(f); } catch (e) { console.error("Error adding feature to map:", e); }
+            });
+        }
+
+        window.selectZone = (zoneId) => {
+            const zone = deliveryZones.find(z => z.id === zoneId);
+            if (!zone || !draw) return;
+
+            editingZone = zone;
+            highlightZoneInList(zoneId);
+
+            // Select on draw
+            try {
+                draw.changeMode('simple_select', { featureIds: [zoneId] });
+            } catch (e) {}
+
+            // Fit map to polygon
+            try {
+                const bbox = turf.bbox(zone.geojson);
+                map.fitBounds(bbox, { padding: 40 });
+            } catch (e) {}
+        };
+
+        function highlightZoneInList(zoneId) {
+            document.querySelectorAll('.zone-card').forEach(c => c.classList.remove('active'));
+            const card = document.getElementById(`zone-card-${zoneId}`);
+            if (card) {
+                card.classList.add('active');
+                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        // ==========================================
+        // ZONE MODAL OPERATIONS
+        // ==========================================
+        window.openZoneModal = (zoneId = null, feature = null) => {
+            const modal = document.getElementById('zone-modal');
+            const nameInput = document.getElementById('modal-zone-name');
+            const feeInput = document.getElementById('modal-zone-fee');
+            const activeInput = document.getElementById('modal-zone-active');
+
+            if (zoneId) {
+                editingZone = deliveryZones.find(z => z.id === zoneId);
+                pendingDrawFeature = null;
+                nameInput.value = editingZone.name || '';
+                feeInput.value = editingZone.fee !== undefined ? editingZone.fee : 0;
+                activeInput.checked = editingZone.is_active !== false;
+                selectColorInPalette(editingZone.color || '#ff9533');
+            } else {
+                editingZone = null;
+                pendingDrawFeature = feature || null;
+                nameInput.value = '';
+                feeInput.value = '2.50';
+                activeInput.checked = true;
+                selectColorInPalette('#ff9533');
+
+                if (!feature) {
+                    if (draw) {
+                        const selected = draw.getSelected();
+                        if (selected && selected.features.length > 0) {
+                            pendingDrawFeature = selected.features[0];
+                        } else {
+                            draw.changeMode('draw_polygon');
+                            showToast(I18N[currentLang].toastDrawPolygonFirst, "warning");
+                            return;
+                        }
+                    }
+                }
+            }
+
+            modal.style.display = 'flex';
+        };
+
+        window.closeZoneModal = () => {
+            document.getElementById('zone-modal').style.display = 'none';
+            pendingDrawFeature = null;
+        };
+
+        function selectColorInPalette(color) {
+            const colorChoices = document.querySelectorAll('.color-choice');
+            colorChoices.forEach(c => {
+                c.classList.toggle('selected', c.dataset.color.toLowerCase() === color.toLowerCase());
+            });
+        }
+
+        function getSelectedColor() {
+            const selected = document.querySelector('.color-choice.selected');
+            return selected ? selected.dataset.color : '#ff9533';
+        }
+
+        async function saveZoneFromModal() {
+            if (!activeOwnerId) return;
+
+            const name = document.getElementById('modal-zone-name').value.trim();
+            const fee = parseFloat(document.getElementById('modal-zone-fee').value);
+            const isActive = document.getElementById('modal-zone-active').checked;
+            const color = getSelectedColor();
+
+            if (!name) {
+                showToast("Please enter a name for the delivery zone.", "warning");
+                return;
+            }
+            if (isNaN(fee) || fee < 0) {
+                showToast("Please enter a valid delivery fee.", "warning");
+                return;
+            }
+
+            let geojson = null;
+
+            if (editingZone) {
+                if (draw) {
+                    const featureInDraw = draw.get(editingZone.id);
+                    geojson = featureInDraw ? featureInDraw.geometry : editingZone.geojson;
+                } else {
+                    geojson = editingZone.geojson;
+                }
+
+                const { error } = await sb.from('menutech_delivery_zones').update({
+                    name: name,
+                    fee: fee,
+                    color: color,
+                    is_active: isActive,
+                    geojson: geojson,
+                    updated_at: new Date().toISOString()
+                }).eq('id', editingZone.id);
+
+                if (error) {
+                    showToast("Error updating zone: " + error.message, "error");
+                    return;
+                }
+            } else {
+                if (pendingDrawFeature) {
+                    geojson = pendingDrawFeature.geometry;
+                } else if (draw) {
+                    const selected = draw.getSelected();
+                    if (selected && selected.features.length > 0) {
+                        geojson = selected.features[0].geometry;
+                    }
+                }
+
+                if (!geojson) {
+                    showToast(I18N[currentLang].toastDrawPolygonFirst, "warning");
+                    closeZoneModal();
+                    return;
+                }
+
+                const { data, error } = await sb.from('menutech_delivery_zones').insert({
+                    user_id: activeOwnerId,
+                    name: name,
+                    fee: fee,
+                    color: color,
+                    is_active: isActive,
+                    geojson: geojson
+                }).select().single();
+
+                if (error) {
+                    showToast("Error creating zone: " + error.message, "error");
+                    return;
+                }
+            }
+
+            showToast(I18N[currentLang].toastZoneSaved, "success");
+            closeZoneModal();
+            await loadDeliveryZones();
+        }
+
+        async function updateZoneInSupabase(zone) {
+            const { error } = await sb.from('menutech_delivery_zones').update({
+                geojson: zone.geojson,
+                updated_at: new Date().toISOString()
+            }).eq('id', zone.id);
+
+            if (error) {
+                console.error("Error syncing zone polygon update:", error);
+            }
+        }
+
+        window.toggleZoneActive = async (zoneId) => {
+            const zone = deliveryZones.find(z => z.id === zoneId);
+            if (!zone) return;
+
+            const nextActive = !zone.is_active;
+            const { error } = await sb.from('menutech_delivery_zones').update({
+                is_active: nextActive,
+                updated_at: new Date().toISOString()
+            }).eq('id', zoneId);
+
+            if (error) {
+                showToast("Error updating zone status: " + error.message, "error");
+            } else {
+                zone.is_active = nextActive;
+                showToast(I18N[currentLang].toastZoneToggled, "success");
+                renderZonesList();
+                renderZonesOnMap();
+            }
+        };
+
+        window.deleteZone = async (zoneId) => {
+            if (!confirm(I18N[currentLang].confirmDeleteZone)) return;
+
+            const { error } = await sb.from('menutech_delivery_zones').delete().eq('id', zoneId);
+            if (error) {
+                showToast("Error deleting zone: " + error.message, "error");
+            } else {
+                if (draw) draw.delete(zoneId);
+                showToast(I18N[currentLang].toastZoneDeleted, "success");
+                await loadDeliveryZones();
+            }
+        };
+    </script>
+</body>
+</html>

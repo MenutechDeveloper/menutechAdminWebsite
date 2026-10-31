@@ -340,6 +340,16 @@ class PrintService {
 
     sb.writeln("[C]--------------------------------");
 
+    // Delivery & Subtotal calculation
+    final fee = order.deliveryFee ?? 0.0;
+    if (fee > 0) {
+      final sub = order.subtotal ?? (order.totalAmount - fee);
+      sb.writeln("[L]Subtotal:[R]\$ ${sub.toStringAsFixed(2)}");
+      final zoneLabel = order.deliveryZoneName != null ? "Delivery (${order.deliveryZoneName}):" : "Delivery Fee:";
+      sb.writeln("[L]$zoneLabel[R]\$ ${fee.toStringAsFixed(2)}");
+      sb.writeln("[C]--------------------------------");
+    }
+
     // Footer
     sb.writeln("[L]<b>TOTAL</b>[R]<b>\$${order.totalAmount.toStringAsFixed(2)}</b>");
 

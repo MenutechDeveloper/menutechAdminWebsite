@@ -18,6 +18,9 @@ class UnifiedItem {
   final String? address;
   final String? reference;
   final String orderType; // 'delivery' or 'pickup'
+  final double? subtotal;
+  final double? deliveryFee;
+  final String? deliveryZoneName;
   final List<OrderItem> items;
   final String? customerNotes;
   final String? paymentMethod;
@@ -45,6 +48,9 @@ class UnifiedItem {
     this.address,
     this.reference,
     this.orderType = 'pickup',
+    this.subtotal,
+    this.deliveryFee,
+    this.deliveryZoneName,
     this.items = const [],
     this.customerNotes,
     this.paymentMethod,
@@ -82,6 +88,9 @@ class UnifiedItem {
       address: json['address'],
       reference: json['reference'],
       orderType: json['order_type'] ?? 'pickup',
+      subtotal: json['subtotal'] != null ? (json['subtotal'] as num).toDouble() : null,
+      deliveryFee: json['delivery_fee'] != null ? (json['delivery_fee'] as num).toDouble() : null,
+      deliveryZoneName: json['delivery_zone_name'],
       items: itemsList,
       customerNotes: json['customer_notes'],
       paymentMethod: json['payment_method'],
@@ -185,6 +194,9 @@ class UnifiedItem {
       orderType: orderType,
       status: status,
       totalAmount: totalAmount,
+      subtotal: subtotal,
+      deliveryFee: deliveryFee,
+      deliveryZoneName: deliveryZoneName,
       items: items,
       createdAt: createdAt,
       customerNotes: customerNotes,

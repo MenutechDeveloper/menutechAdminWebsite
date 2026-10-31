@@ -153,8 +153,15 @@ function renderOrderEmailTemplate(data: {
   const { item, restName, restLogo, brandColor, restPhone, restAddress } = data;
   const items = Array.isArray(item.items) ? item.items : [];
   const total = parseFloat(item.total || item.total_amount || item.totalAmount || 0).toFixed(2);
+  const deliveryFee = parseFloat(item.delivery_fee || item.deliveryFee || 0);
+  const subtotal = item.subtotal !== undefined && item.subtotal !== null
+    ? parseFloat(item.subtotal).toFixed(2)
+    : (deliveryFee > 0 ? (parseFloat(total) - deliveryFee).toFixed(2) : total);
+  const zoneName = item.delivery_zone_name || item.deliveryZoneName;
   const orderType = item.order_type || item.orderType;
-  const deliveryType = orderType === "delivery" ? "Entrega a Domicilio / Delivery" : "Recoger en Local / Pickup";
+  const deliveryType = orderType === "delivery"
+    ? (zoneName ? `Entrega a Domicilio (${zoneName})` : "Entrega a Domicilio / Delivery")
+    : "Recoger en Local / Pickup";
   const paymentMethod = (item.payment_method || item.paymentMethod || "Efectivo").toUpperCase();
   const customerName = item.customer_name || item.customerName || "Cliente";
   const customerPhone = item.customer_phone || item.customerPhone || "N/A";
@@ -259,9 +266,19 @@ function renderOrderEmailTemplate(data: {
                   ${itemsRowsHtml || `<tr><td colspan="2" style="padding:12px; font-size:14px; color:#718096;">Detalles del pedido procesados</td></tr>`}
                 </tbody>
                 <tfoot>
+                  ${deliveryFee > 0 ? `
+                    <tr style="background-color: #f8fafc;">
+                      <td style="padding: 10px 16px; font-size: 14px; color: #718096; border-top: 1px solid #edf2f7;">Subtotal productos</td>
+                      <td style="padding: 10px 16px; font-size: 14px; color: #2d3748; text-align: right; border-top: 1px solid #edf2f7;">$${subtotal}</td>
+                    </tr>
+                    <tr style="background-color: #f8fafc;">
+                      <td style="padding: 10px 16px; font-size: 14px; color: #718096;">Costo de envío ${zoneName ? `(${zoneName})` : ''}</td>
+                      <td style="padding: 10px 16px; font-size: 14px; color: #2d3748; text-align: right;">$${deliveryFee.toFixed(2)}</td>
+                    </tr>
+                  ` : ''}
                   <tr style="background-color: #f8fafc;">
-                    <td style="padding: 14px 16px; font-size: 16px; font-weight: 800; color: #1a202c;">Total</td>
-                    <td style="padding: 14px 16px; font-size: 18px; font-weight: 800; color: ${brandColor}; text-align: right;">$${total}</td>
+                    <td style="padding: 14px 16px; font-size: 16px; font-weight: 800; color: #1a202c; border-top: 1.5px solid #edf2f7;">Total</td>
+                    <td style="padding: 14px 16px; font-size: 18px; font-weight: 800; color: ${brandColor}; text-align: right; border-top: 1.5px solid #edf2f7;">$${total}</td>
                   </tr>
                 </tfoot>
               </table>

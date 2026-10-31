@@ -10,6 +10,9 @@ class OrderModel {
   final String orderType;
   final String status;
   final double totalAmount;
+  final double? subtotal;
+  final double? deliveryFee;
+  final String? deliveryZoneName;
   final List<OrderItem> items;
   final DateTime createdAt;
   final String? customerNotes;
@@ -28,6 +31,9 @@ class OrderModel {
     required this.orderType,
     required this.status,
     required this.totalAmount,
+    this.subtotal,
+    this.deliveryFee,
+    this.deliveryZoneName,
     required this.items,
     required this.createdAt,
     this.customerNotes,
@@ -58,6 +64,9 @@ class OrderModel {
       orderType: json['order_type'] ?? 'pickup',
       status: json['status'] ?? 'pending',
       totalAmount: (json['total_amount'] ?? json['total'] ?? 0).toDouble(),
+      subtotal: json['subtotal'] != null ? (json['subtotal'] as num).toDouble() : null,
+      deliveryFee: json['delivery_fee'] != null ? (json['delivery_fee'] as num).toDouble() : null,
+      deliveryZoneName: json['delivery_zone_name'],
       items: itemsList,
       createdAt: DateTime.parse(json['created_at']).toLocal(),
       customerNotes: json['customer_notes'],
