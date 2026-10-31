@@ -207,11 +207,6 @@
                 <h3>My Menu</h3>
                 <p>Create and manage digital menus for your restaurant.</p>
             </a>
-            <a href="onlinePayment.html" class="bento-card" id="card-online-payment">
-                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
-                <h3>Online Payment</h3>
-                <p>Connect your Stripe account to receive online payments for orders & reservations.</p>
-            </a>
             <a href="reservations.html" class="bento-card" id="card-reservations">
                 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/></svg></div>
                 <h3>My Reservations</h3>
@@ -222,15 +217,20 @@
                 <h3>Orders & Reservations</h3>
                 <p>Manage incoming restaurant orders and table bookings in real-time.</p>
             </a>
-            <a href="delivery.html" class="bento-card" id="card-delivery">
-                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div>
-                <h3>Delivery</h3>
-                <p>Configure delivery zones, polygon coverage, and shipping fees.</p>
-            </a>
             <a href="tickets.html" class="bento-card" id="card-tickets">
                 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><path d="M2 18V2h20v16l-2-2-2 2-2-2-2 2-2-2-2 2-2-2-2 2-2-2ZM9 7h6M9 11h6"/></svg></div>
                 <h3>Tickets</h3>
                 <p>Configure the design and information for your printed tickets.</p>
+            </a>
+            <a href="onlinePayment.html" class="bento-card" id="card-online-payment">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+                <h3>Online Payment</h3>
+                <p>Connect your Stripe account to receive online payments for orders & reservations.</p>
+            </a>
+            <a href="delivery.html" class="bento-card" id="card-delivery">
+                <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div>
+                <h3>Delivery</h3>
+                <p>Configure delivery zones, polygon coverage, and shipping fees.</p>
             </a>
             <a href="adminBilling.html" class="bento-card" id="card-admin-billing">
                 <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px; height:32px;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M6 15h4"/></svg></div>
@@ -363,6 +363,8 @@
                         document.getElementById('card-scanner-menus').classList.add('hidden');
                         document.getElementById('card-customer-website').classList.add('hidden');
                         document.getElementById('card-admin-billing').classList.add('hidden');
+                        document.getElementById('card-online-payment').classList.add('hidden');
+                        document.getElementById('card-delivery').classList.add('hidden');
                         document.getElementById('divider-1').classList.add('hidden');
                         document.getElementById('divider-2').classList.add('hidden');
 
