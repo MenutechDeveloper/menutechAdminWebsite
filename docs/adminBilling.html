@@ -59,10 +59,11 @@
         .main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
 
         .search-box { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 24px; position: relative; cursor: default; transition: opacity 0.3s; user-select: none; z-index: 100; box-shadow: 0 20px 50px rgba(0,0,0,0.15); height: 100%; display: flex; flex-direction: column; }
-        .search-box label { display: block; font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 12px; margin-left: 5px; pointer-events: none; letter-spacing: 0.5px; }
-        .search-box input { width: 100%; margin-bottom: 15px; border-radius: 16px; padding: 14px; background: var(--input); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 0.85rem; }
+        .search-box label { display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 15px; margin-left: 5px; pointer-events: none; letter-spacing: 0.5px; }
+        .search-box input { width: 100%; margin-bottom: 15px; border-radius: 16px; padding: 14px; background: var(--input); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 0.85rem; outline: none; }
+        .search-box input:focus { border-color: var(--orange); }
 
-        .client-list { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
+        .client-list { max-height: 440px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
         .client-list::-webkit-scrollbar { width: 4px; }
         .client-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
@@ -249,16 +250,16 @@
             <div class="sidebar-container hidden" id="sidebar-container">
                 <div class="sidebar" id="sidebar">
                     <div class="search-box">
-                        <label id="lbl-sidebar-search">Buscar Restaurante</label>
-                        <input type="text" id="client-search" placeholder="Nombre o Dominio...">
+                        <label id="lbl-sidebar-search">BUSCAR PROYECTO</label>
+                        <input type="text" id="client-search" placeholder="Dominio o Nombre...">
                         <div class="client-list" id="client-list"></div>
                         <div id="project-info" class="switcher-box hidden" style="width: 100%; margin: 0; padding-top: 15px; border-top: 1px solid var(--border); margin-top: auto;">
-                            <label id="lbl-sidebar-selected">Restaurante Seleccionado</label>
-                            <div id="active-project-name" style="font-weight: 700; padding: 12px; background: var(--input); border-radius: 14px; border: 1px solid var(--border); font-size: 0.8rem; margin-top: 8px;">Ninguno</div>
+                            <label id="lbl-sidebar-selected">PROYECTO ACTIVO</label>
+                            <div id="active-project-name" style="font-weight: 700; padding: 12px; background: var(--input); border-radius: 14px; border: 1px solid var(--border); font-size: 0.8rem; margin-top: 8px;">Ninguno Seleccionado</div>
                         </div>
                     </div>
                 </div>
-                <div class="sidebar-tab" id="sidebar-tab">Buscar Cliente</div>
+                <div class="sidebar-tab" id="sidebar-tab">BUSCAR PROYECTO</div>
             </div>
 
             <div class="main-content">
@@ -267,9 +268,9 @@
                     <!-- Active Account Banner -->
                     <div class="account-banner">
                         <div class="account-title-box">
-                            <div class="account-avatar" id="acc-avatar">M</div>
+                            <div class="account-avatar" id="acc-avatar">-</div>
                             <div class="account-details">
-                                <h2 id="active-account-name">Menutech</h2>
+                                <h2 id="active-account-name">-</h2>
                                 <p id="active-account-sub">Dominio: - | Registro: -</p>
                             </div>
                         </div>
@@ -470,9 +471,11 @@
                 navPanel: "PANEL",
                 pillHome: "Inicio",
                 pillLogout: "Cerrar Sesión",
-                findRestaurant: "Buscar Restaurante",
-                findClientTab: "Buscar Cliente",
-                selectedRestaurant: "Restaurante Seleccionado",
+                findRestaurant: "BUSCAR PROYECTO",
+                findClientTab: "BUSCAR PROYECTO",
+                selectedRestaurant: "PROYECTO ACTIVO",
+                noneSelected: "Ninguno Seleccionado",
+                phDomainOrName: "Dominio o Nombre...",
                 domainLabel: "Dominio",
                 regLabel: "Registro",
                 tabMonthly: "Mensualidades",
@@ -541,9 +544,11 @@
                 navPanel: "PANEL",
                 pillHome: "Home",
                 pillLogout: "Logout",
-                findRestaurant: "Search Restaurant",
-                findClientTab: "Search Client",
-                selectedRestaurant: "Selected Restaurant",
+                findRestaurant: "FIND PROJECT",
+                findClientTab: "FIND PROJECT",
+                selectedRestaurant: "ACTIVE PROJECT",
+                noneSelected: "None Selected",
+                phDomainOrName: "Domain or Name...",
                 domainLabel: "Domain",
                 regLabel: "Registered",
                 tabMonthly: "Monthly Billing",
@@ -631,6 +636,8 @@
             if (!session) {
                 // If in mock or standalone test mode, do not redirect
                 if (window.location.search.includes('mock=true')) {
+                    document.getElementById('sidebar-container').classList.remove('hidden');
+                    document.getElementById('sidebar-container').classList.add('collapsed');
                     showApp({ username: 'Admin', role: 'ADMIN' });
                     return;
                 }
@@ -702,6 +709,12 @@
             document.getElementById('lbl-sidebar-search').textContent = dict.findRestaurant;
             document.getElementById('sidebar-tab').textContent = dict.findClientTab;
             document.getElementById('lbl-sidebar-selected').textContent = dict.selectedRestaurant;
+            document.getElementById('client-search').placeholder = dict.phDomainOrName;
+
+            const activeProjEl = document.getElementById('active-project-name');
+            if (activeProjEl && (!activeOwnerProfile || activeProjEl.textContent === 'Ninguno' || activeProjEl.textContent === 'None Selected' || activeProjEl.textContent === 'Ninguno Seleccionado')) {
+                activeProjEl.textContent = dict.noneSelected;
+            }
 
             document.getElementById('tab-sub-btn').textContent = dict.tabMonthly;
             document.getElementById('tab-overview-btn').textContent = dict.tabOverview;
@@ -760,9 +773,8 @@
 
         async function setupContextSwitcher() {
             const search = document.getElementById('client-search');
-            const { data } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
-            allOwners = (data || []).filter(p => !['admin', 'developer'].includes((p.role || '').toLowerCase()));
-            if (!allOwners.length && data?.length) allOwners = data;
+            const { data } = await sb.from('profiles').select('*');
+            allOwners = data || [];
 
             renderOwners(allOwners);
             search.oninput = () => {
@@ -796,9 +808,9 @@
         function renderActiveAccountBanner() {
             if (!activeOwnerProfile) return;
             const dict = I18N_BILLING[currentLang];
-            const name = activeOwnerProfile.username || 'Cliente';
+            const name = activeOwnerProfile.username || activeOwnerProfile.email?.split('@')[0] || (currentLang === 'es' ? 'Cliente' : 'Client');
             document.getElementById('active-account-name').textContent = name;
-            document.getElementById('acc-avatar').textContent = name.charAt(0).toUpperCase();
+            document.getElementById('acc-avatar').textContent = name.charAt(0).toUpperCase() || 'C';
 
             const regDateStr = activeOwnerProfile.created_at ? new Date(activeOwnerProfile.created_at).toLocaleDateString(currentLang === 'es' ? 'es-MX' : 'en-US') : '-';
             const dom = activeOwnerProfile.domain || '-';
