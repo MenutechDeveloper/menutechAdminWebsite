@@ -20,6 +20,7 @@
             "Delivery & Coverage Zones": "Delivery y Zonas de Cobertura",
             "Delivery Fee": "Tarifa de Entrega",
             "Subtotal": "Subtotal",
+            "Admin Billing": "Facturación Admin",
             "Tickets": "Tickets",
             "Users": "Usuarios",
             "Deluxe Website": "Sitio Web Deluxe",

@@ -1703,10 +1703,29 @@ class MenutechPlatformOrders extends HTMLElement {
             document.title = data.config.restaurant_name;
         }
 
-        // Check if restaurant has Stripe online payments enabled
+        // Check if restaurant is suspended or has Stripe online payments enabled
         this.onlinePaymentEnabled = false;
         if (data.user_id && this.supabase) {
             try {
+                const { data: prof } = await this.supabase
+                    .from('profiles')
+                    .select('is_suspended')
+                    .eq('id', data.user_id)
+                    .maybeSingle();
+                if (prof && prof.is_suspended) {
+                    const isSpanish = (data.config && data.config.language === 'es') || (localStorage.getItem('menutech_restaurant_language') === 'es');
+                    const suspendMsg = isSpanish
+                        ? '<div style="padding: 60px 20px; text-align: center; font-family: sans-serif; color: #64748b;"><div style="font-size: 2.5rem; margin-bottom: 15px;">⏳</div><h3 style="color:#1a1c1e; margin-bottom: 8px;">Servicio no disponible temporalmente</h3><p style="margin: 0; font-size: 0.95rem;">El menú y sistema de pedidos no están disponibles en este momento. Por favor, intenta más tarde.</p></div>'
+                        : '<div style="padding: 60px 20px; text-align: center; font-family: sans-serif; color: #64748b;"><div style="font-size: 2.5rem; margin-bottom: 15px;">⏳</div><h3 style="color:#1a1c1e; margin-bottom: 8px;">Service Temporarily Unavailable</h3><p style="margin: 0; font-size: 0.95rem;">The menu and ordering system are temporarily unavailable. Please check back later.</p></div>';
+
+                    if (this.getAttribute('view') === 'popup') {
+                        this.popupRoot.getElementById('menu-container-inner').innerHTML = suspendMsg;
+                    } else {
+                        this.popupRoot.innerHTML = suspendMsg;
+                    }
+                    return;
+                }
+
                 const { data: stripeAcc } = await this.supabase
                     .from('menutech_stripe_accounts')
                     .select('charges_enabled')
@@ -3867,9 +3886,18 @@ class MenutechReservations extends HTMLElement {
                 if (resSetByUserId) resSettings = resSetByUserId;
             }
 
-            // Fetch restaurant schedule
-            let schedule = [];
+            // Check if profile is suspended
             if (userId) {
+                const { data: prof } = await this.supabase
+                    .from('profiles')
+                    .select('is_suspended')
+                    .eq('id', userId)
+                    .maybeSingle();
+                if (prof && prof.is_suspended) {
+                    this.isSuspended = true;
+                }
+
+                // Fetch restaurant schedule
                 const { data: rest } = await this.supabase
                     .from('menutech_restaurants')
                     .select('*')
@@ -3891,7 +3919,7 @@ class MenutechReservations extends HTMLElement {
 
             this.settings = {
                 user_id: userId,
-                enabled: resSettings ? (resSettings.enabled !== false) : true,
+                enabled: this.isSuspended ? false : (resSettings ? (resSettings.enabled !== false) : true),
                 min_guests: resSettings ? (resSettings.min_guests || 2) : 2,
                 max_guests: resSettings ? (resSettings.max_guests || 8) : 8,
                 min_lead_time_min: resSettings ? (resSettings.min_lead_time_min !== undefined ? resSettings.min_lead_time_min : 15) : 15,
