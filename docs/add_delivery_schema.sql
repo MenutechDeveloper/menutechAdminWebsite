@@ -126,3 +126,20 @@ BEGIN
         ALTER PUBLICATION supabase_realtime ADD TABLE public.menutech_restaurant_locations;
     END IF;
 END $$;
+
+-- Migration for additional delivery zone fields (shape type, circle radius, minimum order amount)
+ALTER TABLE public.menutech_delivery_zones
+ADD COLUMN IF NOT EXISTS min_amount NUMERIC(10, 2) DEFAULT 0.00;
+
+ALTER TABLE public.menutech_delivery_zones
+ADD COLUMN IF NOT EXISTS shape_type TEXT DEFAULT 'shape'; -- 'shape' (polygon) or 'circle'
+
+ALTER TABLE public.menutech_delivery_zones
+ADD COLUMN IF NOT EXISTS circle_radius NUMERIC(10, 2) DEFAULT NULL; -- radius in miles
+
+ALTER TABLE public.menutech_delivery_zones
+ADD COLUMN IF NOT EXISTS circle_center JSONB DEFAULT NULL; -- [lng, lat]
+
+-- Add delivery status toggle to restaurant locations
+ALTER TABLE public.menutech_restaurant_locations
+ADD COLUMN IF NOT EXISTS is_delivery_enabled BOOLEAN DEFAULT true;
