@@ -160,17 +160,32 @@
         #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .pill-menu {
-            position: absolute; top: calc(100% + 12px); right: 0; background: var(--card) !important;
-            border: 1px solid var(--border); border-radius: 24px; padding: 12px; min-width: 100%;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2); opacity: 0; transform: translateY(10px);
-            pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
+            position: absolute; top: calc(100% + 12px); right: 0; background: var(--card) !important; border: 1px solid var(--border);
+            border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
+            animation: none !important;
         }
-        .pill-menu.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
         .pill-menu-item {
-            display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 14px;
-            color: var(--text); text-decoration: none; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s;
+            padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text);
+            display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none;
         }
-        .pill-menu-item:hover { background: var(--input); color: var(--orange); }
+        .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
+        .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+
+        .theme-switch {
+            width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); pointer-events: auto; }
+        .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
+
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
+        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
 
         /* Workspace Header Card */
         .workspace-card {
@@ -683,23 +698,26 @@
 
     <!-- Top Navigation -->
     <div id="top-nav" class="hidden">
-        <div></div>
-        <div id="user-display-pill">
-            <div class="pill-info">
-                <span id="user-name">Loading...</span>
-                <span id="user-role-label">OWNER</span>
+        <div><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="theme-switch" id="theme-toggle">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </div>
-            <div class="pill-menu" id="user-menu">
-                <a href="index.html" class="pill-menu-item">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                    <span id="lbl-pill-home">Home</span>
-                </a>
-                <div class="pill-menu-item" id="btn-logout" style="color:var(--error);">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    <span id="lbl-pill-logout">Logout</span>
+            <div id="user-display-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div class="pill-info">
+                    <div id="user-name">&nbsp;</div>
+                    <div id="user-role-label">&nbsp;</div>
+                </div>
+                <div class="pill-menu">
+                    <a href="index.html" class="pill-menu-item">Home</a>
+                    <a href="reservations.html" class="pill-menu-item">Reservation Settings</a>
+                    <div class="pill-menu-item danger" onclick="logout()">Logout</div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- Collapsible Sidebar Container for Privileged Roles (Admin/Dev/CS) -->
@@ -934,30 +952,38 @@
         }
 
         document.addEventListener("DOMContentLoaded", async () => {
+            initTheme();
             initEvents();
             await checkSession();
         });
 
+        function initTheme() {
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            const themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) {
+                themeToggle.onclick = () => {
+                    document.body.classList.toggle('dark-mode');
+                    localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+                };
+            }
+        }
+
         function initEvents() {
             // User menu dropdown
             const pill = document.getElementById("user-display-pill");
-            const menu = document.getElementById("user-menu");
-            if (pill && menu) {
+            if (pill) {
                 pill.onclick = (e) => {
                     e.stopPropagation();
-                    menu.classList.toggle("active");
+                    pill.classList.toggle("active");
                 };
-                document.addEventListener("click", () => menu.classList.remove("active"));
+                document.addEventListener("click", () => pill.classList.remove("active"));
             }
 
             // Logout
-            const logoutBtn = document.getElementById("btn-logout");
-            if (logoutBtn) {
-                logoutBtn.onclick = async () => {
-                    await sb.auth.signOut();
-                    location.href = "index.html";
-                };
-            }
+            window.logout = async () => {
+                await sb.auth.signOut();
+                location.href = "index.html";
+            };
 
             // Sidebar toggle
             const sidebarTab = document.getElementById("sidebar-tab");
@@ -1127,7 +1153,11 @@
             } catch (e) {
                 currentLang = 'en';
             }
+            localStorage.setItem('menutech_restaurant_language', currentLang);
             applyLanguage();
+            if (window.MenutechI18n && typeof window.MenutechI18n.translatePage === 'function') {
+                window.MenutechI18n.translatePage();
+            }
         }
 
         function applyLanguage() {
@@ -1151,10 +1181,29 @@
             document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('top-nav').classList.remove('hidden');
 
+            const pill = document.getElementById('user-display-pill');
             const nameEl = document.getElementById('user-name');
             const roleEl = document.getElementById('user-role-label');
-            if (nameEl) nameEl.textContent = (profile && profile.username) ? profile.username : (user ? user.email.split('@')[0] : '');
-            if (roleEl) roleEl.textContent = userRole;
+
+            if (profile) {
+                if (nameEl) nameEl.textContent = profile.username || (user ? user.email.split('@')[0] : '');
+                if (roleEl) roleEl.textContent = profile.role || 'User';
+
+                const role = (profile.role || 'user').trim().toUpperCase();
+                if (pill) {
+                    pill.classList.remove('admin-glow', 'dev-glow', 'owner-glow');
+                    if (role === 'ADMIN') pill.classList.add('admin-glow');
+                    else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
+                    else pill.classList.add('owner-glow');
+                }
+            } else {
+                if (nameEl) nameEl.textContent = user ? user.email.split('@')[0] : '';
+                if (roleEl) roleEl.textContent = 'Owner';
+                if (pill) {
+                    pill.classList.remove('admin-glow', 'dev-glow', 'owner-glow');
+                    pill.classList.add('owner-glow');
+                }
+            }
         }
 
         // ==========================================
@@ -1282,33 +1331,73 @@
         async function loadRestaurantLocation() {
             try {
                 let locationData = null;
+
+                // 1. Check existing saved delivery location
                 const { data: locData } = await sb
                     .from('menutech_restaurant_locations')
                     .select('*')
                     .eq('user_id', activeOwnerId)
                     .maybeSingle();
 
+                // 2. Fetch restaurant data registered in restaurantInfo.html
+                const { data: restData } = await sb
+                    .from('menutech_restaurants')
+                    .select('address, lat, lng')
+                    .eq('user_id', activeOwnerId)
+                    .maybeSingle();
+
+                const registeredAddress = (restData && restData.address) ? restData.address.trim() : '';
+
                 if (locData && (locData.latitude || locData.lat) && (locData.longitude || locData.lng)) {
                     locationData = {
                         latitude: parseFloat(locData.latitude || locData.lat),
                         longitude: parseFloat(locData.longitude || locData.lng),
-                        address: locData.address || '',
+                        address: locData.address || registeredAddress,
                         is_delivery_enabled: locData.is_delivery_enabled !== false
                     };
-                } else {
-                    const { data: restData } = await sb
-                        .from('menutech_restaurants')
-                        .select('address, lat, lng')
-                        .eq('user_id', activeOwnerId)
-                        .maybeSingle();
 
-                    if (restData && restData.lat && restData.lng) {
+                    // If registered address changed and differs, re-geocode
+                    if (registeredAddress && locData.address && registeredAddress.toLowerCase() !== locData.address.toLowerCase()) {
+                        const geocoded = await geocodeAddress(registeredAddress);
+                        if (geocoded) {
+                            locationData.latitude = geocoded.lat;
+                            locationData.longitude = geocoded.lng;
+                            locationData.address = registeredAddress;
+                            await sb.from('menutech_restaurant_locations').upsert({
+                                user_id: activeOwnerId,
+                                latitude: geocoded.lat,
+                                longitude: geocoded.lng,
+                                address: registeredAddress,
+                                is_delivery_enabled: locationData.is_delivery_enabled,
+                                updated_at: new Date().toISOString()
+                            }, { onConflict: 'user_id' });
+                        }
+                    }
+                } else if (restData && restData.lat && restData.lng) {
+                    locationData = {
+                        latitude: parseFloat(restData.lat),
+                        longitude: parseFloat(restData.lng),
+                        address: registeredAddress,
+                        is_delivery_enabled: true
+                    };
+                } else if (registeredAddress) {
+                    // Geocode registered address from restaurantInfo.html
+                    const geocoded = await geocodeAddress(registeredAddress);
+                    if (geocoded) {
                         locationData = {
-                            latitude: parseFloat(restData.lat),
-                            longitude: parseFloat(restData.lng),
-                            address: restData.address || '',
+                            latitude: geocoded.lat,
+                            longitude: geocoded.lng,
+                            address: registeredAddress,
                             is_delivery_enabled: true
                         };
+                        await sb.from('menutech_restaurant_locations').upsert({
+                            user_id: activeOwnerId,
+                            latitude: geocoded.lat,
+                            longitude: geocoded.lng,
+                            address: registeredAddress,
+                            is_delivery_enabled: true,
+                            updated_at: new Date().toISOString()
+                        }, { onConflict: 'user_id' });
                     }
                 }
 
@@ -1316,7 +1405,7 @@
                     locationData = {
                         latitude: 25.6866,
                         longitude: -100.3161,
-                        address: 'Default Location',
+                        address: registeredAddress || 'Default Location',
                         is_delivery_enabled: true
                     };
                 }
@@ -1334,13 +1423,35 @@
                 if (map) {
                     map.easeTo({
                         center: [locationData.longitude, locationData.latitude],
-                        zoom: 12.5,
-                        duration: 800
+                        zoom: 13,
+                        duration: 1000
                     });
                 }
             } catch (err) {
                 console.error("Error loading location:", err);
             }
+        }
+
+        async function geocodeAddress(address) {
+            if (!address || typeof address !== 'string' || !address.trim()) return null;
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address.trim())}`;
+                const res = await fetch(url, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!res.ok) return null;
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lng = parseFloat(data[0].lon);
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        return { lat, lng };
+                    }
+                }
+            } catch (e) {
+                console.warn("Geocoding failed:", e);
+            }
+            return null;
         }
 
         function updateRestaurantMarkerOnMap(lng, lat) {
@@ -1978,5 +2089,7 @@
         }
     </script>
 
+    <script src="i18n.js"></script>
+    <script src="chatbot.js"></script>
 </body>
 </html>
