@@ -43,7 +43,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         header { text-align: center; margin-bottom: 30px; }
-        .logo-main { width: 100%; max-width: 240px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
 
         .dashboard-layout { display: flex; min-height: calc(100vh - 160px); gap: 32px; }
 
@@ -242,10 +241,6 @@
     </div>
 
     <div class="container hidden" id="main-app">
-        <header>
-            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
-        </header>
-
         <div class="dashboard-layout">
             <div class="sidebar-container hidden" id="sidebar-container">
                 <div class="sidebar" id="sidebar">
@@ -276,7 +271,7 @@
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                             <span class="status-badge active" id="acc-status-badge">AL CORRIENTE</span>
-                            <button class="btn-action btn-danger" id="btn-toggle-suspension" onclick="toggleAccountSuspension()">Suspender Widget y Enlace</button>
+                            <button class="btn-action btn-danger" id="btn-toggle-suspension" onclick="toggleAccountSuspension()">Suspender Servicio</button>
                         </div>
                     </div>
 
@@ -295,7 +290,7 @@
                                     <select id="sub-package-select"><option value="">-- Sin Paquete --</option></select>
                                 </div>
                                 <div class="form-group">
-                                    <label id="lbl-start-date">Fecha Registro / Inicio</label>
+                                    <label id="lbl-start-date">Fecha Inicio</label>
                                     <input type="date" id="sub-start-date">
                                 </div>
                                 <div class="form-group">
@@ -307,7 +302,7 @@
                                     <input type="date" id="sub-next-due">
                                 </div>
                                 <div class="form-group">
-                                    <label id="lbl-status">Estado Mensualidad (Automático)</label>
+                                    <label id="lbl-status">Estado Mensualidad</label>
                                     <select id="sub-status-select">
                                         <option value="active">Al Corriente</option>
                                         <option value="due_soon">Próximo a Vencer</option>
@@ -324,8 +319,7 @@
 
                             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                                 <button class="btn-action btn-primary" onclick="saveSubscription()" id="btn-save-sub">Guardar Cambios</button>
-                                <button class="btn-action btn-success" onclick="quickMarkPaid()" id="btn-quick-pay">Renovar Mensualidad (Marcar Pagado)</button>
-                                <button class="btn-action btn-secondary" onclick="openPaymentModal()" id="btn-manual-pay">+ Registrar Detalle de Pago</button>
+                                <button class="btn-action btn-success" onclick="quickMarkPaid()" id="btn-quick-pay">Renovar Mensualidad</button>
                             </div>
                         </div>
 
@@ -482,16 +476,16 @@
                 tabOverview: "Resumen Clientes",
                 tabPackages: "Paquetes",
                 lblPackage: "Paquete Asignado",
-                lblStartDate: "Fecha Registro / Inicio",
+                lblStartDate: "Fecha Inicio",
                 lblLastPayment: "Último Pago",
                 lblNextDue: "Próximo Vencimiento",
-                lblStatus: "Estado Mensualidad (Automático)",
+                lblStatus: "Estado Mensualidad",
                 lblNotes: "Notas Internas",
                 btnSaveSub: "Guardar Cambios",
-                btnQuickPay: "Renovar Mensualidad (Marcar Pagado)",
+                btnQuickPay: "Renovar Mensualidad",
                 btnManualPay: "+ Registrar Detalle de Pago",
-                btnSuspend: "Suspender Widget y Enlace",
-                btnReactivate: "Reactivar Widget y Enlace",
+                btnSuspend: "Suspender Servicio",
+                btnReactivate: "Reactivar Servicio",
                 badgeActive: "AL CORRIENTE",
                 badgeDueSoon: "PRÓXIMO A VENCER",
                 badgeOverdue: "VENCIDA",
@@ -555,16 +549,16 @@
                 tabOverview: "Clients Overview",
                 tabPackages: "Packages",
                 lblPackage: "Assigned Package",
-                lblStartDate: "Registration / Start Date",
+                lblStartDate: "Start Date",
                 lblLastPayment: "Last Payment",
                 lblNextDue: "Next Due Date",
-                lblStatus: "Subscription Status (Automatic)",
+                lblStatus: "Subscription Status",
                 lblNotes: "Internal Notes",
                 btnSaveSub: "Save Changes",
-                btnQuickPay: "Renew Month (Mark Paid)",
+                btnQuickPay: "Renew Subscription",
                 btnManualPay: "+ Register Payment Details",
-                btnSuspend: "Suspend Widget & Link",
-                btnReactivate: "Reactivate Widget & Link",
+                btnSuspend: "Suspend Service",
+                btnReactivate: "Reactivate Service",
                 badgeActive: "CURRENT",
                 badgeDueSoon: "DUE SOON",
                 badgeOverdue: "OVERDUE",
@@ -729,7 +723,9 @@
 
             document.getElementById('btn-save-sub').textContent = dict.btnSaveSub;
             document.getElementById('btn-quick-pay').textContent = dict.btnQuickPay;
-            document.getElementById('btn-manual-pay').textContent = dict.btnManualPay;
+            if (document.getElementById('btn-manual-pay')) {
+                document.getElementById('btn-manual-pay').textContent = dict.btnManualPay;
+            }
 
             document.getElementById('lbl-history-title').textContent = dict.lblHistoryTitle;
             document.getElementById('th-h-date').textContent = dict.thHDate;
