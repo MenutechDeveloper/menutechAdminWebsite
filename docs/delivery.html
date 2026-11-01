@@ -335,6 +335,345 @@
         }
 
         .hidden { display: none !important; }
+
+        /* Delivery status switch & Add Zone */
+        .status-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--input);
+            padding: 12px 18px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            margin-bottom: 14px;
+        }
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .status-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        input:checked + .slider {
+            background-color: var(--orange);
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .btn-add-zone-primary {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+        .btn-add-zone-primary:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+            background: #fff8f0;
+        }
+
+        /* Accordion Zone Items */
+        .zone-accordion-item {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: all 0.25s ease;
+        }
+        .zone-accordion-item.active-editing {
+            border-color: var(--orange);
+            box-shadow: 0 4px 16px rgba(255, 149, 51, 0.12);
+        }
+        .zone-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            cursor: pointer;
+            user-select: none;
+            background: var(--card);
+        }
+        .zone-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        .zone-color-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .zone-header-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .zone-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .zone-icon-btn {
+            background: transparent;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-dim);
+            transition: all 0.15s;
+        }
+        .zone-icon-btn:hover {
+            background: var(--input);
+            color: var(--text);
+        }
+        .zone-icon-btn.delete:hover {
+            color: var(--error);
+            background: #fef2f2;
+        }
+        .zone-chevron {
+            transition: transform 0.25s ease;
+        }
+        .zone-accordion-item.open .zone-chevron {
+            transform: rotate(180deg);
+        }
+
+        .zone-editor-body {
+            display: none;
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            background: var(--card);
+        }
+        .zone-accordion-item.open .zone-editor-body {
+            display: block;
+        }
+
+        /* Shape toggle (Circle vs Shape) */
+        .shape-segmented-control {
+            display: flex;
+            align-items: center;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 3px;
+            margin-bottom: 14px;
+        }
+        .shape-segment-btn {
+            flex: 1;
+            padding: 7px 12px;
+            border: none;
+            background: transparent;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .shape-segment-btn.active {
+            background: var(--card);
+            color: var(--text);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        /* Circle / Polygon Hint */
+        .zone-mode-hint {
+            font-size: 0.76rem;
+            color: var(--orange);
+            font-weight: 600;
+            background: #fff8f0;
+            border: 1px dashed var(--orange);
+            padding: 8px 12px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Name & Color Picker row */
+        .name-color-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            margin-bottom: 12px;
+        }
+        .color-picker-wrapper {
+            position: relative;
+            flex-shrink: 0;
+        }
+        .color-swatch-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1.5px solid var(--border);
+            cursor: pointer;
+            padding: 0;
+            background: #ff9533;
+        }
+        .color-picker-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Fee & Min Amount Input Row */
+        .fee-min-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .input-group-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .input-group-compact label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-wrapper-currency {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .currency-symbol {
+            position: absolute;
+            left: 12px;
+            font-weight: 700;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+        .input-wrapper-currency input {
+            padding-left: 28px !important;
+        }
+
+        .distance-fee-link {
+            display: inline-block;
+            font-size: 0.78rem;
+            color: #6366f1;
+            text-decoration: underline;
+            margin-bottom: 14px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .editor-actions-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+        }
+
+        .another-zone-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #6366f1;
+            text-decoration: none;
+            padding: 8px 4px;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+        .another-zone-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Circle Draggable Resize Handle on Map */
+        .circle-resize-handle {
+            width: 18px;
+            height: 18px;
+            background: #ffffff;
+            border: 3px solid var(--orange);
+            border-radius: 50%;
+            cursor: ew-resize;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .circle-resize-handle::after {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--orange);
+            border-radius: 50%;
+        }
+
     </style>
 </head>
 <body>
@@ -389,8 +728,7 @@
                 <!-- Workspace Info Card -->
                 <div class="workspace-card">
                     <div class="workspace-info">
-                        <h1 id="lbl-delivery-title">Delivery & Coverage Zones</h1>
-                        <p id="lbl-delivery-desc">Configure your restaurant location, custom polygon delivery zones, and fees.</p>
+                        <h1 id="lbl-delivery-title">Where do you deliver?</h1>
                         <div id="project-info" class="hidden" style="margin-top:6px; font-size:0.75rem; color:var(--orange); font-weight:700;">
                             <span id="lbl-active-project">Active Project:</span> <span id="active-project-name">None Selected</span>
                         </div>
@@ -402,50 +740,36 @@
                     </div>
                 </div>
 
-                <!-- Location & Geocoding Bar -->
-                <div class="card-box">
-                    <div class="location-grid">
-                        <div class="input-group">
-                            <label id="lbl-restaurant-address">Restaurant Address</label>
-                            <input type="text" id="input-address" class="input-field" placeholder="Search address or street...">
-                        </div>
-                        <div class="input-group">
-                            <label id="lbl-latitude">Latitude</label>
-                            <input type="number" step="0.000001" id="input-lat" class="input-field" placeholder="e.g. 40.7128">
-                        </div>
-                        <div class="input-group">
-                            <label id="lbl-longitude">Longitude</label>
-                            <input type="number" step="0.000001" id="input-lng" class="input-field" placeholder="e.g. -74.0060">
-                        </div>
-                        <div style="display:flex; gap:8px;">
-                            <button class="btn btn-outline" id="btn-detect-loc" title="Detect current GPS location">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
-                                <span id="lbl-btn-locate">Locate</span>
-                            </button>
-                            <button class="btn btn-primary" id="btn-save-loc">
-                                <span id="lbl-btn-save-loc">Save Pin</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Split Map & Delivery Zones View -->
                 <div class="delivery-layout">
                     <!-- Zones Sidebar -->
                     <div class="card-box zones-panel">
-                        <div class="zones-header">
-                            <div>
-                                <h3 id="lbl-zones-title">Delivery Zones</h3>
-                                <p style="font-size:0.75rem; color:var(--text-dim);" id="lbl-zones-subtitle">Polygons & delivery rates</p>
-                            </div>
-                            <button class="btn btn-primary" id="btn-create-zone" style="padding:8px 12px; font-size:0.75rem;">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                <span id="lbl-btn-add-zone">Add Zone</span>
-                            </button>
+                        <!-- Delivery status toggle switch -->
+                        <div class="status-container">
+                            <span class="status-title" id="lbl-delivery-status-title">Delivery status</span>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-delivery-status" checked>
+                                <span class="slider"></span>
+                            </label>
                         </div>
 
-                        <div class="zones-list" id="zones-list">
+                        <!-- Add Zone Button -->
+                        <button class="btn-add-zone-primary" id="btn-add-zone">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <span id="lbl-add-zone-btn">Add Zone</span>
+                        </button>
+
+                        <!-- Accordion Zones List -->
+                        <div class="zones-list" id="zones-list" style="margin-top:4px;">
                             <!-- Populated dynamically via JS -->
+                        </div>
+
+                        <!-- Add another zone link -->
+                        <div id="add-another-zone-wrapper" class="hidden">
+                            <a class="another-zone-link" id="btn-add-another-zone">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                <span id="lbl-add-another-zone">Add another zone?</span>
+                            </a>
                         </div>
                     </div>
 
@@ -526,355 +850,315 @@
     <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
 
     <script type="module">
-        import { MT_CONFIG } from './config.js';
         import { supabase as sb } from './supabase.js';
 
-        // State
         let user = null;
         let userRole = null;
         let activeOwnerId = null;
         let activeDomain = null;
-        let allOwners = [];
         let currentLang = 'en';
 
         let map = null;
         let draw = null;
         let restaurantMarker = null;
         let currentRestaurantLocation = null;
+        let isDeliveryEnabled = true;
+
         let deliveryZones = [];
-        let editingZone = null;
-        let pendingDrawFeature = null;
+        let activeEditingZoneId = null; // ID of zone currently expanded in accordion
+        let activeShapeType = 'shape'; // 'shape' | 'circle'
+
+        // Circle editing state
+        let circleCenter = null; // [lng, lat]
+        let circleRadiusMiles = 2; // default 2 miles
+        let circleHandleMarker = null;
 
         const I18N = {
             en: {
-                pageTitle: "Delivery & Zones | Menutech",
-                deliveryTitle: "Delivery & Coverage Zones",
-                deliveryDesc: "Configure your restaurant location, custom polygon delivery zones, and fees.",
-                restaurantAddress: "Restaurant Address",
-                latitude: "Latitude",
-                longitude: "Longitude",
-                btnLocate: "Locate",
-                btnSaveLoc: "Save Pin",
-                zonesTitle: "Delivery Zones",
-                zonesSubtitle: "Polygons & delivery rates",
+                pageTitle: "Where do you deliver? | Menutech",
+                deliveryTitle: "Where do you deliver?",
+                deliveryStatus: "Delivery status",
                 btnAddZone: "Add Zone",
-                toolDraw: "Draw Polygon",
-                toolDelete: "Delete Shape",
+                btnAnotherZone: "Add another zone?",
+                shapeCircle: "Circle",
+                shapePolygon: "Shape",
+                zoneName: "Name",
+                minAmount: "Minimum amount",
+                deliveryFee: "Delivery fee",
+                byDistanceLink: "Or switch to fee by distance",
+                btnCancel: "Cancel",
+                btnSave: "Save",
+                emptyZones: "No delivery zones defined yet. Click 'Add Zone' to get started.",
+                toastSaved: "Zone saved successfully!",
+                toastDeleted: "Zone deleted successfully!",
+                toastStatusUpdated: "Delivery status updated!",
                 toolCenter: "Center Restaurant",
-                mapHintDraw: "💡 Click 'Draw Polygon' to draw a zone on the map. Click the first vertex to close the shape.",
-                mapHintSelect: "💡 Click a polygon on the map or edit points to reshape.",
-                modalZoneTitle: "Zone Configuration",
-                zoneName: "Zone Name",
-                zoneFee: "Delivery Fee ($)",
-                zoneColor: "Zone Color",
-                zoneActive: "Active Coverage",
-                modalCancel: "Cancel",
-                modalSave: "Save Zone",
-                findProjectSide: "Find Project",
-                activeProject: "Active Project:",
-                noneSelected: "None Selected",
-                pillHome: "Home",
-                pillLogout: "Logout",
-                phDomainOrName: "Domain or Name...",
-                emptyZones: "No delivery zones created yet. Click 'Add Zone' to draw custom polygon coverage and set delivery fees.",
-                statusActive: "Active",
-                statusInactive: "Inactive",
-                toastLocSaved: "Restaurant location saved successfully!",
-                toastLocError: "Error saving restaurant location: ",
-                toastZoneSaved: "Delivery zone saved successfully!",
-                toastZoneDeleted: "Delivery zone deleted successfully!",
-                toastZoneToggled: "Delivery zone status updated!",
-                toastDrawPolygonFirst: "Please draw a polygon on the map first, or click 'Add Zone'.",
-                toastGeolocSuccess: "Location detected from your browser!",
-                toastGeolocError: "Unable to detect browser location.",
-                confirmDeleteZone: "Are you sure you want to delete this delivery zone?",
-                geocodingNotFound: "Address not found. Please try another query or drag the pin on the map."
+                toolDelete: "Clear Drawing",
+                toastDrawPolygonFirst: "Please draw a polygon on the map for this zone.",
+                toastNameRequired: "Please enter a name for the delivery zone."
             },
             es: {
-                pageTitle: "Delivery y Zonas | Menutech",
-                deliveryTitle: "Delivery y Zonas de Cobertura",
-                deliveryDesc: "Configura la ubicación de tu restaurante, zonas poligonales de entrega y tarifas.",
-                restaurantAddress: "Dirección del Restaurante",
-                latitude: "Latitud",
-                longitude: "Longitud",
-                btnLocate: "Ubicar",
-                btnSaveLoc: "Guardar Pin",
-                zonesTitle: "Zonas de Entrega",
-                zonesSubtitle: "Polígonos y tarifas de envío",
+                pageTitle: "¿Dónde entregas? | Menutech",
+                deliveryTitle: "¿Dónde entregas?",
+                deliveryStatus: "Delivery status",
                 btnAddZone: "Agregar Zona",
-                toolDraw: "Dibujar Polígono",
-                toolDelete: "Eliminar Trazo",
+                btnAnotherZone: "¿Agregar otra zona?",
+                shapeCircle: "Círculo",
+                shapePolygon: "Polígono",
+                zoneName: "Nombre",
+                minAmount: "Cantidad mínima",
+                deliveryFee: "Tarifa de envío",
+                byDistanceLink: "O cambiar a tarifa por distancia",
+                btnCancel: "Cancelar",
+                btnSave: "Guardar",
+                emptyZones: "No hay zonas de entrega aún. Haz clic en 'Agregar Zona' para comenzar.",
+                toastSaved: "¡Zona guardada con éxito!",
+                toastDeleted: "¡Zona eliminada con éxito!",
+                toastStatusUpdated: "¡Estado del delivery actualizado!",
                 toolCenter: "Centrar Restaurante",
-                mapHintDraw: "💡 Haz clic en 'Dibujar Polígono' para crear una zona. Haz clic en el primer punto para cerrar el polígono.",
-                mapHintSelect: "💡 Haz clic en un polígono en el mapa para editar sus puntos o ver detalles.",
-                modalZoneTitle: "Configuración de Zona",
-                zoneName: "Nombre de la Zona",
-                zoneFee: "Tarifa de Entrega ($)",
-                zoneColor: "Color de la Zona",
-                zoneActive: "Cobertura Activa",
-                modalCancel: "Cancelar",
-                modalSave: "Guardar Zona",
-                findProjectSide: "Buscar Proyecto",
-                activeProject: "Proyecto Activo:",
-                noneSelected: "Ninguno Seleccionado",
-                pillHome: "Inicio",
-                pillLogout: "Cerrar Sesión",
-                phDomainOrName: "Dominio o Nombre...",
-                emptyZones: "Aún no hay zonas de entrega configuradas. Haz clic en 'Agregar Zona' para dibujar el polígono de cobertura.",
-                statusActive: "Activa",
-                statusInactive: "Inactiva",
-                toastLocSaved: "¡Ubicación del restaurante guardada con éxito!",
-                toastLocError: "Error al guardar ubicación del restaurante: ",
-                toastZoneSaved: "¡Zona de entrega guardada con éxito!",
-                toastZoneDeleted: "¡Zona de entrega eliminada con éxito!",
-                toastZoneToggled: "¡Estado de la zona actualizado!",
-                toastDrawPolygonFirst: "Por favor dibuja un polígono en el mapa primero o haz clic en 'Agregar Zona'.",
-                toastGeolocSuccess: "¡Ubicación detectada por el navegador!",
-                toastGeolocError: "No se pudo obtener la ubicación del navegador.",
-                confirmDeleteZone: "¿Estás seguro de que deseas eliminar esta zona de entrega?",
-                geocodingNotFound: "Dirección no encontrada. Intenta otra búsqueda o arrastra el marcador."
+                toolDelete: "Limpiar Trazo",
+                toastDrawPolygonFirst: "Por favor dibuja un polígono en el mapa para esta zona.",
+                toastNameRequired: "Por favor ingresa un nombre para la zona de entrega."
             }
         };
 
-        function applyLanguage(lang) {
-            currentLang = (lang === 'es') ? 'es' : 'en';
-            const dict = I18N[currentLang];
-
-            document.title = dict.pageTitle;
-            document.getElementById('lbl-delivery-title').textContent = dict.deliveryTitle;
-            document.getElementById('lbl-delivery-desc').textContent = dict.deliveryDesc;
-            document.getElementById('lbl-restaurant-address').textContent = dict.restaurantAddress;
-            document.getElementById('lbl-latitude').textContent = dict.latitude;
-            document.getElementById('lbl-longitude').textContent = dict.longitude;
-            document.getElementById('lbl-btn-locate').textContent = dict.btnLocate;
-            document.getElementById('lbl-btn-save-loc').textContent = dict.btnSaveLoc;
-            document.getElementById('lbl-zones-title').textContent = dict.zonesTitle;
-            document.getElementById('lbl-zones-subtitle').textContent = dict.zonesSubtitle;
-            document.getElementById('lbl-btn-add-zone').textContent = dict.btnAddZone;
-            document.getElementById('lbl-tool-draw').textContent = dict.toolDraw;
-            document.getElementById('lbl-tool-delete').textContent = dict.toolDelete;
-            document.getElementById('lbl-tool-center').textContent = dict.toolCenter;
-            document.getElementById('lbl-map-hint').textContent = dict.mapHintDraw;
-            document.getElementById('lbl-modal-zone-title').textContent = dict.modalZoneTitle;
-            document.getElementById('lbl-zone-name').textContent = dict.zoneName;
-            document.getElementById('lbl-zone-fee').textContent = dict.zoneFee;
-            document.getElementById('lbl-zone-color').textContent = dict.zoneColor;
-            document.getElementById('lbl-zone-active').textContent = dict.zoneActive;
-            document.getElementById('lbl-modal-cancel').textContent = dict.modalCancel;
-            document.getElementById('lbl-modal-save').textContent = dict.modalSave;
-            document.getElementById('lbl-find-project-side').textContent = dict.findProjectSide;
-            document.getElementById('sidebar-tab').textContent = dict.findProjectSide;
-            document.getElementById('lbl-active-project').textContent = dict.activeProject;
-            document.getElementById('client-search').placeholder = dict.phDomainOrName;
-            document.getElementById('lbl-pill-home').textContent = dict.pillHome;
-            document.getElementById('lbl-pill-logout').textContent = dict.pillLogout;
-
-            const activeProjEl = document.getElementById('active-project-name');
-            if (activeProjEl && (activeProjEl.textContent === 'None Selected' || activeProjEl.textContent === 'Ninguno Seleccionado')) {
-                activeProjEl.textContent = dict.noneSelected;
-            }
-
-            renderZonesList();
+        function showToast(message, type = "success") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            const msg = document.createElement("div");
+            msg.textContent = message;
+            toast.appendChild(msg);
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
         }
 
-        window.showToast = (message, type = 'success') => {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            const msg = document.createElement('div');
-            msg.textContent = message;
-            toast.appendChild(msg); container.appendChild(toast);
-            setTimeout(() => toast.remove(), 5000);
-        };
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            initTheme();
+        document.addEventListener("DOMContentLoaded", async () => {
             initEvents();
             await checkSession();
         });
 
-        function initTheme() {
-            if (localStorage.getItem('menutech_theme') === 'dark') {
-                document.body.classList.add('dark-mode');
-            }
-        }
-
         function initEvents() {
-            // User pill toggle
-            const pill = document.getElementById('user-display-pill');
-            const pillMenu = document.getElementById('user-menu');
-            pill.addEventListener('click', (e) => {
-                if (e.target.closest('.pill-menu')) return;
-                pillMenu.classList.toggle('active');
-            });
-            document.addEventListener('click', (e) => {
-                if (!pill.contains(e.target)) pillMenu.classList.remove('active');
-            });
+            // User menu dropdown
+            const pill = document.getElementById("user-display-pill");
+            const menu = document.getElementById("user-menu");
+            if (pill && menu) {
+                pill.onclick = (e) => {
+                    e.stopPropagation();
+                    menu.classList.toggle("active");
+                };
+                document.addEventListener("click", () => menu.classList.remove("active"));
+            }
 
             // Logout
-            document.getElementById('btn-logout').onclick = async () => {
-                await sb.auth.signOut();
-                location.href = 'index.html';
-            };
+            const logoutBtn = document.getElementById("btn-logout");
+            if (logoutBtn) {
+                logoutBtn.onclick = async () => {
+                    await sb.auth.signOut();
+                    location.href = "index.html";
+                };
+            }
 
             // Sidebar toggle
-            const sidebarTab = document.getElementById('sidebar-tab');
-            const sidebarContainer = document.getElementById('sidebar-container');
-            sidebarTab.onclick = () => sidebarContainer.classList.toggle('collapsed');
-
-            // Location buttons
-            document.getElementById('btn-detect-loc').onclick = detectCurrentLocation;
-            document.getElementById('btn-save-loc').onclick = saveRestaurantLocation;
-
-            // Address search with Enter key or blur
-            const inputAddress = document.getElementById('input-address');
-            inputAddress.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    geocodeAddress(inputAddress.value);
-                }
-            });
-
-            // Map tools
-            document.getElementById('tool-draw-polygon').onclick = () => {
-                if (!draw) return;
-                draw.changeMode('draw_polygon');
-                document.getElementById('tool-draw-polygon').classList.add('active');
-            };
-
-            document.getElementById('tool-delete-shape').onclick = () => {
-                if (!draw) return;
-                const selected = draw.getSelected();
-                if (selected && selected.features.length > 0) {
-                    draw.delete(selected.features.map(f => f.id));
-                }
-            };
-
-            document.getElementById('tool-recenter').onclick = () => {
-                if (!map || !currentRestaurantLocation) return;
-                map.flyTo({
-                    center: [currentRestaurantLocation.longitude, currentRestaurantLocation.latitude],
-                    zoom: 14
-                });
-            };
-
-            // Modal events
-            document.getElementById('btn-create-zone').onclick = () => openZoneModal();
-            document.getElementById('btn-modal-cancel').onclick = closeZoneModal;
-            document.getElementById('btn-modal-save').onclick = saveZoneFromModal;
-
-            // Color choice selection in modal
-            const colorChoices = document.querySelectorAll('.color-choice');
-            colorChoices.forEach(choice => {
-                choice.onclick = () => {
-                    colorChoices.forEach(c => c.classList.remove('selected'));
-                    choice.classList.add('selected');
+            const sidebarTab = document.getElementById("sidebar-tab");
+            const sidebarContainer = document.getElementById("sidebar-container");
+            if (sidebarTab && sidebarContainer) {
+                sidebarTab.onclick = () => {
+                    sidebarContainer.classList.toggle("collapsed");
                 };
-            });
+            }
+
+            // Add Zone primary button
+            const btnAddZone = document.getElementById("btn-add-zone");
+            if (btnAddZone) {
+                btnAddZone.onclick = () => {
+                    startAddZone();
+                };
+            }
+
+            // Delivery Status Switch
+            const toggleDeliveryStatus = document.getElementById("toggle-delivery-status");
+            if (toggleDeliveryStatus) {
+                toggleDeliveryStatus.onchange = async (e) => {
+                    isDeliveryEnabled = e.target.checked;
+                    await updateDeliveryStatus(isDeliveryEnabled);
+                };
+            }
+
+            // Map Tools
+            const btnCenter = document.getElementById("tool-recenter");
+            if (btnCenter) {
+                btnCenter.onclick = () => {
+                    if (currentRestaurantLocation && map) {
+                        map.easeTo({ center: [currentRestaurantLocation.longitude, currentRestaurantLocation.latitude], zoom: 13, duration: 800 });
+                    }
+                };
+            }
+
+            const btnClear = document.getElementById("tool-delete-shape");
+            if (btnClear) {
+                btnClear.onclick = () => {
+                    if (draw) draw.deleteAll();
+                    removeCircleHandle();
+                };
+            }
+
+            const btnDrawPoly = document.getElementById("tool-draw-polygon");
+            if (btnDrawPoly) {
+                btnDrawPoly.onclick = () => {
+                    if (!activeEditingZoneId) {
+                        startAddZone();
+                    }
+                    setEditingShapeType('shape');
+                    if (draw) {
+                        draw.deleteAll();
+                        draw.changeMode('draw_polygon');
+                    }
+                };
+            }
         }
 
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
-            if (!session) { location.href = 'index.html'; return; }
+            if (!session) { location.href = "index.html"; return; }
             user = session.user;
 
-            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            const { data: profile } = await sb.from("profiles").select("*").eq("id", user.id).single();
             if (!profile) {
-                userRole = 'OWNER'; activeOwnerId = user.id; showApp(null); return;
+                userRole = "OWNER";
+                activeOwnerId = user.id;
+                showApp(null);
+                return;
             }
 
-            userRole = (profile.role || 'OWNER').trim().toUpperCase();
-            const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'];
+            userRole = (profile.role || "OWNER").trim().toUpperCase();
+            const privilegedRoles = ["ADMIN", "DEVELOPER", "CS", "ADMINCS"];
 
             if (privilegedRoles.includes(userRole)) {
-                const sidebarContainer = document.getElementById('sidebar-container');
-                sidebarContainer.classList.remove('hidden');
-                sidebarContainer.classList.add('collapsed');
-
+                const sidebarContainer = document.getElementById("sidebar-container");
+                if (sidebarContainer) {
+                    sidebarContainer.classList.remove("hidden");
+                    sidebarContainer.classList.add("collapsed");
+                }
                 await setupContextSwitcher();
                 if (!activeOwnerId) {
                     activeOwnerId = user.id;
                     activeDomain = profile.domain;
-                    document.getElementById('view-domain-title').textContent = activeDomain || "Admin Workspace";
+                    const domainEl = document.getElementById("view-domain-title");
+                    if (domainEl) domainEl.textContent = activeDomain || "Admin Workspace";
                 }
-                showApp(profile);
             } else {
                 activeOwnerId = user.id;
                 activeDomain = profile.domain;
-                showApp(profile);
+                const domainEl = document.getElementById("view-domain-title");
+                if (domainEl) domainEl.textContent = activeDomain || "My Restaurant";
             }
+
+            showApp(profile);
+            await syncLanguageForContext();
+            initMap();
         }
 
         async function setupContextSwitcher() {
-            const search = document.getElementById('client-search');
-            const { data } = await sb.from('profiles').select('*');
-            allOwners = data || [];
+            const { data: profiles, error } = await sb
+                .from("profiles")
+                .select("id, username, domain, role")
+                .order("username", { ascending: true });
 
-            renderOwners(allOwners);
-            search.oninput = () => {
-                const term = search.value.toLowerCase();
-                const filtered = allOwners.filter(o =>
-                    (o.username || '').toLowerCase().includes(term) ||
-                    (o.domain || '').toLowerCase().includes(term)
+            if (error || !profiles) return;
+
+            const clientList = document.getElementById("client-list");
+            const searchInput = document.getElementById("client-search");
+
+            const renderProfiles = (list) => {
+                clientList.innerHTML = "";
+                list.forEach(p => {
+                    const item = document.createElement("div");
+                    item.className = `client-item ${p.id === activeOwnerId ? "active" : ""}`;
+                    item.innerHTML = `
+                        <div class="name">${p.username || "Untitled"}</div>
+                        <div class="domain">${p.domain || "No domain"}</div>
+                    `;
+                    item.onclick = async () => {
+                        activeOwnerId = p.id;
+                        activeDomain = p.domain;
+                        const domainEl = document.getElementById("view-domain-title");
+                        if (domainEl) domainEl.textContent = activeDomain || p.username;
+
+                        clientList.querySelectorAll(".client-item").forEach(ci => ci.classList.remove("active"));
+                        item.classList.add("active");
+
+                        activeEditingZoneId = null;
+                        removeCircleHandle();
+                        await syncLanguageForContext();
+                        await loadRestaurantLocation();
+                        await loadDeliveryZones();
+                    };
+                    clientList.appendChild(item);
+                });
+            };
+
+            renderProfiles(profiles);
+
+            searchInput.oninput = (e) => {
+                const q = e.target.value.toLowerCase().trim();
+                const filtered = profiles.filter(p =>
+                    (p.username && p.username.toLowerCase().includes(q)) ||
+                    (p.domain && p.domain.toLowerCase().includes(q))
                 );
-                renderOwners(filtered);
+                renderProfiles(filtered);
             };
         }
 
-        function renderOwners(owners) {
-            const list = document.getElementById('client-list');
-            list.innerHTML = owners.map(o => `
-                <div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')">
-                    <span class="name">${o.username || 'User'}</span>
-                    <span class="domain">${o.domain || o.id.substring(0,8)}</span>
-                </div>
-            `).join('');
-        }
-
-        window.switchContext = async (ownerId) => {
-            const owner = allOwners.find(o => o.id === ownerId);
-            if (!owner) return;
-            activeOwnerId = ownerId;
-            activeDomain = owner.domain;
-            document.getElementById('view-domain-title').textContent = activeDomain || "No Domain Set";
-            document.getElementById('active-project-name').textContent = owner.username || owner.email;
-            document.getElementById('project-info').classList.remove('hidden');
-            renderOwners(allOwners);
-
-            await syncLanguageForContext();
-            await loadRestaurantLocation();
-            await loadDeliveryZones();
-        };
-
         async function syncLanguageForContext() {
-            if (!activeOwnerId) return;
-            const { data: resData } = await sb.from('menutech_restaurants').select('language').eq('user_id', activeOwnerId).maybeSingle();
-            const selectedLang = resData?.language || localStorage.getItem('menutech_restaurant_language') || 'en';
-            applyLanguage(selectedLang);
+            try {
+                const { data: resData } = await sb
+                    .from('menutech_restaurants')
+                    .select('language')
+                    .eq('user_id', activeOwnerId)
+                    .maybeSingle();
+
+                if (resData && resData.language) {
+                    currentLang = (resData.language.toLowerCase() === 'es') ? 'es' : 'en';
+                } else {
+                    const localLang = localStorage.getItem('menutech_restaurant_language');
+                    currentLang = (localLang && localLang.toLowerCase() === 'es') ? 'es' : 'en';
+                }
+            } catch (e) {
+                currentLang = 'en';
+            }
+            applyLanguage();
         }
 
-        async function showApp(profile) {
+        function applyLanguage() {
+            const dict = I18N[currentLang];
+            document.title = dict.pageTitle;
+            const titleEl = document.getElementById("lbl-delivery-title");
+            if (titleEl) titleEl.textContent = dict.deliveryTitle;
+            const statusEl = document.getElementById("lbl-delivery-status-title");
+            if (statusEl) statusEl.textContent = dict.deliveryStatus;
+            const addBtnEl = document.getElementById("lbl-add-zone-btn");
+            if (addBtnEl) addBtnEl.textContent = dict.btnAddZone;
+            const anotherEl = document.getElementById("lbl-add-another-zone");
+            if (anotherEl) anotherEl.textContent = dict.btnAnotherZone;
+            const centerEl = document.getElementById("lbl-tool-center");
+            if (centerEl) centerEl.textContent = dict.toolCenter;
+            const delEl = document.getElementById("lbl-tool-delete");
+            if (delEl) delEl.textContent = dict.toolDelete;
+        }
+
+        function showApp(profile) {
             document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('top-nav').classList.remove('hidden');
-            const pill = document.getElementById('user-display-pill');
 
-            if (profile) {
-                document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
-                document.getElementById('user-role-label').textContent = profile.role || 'User';
-                const role = (profile.role || 'user').trim().toUpperCase();
-                if (role === 'ADMIN') pill.classList.add('admin-glow');
-                else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
-                else pill.classList.add('owner-glow');
-            }
-
-            await syncLanguageForContext();
-            initMap();
-            await loadRestaurantLocation();
-            await loadDeliveryZones();
+            const nameEl = document.getElementById('user-name');
+            const roleEl = document.getElementById('user-role-label');
+            if (nameEl) nameEl.textContent = (profile && profile.username) ? profile.username : (user ? user.email.split('@')[0] : '');
+            if (roleEl) roleEl.textContent = userRole;
         }
 
         // ==========================================
-        // MAPLIBRE GL JS & MAPBOX DRAW INTEGRATION
+        // MAP INITIALIZATION
         // ==========================================
         function initMap() {
             if (map) return;
@@ -887,538 +1171,812 @@
                         'osm': {
                             type: 'raster',
                             tiles: [
-                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+                                'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
                             ],
                             tileSize: 256,
                             attribution: '&copy; OpenStreetMap Contributors'
                         }
                     },
-                    layers: [
-                        {
-                            id: 'osm-tiles',
-                            type: 'raster',
-                            source: 'osm',
-                            minzoom: 0,
-                            maxzoom: 19
-                        }
-                    ]
+                    layers: [{
+                        id: 'osm-layer',
+                        type: 'raster',
+                        source: 'osm',
+                        minzoom: 0,
+                        maxzoom: 19
+                    }]
                 },
-                center: [-74.006, 40.7128], // Default NYC
-                zoom: 12
+                center: [-98.5795, 39.8283],
+                zoom: 4
             });
 
-            map.addControl(new maplibregl.NavigationControl(), 'top-right');
+            map.addControl(new maplibregl.NavigationControl(), 'top-left');
 
-            // Mapbox Draw Plugin
             draw = new MapboxDraw({
                 displayControlsDefault: false,
                 controls: {},
-                userProperties: true
+                userProperties: true,
+                styles: [
+                    // POLYGON FILL
+                    {
+                        'id': 'gl-draw-polygon-fill-inactive',
+                        'type': 'fill',
+                        'filter': ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon']],
+                        'paint': {
+                            'fill-color': ['coalesce', ['get', 'user_color'], '#ff9533'],
+                            'fill-opacity': 0.28
+                        }
+                    },
+                    {
+                        'id': 'gl-draw-polygon-fill-active',
+                        'type': 'fill',
+                        'filter': ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']],
+                        'paint': {
+                            'fill-color': ['coalesce', ['get', 'user_color'], '#ff9533'],
+                            'fill-opacity': 0.38
+                        }
+                    },
+                    // POLYGON STROKE
+                    {
+                        'id': 'gl-draw-polygon-stroke-inactive',
+                        'type': 'line',
+                        'filter': ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon']],
+                        'layout': { 'line-cap': 'round', 'line-join': 'round' },
+                        'paint': {
+                            'line-color': ['coalesce', ['get', 'user_color'], '#ff9533'],
+                            'line-width': 2.5
+                        }
+                    },
+                    {
+                        'id': 'gl-draw-polygon-stroke-active',
+                        'type': 'line',
+                        'filter': ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']],
+                        'layout': { 'line-cap': 'round', 'line-join': 'round' },
+                        'paint': {
+                            'line-color': ['coalesce', ['get', 'user_color'], '#ff9533'],
+                            'line-width': 3
+                        }
+                    },
+                    // VERTICES
+                    {
+                        'id': 'gl-draw-polygon-midpoint',
+                        'type': 'circle',
+                        'filter': ['all', ['==', '$type', 'Point'], ['==', 'meta', 'midpoint']],
+                        'paint': {
+                            'circle-radius': 4,
+                            'circle-color': '#ff9533'
+                        }
+                    },
+                    {
+                        'id': 'gl-draw-polygon-and-line-vertex-active',
+                        'type': 'circle',
+                        'filter': ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point']],
+                        'paint': {
+                            'circle-radius': 6,
+                            'circle-color': '#ffffff',
+                            'circle-stroke-width': 2,
+                            'circle-stroke-color': '#ff9533'
+                        }
+                    }
+                ]
             });
 
-            map.addControl(draw, 'top-left');
+            map.addControl(draw);
 
             map.on('draw.create', (e) => {
-                document.getElementById('tool-draw-polygon').classList.remove('active');
-                if (e.features && e.features.length > 0) {
-                    const feature = e.features[0];
-                    pendingDrawFeature = feature;
-                    openZoneModal(null, feature);
+                if (activeShapeType === 'shape') {
+                    // Stored drawn feature
                 }
             });
 
-            map.on('draw.update', async (e) => {
-                if (e.features && e.features.length > 0) {
-                    const updatedFeature = e.features[0];
-                    const zone = deliveryZones.find(z => z.id === updatedFeature.id);
-                    if (zone) {
-                        zone.geojson = updatedFeature.geometry;
-                        await updateZoneInSupabase(zone);
-                    }
-                }
-            });
-
-            map.on('draw.selectionchange', (e) => {
-                if (e.features && e.features.length > 0) {
-                    const selectedId = e.features[0].id;
-                    highlightZoneInList(selectedId);
-                }
+            map.on('load', async () => {
+                await loadRestaurantLocation();
+                await loadDeliveryZones();
             });
         }
 
         // ==========================================
-        // RESTAURANT LOCATION MANAGEMENT
+        // RESTAURANT LOCATION LOADING & SMOOTH PAN
         // ==========================================
         async function loadRestaurantLocation() {
-            if (!activeOwnerId) return;
+            try {
+                let locationData = null;
+                const { data: locData } = await sb
+                    .from('menutech_restaurant_locations')
+                    .select('*')
+                    .eq('user_id', activeOwnerId)
+                    .maybeSingle();
 
-            // Fetch from menutech_restaurant_locations or fallback to menutech_restaurants address
-            const { data: locData } = await sb
-                .from('menutech_restaurant_locations')
-                .select('*')
-                .eq('user_id', activeOwnerId)
-                .maybeSingle();
+                if (locData && (locData.latitude || locData.lat) && (locData.longitude || locData.lng)) {
+                    locationData = {
+                        latitude: parseFloat(locData.latitude || locData.lat),
+                        longitude: parseFloat(locData.longitude || locData.lng),
+                        address: locData.address || '',
+                        is_delivery_enabled: locData.is_delivery_enabled !== false
+                    };
+                } else {
+                    const { data: restData } = await sb
+                        .from('menutech_restaurants')
+                        .select('address, lat, lng')
+                        .eq('user_id', activeOwnerId)
+                        .maybeSingle();
 
-            const { data: resData } = await sb
-                .from('menutech_restaurants')
-                .select('name, address')
-                .eq('user_id', activeOwnerId)
-                .maybeSingle();
+                    if (restData && restData.lat && restData.lng) {
+                        locationData = {
+                            latitude: parseFloat(restData.lat),
+                            longitude: parseFloat(restData.lng),
+                            address: restData.address || '',
+                            is_delivery_enabled: true
+                        };
+                    }
+                }
 
-            if (locData && locData.latitude && locData.longitude) {
-                currentRestaurantLocation = {
-                    address: locData.address || resData?.address || '',
-                    latitude: parseFloat(locData.latitude),
-                    longitude: parseFloat(locData.longitude)
-                };
-            } else if (resData?.address) {
-                currentRestaurantLocation = {
-                    address: resData.address,
-                    latitude: 40.7128,
-                    longitude: -74.006
-                };
-                // Try geocoding address
-                geocodeAddress(resData.address, false);
-            } else {
-                currentRestaurantLocation = {
-                    address: '',
-                    latitude: 40.7128,
-                    longitude: -74.006
-                };
+                if (!locationData) {
+                    locationData = {
+                        latitude: 25.6866,
+                        longitude: -100.3161,
+                        address: 'Default Location',
+                        is_delivery_enabled: true
+                    };
+                }
+
+                currentRestaurantLocation = locationData;
+                isDeliveryEnabled = locationData.is_delivery_enabled !== false;
+
+                const statusToggle = document.getElementById('toggle-delivery-status');
+                if (statusToggle) {
+                    statusToggle.checked = isDeliveryEnabled;
+                }
+
+                updateRestaurantMarkerOnMap(locationData.longitude, locationData.latitude);
+
+                if (map) {
+                    map.easeTo({
+                        center: [locationData.longitude, locationData.latitude],
+                        zoom: 12.5,
+                        duration: 800
+                    });
+                }
+            } catch (err) {
+                console.error("Error loading location:", err);
             }
-
-            updateLocationUI();
-            setRestaurantMapMarker(currentRestaurantLocation.longitude, currentRestaurantLocation.latitude);
         }
 
-        function updateLocationUI() {
-            if (!currentRestaurantLocation) return;
-            document.getElementById('input-address').value = currentRestaurantLocation.address || '';
-            document.getElementById('input-lat').value = currentRestaurantLocation.latitude.toFixed(6);
-            document.getElementById('input-lng').value = currentRestaurantLocation.longitude.toFixed(6);
-        }
-
-        function setRestaurantMapMarker(lng, lat) {
+        function updateRestaurantMarkerOnMap(lng, lat) {
             if (!map) return;
+            if (restaurantMarker) restaurantMarker.remove();
 
-            if (!restaurantMarker) {
-                const el = document.createElement('div');
-                el.className = 'restaurant-marker-pin';
-                el.innerHTML = '<div class="restaurant-marker-pin-inner">🍽️</div>';
+            const el = document.createElement('div');
+            el.className = 'restaurant-marker-custom';
+            el.innerHTML = `
+                <div style="background:#ff9533; border:3px solid #ffffff; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(0,0,0,0.3);">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffffff" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                </div>
+            `;
 
-                restaurantMarker = new maplibregl.Marker({ element: el, draggable: true })
-                    .setLngLat([lng, lat])
-                    .addTo(map);
-
-                restaurantMarker.on('dragend', () => {
-                    const newLngLat = restaurantMarker.getLngLat();
-                    currentRestaurantLocation.latitude = newLngLat.lat;
-                    currentRestaurantLocation.longitude = newLngLat.lng;
-                    updateLocationUI();
-                    reverseGeocode(newLngLat.lat, newLngLat.lng);
-                });
-            } else {
-                restaurantMarker.setLngLat([lng, lat]);
-            }
-
-            map.flyTo({ center: [lng, lat], zoom: 13 });
+            restaurantMarker = new maplibregl.Marker({ element: el })
+                .setLngLat([lng, lat])
+                .addTo(map);
         }
 
-        async function saveRestaurantLocation() {
-            if (!activeOwnerId) return;
-
-            const lat = parseFloat(document.getElementById('input-lat').value);
-            const lng = parseFloat(document.getElementById('input-lng').value);
-            const address = document.getElementById('input-address').value.trim();
-
-            if (isNaN(lat) || isNaN(lng)) {
-                showToast(I18N[currentLang].geocodingNotFound, "warning");
-                return;
-            }
-
-            currentRestaurantLocation = { address, latitude: lat, longitude: lng };
-
-            const { error } = await sb.from('menutech_restaurant_locations').upsert({
-                user_id: activeOwnerId,
-                address: address,
-                latitude: lat,
-                longitude: lng,
-                updated_at: new Date().toISOString()
-            });
-
-            if (error) {
-                showToast(I18N[currentLang].toastLocError + error.message, "error");
-            } else {
-                showToast(I18N[currentLang].toastLocSaved, "success");
-                setRestaurantMapMarker(lng, lat);
-            }
-        }
-
-        function detectCurrentLocation() {
-            if (!navigator.geolocation) {
-                showToast(I18N[currentLang].toastGeolocError, "error");
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const lat = pos.coords.latitude;
-                    const lng = pos.coords.longitude;
-                    currentRestaurantLocation.latitude = lat;
-                    currentRestaurantLocation.longitude = lng;
-                    updateLocationUI();
-                    setRestaurantMapMarker(lng, lat);
-                    reverseGeocode(lat, lng);
-                    showToast(I18N[currentLang].toastGeolocSuccess, "success");
-                },
-                (err) => {
-                    showToast(I18N[currentLang].toastGeolocError, "warning");
-                },
-                { enableHighAccuracy: true, timeout: 8000 }
-            );
-        }
-
-        async function geocodeAddress(query, showToasts = true) {
-            if (!query) return;
+        async function updateDeliveryStatus(enabled) {
             try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`, {
-                    headers: { 'Accept-Language': currentLang }
-                });
-                const data = await res.json();
-                if (data && data.length > 0) {
-                    const lat = parseFloat(data[0].lat);
-                    const lng = parseFloat(data[0].lon);
-                    currentRestaurantLocation.latitude = lat;
-                    currentRestaurantLocation.longitude = lng;
-                    updateLocationUI();
-                    setRestaurantMapMarker(lng, lat);
-                    if (showToasts) showToast(I18N[currentLang].toastGeolocSuccess, "success");
-                } else if (showToasts) {
-                    showToast(I18N[currentLang].geocodingNotFound, "warning");
+                if (!activeOwnerId) return;
+                const updatePayload = {
+                    user_id: activeOwnerId,
+                    is_delivery_enabled: enabled,
+                    updated_at: new Date().toISOString()
+                };
+                if (currentRestaurantLocation) {
+                    updatePayload.latitude = currentRestaurantLocation.latitude;
+                    updatePayload.longitude = currentRestaurantLocation.longitude;
+                    updatePayload.address = currentRestaurantLocation.address;
                 }
-            } catch (e) {
-                console.error("Geocoding error:", e);
-            }
-        }
+                await sb.from('menutech_restaurant_locations').upsert(updatePayload, { onConflict: 'user_id' });
 
-        async function reverseGeocode(lat, lng) {
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
-                    headers: { 'Accept-Language': currentLang }
-                });
-                const data = await res.json();
-                if (data && data.display_name) {
-                    currentRestaurantLocation.address = data.display_name;
-                    document.getElementById('input-address').value = data.display_name;
-                }
-            } catch (e) {
-                console.error("Reverse geocoding error:", e);
+                renderZonesList();
+                renderZonesOnMap();
+                showToast(I18N[currentLang].toastStatusUpdated, "success");
+            } catch (err) {
+                console.error("Error updating delivery status:", err);
             }
         }
 
         // ==========================================
-        // DELIVERY ZONES MANAGEMENT
+        // DELIVERY ZONES FETCH & RENDER
         // ==========================================
         async function loadDeliveryZones() {
-            if (!activeOwnerId) return;
+            try {
+                const { data, error } = await sb
+                    .from('menutech_delivery_zones')
+                    .select('*')
+                    .eq('user_id', activeOwnerId)
+                    .order('created_at', { ascending: true });
 
-            const { data, error } = await sb
-                .from('menutech_delivery_zones')
-                .select('*')
-                .eq('user_id', activeOwnerId)
-                .order('fee', { ascending: true });
+                if (error) {
+                    console.error("Error fetching delivery zones:", error);
+                    return;
+                }
 
-            if (error) {
-                console.error("Error loading delivery zones:", error);
-                deliveryZones = [];
-            } else {
-                deliveryZones = data || [];
+                deliveryZones = (data || []).map(z => {
+                    let coords = [];
+                    let shapeType = z.shape_type || 'shape';
+                    let circleRadius = z.circle_radius ? parseFloat(z.circle_radius) : null;
+                    let circleCenter = z.circle_center || null;
+
+                    if (z.geojson) {
+                        if (z.geojson.geometry && z.geojson.geometry.coordinates) {
+                            coords = z.geojson.geometry.coordinates;
+                        } else if (z.geojson.coordinates) {
+                            coords = z.geojson.coordinates;
+                        }
+                        if (!shapeType && z.geojson.properties && z.geojson.properties.shape_type) {
+                            shapeType = z.geojson.properties.shape_type;
+                        }
+                    }
+
+                    if (circleRadius && !shapeType) {
+                        shapeType = 'circle';
+                    }
+
+                    return {
+                        id: z.id,
+                        user_id: z.user_id,
+                        name: z.name,
+                        fee: parseFloat(z.fee || 0),
+                        min_amount: parseFloat(z.min_amount || 0),
+                        color: z.color || '#ff9533',
+                        shape_type: shapeType,
+                        circle_radius: circleRadius,
+                        circle_center: circleCenter,
+                        coordinates: coords,
+                        is_active: z.is_active !== false,
+                        geojson: z.geojson
+                    };
+                });
+
+                renderZonesList();
+                renderZonesOnMap();
+            } catch (err) {
+                console.error("Error loading delivery zones:", err);
             }
-
-            renderZonesList();
-            renderZonesOnMap();
         }
 
         function renderZonesList() {
-            const container = document.getElementById('zones-list');
-            const dict = I18N[currentLang];
+            const listEl = document.getElementById("zones-list");
+            const anotherWrapper = document.getElementById("add-another-zone-wrapper");
+            const anotherBtn = document.getElementById("btn-add-another-zone");
 
-            if (!deliveryZones || deliveryZones.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polygon points="12 2 2 8.5 4 18 20 18 22 8.5 12 2"/>
-                        </svg>
-                        <p>${dict.emptyZones}</p>
+            if (!listEl) return;
+            listEl.innerHTML = "";
+
+            if (!isDeliveryEnabled) {
+                if (anotherWrapper) anotherWrapper.classList.add("hidden");
+                listEl.innerHTML = `
+                    <div style="text-align:center; padding:24px 16px; color:var(--text-dim); font-size:0.85rem;">
+                        ${currentLang === 'es' ? 'El servicio de entrega está desactivado.' : 'Delivery service is turned off.'}
                     </div>
                 `;
                 return;
             }
 
-            container.innerHTML = deliveryZones.map(zone => `
-                <div class="zone-card ${editingZone?.id === zone.id ? 'active' : ''}" id="zone-card-${zone.id}" onclick="selectZone('${zone.id}')">
-                    <div class="zone-card-top">
-                        <div class="zone-badge-wrap">
-                            <div class="zone-color-dot" style="background:${zone.color || '#ff9533'};"></div>
-                            <span class="zone-title">${zone.name}</span>
-                        </div>
-                        <span class="zone-fee">$${parseFloat(zone.fee || 0).toFixed(2)}</span>
+            if (anotherWrapper) {
+                if (deliveryZones.length > 0) {
+                    anotherWrapper.classList.remove("hidden");
+                } else {
+                    anotherWrapper.classList.add("hidden");
+                }
+            }
+
+            if (anotherBtn) {
+                anotherBtn.onclick = () => startAddZone();
+            }
+
+            if (deliveryZones.length === 0) {
+                listEl.innerHTML = `
+                    <div style="text-align:center; padding:24px 16px; color:var(--text-dim); font-size:0.85rem;">
+                        ${I18N[currentLang].emptyZones}
                     </div>
-                    <div class="zone-card-bottom">
-                        <span style="display:flex; align-items:center; gap:4px; font-weight:700; color:${zone.is_active ? 'var(--success)' : 'var(--text-dim)'};">
-                            ${zone.is_active ? '● ' + dict.statusActive : '○ ' + dict.statusInactive}
-                        </span>
-                        <div class="zone-actions">
-                            <button class="zone-action-btn" title="Edit Zone" onclick="event.stopPropagation(); openZoneModal('${zone.id}')">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                `;
+                return;
+            }
+
+            deliveryZones.forEach(zone => {
+                const isOpen = (activeEditingZoneId === zone.id);
+                const isCircle = zone.shape_type === 'circle';
+
+                const item = document.createElement("div");
+                item.className = `zone-accordion-item ${isOpen ? 'open active-editing' : ''}`;
+                item.id = `zone-item-${zone.id}`;
+
+                item.innerHTML = `
+                    <div class="zone-header-row" onclick="window.toggleZoneAccordion('${zone.id}')">
+                        <div class="zone-header-left">
+                            <div class="zone-color-indicator" style="background:${zone.color};"></div>
+                            <span class="zone-header-name">${zone.name || 'Untitled Zone'}</span>
+                        </div>
+                        <div class="zone-header-actions">
+                            <button class="zone-icon-btn" title="Toggle Visibility" onclick="event.stopPropagation(); window.toggleZoneActive('${zone.id}')">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                    ${zone.is_active !== false
+                                        ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+                                        : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}
+                                </svg>
                             </button>
-                            <button class="zone-action-btn" title="Toggle Active" onclick="event.stopPropagation(); toggleZoneActive('${zone.id}')">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                            <button class="zone-icon-btn delete" title="Delete Zone" onclick="event.stopPropagation(); window.deleteZone('${zone.id}')">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             </button>
-                            <button class="zone-action-btn delete" title="Delete Zone" onclick="event.stopPropagation(); deleteZone('${zone.id}')">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                            </button>
+                            <div class="zone-chevron">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+
+                    <div class="zone-editor-body" onclick="event.stopPropagation()">
+                        <!-- Shape selector -->
+                        <div class="shape-segmented-control">
+                            <button type="button" class="shape-segment-btn ${isCircle ? 'active' : ''}" id="btn-shape-circle-${zone.id}">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+                                <span>${I18N[currentLang].shapeCircle}</span>
+                            </button>
+                            <button type="button" class="shape-segment-btn ${!isCircle ? 'active' : ''}" id="btn-shape-polygon-${zone.id}">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 8.5 4 18 20 18 22 8.5 12 2"/></svg>
+                                <span>${I18N[currentLang].shapePolygon}</span>
+                            </button>
+                        </div>
+
+                        <!-- Mode hint -->
+                        <div class="zone-mode-hint" id="zone-hint-${zone.id}">
+                            ${isCircle
+                                ? '<span>🔘 Arrastra el tirador en el mapa para ajustar el radio.</span>'
+                                : '<span>📐 Dibuja o edita los vértices del polígono directamente en el mapa.</span>'}
+                        </div>
+
+                        <!-- Name & Color -->
+                        <div class="name-color-row">
+                            <div class="color-picker-wrapper">
+                                <button type="button" class="color-swatch-btn" id="swatch-${zone.id}" style="background:${zone.color};"></button>
+                                <input type="color" class="color-picker-input" id="color-input-${zone.id}" value="${zone.color}">
+                            </div>
+                            <div class="input-group-compact" style="flex:1;">
+                                <label>${I18N[currentLang].zoneName}</label>
+                                <input type="text" class="input-field" id="input-name-${zone.id}" value="${zone.name || ''}" placeholder="e.g. Downtown Express">
+                            </div>
+                        </div>
+
+                        <!-- Fee & Min Amount -->
+                        <div class="fee-min-row">
+                            <div class="input-group-compact">
+                                <label>${I18N[currentLang].minAmount}</label>
+                                <div class="input-wrapper-currency">
+                                    <span class="currency-symbol">$</span>
+                                    <input type="number" step="0.01" min="0" class="input-field" id="input-min-${zone.id}" value="${zone.min_amount || '0.00'}">
+                                </div>
+                            </div>
+                            <div class="input-group-compact">
+                                <label>${I18N[currentLang].deliveryFee}</label>
+                                <div class="input-wrapper-currency">
+                                    <span class="currency-symbol">$</span>
+                                    <input type="number" step="0.01" min="0" class="input-field" id="input-fee-${zone.id}" value="${zone.fee || '0.00'}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <a class="distance-fee-link">${I18N[currentLang].byDistanceLink}</a>
+
+                        <!-- Actions -->
+                        <div class="editor-actions-row">
+                            <button type="button" class="btn btn-secondary" style="padding:6px 14px; font-size:0.8rem;" id="btn-cancel-${zone.id}">${I18N[currentLang].btnCancel}</button>
+                            <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem;" id="btn-save-${zone.id}">${I18N[currentLang].btnSave}</button>
+                        </div>
+                    </div>
+                `;
+
+                listEl.appendChild(item);
+
+                // Bind events for this zone editor
+                bindZoneEditorEvents(zone);
+            });
         }
 
-        function renderZonesOnMap() {
-            if (!draw || !map) return;
+        function bindZoneEditorEvents(zone) {
+            const btnCircle = document.getElementById(`btn-shape-circle-${zone.id}`);
+            const btnShape = document.getElementById(`btn-shape-polygon-${zone.id}`);
+            const colorInput = document.getElementById(`color-input-${zone.id}`);
+            const swatchBtn = document.getElementById(`swatch-${zone.id}`);
+            const btnCancel = document.getElementById(`btn-cancel-${zone.id}`);
+            const btnSave = document.getElementById(`btn-save-${zone.id}`);
 
-            // Clear previous draw features
+            if (colorInput && swatchBtn) {
+                colorInput.oninput = (e) => {
+                    const newColor = e.target.value;
+                    swatchBtn.style.background = newColor;
+                    zone.color = newColor;
+                    updateZonePreviewOnMap(zone);
+                };
+            }
+
+            if (btnCircle) {
+                btnCircle.onclick = (e) => {
+                    e.stopPropagation();
+                    switchZoneShapeType(zone, 'circle');
+                };
+            }
+            if (btnShape) {
+                btnShape.onclick = (e) => {
+                    e.stopPropagation();
+                    switchZoneShapeType(zone, 'shape');
+                };
+            }
+
+            if (btnCancel) {
+                btnCancel.onclick = (e) => {
+                    e.stopPropagation();
+                    activeEditingZoneId = null;
+                    removeCircleHandle();
+                    renderZonesList();
+                    renderZonesOnMap();
+                };
+            }
+
+            if (btnSave) {
+                btnSave.onclick = async (e) => {
+                    e.stopPropagation();
+                    await saveZone(zone);
+                };
+            }
+        }
+
+        function switchZoneShapeType(zone, type) {
+            zone.shape_type = type;
+            activeShapeType = type;
+
+            const btnCircle = document.getElementById(`btn-shape-circle-${zone.id}`);
+            const btnShape = document.getElementById(`btn-shape-polygon-${zone.id}`);
+            const hint = document.getElementById(`zone-hint-${zone.id}`);
+
+            if (type === 'circle') {
+                if (btnCircle) btnCircle.classList.add('active');
+                if (btnShape) btnShape.classList.remove('active');
+                if (hint) hint.innerHTML = '<span>🔘 Arrastra el tirador en el mapa para ajustar el radio del círculo.</span>';
+
+                // Initialize circle if none exists
+                if (!zone.circle_center) {
+                    zone.circle_center = currentRestaurantLocation
+                        ? [currentRestaurantLocation.longitude, currentRestaurantLocation.latitude]
+                        : [-100.3161, 25.6866];
+                }
+                if (!zone.circle_radius) {
+                    zone.circle_radius = 2.0; // 2 miles
+                }
+                circleCenter = zone.circle_center;
+                circleRadiusMiles = zone.circle_radius;
+
+                if (draw) draw.deleteAll();
+                renderCircleOnMap(zone);
+                createCircleHandleMarker(zone);
+            } else {
+                if (btnShape) btnShape.classList.add('active');
+                if (btnCircle) btnCircle.classList.remove('active');
+                if (hint) hint.innerHTML = '<span>📐 Dibuja o edita los vértices del polígono directamente en el mapa.</span>';
+
+                removeCircleHandle();
+                if (draw) {
+                    draw.deleteAll();
+                    if (zone.coordinates && zone.coordinates.length > 0) {
+                        const feat = {
+                            id: zone.id,
+                            type: 'Feature',
+                            properties: { user_color: zone.color },
+                            geometry: { type: 'Polygon', coordinates: zone.coordinates }
+                        };
+                        draw.add(feat);
+                    } else {
+                        draw.changeMode('draw_polygon');
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // CIRCLE MAP RENDERING & RESIZE HANDLE
+        // ==========================================
+        function renderCircleOnMap(zone) {
+            if (!draw || !map) return;
             draw.deleteAll();
 
-            // Populate MapboxDraw with all existing zone polygons
-            const features = deliveryZones.map(zone => {
-                let geom = zone.geojson;
-                if (typeof geom === 'string') {
-                    try { geom = JSON.parse(geom); } catch(e){}
-                }
-                return {
-                    id: zone.id,
-                    type: 'Feature',
-                    properties: {
-                        name: zone.name,
-                        fee: zone.fee,
-                        color: zone.color,
-                        is_active: zone.is_active
-                    },
-                    geometry: geom
-                };
-            }).filter(f => f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon'));
+            const center = zone.circle_center || [currentRestaurantLocation.longitude, currentRestaurantLocation.latitude];
+            const radius = zone.circle_radius || 2.0;
 
-            features.forEach(f => {
-                try { draw.add(f); } catch (e) { console.error("Error adding feature to map:", e); }
+            const circlePolygon = turf.circle(center, radius, { units: 'miles', steps: 64 });
+            circlePolygon.id = zone.id;
+            circlePolygon.properties = {
+                user_color: zone.color || '#ff9533',
+                name: zone.name
+            };
+
+            draw.add(circlePolygon);
+        }
+
+        function createCircleHandleMarker(zone) {
+            removeCircleHandle();
+            if (!map) return;
+
+            const center = zone.circle_center || [currentRestaurantLocation.longitude, currentRestaurantLocation.latitude];
+            const radius = zone.circle_radius || 2.0;
+
+            // Compute point on circle boundary at bearing 90 (due east)
+            const handleDest = turf.destination(turf.point(center), radius, 90, { units: 'miles' });
+            const handleCoords = handleDest.geometry.coordinates;
+
+            const handleEl = document.createElement('div');
+            handleEl.className = 'circle-resize-handle';
+            handleEl.title = 'Arrastra para cambiar el tamaño';
+
+            circleHandleMarker = new maplibregl.Marker({
+                element: handleEl,
+                draggable: true
+            })
+            .setLngLat(handleCoords)
+            .addTo(map);
+
+            circleHandleMarker.on('drag', () => {
+                const lngLat = circleHandleMarker.getLngLat();
+                const dist = turf.distance(turf.point(center), turf.point([lngLat.lng, lngLat.lat]), { units: 'miles' });
+                zone.circle_radius = Math.max(0.2, parseFloat(dist.toFixed(2)));
+                renderCircleOnMap(zone);
+            });
+
+            circleHandleMarker.on('dragend', () => {
+                renderCircleOnMap(zone);
             });
         }
 
-        window.selectZone = (zoneId) => {
-            const zone = deliveryZones.find(z => z.id === zoneId);
-            if (!zone || !draw) return;
+        function removeCircleHandle() {
+            if (circleHandleMarker) {
+                circleHandleMarker.remove();
+                circleHandleMarker = null;
+            }
+        }
 
-            editingZone = zone;
-            highlightZoneInList(zoneId);
-
-            // Select on draw
-            try {
-                draw.changeMode('simple_select', { featureIds: [zoneId] });
-            } catch (e) {}
-
-            // Fit map to polygon
-            try {
-                const bbox = turf.bbox(zone.geojson);
-                map.fitBounds(bbox, { padding: 40 });
-            } catch (e) {}
-        };
-
-        function highlightZoneInList(zoneId) {
-            document.querySelectorAll('.zone-card').forEach(c => c.classList.remove('active'));
-            const card = document.getElementById(`zone-card-${zoneId}`);
-            if (card) {
-                card.classList.add('active');
-                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        function updateZonePreviewOnMap(zone) {
+            if (zone.shape_type === 'circle') {
+                renderCircleOnMap(zone);
+            } else if (draw) {
+                const all = draw.getAll();
+                if (all && all.features && all.features.length > 0) {
+                    draw.deleteAll();
+                    all.features.forEach(f => {
+                        f.properties = f.properties || {};
+                        f.properties.user_color = zone.color;
+                        draw.add(f);
+                    });
+                }
             }
         }
 
         // ==========================================
-        // ZONE MODAL OPERATIONS
+        // ACCORDION TOGGLE & ZONE CREATION
         // ==========================================
-        window.openZoneModal = (zoneId = null, feature = null) => {
-            const modal = document.getElementById('zone-modal');
-            const nameInput = document.getElementById('modal-zone-name');
-            const feeInput = document.getElementById('modal-zone-fee');
-            const activeInput = document.getElementById('modal-zone-active');
+        window.toggleZoneAccordion = (zoneId) => {
+            if (activeEditingZoneId === zoneId) {
+                activeEditingZoneId = null;
+                removeCircleHandle();
+                renderZonesList();
+                renderZonesOnMap();
+                return;
+            }
 
-            if (zoneId) {
-                editingZone = deliveryZones.find(z => z.id === zoneId);
-                pendingDrawFeature = null;
-                nameInput.value = editingZone.name || '';
-                feeInput.value = editingZone.fee !== undefined ? editingZone.fee : 0;
-                activeInput.checked = editingZone.is_active !== false;
-                selectColorInPalette(editingZone.color || '#ff9533');
+            activeEditingZoneId = zoneId;
+            const zone = deliveryZones.find(z => z.id === zoneId);
+            if (!zone) return;
+
+            renderZonesList();
+
+            if (zone.shape_type === 'circle') {
+                activeShapeType = 'circle';
+                renderCircleOnMap(zone);
+                createCircleHandleMarker(zone);
+                if (zone.circle_center) {
+                    map.easeTo({ center: zone.circle_center, zoom: 12, duration: 600 });
+                }
             } else {
-                editingZone = null;
-                pendingDrawFeature = feature || null;
-                nameInput.value = '';
-                feeInput.value = '2.50';
-                activeInput.checked = true;
-                selectColorInPalette('#ff9533');
-
-                if (!feature) {
-                    if (draw) {
-                        const selected = draw.getSelected();
-                        if (selected && selected.features.length > 0) {
-                            pendingDrawFeature = selected.features[0];
-                        } else {
-                            draw.changeMode('draw_polygon');
-                            showToast(I18N[currentLang].toastDrawPolygonFirst, "warning");
-                            return;
-                        }
+                activeShapeType = 'shape';
+                removeCircleHandle();
+                if (draw) {
+                    draw.deleteAll();
+                    if (zone.coordinates && zone.coordinates.length > 0) {
+                        const feat = {
+                            id: zone.id,
+                            type: 'Feature',
+                            properties: { user_color: zone.color },
+                            geometry: { type: 'Polygon', coordinates: zone.coordinates }
+                        };
+                        draw.add(feat);
+                        try {
+                            const bbox = turf.bbox(feat);
+                            map.fitBounds(bbox, { padding: 60, maxZoom: 14, duration: 600 });
+                        } catch (e) {}
                     }
                 }
             }
-
-            modal.style.display = 'flex';
         };
 
-        window.closeZoneModal = () => {
-            document.getElementById('zone-modal').style.display = 'none';
-            pendingDrawFeature = null;
-        };
+        function startAddZone() {
+            const tempId = 'temp-' + Date.now();
+            const defaultCenter = currentRestaurantLocation
+                ? [currentRestaurantLocation.longitude, currentRestaurantLocation.latitude]
+                : [-100.3161, 25.6866];
 
-        function selectColorInPalette(color) {
-            const colorChoices = document.querySelectorAll('.color-choice');
-            colorChoices.forEach(c => {
-                c.classList.toggle('selected', c.dataset.color.toLowerCase() === color.toLowerCase());
-            });
+            const newZone = {
+                id: tempId,
+                user_id: activeOwnerId,
+                name: `Zone ${deliveryZones.length + 1}`,
+                fee: 3.50,
+                min_amount: 0.00,
+                color: '#ff9533',
+                shape_type: 'circle',
+                circle_radius: 2.0,
+                circle_center: defaultCenter,
+                coordinates: [],
+                is_active: true,
+                is_new: true
+            };
+
+            deliveryZones.unshift(newZone);
+            activeEditingZoneId = tempId;
+            activeShapeType = 'circle';
+
+            renderZonesList();
+            renderCircleOnMap(newZone);
+            createCircleHandleMarker(newZone);
+
+            map.easeTo({ center: defaultCenter, zoom: 12.5, duration: 600 });
         }
 
-        function getSelectedColor() {
-            const selected = document.querySelector('.color-choice.selected');
-            return selected ? selected.dataset.color : '#ff9533';
-        }
+        async function saveZone(zone) {
+            const nameInput = document.getElementById(`input-name-${zone.id}`);
+            const minInput = document.getElementById(`input-min-${zone.id}`);
+            const feeInput = document.getElementById(`input-fee-${zone.id}`);
 
-        async function saveZoneFromModal() {
-            if (!activeOwnerId) return;
-
-            const name = document.getElementById('modal-zone-name').value.trim();
-            const fee = parseFloat(document.getElementById('modal-zone-fee').value);
-            const isActive = document.getElementById('modal-zone-active').checked;
-            const color = getSelectedColor();
+            const name = nameInput ? nameInput.value.trim() : zone.name;
+            const minAmount = minInput ? parseFloat(minInput.value) || 0 : zone.min_amount;
+            const fee = feeInput ? parseFloat(feeInput.value) || 0 : zone.fee;
 
             if (!name) {
-                showToast("Please enter a name for the delivery zone.", "warning");
-                return;
-            }
-            if (isNaN(fee) || fee < 0) {
-                showToast("Please enter a valid delivery fee.", "warning");
+                showToast(I18N[currentLang].toastNameRequired, "error");
                 return;
             }
 
-            let geojson = null;
+            let geojsonPayload = null;
+            let circleRadiusPayload = null;
+            let circleCenterPayload = null;
 
-            if (editingZone) {
-                if (draw) {
-                    const featureInDraw = draw.get(editingZone.id);
-                    geojson = featureInDraw ? featureInDraw.geometry : editingZone.geojson;
-                } else {
-                    geojson = editingZone.geojson;
-                }
-
-                const { error } = await sb.from('menutech_delivery_zones').update({
-                    name: name,
-                    fee: fee,
-                    color: color,
-                    is_active: isActive,
-                    geojson: geojson,
-                    updated_at: new Date().toISOString()
-                }).eq('id', editingZone.id);
-
-                if (error) {
-                    showToast("Error updating zone: " + error.message, "error");
-                    return;
-                }
+            if (zone.shape_type === 'circle') {
+                circleRadiusPayload = zone.circle_radius || 2.0;
+                circleCenterPayload = zone.circle_center || [currentRestaurantLocation.longitude, currentRestaurantLocation.latitude];
+                const circlePoly = turf.circle(circleCenterPayload, circleRadiusPayload, { units: 'miles', steps: 64 });
+                geojsonPayload = circlePoly;
             } else {
-                if (pendingDrawFeature) {
-                    geojson = pendingDrawFeature.geometry;
-                } else if (draw) {
-                    const selected = draw.getSelected();
-                    if (selected && selected.features.length > 0) {
-                        geojson = selected.features[0].geometry;
+                const drawn = draw.getAll();
+                if (!drawn || !drawn.features || drawn.features.length === 0) {
+                    if (zone.coordinates && zone.coordinates.length > 0) {
+                        geojsonPayload = {
+                            type: 'Feature',
+                            geometry: { type: 'Polygon', coordinates: zone.coordinates },
+                            properties: { name, color: zone.color }
+                        };
+                    } else {
+                        showToast(I18N[currentLang].toastDrawPolygonFirst, "error");
+                        return;
                     }
-                }
-
-                if (!geojson) {
-                    showToast(I18N[currentLang].toastDrawPolygonFirst, "warning");
-                    closeZoneModal();
-                    return;
-                }
-
-                const { data, error } = await sb.from('menutech_delivery_zones').insert({
-                    user_id: activeOwnerId,
-                    name: name,
-                    fee: fee,
-                    color: color,
-                    is_active: isActive,
-                    geojson: geojson
-                }).select().single();
-
-                if (error) {
-                    showToast("Error creating zone: " + error.message, "error");
-                    return;
+                } else {
+                    geojsonPayload = drawn.features[0];
                 }
             }
 
-            showToast(I18N[currentLang].toastZoneSaved, "success");
-            closeZoneModal();
+            const payload = {
+                user_id: activeOwnerId,
+                name: name,
+                fee: fee,
+                min_amount: minAmount,
+                color: zone.color,
+                shape_type: zone.shape_type,
+                circle_radius: circleRadiusPayload,
+                circle_center: circleCenterPayload,
+                geojson: geojsonPayload,
+                is_active: zone.is_active !== false,
+                updated_at: new Date().toISOString()
+            };
+
+            let saveError = null;
+            if (zone.is_new) {
+                const { error } = await sb.from('menutech_delivery_zones').insert([payload]);
+                saveError = error;
+            } else {
+                const { error } = await sb.from('menutech_delivery_zones').update(payload).eq('id', zone.id);
+                saveError = error;
+            }
+
+            if (saveError) {
+                showToast("Error saving zone: " + saveError.message, "error");
+                return;
+            }
+
+            showToast(I18N[currentLang].toastSaved, "success");
+            activeEditingZoneId = null;
+            removeCircleHandle();
             await loadDeliveryZones();
         }
 
-        async function updateZoneInSupabase(zone) {
-            const { error } = await sb.from('menutech_delivery_zones').update({
-                geojson: zone.geojson,
-                updated_at: new Date().toISOString()
-            }).eq('id', zone.id);
-
-            if (error) {
-                console.error("Error syncing zone polygon update:", error);
+        window.deleteZone = async (zoneId) => {
+            if (zoneId.startsWith('temp-')) {
+                deliveryZones = deliveryZones.filter(z => z.id !== zoneId);
+                activeEditingZoneId = null;
+                removeCircleHandle();
+                renderZonesList();
+                renderZonesOnMap();
+                return;
             }
-        }
+
+            const { error } = await sb.from('menutech_delivery_zones').delete().eq('id', zoneId);
+            if (error) {
+                showToast("Error deleting zone: " + error.message, "error");
+                return;
+            }
+
+            showToast(I18N[currentLang].toastDeleted, "success");
+            if (activeEditingZoneId === zoneId) {
+                activeEditingZoneId = null;
+                removeCircleHandle();
+            }
+            await loadDeliveryZones();
+        };
 
         window.toggleZoneActive = async (zoneId) => {
             const zone = deliveryZones.find(z => z.id === zoneId);
             if (!zone) return;
 
             const nextActive = !zone.is_active;
-            const { error } = await sb.from('menutech_delivery_zones').update({
-                is_active: nextActive,
-                updated_at: new Date().toISOString()
-            }).eq('id', zoneId);
-
+            const { error } = await sb.from('menutech_delivery_zones').update({ is_active: nextActive }).eq('id', zoneId);
             if (error) {
-                showToast("Error updating zone status: " + error.message, "error");
-            } else {
-                zone.is_active = nextActive;
-                showToast(I18N[currentLang].toastZoneToggled, "success");
-                renderZonesList();
-                renderZonesOnMap();
+                showToast("Error updating zone: " + error.message, "error");
+                return;
             }
+            zone.is_active = nextActive;
+            renderZonesList();
+            renderZonesOnMap();
         };
 
-        window.deleteZone = async (zoneId) => {
-            if (!confirm(I18N[currentLang].confirmDeleteZone)) return;
+        function renderZonesOnMap() {
+            if (!draw || !map) return;
+            draw.deleteAll();
 
-            const { error } = await sb.from('menutech_delivery_zones').delete().eq('id', zoneId);
-            if (error) {
-                showToast("Error deleting zone: " + error.message, "error");
-            } else {
-                if (draw) draw.delete(zoneId);
-                showToast(I18N[currentLang].toastZoneDeleted, "success");
-                await loadDeliveryZones();
-            }
-        };
+            if (!isDeliveryEnabled) return;
+
+            deliveryZones.forEach(zone => {
+                if (zone.is_active === false) return;
+
+                let poly = null;
+                if (zone.shape_type === 'circle' && zone.circle_center && zone.circle_radius) {
+                    poly = turf.circle(zone.circle_center, parseFloat(zone.circle_radius), { units: 'miles' });
+                } else if (zone.coordinates && zone.coordinates.length > 0) {
+                    poly = turf.polygon(zone.coordinates);
+                }
+
+                if (poly) {
+                    poly.id = zone.id;
+                    poly.properties = {
+                        name: zone.name,
+                        user_color: zone.color || '#ff9533',
+                        shape_type: zone.shape_type
+                    };
+                    draw.add(poly);
+                }
+            });
+        }
     </script>
+
 </body>
 </html>
