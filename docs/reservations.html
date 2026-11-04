@@ -439,7 +439,7 @@
     <script type="module">
         import { supabase as sb } from './supabase.js';
 
-        let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
+        let user = null, userRole = null, activeOwnerId = null, activeDomain = null, activeOwnerUsername = null;
         let restaurantLang = 'en';
         let allOwners = [];
 
@@ -481,12 +481,14 @@
                 if (!activeOwnerId) {
                     activeOwnerId = user.id;
                     activeDomain = profile.domain;
+                    activeOwnerUsername = profile.username;
                     document.getElementById('view-domain-title').textContent = activeDomain || "Admin Workspace";
                 }
                 showApp(profile);
             } else {
                 activeOwnerId = user.id;
                 activeDomain = profile.domain;
+                activeOwnerUsername = profile.username;
                 showApp(profile);
             }
         }
@@ -512,7 +514,9 @@
         window.switchContext = (ownerId) => {
             const owner = allOwners.find(o => o.id === ownerId);
             if (!owner) return;
-            activeOwnerId = ownerId; activeDomain = owner.domain;
+            activeOwnerId = ownerId;
+            activeDomain = owner.domain;
+            activeOwnerUsername = owner.username;
             document.getElementById('view-domain-title').textContent = activeDomain || "No Domain Set";
             document.getElementById('active-project-name').textContent = owner.username || owner.email;
             document.getElementById('project-info').classList.remove('hidden');
@@ -576,14 +580,17 @@
         }
 
         window.copyReservationLink = async () => {
-            let domain = activeDomain || 'yoursite.com';
             let langParam = (restaurantLang === 'es') ? '&lang=es' : '';
-            let url = `https://menutech.io/menu.html?domain=${domain}&res=true${langParam}`;
+            let url = '';
             if (activeOwnerId) {
                 const { data: menu } = await sb.from('menutech_menus').select('slug').eq('user_id', activeOwnerId).maybeSingle();
                 if (menu && menu.slug) {
                     url = `https://menutech.io/menu.html?n=${menu.slug}&res=true${langParam}`;
                 }
+            }
+            if (!url) {
+                const identifier = activeDomain || activeOwnerUsername || 'yoursite.com';
+                url = `https://menutech.io/menu.html?domain=${identifier}&res=true${langParam}`;
             }
             navigator.clipboard.writeText(url).then(() => {
                 showToast("Reservation URL copied to clipboard!");
@@ -591,9 +598,9 @@
         };
 
         window.copySnippetAction = () => {
-            const domain = activeDomain || 'yoursite.com';
+            const identifier = activeDomain || activeOwnerUsername || 'yoursite.com';
             const langAttr = (restaurantLang === 'es') ? ' lang="es"' : '';
-            const snippet = `<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-reservations domain="${domain}"${langAttr}></menutech-reservations>`;
+            const snippet = `<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-reservations domain="${identifier}"${langAttr}></menutech-reservations>`;
             navigator.clipboard.writeText(snippet).then(() => {
                 showToast("Reservation code copied to clipboard!");
                 const txt = document.getElementById('btn-copy-snippet-text');
@@ -858,9 +865,15 @@
                 hours: item.querySelector('.schedule-hours-input')?.value || item.querySelector('input[type="text"]:last-of-type')?.value || ''
             }));
 
+            let resolvedDomain = activeDomain || activeOwnerUsername || null;
+            if (!resolvedDomain && activeOwnerId) {
+                const { data: existingSet } = await sb.from('menutech_reservation_settings').select('domain').eq('user_id', activeOwnerId).maybeSingle();
+                if (existingSet && existingSet.domain) resolvedDomain = existingSet.domain;
+            }
+
             const payload = {
                 user_id: activeOwnerId,
-                domain: activeDomain || null,
+                domain: resolvedDomain,
                 enabled: document.getElementById('res-enabled').checked,
                 min_guests: parseInt(document.getElementById('min-guests').value) || 2,
                 max_guests: parseInt(document.getElementById('max-guests').value) || 8,
