@@ -1,1679 +1,1030 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avance del Proyecto | Menutech</title>
-    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-body: #0b0f17;
-            --bg-card: rgba(22, 27, 34, 0.75);
-            --bg-card-hover: rgba(30, 37, 48, 0.85);
-            --border-glass: rgba(255, 255, 255, 0.08);
-            --border-highlight: rgba(255, 149, 51, 0.3);
-
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --text-dim: #64748b;
-
-            --color-orange: #ff9533;
-            --color-yellow: #f59e0b;
-            --color-lime: #84cc16;
-            --color-green: #10b981;
-            --color-green-bright: #22c55e;
-
-            --font-main: 'Plus Jakarta Sans', sans-serif;
-            --font-heading: 'Outfit', sans-serif;
-            --radius-lg: 20px;
-            --radius-md: 14px;
-            --radius-sm: 8px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--font-main);
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
-            line-height: 1.6;
-        }
-
-        /* Ambient glowing background */
-        .ambient-glow {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-            background:
-                radial-gradient(circle at 10% 15%, rgba(255, 149, 51, 0.12) 0%, transparent 40%),
-                radial-gradient(circle at 85% 20%, rgba(34, 197, 94, 0.08) 0%, transparent 45%),
-                radial-gradient(circle at 50% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
-        }
-
-        /* Grid noise pattern overlay */
-        .grid-overlay {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-            background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            background-size: 40px 40px;
-        }
-
-        .container {
-            max-width: 1240px;
-            margin: 0 auto;
-            padding: 40px 24px 80px;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Header Navigation */
-        .top-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 40px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid var(--border-glass);
-        }
-
-        .brand-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-            color: var(--text-main);
-        }
-
-        .brand-logo {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            object-fit: cover;
-            box-shadow: 0 4px 15px rgba(255, 149, 51, 0.25);
-            background: #1e2530;
-        }
-
-        .brand-text h1 {
-            font-family: var(--font-heading);
-            font-size: 1.35rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #ffffff 30%, #ff9533 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .brand-text span {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .badge-role {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-glass);
-            color: var(--text-muted);
-            backdrop-filter: blur(8px);
-        }
-
-        .badge-role.admin {
-            background: rgba(255, 149, 51, 0.15);
-            border-color: rgba(255, 149, 51, 0.4);
-            color: #ff9533;
-            box-shadow: 0 0 15px rgba(255, 149, 51, 0.2);
-        }
-
-        .badge-role .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: currentColor;
-        }
-
-        .btn {
-            font-family: var(--font-main);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 10px 18px;
-            border-radius: var(--radius-sm);
-            font-size: 0.88rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            border: none;
-            outline: none;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #ff9533 0%, #e07412 100%);
-            color: #ffffff;
-            box-shadow: 0 4px 14px rgba(255, 149, 51, 0.35);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 149, 51, 0.5);
-        }
-
-        .btn-glass {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid var(--border-glass);
-            color: var(--text-main);
-            backdrop-filter: blur(8px);
-        }
-
-        .btn-glass:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.2);
-            color: #fff;
-        }
-
-        /* Hero / Metric Overview */
-        .hero-section {
-            margin-bottom: 40px;
-        }
-
-        .hero-header {
-            margin-bottom: 24px;
-        }
-
-        .hero-header h2 {
-            font-family: var(--font-heading);
-            font-size: 2.2rem;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            margin-bottom: 8px;
-        }
-
-        .hero-header p {
-            color: var(--text-muted);
-            font-size: 1.05rem;
-            max-width: 650px;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-md);
-            padding: 20px;
-            backdrop-filter: blur(12px);
-            position: relative;
-            overflow: hidden;
-            transition: var(--transition);
-        }
-
-        .stat-card:hover {
-            border-color: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--text-dim);
-            font-weight: 700;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .stat-value {
-            font-family: var(--font-heading);
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--text-main);
-            line-height: 1.1;
-        }
-
-        .stat-bar-container {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 99px;
-            margin-top: 14px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .stat-bar-fill {
-            height: 100%;
-            border-radius: 99px;
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease;
-        }
-
-        /* Filters Bar */
-        .controls-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-bottom: 28px;
-            padding: 14px 20px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-md);
-            backdrop-filter: blur(12px);
-        }
-
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            background: transparent;
-            border: 1px solid transparent;
-            color: var(--text-muted);
-            padding: 6px 14px;
-            border-radius: var(--radius-sm);
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .filter-btn:hover {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .filter-btn.active {
-            background: rgba(255, 149, 51, 0.15);
-            border-color: rgba(255, 149, 51, 0.35);
-            color: #ff9533;
-        }
-
-        .search-box {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(11, 15, 23, 0.6);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-sm);
-            padding: 6px 12px;
-            min-width: 240px;
-        }
-
-        .search-box svg {
-            width: 16px;
-            height: 16px;
-            color: var(--text-dim);
-        }
-
-        .search-box input {
-            background: transparent;
-            border: none;
-            outline: none;
-            color: var(--text-main);
-            font-size: 0.88rem;
-            font-family: var(--font-main);
-            width: 100%;
-        }
-
-        .search-box input::placeholder {
-            color: var(--text-dim);
-        }
-
-        /* Objectives Grid */
-        .objectives-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-            gap: 24px;
-        }
-
-        @media (max-width: 480px) {
-            .objectives-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .objective-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-lg);
-            padding: 22px;
-            backdrop-filter: blur(14px);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .objective-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(255, 255, 255, 0.18);
-            box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.5);
-        }
-
-        .objective-card.status-completed {
-            border-color: rgba(34, 197, 94, 0.4);
-            box-shadow: 0 0 30px -10px rgba(34, 197, 94, 0.2);
-        }
-
-        /* Header of Card */
-        .card-top {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-
-        .card-category {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 99px;
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-muted);
-            border: 1px solid var(--border-glass);
-        }
-
-        .card-percent-badge {
-            font-family: var(--font-heading);
-            font-size: 1.15rem;
-            font-weight: 800;
-            padding: 4px 12px;
-            border-radius: 99px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: var(--transition);
-        }
-
-        .card-title {
-            font-family: var(--font-heading);
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            margin-bottom: 6px;
-            color: var(--text-main);
-        }
-
-        .card-desc {
-            font-size: 0.88rem;
-            color: var(--text-muted);
-            margin-bottom: 18px;
-            line-height: 1.5;
-            min-height: 40px;
-        }
-
-        /* Progress Bar in Card */
-        .progress-wrapper {
-            margin-bottom: 18px;
-        }
-
-        .progress-labels {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-dim);
-            margin-bottom: 6px;
-        }
-
-        .progress-track {
-            width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 99px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .progress-fill {
-            height: 100%;
-            border-radius: 99px;
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s ease;
-        }
-
-        /* Video Showcase Preview Container */
-        .video-preview-box {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            background: #0d1117;
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            border: 1px solid var(--border-glass);
-            margin-bottom: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            group: true;
-        }
-
-        .video-preview-box video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .video-preview-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(11, 15, 23, 0.45);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-        }
-
-        .video-preview-box:hover .video-preview-overlay {
-            background: rgba(11, 15, 23, 0.25);
-        }
-
-        .play-trigger-btn {
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.95);
-            color: #0b0f17;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-            transition: var(--transition);
-        }
-
-        .video-preview-box:hover .play-trigger-btn {
-            transform: scale(1.12);
-            background: #ffffff;
-            box-shadow: 0 10px 30px rgba(255, 149, 51, 0.4);
-        }
-
-        .play-trigger-btn svg {
-            width: 20px;
-            height: 20px;
-            margin-left: 2px;
-        }
-
-        .video-badge {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #fff;
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .video-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            color: var(--text-dim);
-            font-size: 0.8rem;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .video-placeholder svg {
-            width: 32px;
-            height: 32px;
-            color: var(--text-dim);
-            opacity: 0.7;
-        }
-
-        /* Card Footer & Admin Actions */
-        .card-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-top: 14px;
-            border-top: 1px solid var(--border-glass);
-            gap: 8px;
-        }
-
-        .status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.8rem;
-            font-weight: 700;
-        }
-
-        .admin-controls {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-glass);
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .btn-icon:hover {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.25);
-        }
-
-        .btn-icon.delete:hover {
-            color: #ef4444;
-            background: rgba(239, 68, 68, 0.12);
-            border-color: rgba(239, 68, 68, 0.3);
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(5, 7, 12, 0.85);
-            backdrop-filter: blur(16px);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-content {
-            background: #141923;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: var(--radius-lg);
-            width: 100%;
-            max-width: 600px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-            position: relative;
-            transform: scale(0.95);
-            transition: var(--transition);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-overlay.active .modal-content {
-            transform: scale(1);
-        }
-
-        .modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border-glass);
-        }
-
-        .modal-header h3 {
-            font-family: var(--font-heading);
-            font-size: 1.3rem;
-            font-weight: 700;
-        }
-
-        .modal-body {
-            padding: 24px;
-        }
-
-        .modal-footer {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 12px;
-            padding: 16px 24px;
-            border-top: 1px solid var(--border-glass);
-            background: rgba(11, 15, 23, 0.4);
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.82rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .form-input, .form-textarea {
-            width: 100%;
-            background: rgba(11, 15, 23, 0.8);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-sm);
-            padding: 10px 14px;
-            color: var(--text-main);
-            font-family: var(--font-main);
-            font-size: 0.92rem;
-            outline: none;
-            transition: var(--transition);
-        }
-
-        .form-input:focus, .form-textarea:focus {
-            border-color: var(--color-orange);
-            box-shadow: 0 0 0 3px rgba(255, 149, 51, 0.2);
-        }
-
-        .form-textarea {
-            resize: vertical;
-            min-height: 70px;
-        }
-
-        .slider-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-top: 8px;
-        }
-
-        .slider-wrapper input[type="range"] {
-            flex: 1;
-            height: 8px;
-            border-radius: 4px;
-            outline: none;
-            background: rgba(255, 255, 255, 0.1);
-            cursor: pointer;
-            accent-color: var(--color-orange);
-        }
-
-        .slider-val-box {
-            font-family: var(--font-heading);
-            font-size: 1.1rem;
-            font-weight: 800;
-            width: 60px;
-            text-align: right;
-            color: var(--color-orange);
-        }
-
-        /* Large Video Player Modal */
-        .video-modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.92);
-            backdrop-filter: blur(20px);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-        }
-
-        .video-modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .video-theater-wrap {
-            width: 100%;
-            max-width: 1080px;
-            background: #000;
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            position: relative;
-        }
-
-        .video-theater-header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 16px 20px;
-            background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 10;
-        }
-
-        .video-theater-title {
-            font-family: var(--font-heading);
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .video-theater-player {
-            width: 100%;
-            max-height: 75vh;
-            display: block;
-            outline: none;
-            background: #000;
-        }
-
-        .theater-close-btn {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .theater-close-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.08);
-        }
-
-        /* Toast notification */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #1e2530;
-            color: #fff;
-            border: 1px solid var(--border-glass);
-            padding: 12px 20px;
-            border-radius: var(--radius-md);
-            font-size: 0.9rem;
-            font-weight: 600;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 3000;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: var(--transition);
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .toast.success {
-            border-color: rgba(34, 197, 94, 0.4);
-            background: #112519;
-            color: #4ade80;
-        }
-
-        /* Hidden helper */
-        .hidden {
-            display: none !important;
-        }
-
-        /* Animations */
-        @keyframes pulseComplete {
-            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
-            70% { box-shadow: 0 0 0 12px rgba(34, 197, 94, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-        }
-
-        .pulse-complete {
-            animation: pulseComplete 2.5s infinite;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Avance de Objetivos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --card-hover: #f1f5f9;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-subtle: #94a3b8;
+
+      --color-orange: #ea580c;
+      --color-green: #16a34a;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+      --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      padding: 32px 20px 60px;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    /* BARRA SUPERIOR DISCRETA (SOLO ACCIONES ESENCIALES) */
+    .top-bar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      min-height: 40px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: var(--radius-full);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      font-family: inherit;
+    }
+
+    .btn-toggle-admin {
+      background: #ffffff;
+      color: #334155;
+      border-color: #cbd5e1;
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-toggle-admin:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+    .btn-toggle-admin.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    .btn-primary {
+      background: #ea580c;
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(234, 88, 12, 0.2);
+    }
+    .btn-primary:hover {
+      background: #c2410c;
+      transform: translateY(-1px);
+    }
+
+    .admin-controls {
+      display: none;
+      gap: 10px;
+      align-items: center;
+    }
+    body.is-admin .admin-controls {
+      display: flex;
+    }
+
+    /* LISTA VERTICAL (UNO DEBAJO DEL OTRO EN FILA) */
+    .objectives-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .objective-row {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 320px 1fr 110px auto;
+      align-items: center;
+      gap: 24px;
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+      position: relative;
+    }
+
+    .objective-row:hover {
+      border-color: #cbd5e1;
+      box-shadow: var(--shadow-md);
+    }
+
+    /* 1. TITULO DEL OBJETIVO */
+    .obj-title-col {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .obj-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 2. BARRA DE PROGRESO Y COLOR DINÁMICO */
+    .obj-progress-col {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+    }
+
+    .progress-track {
+      flex: 1;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease;
+    }
+
+    .progress-badge {
+      font-size: 13px;
+      font-weight: 800;
+      font-family: 'Outfit', sans-serif;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      min-width: 52px;
+      text-align: center;
+      border: 1px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    /* 3. BOTON DE VIDEO */
+    .obj-video-col {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-video {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .btn-video:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .btn-video i {
+      color: #ea580c;
+      font-size: 12px;
+    }
+
+    .btn-video.has-100 i {
+      color: #16a34a;
+    }
+
+    /* 4. ACCIONES ADMIN (EDITAR / ELIMINAR) */
+    .obj-admin-col {
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    body.is-admin .obj-admin-col {
+      display: flex;
+    }
+
+    .btn-action-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-full);
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      color: #64748b;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action-icon:hover {
+      background: #f8fafc;
+      color: #0f172a;
+      border-color: #cbd5e1;
+    }
+
+    .btn-action-icon.btn-delete:hover {
+      background: #fef2f2;
+      color: #ef4444;
+      border-color: #fca5a5;
+    }
+
+    /* MODAL DE EDICIÓN / AGREGAR */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 480px;
+      box-shadow: var(--shadow-modal);
+      overflow: hidden;
+      animation: modalFadeIn 0.2s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+    .modal-close:hover {
+      color: #0f172a;
+    }
+
+    .modal-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .form-input {
+      padding: 10px 14px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--radius-sm);
+      color: #0f172a;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .form-input:focus {
+      background: #ffffff;
+      border-color: #ea580c;
+      box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+    }
+
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .range-wrap input[type="range"] {
+      flex: 1;
+      accent-color: #ea580c;
+    }
+    .range-val {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      min-width: 48px;
+      text-align: right;
+      color: #0f172a;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      background: #f8fafc;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: #475569;
+      border-color: #cbd5e1;
+    }
+    .btn-secondary:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    /* MODAL DE REPRODUCTOR DE VIDEO (GRANDE, PLAY/PAUSE/FULLSCREEN) */
+    .video-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .video-modal-overlay.active {
+      display: flex;
+    }
+
+    .video-theater {
+      background: #000000;
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 860px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .video-theater-header {
+      background: rgba(15, 23, 42, 0.95);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .video-theater-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: #ffffff;
+    }
+
+    .video-theater-close {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+    .video-theater-close:hover {
+      color: #ffffff;
+    }
+
+    .video-theater-body {
+      background: #000000;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .video-theater video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .video-error-placeholder {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      color: #94a3b8;
+      text-align: center;
+      padding: 30px;
+    }
+    .video-error-placeholder i {
+      font-size: 40px;
+      color: #ea580c;
+    }
+    .video-error-placeholder p {
+      font-size: 14px;
+      max-width: 400px;
+      line-height: 1.4;
+    }
+    .video-path-preview {
+      font-family: monospace;
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 4px;
+      color: #f1f5f9;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      body {
+        padding: 20px 14px 40px;
+      }
+      .objective-row {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .obj-title {
+        white-space: normal;
+      }
+      .obj-video-col {
+        justify-content: flex-start;
+      }
+      .obj-admin-col {
+        border-top: 1px solid #f1f5f9;
+        padding-top: 10px;
+        justify-content: flex-end;
+      }
+    }
+  </style>
 </head>
 <body>
 
-    <div class="ambient-glow"></div>
-    <div class="grid-overlay"></div>
+  <div class="container">
 
-    <div class="container">
-        <!-- Top Navigation -->
-        <header class="top-bar">
-            <a href="index.html" class="brand-pill">
-                <img src="https://menutech.services/assets/img/logomt.png" alt="Menutech" class="brand-logo" onerror="this.src='./assets/menutech.png'">
-                <div class="brand-text">
-                    <h1>Menutech</h1>
-                    <span>Hoja de Ruta & Avances</span>
-                </div>
-            </a>
+    <!-- BARRA SUPERIOR DISCRETA (SOLO CONTROLES) -->
+    <div class="top-bar">
+      <!-- Botón para nuevo objetivo (visible en modo admin) -->
+      <div class="admin-controls">
+        <button class="btn btn-primary" id="btn-add-obj">
+          <i class="fa-solid fa-plus"></i> Agregar Objetivo
+        </button>
+      </div>
 
-            <div class="header-actions">
-                <div id="roleBadge" class="badge-role">
-                    <span class="dot"></span>
-                    <span id="roleText">Invitado</span>
-                </div>
-
-                <!-- Admin Action Buttons (Hidden for public/visitors) -->
-                <button id="btnAddObjective" class="btn btn-primary hidden" onclick="openAddModal()">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <span>Agregar Objetivo</span>
-                </button>
-
-                <button id="btnExportCode" class="btn btn-glass hidden" onclick="openExportModal()" title="Exportar configuración de objetivos para guardarla directamente en el código">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                    </svg>
-                    <span>Exportar Data</span>
-                </button>
-            </div>
-        </header>
-
-        <!-- Hero Section -->
-        <section class="hero-section">
-            <div class="hero-header">
-                <h2>Progreso de Objetivos</h2>
-                <p>Monitoreo en tiempo real del desarrollo, metas alcanzadas y demostraciones en video de cada objetivo del ecosistema Menutech.</p>
-            </div>
-
-            <!-- Global Metric Summary -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                        Progreso General
-                    </div>
-                    <div class="stat-value" id="statAvgPercent">0%</div>
-                    <div class="stat-bar-container">
-                        <div class="stat-bar-fill" id="statAvgFill" style="width: 0%; background: var(--color-orange);"></div>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-label">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        Completados (100%)
-                    </div>
-                    <div class="stat-value" id="statCompletedCount" style="color: var(--color-green-bright);">0</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-label">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        En Desarrollo
-                    </div>
-                    <div class="stat-value" id="statInProgressCount" style="color: var(--color-orange);">0</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-label">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                        Total Objetivos
-                    </div>
-                    <div class="stat-value" id="statTotalCount">0</div>
-                </div>
-            </div>
-
-            <!-- Controls and Filters -->
-            <div class="controls-bar">
-                <div class="filter-group">
-                    <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Todos (<span id="countFilterAll">0</span>)</button>
-                    <button class="filter-btn" data-filter="completed" onclick="setFilter('completed')">Completados (<span id="countFilterDone">0</span>)</button>
-                    <button class="filter-btn" data-filter="inprogress" onclick="setFilter('inprogress')">En Progreso (<span id="countFilterPending">0</span>)</button>
-                </div>
-
-                <div class="search-box">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <input type="text" id="searchInput" placeholder="Buscar objetivo..." oninput="handleSearch()">
-                </div>
-            </div>
-        </section>
-
-        <!-- Objectives Cards Grid -->
-        <main id="objectivesContainer" class="objectives-grid">
-            <!-- Dynamic Cards Loaded Here -->
-        </main>
+      <!-- Toggle directo de modo Administrador -->
+      <button class="btn btn-toggle-admin" id="btn-toggle-admin" title="Activar/Desactivar controles de edición">
+        <i class="fa-solid fa-lock" id="icon-admin-status"></i>
+        <span id="text-admin-status">Editar</span>
+      </button>
     </div>
 
-    <!-- Objective Edit / Create Modal (Admins Only) -->
-    <div id="objectiveModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalTitle">Nuevo Objetivo</h3>
-                <button class="btn-icon" onclick="closeModal()">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="objId">
+    <!-- LISTA VERTICAL DE OBJETIVOS (UNO DEBAJO DEL OTRO EN FILA) -->
+    <div class="objectives-list" id="objectives-list">
+      <!-- Los objetivos se renderizan aquí dinámicamente -->
+    </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="objTitle">Título del Objetivo</label>
-                    <input type="text" id="objTitle" class="form-input" placeholder="Ej: Online payment, App Android Flutter..." required>
-                </div>
+  </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="objCategory">Categoría / Módulo</label>
-                    <input type="text" id="objCategory" class="form-input" placeholder="Ej: Pasarela, Menús, Inteligencia Artificial, Móvil...">
-                </div>
+  <!-- MODAL PARA AGREGAR O EDITAR OBJETIVO -->
+  <div class="modal-overlay" id="edit-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-heading">Editar Objetivo</h3>
+        <button class="modal-close" id="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-id">
 
-                <div class="form-group">
-                    <label class="form-label" for="objDesc">Descripción corta</label>
-                    <textarea id="objDesc" class="form-textarea" placeholder="Explica de qué trata el objetivo y qué se ha logrado..."></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Porcentaje de Avance (<span id="sliderPercentDisplay">50%</span>)</label>
-                    <div class="slider-wrapper">
-                        <input type="range" id="objPercent" min="0" max="100" value="50" oninput="updateSliderDisplay(this.value)">
-                        <div class="slider-val-box" id="sliderBoxDisplay">50%</div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="objVideo">Ruta local del Video (desde el código)</label>
-                    <input type="text" id="objVideo" class="form-input" placeholder="./assets/misAvances/img/onlinepayment.mp4">
-                    <small style="color: var(--text-dim); font-size: 0.76rem; margin-top: 4px; display: block;">
-                        💡 Pon la ruta relativa o absoluta del video en tu proyecto, por ejemplo: <code>./assets/misAvances/img/mivideo.mp4</code>
-                    </small>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-glass" onclick="closeModal()">Cancelar</button>
-                <button class="btn btn-primary" onclick="saveObjective()">Guardar Objetivo</button>
-            </div>
+        <div class="form-group">
+          <label class="form-label" for="input-title">Objetivo</label>
+          <input type="text" id="input-title" class="form-input" placeholder="Nombre del objetivo (ej. Online payment)">
         </div>
-    </div>
 
-    <!-- Export / Code Sync Modal (Admins Only) -->
-    <div id="exportModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 680px;">
-            <div class="modal-header">
-                <h3>Código de Configuración de Objetivos</h3>
-                <button class="btn-icon" onclick="closeExportModal()">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px;">
-                    Aquí tienes el JSON con todos tus objetivos actuales. Puedes copiarlo para pegarlo en la constante <code>INITIAL_OBJECTIVES</code> de <code>avance.html</code> si quieres fijar tus cambios permanentemente en el código fuente:
-                </p>
-                <textarea id="exportJsonArea" class="form-textarea" style="height: 240px; font-family: monospace; font-size: 0.82rem;" readonly></textarea>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-glass" onclick="closeExportModal()">Cerrar</button>
-                <button class="btn btn-primary" onclick="copyExportedJson()">Copiar JSON</button>
-            </div>
+        <div class="form-group">
+          <label class="form-label">Porcentaje de Avance</label>
+          <div class="range-wrap">
+            <input type="range" id="input-progress" min="0" max="100" value="0">
+            <span class="range-val" id="label-progress">0%</span>
+          </div>
         </div>
-    </div>
 
-    <!-- Video Theater / Full-Screen Modal -->
-    <div id="videoTheaterModal" class="video-modal-overlay" onclick="handleTheaterBackdropClick(event)">
-        <div class="video-theater-wrap">
-            <div class="video-theater-header">
-                <span class="video-theater-title" id="theaterTitle">Demostración en Video</span>
-                <button class="theater-close-btn" onclick="closeTheaterModal()" title="Cerrar video">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <video id="theaterVideo" class="video-theater-player" controls playsinline preload="metadata">
-                Tu navegador no soporta la reproducción de video HTML5.
-            </video>
+        <div class="form-group">
+          <label class="form-label" for="input-video">Ruta del Video de Muestra</label>
+          <input type="text" id="input-video" class="form-input" placeholder="./assets/misAvances/img/video.mp4">
         </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-cancel-modal">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save-modal">Guardar</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast">
-        <span id="toastMsg">Operación completada</span>
+  <!-- MODAL DE REPRODUCTOR DE VIDEO GRANDE -->
+  <div class="video-modal-overlay" id="video-theater-modal">
+    <div class="video-theater">
+      <div class="video-theater-header">
+        <span class="video-theater-title" id="theater-title">Video de Muestra</span>
+        <button class="video-theater-close" id="btn-close-theater">&times;</button>
+      </div>
+      <div class="video-theater-body">
+        <video id="theater-video" controls playsinline></video>
+        <div class="video-error-placeholder" id="video-error-msg">
+          <i class="fa-solid fa-film"></i>
+          <p>Ruta local configurada para este objetivo:</p>
+          <span class="video-path-preview" id="video-path-text"></span>
+          <p style="font-size: 12px; color: #64748b; margin-top: 6px;">
+            Coloca el archivo de video en la ruta especificada dentro de tu proyecto para reproducirlo.
+          </p>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Application Script -->
-    <script type="module">
-        import { supabase as sb } from './supabase.js';
+  <!-- CARGA OPCIONAL DE SUPABASE (PARA DETECTAR SESION ADMIN AUTOMATICAMENTE SI EXISTE) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase.js" onerror="console.log('supabase.js opcional')"></script>
 
-        /**
-         * INITIAL DEFAULT OBJECTIVES (Stored directly in code as requested)
-         * El usuario puede editar las rutas y objetivos desde aquí o desde la interfaz como admin.
-         */
-        const INITIAL_OBJECTIVES = [
-            {
-                id: "obj-online-payment",
-                title: "Online payment",
-                category: "Pagos & Stripe",
-                description: "Integración de pasarela de pagos con Stripe Connect, cobros en línea para pedidos y comisiones automáticas.",
-                percentage: 95,
-                videoUrl: "./assets/misAvances/img/onlinepayment.mp4"
-            },
-            {
-                id: "obj-menu-creation",
-                title: "Menu creation",
-                category: "Menús Digitales",
-                description: "Módulo completo de creación, edición y personalización visual de menús digitales interactivos en tiempo real.",
-                percentage: 100,
-                videoUrl: "./assets/misAvances/img/menucreation.mp4"
-            },
-            {
-                id: "obj-menutech-ia",
-                title: "Generador de menu con MenutechIA",
-                category: "Inteligencia Artificial",
-                description: "Lectura de fotos de menús físicos con visión artificial e importación automática de categorías, platos y precios.",
-                percentage: 85,
-                videoUrl: "./assets/misAvances/img/menutechia.mp4"
-            },
-            {
-                id: "obj-android-flutter",
-                title: "App Android Flutter",
-                category: "Aplicación Móvil",
-                description: "Aplicación nativa para restaurantes con alertas sonoras en bucle, síntesis de voz en inglés y gestión en vivo de comandas.",
-                percentage: 90,
-                videoUrl: "./assets/misAvances/img/appflutter.mp4"
-            },
-            {
-                id: "obj-google-play",
-                title: "Google play store",
-                category: "Distribución & Lanzamiento",
-                description: "Preparación de bundle AAB, fichas de tienda, políticas de privacidad y proceso de publicación en Google Play Console.",
-                percentage: 60,
-                videoUrl: "./assets/misAvances/img/googleplay.mp4"
-            }
-        ];
+  <script>
+    // LISTA DE OBJETIVOS SOLICITADOS POR DEFECTO
+    const DEFAULT_OBJECTIVES = [
+      {
+        id: "obj-1",
+        title: "Online payment",
+        progress: 95,
+        video: "./assets/misAvances/img/onlinepayment.mp4"
+      },
+      {
+        id: "obj-2",
+        title: "Menu creation",
+        progress: 100,
+        video: "./assets/misAvances/img/menucreation.mp4"
+      },
+      {
+        id: "obj-3",
+        title: "Generador de menu con MenutechIA",
+        progress: 85,
+        video: "./assets/misAvances/img/menutechia.mp4"
+      },
+      {
+        id: "obj-4",
+        title: "App Android Flutter",
+        progress: 90,
+        video: "./assets/misAvances/img/appflutter.mp4"
+      },
+      {
+        id: "obj-5",
+        title: "Google play store",
+        progress: 60,
+        video: "./assets/misAvances/img/playstore.mp4"
+      }
+    ];
 
-        // Storage Key
-        const STORAGE_KEY = 'menutech_project_avances_v1';
+    const STORAGE_KEY = "menutech_avances_list_v2";
+    const ADMIN_KEY = "menutech_avance_is_admin";
 
-        // State variables
-        let objectives = [];
-        let isAdmin = false;
-        let currentUser = null;
-        let currentFilter = 'all';
-        let searchQuery = '';
+    // ESTADO DE LA APLICACION
+    let objectives = [];
+    let isAdmin = false;
 
-        /**
-         * Color interpolation algorithm based on percentage (0% orange -> yellow/lime -> 100% green)
-         */
-        function getProgressColor(percent) {
-            const p = Math.max(0, Math.min(100, Number(percent) || 0));
-            if (p >= 100) {
-                return {
-                    color: '#22c55e',
-                    border: 'rgba(34, 197, 94, 0.45)',
-                    glow: 'rgba(34, 197, 94, 0.25)',
-                    bgBadge: 'rgba(34, 197, 94, 0.15)',
-                    statusText: 'Completado'
-                };
-            }
-            if (p >= 80) {
-                return {
-                    color: '#10b981',
-                    border: 'rgba(16, 185, 129, 0.35)',
-                    glow: 'rgba(16, 185, 129, 0.18)',
-                    bgBadge: 'rgba(16, 185, 129, 0.14)',
-                    statusText: 'Casi listo'
-                };
-            }
-            if (p >= 60) {
-                return {
-                    color: '#84cc16',
-                    border: 'rgba(132, 204, 22, 0.35)',
-                    glow: 'rgba(132, 204, 22, 0.15)',
-                    bgBadge: 'rgba(132, 204, 22, 0.12)',
-                    statusText: 'Avanzado'
-                };
-            }
-            if (p >= 40) {
-                return {
-                    color: '#f59e0b',
-                    border: 'rgba(245, 158, 11, 0.35)',
-                    glow: 'rgba(245, 158, 11, 0.15)',
-                    bgBadge: 'rgba(245, 158, 11, 0.12)',
-                    statusText: 'En progreso'
-                };
-            }
-            return {
-                color: '#ff9533',
-                border: 'rgba(255, 149, 51, 0.35)',
-                glow: 'rgba(255, 149, 51, 0.18)',
-                bgBadge: 'rgba(255, 149, 51, 0.12)',
-                statusText: 'Iniciado'
-            };
+    // INICIALIZACION
+    function init() {
+      loadData();
+      checkAdminStatus();
+      setupEvents();
+      renderList();
+    }
+
+    // CARGAR DATOS
+    function loadData() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          objectives = JSON.parse(saved);
+        } else {
+          objectives = [...DEFAULT_OBJECTIVES];
+          saveData();
         }
+      } catch (e) {
+        objectives = [...DEFAULT_OBJECTIVES];
+      }
+    }
 
-        /**
-         * Load objectives from storage or fallback to defaults
-         */
-        function loadObjectives() {
-            try {
-                const stored = localStorage.getItem(STORAGE_KEY);
-                if (stored) {
-                    const parsed = JSON.parse(stored);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        objectives = parsed;
-                        return;
-                    }
-                }
-            } catch (e) {
-                console.warn("Could not read stored objectives, falling back to defaults", e);
+    function saveData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(objectives));
+      } catch (e) {
+        console.error("Error guardando en localStorage:", e);
+      }
+    }
+
+    // GESTION DEL MODO ADMIN
+    function checkAdminStatus() {
+      const urlParams = new URLSearchParams(window.location.search);
+
+      // 1. Si viene por query param ?admin=true o ?admin=1
+      if (urlParams.get("admin") === "true" || urlParams.get("admin") === "1" || urlParams.get("edit") === "true") {
+        setAdminState(true);
+        return;
+      }
+
+      // 2. Si ya lo tenía activo en localStorage
+      const localAdmin = localStorage.getItem(ADMIN_KEY);
+      if (localAdmin === "true") {
+        setAdminState(true);
+        return;
+      }
+
+      // 3. Revisar si hay sesion activa de Supabase
+      try {
+        const sbClient = window.sbClient || window.supabaseClient;
+        if (sbClient && sbClient.auth) {
+          sbClient.auth.getSession().then(({ data }) => {
+            if (data && data.session) {
+              setAdminState(true);
             }
-            objectives = [...INITIAL_OBJECTIVES];
-            persistObjectives();
+          });
         }
+      } catch (e) {}
 
-        function persistObjectives() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(objectives));
-            } catch (e) {
-                console.error("Error saving objectives", e);
-            }
+      setAdminState(false);
+    }
+
+    function setAdminState(adminActive) {
+      isAdmin = adminActive;
+      localStorage.setItem(ADMIN_KEY, isAdmin ? "true" : "false");
+
+      const btnToggle = document.getElementById("btn-toggle-admin");
+      const icon = document.getElementById("icon-admin-status");
+      const text = document.getElementById("text-admin-status");
+
+      if (isAdmin) {
+        document.body.classList.add("is-admin");
+        btnToggle.classList.add("active");
+        icon.className = "fa-solid fa-lock-open";
+        text.textContent = "Modo Admin Activo";
+      } else {
+        document.body.classList.remove("is-admin");
+        btnToggle.classList.remove("active");
+        icon.className = "fa-solid fa-lock";
+        text.textContent = "Editar";
+      }
+    }
+
+    // CALCULO DEL COLOR PROGRESIVO SEGUN EL %
+    // Estado normal/inicial: naranja (#ea580c)
+    // Va cambiando mientras se acerca al 100% hasta verde esmeralda (#16a34a)
+    function getColorForProgress(pct) {
+      const p = Math.max(0, Math.min(100, Number(pct) || 0));
+
+      if (p >= 100) {
+        return {
+          barColor: "#16a34a",       // Verde esmeralda vivo
+          badgeBg: "#dcfce7",        // Verde suave
+          badgeText: "#15803d",
+          badgeBorder: "#86efac",
+          is100: true
+        };
+      } else if (p >= 80) {
+        return {
+          barColor: "#65a30d",       // Verde lima avanzado
+          badgeBg: "#ecfccb",
+          badgeText: "#4d7c0f",
+          badgeBorder: "#bef264",
+          is100: false
+        };
+      } else if (p >= 60) {
+        return {
+          barColor: "#eab308",       // Amarillo / ámbar intermedio
+          badgeBg: "#fef9c3",
+          badgeText: "#a16207",
+          badgeBorder: "#fde047",
+          is100: false
+        };
+      } else if (p >= 35) {
+        return {
+          barColor: "#f97316",       // Naranja vivo
+          badgeBg: "#ffedd5",
+          badgeText: "#c2410c",
+          badgeBorder: "#fed7aa",
+          is100: false
+        };
+      } else {
+        return {
+          barColor: "#ea580c",       // Naranja base
+          badgeBg: "#ffedd5",
+          badgeText: "#c2410c",
+          badgeBorder: "#fdba74",
+          is100: false
+        };
+      }
+    }
+
+    // ESCAPAR STRINGS HTML
+    function escapeHtml(str) {
+      if (!str) return "";
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // RENDERIZAR LISTA EN FILA (UNO DEBAJO DEL OTRO)
+    function renderList() {
+      const listContainer = document.getElementById("objectives-list");
+      listContainer.innerHTML = "";
+
+      if (objectives.length === 0) {
+        listContainer.innerHTML = `
+          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:32px; text-align:center; color:#64748b;">
+            No hay objetivos registrados.
+          </div>
+        `;
+        return;
+      }
+
+      objectives.forEach(item => {
+        const color = getColorForProgress(item.progress);
+
+        const row = document.createElement("div");
+        row.className = "objective-row";
+        row.dataset.id = item.id;
+
+        row.innerHTML = `
+          <!-- 1. TITULO -->
+          <div class="obj-title-col">
+            <span class="obj-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</span>
+          </div>
+
+          <!-- 2. PROGRESO CON COLOR PROGRESIVO -->
+          <div class="obj-progress-col">
+            <div class="progress-track">
+              <div class="progress-fill" style="width: ${item.progress}%; background-color: ${color.barColor};"></div>
+            </div>
+            <span class="progress-badge" style="background-color: ${color.badgeBg}; color: ${color.badgeText}; border-color: ${color.badgeBorder};">
+              ${item.progress}%
+            </span>
+          </div>
+
+          <!-- 3. VIDEO DE MUESTRA -->
+          <div class="obj-video-col">
+            <button class="btn-video ${color.is100 ? 'has-100' : ''}" onclick="openVideo('${escapeHtml(item.id)}')">
+              <i class="fa-solid fa-circle-play"></i> Video
+            </button>
+          </div>
+
+          <!-- 4. CONTROLES ADMIN (EDITAR / ELIMINAR) -->
+          <div class="obj-admin-col">
+            <button class="btn-action-icon" title="Editar objetivo" onclick="openEditModal('${escapeHtml(item.id)}')">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="btn-action-icon btn-delete" title="Eliminar objetivo" onclick="deleteObjective('${escapeHtml(item.id)}')">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        `;
+
+        listContainer.appendChild(row);
+      });
+    }
+
+    // LOGICA DE EVENTOS
+    function setupEvents() {
+      // Toggle modo Admin directo al hacer clic
+      const btnToggle = document.getElementById("btn-toggle-admin");
+      btnToggle.addEventListener("click", () => {
+        setAdminState(!isAdmin);
+      });
+
+      // Boton Agregar
+      document.getElementById("btn-add-obj").addEventListener("click", () => {
+        openAddModal();
+      });
+
+      // Cerrar modales
+      document.getElementById("btn-close-modal").addEventListener("click", closeEditModal);
+      document.getElementById("btn-cancel-modal").addEventListener("click", closeEditModal);
+
+      document.getElementById("btn-close-theater").addEventListener("click", closeVideoModal);
+
+      // Sincronizar input range con label
+      const range = document.getElementById("input-progress");
+      const label = document.getElementById("label-progress");
+      range.addEventListener("input", (e) => {
+        label.textContent = e.target.value + "%";
+      });
+
+      // Guardar formulario
+      document.getElementById("btn-save-modal").addEventListener("click", saveModalData);
+
+      // Cerrar al hacer clic en fondo
+      document.getElementById("edit-modal").addEventListener("click", (e) => {
+        if (e.target.id === "edit-modal") closeEditModal();
+      });
+
+      document.getElementById("video-theater-modal").addEventListener("click", (e) => {
+        if (e.target.id === "video-theater-modal") closeVideoModal();
+      });
+
+      // Tecla Escape cierra modales
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeEditModal();
+          closeVideoModal();
         }
+      });
+    }
 
-        /**
-         * Check User Role and Authentication
-         */
-        async function checkAuthAndRole() {
-            const roleBadge = document.getElementById('roleBadge');
-            const roleText = document.getElementById('roleText');
-            const btnAdd = document.getElementById('btnAddObjective');
-            const btnExport = document.getElementById('btnExportCode');
+    // MODAL DE AGREGAR / EDITAR
+    function openAddModal() {
+      document.getElementById("modal-heading").textContent = "Agregar Objetivo";
+      document.getElementById("edit-id").value = "";
+      document.getElementById("input-title").value = "";
+      document.getElementById("input-progress").value = 0;
+      document.getElementById("label-progress").textContent = "0%";
+      document.getElementById("input-video").value = "./assets/misAvances/img/";
+      document.getElementById("edit-modal").classList.add("active");
+      document.getElementById("input-title").focus();
+    }
 
-            try {
-                const { data: { session } } = await sb.auth.getSession();
+    window.openEditModal = function(id) {
+      const item = objectives.find(o => o.id === id);
+      if (!item) return;
 
-                // Also check if admin key param is present for easy administration (?admin=true or auth session)
-                const urlParams = new URLSearchParams(window.location.search);
-                const hasAdminParam = urlParams.get('admin') === 'true';
+      document.getElementById("modal-heading").textContent = "Editar Objetivo";
+      document.getElementById("edit-id").value = item.id;
+      document.getElementById("input-title").value = item.title;
+      document.getElementById("input-progress").value = item.progress;
+      document.getElementById("label-progress").textContent = item.progress + "%";
+      document.getElementById("input-video").value = item.video || "";
+      document.getElementById("edit-modal").classList.add("active");
+      document.getElementById("input-title").focus();
+    };
 
-                if (session && session.user) {
-                    currentUser = session.user;
-                    const { data: profile } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
-                    const role = (profile?.role || 'user').trim().toUpperCase();
+    function closeEditModal() {
+      document.getElementById("edit-modal").classList.remove("active");
+    }
 
-                    const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'];
-                    if (privilegedRoles.includes(role) || hasAdminParam) {
-                        isAdmin = true;
-                        roleBadge.classList.add('admin');
-                        roleText.textContent = profile?.username ? `${profile.username} (Admin)` : 'Administrador';
-                        btnAdd.classList.remove('hidden');
-                        btnExport.classList.remove('hidden');
-                        return;
-                    }
-                } else if (hasAdminParam) {
-                    // Quick admin mode via parameter if testing
-                    isAdmin = true;
-                    roleBadge.classList.add('admin');
-                    roleText.textContent = 'Admin Mode';
-                    btnAdd.classList.remove('hidden');
-                    btnExport.classList.remove('hidden');
-                    return;
-                }
-            } catch (err) {
-                console.log("Visitor session check:", err.message);
-            }
+    function saveModalData() {
+      const id = document.getElementById("edit-id").value;
+      const title = document.getElementById("input-title").value.trim();
+      const progress = parseInt(document.getElementById("input-progress").value, 10) || 0;
+      const video = document.getElementById("input-video").value.trim();
 
-            // Visitor / Read-only Public Mode
-            isAdmin = false;
-            roleBadge.classList.remove('admin');
-            roleText.textContent = 'Modo Lectura';
-            btnAdd.classList.add('hidden');
-            btnExport.classList.add('hidden');
+      if (!title) {
+        alert("Por favor escribe el nombre del objetivo.");
+        return;
+      }
+
+      if (id) {
+        // Editar existente
+        const index = objectives.findIndex(o => o.id === id);
+        if (index !== -1) {
+          objectives[index].title = title;
+          objectives[index].progress = Math.max(0, Math.min(100, progress));
+          objectives[index].video = video;
         }
-
-        /**
-         * Render Dashboard Cards & Metrics
-         */
-        function renderDashboard() {
-            const container = document.getElementById('objectivesContainer');
-            container.innerHTML = '';
-
-            // Compute summary metrics
-            const total = objectives.length;
-            const completed = objectives.filter(o => Number(o.percentage) >= 100).length;
-            const inProgress = total - completed;
-            const avg = total > 0 ? Math.round(objectives.reduce((acc, o) => acc + (Number(o.percentage) || 0), 0) / total) : 0;
-
-            document.getElementById('statTotalCount').textContent = total;
-            document.getElementById('statCompletedCount').textContent = completed;
-            document.getElementById('statInProgressCount').textContent = inProgress;
-            document.getElementById('statAvgPercent').textContent = `${avg}%`;
-
-            const avgFill = document.getElementById('statAvgFill');
-            avgFill.style.width = `${avg}%`;
-            avgFill.style.backgroundColor = getProgressColor(avg).color;
-
-            // Update filter counters
-            document.getElementById('countFilterAll').textContent = total;
-            document.getElementById('countFilterDone').textContent = completed;
-            document.getElementById('countFilterPending').textContent = inProgress;
-
-            // Filter objectives
-            const filtered = objectives.filter(item => {
-                const matchesFilter =
-                    currentFilter === 'all' ? true :
-                    currentFilter === 'completed' ? Number(item.percentage) >= 100 :
-                    Number(item.percentage) < 100;
-
-                const q = searchQuery.toLowerCase().trim();
-                const matchesSearch = !q ||
-                    item.title.toLowerCase().includes(q) ||
-                    (item.category && item.category.toLowerCase().includes(q)) ||
-                    (item.description && item.description.toLowerCase().includes(q));
-
-                return matchesFilter && matchesSearch;
-            });
-
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed var(--border-glass);">
-                        <svg style="width: 48px; height: 48px; color: var(--text-dim); margin-bottom: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <h4 style="font-family: var(--font-heading); font-size: 1.2rem; margin-bottom: 4px;">No se encontraron objetivos</h4>
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">Prueba cambiando el filtro o la búsqueda.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            filtered.forEach(item => {
-                const p = Math.max(0, Math.min(100, Number(item.percentage) || 0));
-                const colorScheme = getProgressColor(p);
-                const isCompleted = p >= 100;
-
-                const card = document.createElement('article');
-                card.className = `objective-card ${isCompleted ? 'status-completed' : ''}`;
-                card.style.borderColor = isCompleted ? colorScheme.border : 'var(--border-glass)';
-                if (isCompleted) {
-                    card.style.boxShadow = `0 10px 30px -10px ${colorScheme.glow}`;
-                }
-
-                // Video markup preview
-                let videoHtml = '';
-                if (item.videoUrl && item.videoUrl.trim() !== '') {
-                    videoHtml = `
-                        <div class="video-preview-box" onclick="openTheaterModal('${item.id}')" title="Clic para reproducir en pantalla completa">
-                            <video src="${escapeHtml(item.videoUrl)}" preload="metadata" muted playsinline></video>
-                            <div class="video-preview-overlay">
-                                <div class="play-trigger-btn ${isCompleted ? 'pulse-complete' : ''}" style="${isCompleted ? 'background: #22c55e; color: #fff;' : ''}">
-                                    <svg viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M8 5v14l11-7z"/>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="video-badge">
-                                <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
-                                Video de Muestra
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    videoHtml = `
-                        <div class="video-preview-box" style="cursor: default;">
-                            <div class="video-placeholder">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                                <span>Demostración en video pendiente</span>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                // Admin action buttons (rendered strictly if logged in as admin)
-                let adminActionButtons = '';
-                if (isAdmin) {
-                    adminActionButtons = `
-                        <div class="admin-controls">
-                            <button class="btn-icon" onclick="openEditModal('${item.id}')" title="Modificar objetivo y %">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                            </button>
-                            <button class="btn-icon delete" onclick="deleteObjective('${item.id}')" title="Eliminar objetivo">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                            </button>
-                        </div>
-                    `;
-                }
-
-                card.innerHTML = `
-                    <div>
-                        <div class="card-top">
-                            <span class="card-category">
-                                <span style="width: 6px; height: 6px; border-radius: 50%; background: ${colorScheme.color};"></span>
-                                ${escapeHtml(item.category || 'General')}
-                            </span>
-                            <span class="card-percent-badge" style="background: ${colorScheme.bgBadge}; color: ${colorScheme.color}; border: 1px solid ${colorScheme.border};">
-                                ${p}%
-                            </span>
-                        </div>
-
-                        <h3 class="card-title">${escapeHtml(item.title)}</h3>
-                        <p class="card-desc">${escapeHtml(item.description || 'Sin descripción adicional.')}</p>
-
-                        <div class="progress-wrapper">
-                            <div class="progress-labels">
-                                <span>Estado: <strong style="color: ${colorScheme.color};">${colorScheme.statusText}</strong></span>
-                                <span>${p} / 100%</span>
-                            </div>
-                            <div class="progress-track">
-                                <div class="progress-fill" style="width: ${p}%; background: ${colorScheme.color}; box-shadow: 0 0 12px ${colorScheme.glow};"></div>
-                            </div>
-                        </div>
-
-                        ${videoHtml}
-                    </div>
-
-                    <div class="card-footer">
-                        <div class="status-pill" style="color: ${colorScheme.color};">
-                            ${isCompleted ? `
-                                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                <span>Completado 100%</span>
-                            ` : `
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <span>${p}% ejecutado</span>
-                            `}
-                        </div>
-
-                        ${adminActionButtons}
-                    </div>
-                `;
-
-                container.appendChild(card);
-            });
-        }
-
-        /**
-         * Search and Filter Handlers
-         */
-        window.setFilter = function(filter) {
-            currentFilter = filter;
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                if (btn.dataset.filter === filter) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-            renderDashboard();
-        };
-
-        window.handleSearch = function() {
-            searchQuery = document.getElementById('searchInput').value;
-            renderDashboard();
-        };
-
-        /**
-         * Modal Management (Admin Only)
-         */
-        window.openAddModal = function() {
-            if (!isAdmin) return;
-            document.getElementById('modalTitle').textContent = 'Nuevo Objetivo';
-            document.getElementById('objId').value = '';
-            document.getElementById('objTitle').value = '';
-            document.getElementById('objCategory').value = '';
-            document.getElementById('objDesc').value = '';
-            document.getElementById('objPercent').value = 50;
-            updateSliderDisplay(50);
-            document.getElementById('objVideo').value = '';
-            document.getElementById('objectiveModal').classList.add('active');
-        };
-
-        window.openEditModal = function(id) {
-            if (!isAdmin) return;
-            const obj = objectives.find(o => o.id === id);
-            if (!obj) return;
-
-            document.getElementById('modalTitle').textContent = 'Editar Objetivo';
-            document.getElementById('objId').value = obj.id;
-            document.getElementById('objTitle').value = obj.title;
-            document.getElementById('objCategory').value = obj.category || '';
-            document.getElementById('objDesc').value = obj.description || '';
-            document.getElementById('objPercent').value = obj.percentage || 0;
-            updateSliderDisplay(obj.percentage || 0);
-            document.getElementById('objVideo').value = obj.videoUrl || '';
-            document.getElementById('objectiveModal').classList.add('active');
-        };
-
-        window.closeModal = function() {
-            document.getElementById('objectiveModal').classList.remove('active');
-        };
-
-        window.updateSliderDisplay = function(val) {
-            const p = Math.max(0, Math.min(100, Number(val) || 0));
-            const color = getProgressColor(p).color;
-            const display = document.getElementById('sliderPercentDisplay');
-            const box = document.getElementById('sliderBoxDisplay');
-            const slider = document.getElementById('objPercent');
-
-            display.textContent = `${p}%`;
-            display.style.color = color;
-            box.textContent = `${p}%`;
-            box.style.color = color;
-            slider.style.accentColor = color;
-        };
-
-        window.saveObjective = function() {
-            if (!isAdmin) return;
-            const id = document.getElementById('objId').value;
-            const title = document.getElementById('objTitle').value.trim();
-            const category = document.getElementById('objCategory').value.trim();
-            const description = document.getElementById('objDesc').value.trim();
-            const percentage = parseInt(document.getElementById('objPercent').value, 10) || 0;
-            const videoUrl = document.getElementById('objVideo').value.trim();
-
-            if (!title) {
-                showToast("Por favor ingresa un título para el objetivo.", "error");
-                return;
-            }
-
-            if (id) {
-                // Edit existing
-                const idx = objectives.findIndex(o => o.id === id);
-                if (idx !== -1) {
-                    objectives[idx] = {
-                        ...objectives[idx],
-                        title,
-                        category,
-                        description,
-                        percentage,
-                        videoUrl
-                    };
-                }
-            } else {
-                // Create new
-                const newObj = {
-                    id: 'obj-' + Date.now(),
-                    title,
-                    category,
-                    description,
-                    percentage,
-                    videoUrl
-                };
-                objectives.unshift(newObj);
-            }
-
-            persistObjectives();
-            renderDashboard();
-            closeModal();
-            showToast("Objetivo guardado exitosamente.", "success");
-        };
-
-        window.deleteObjective = function(id) {
-            if (!isAdmin) return;
-            const obj = objectives.find(o => o.id === id);
-            if (!obj) return;
-
-            if (confirm(`¿Estás seguro de eliminar el objetivo "${obj.title}"?`)) {
-                objectives = objectives.filter(o => o.id !== id);
-                persistObjectives();
-                renderDashboard();
-                showToast("Objetivo eliminado correctamente.", "success");
-            }
-        };
-
-        /**
-         * Export Data Modal (Admins)
-         */
-        window.openExportModal = function() {
-            if (!isAdmin) return;
-            const jsonText = JSON.stringify(objectives, null, 4);
-            document.getElementById('exportJsonArea').value = jsonText;
-            document.getElementById('exportModal').classList.add('active');
-        };
-
-        window.closeExportModal = function() {
-            document.getElementById('exportModal').classList.remove('active');
-        };
-
-        window.copyExportedJson = function() {
-            const area = document.getElementById('exportJsonArea');
-            area.select();
-            navigator.clipboard.writeText(area.value).then(() => {
-                showToast("JSON copiado al portapapeles.", "success");
-            }).catch(() => {
-                showToast("No se pudo copiar automáticamente.", "error");
-            });
-        };
-
-        /**
-         * Video Theater Player (Enlarge, Play, Pause, Full-Screen)
-         */
-        window.openTheaterModal = function(id) {
-            const obj = objectives.find(o => o.id === id);
-            if (!obj || !obj.videoUrl) return;
-
-            const modal = document.getElementById('videoTheaterModal');
-            const player = document.getElementById('theaterVideo');
-            const title = document.getElementById('theaterTitle');
-
-            title.textContent = `Demostración: ${obj.title} (${obj.percentage}%)`;
-            player.src = obj.videoUrl;
-            modal.classList.add('active');
-
-            // Auto-play attempt
-            player.play().catch(e => {
-                console.log("Auto-play blocked, waiting for user gesture:", e);
-            });
-        };
-
-        window.closeTheaterModal = function() {
-            const modal = document.getElementById('videoTheaterModal');
-            const player = document.getElementById('theaterVideo');
-            player.pause();
-            player.src = '';
-            modal.classList.remove('active');
-        };
-
-        window.handleTheaterBackdropClick = function(e) {
-            if (e.target.id === 'videoTheaterModal') {
-                closeTheaterModal();
-            }
-        };
-
-        // Close theater modal on Escape key
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeTheaterModal();
-                closeModal();
-                closeExportModal();
-            }
+      } else {
+        // Nuevo
+        objectives.push({
+          id: "obj-" + Date.now(),
+          title: title,
+          progress: Math.max(0, Math.min(100, progress)),
+          video: video
         });
+      }
 
-        /**
-         * Helper Functions
-         */
-        function escapeHtml(str) {
-            if (!str) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
+      saveData();
+      renderList();
+      closeEditModal();
+    }
 
-        function showToast(msg, type = "normal") {
-            const toast = document.getElementById('toast');
-            const text = document.getElementById('toastMsg');
-            text.textContent = msg;
-            toast.className = `toast show ${type === 'success' ? 'success' : ''}`;
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
+    window.deleteObjective = function(id) {
+      const item = objectives.find(o => o.id === id);
+      if (!item) return;
 
-        // Initialize App on DOM Load
-        window.addEventListener('DOMContentLoaded', async () => {
-            loadObjectives();
-            await checkAuthAndRole();
-            renderDashboard();
+      if (confirm(`¿Deseas eliminar el objetivo "${item.title}"?`)) {
+        objectives = objectives.filter(o => o.id !== id);
+        saveData();
+        renderList();
+      }
+    };
+
+    // REPRODUCTOR DE VIDEO GRANDE (PLAY/PAUSE/SEEK/FULLSCREEN)
+    window.openVideo = function(id) {
+      const item = objectives.find(o => o.id === id);
+      if (!item) return;
+
+      const theaterModal = document.getElementById("video-theater-modal");
+      const theaterTitle = document.getElementById("theater-title");
+      const videoPlayer = document.getElementById("theater-video");
+      const errorMsg = document.getElementById("video-error-msg");
+      const videoPathText = document.getElementById("video-path-text");
+
+      theaterTitle.textContent = item.title;
+      videoPathText.textContent = item.video || "(sin ruta especificada)";
+
+      // Resetear vista
+      errorMsg.style.display = "none";
+      videoPlayer.style.display = "block";
+      videoPlayer.src = item.video || "";
+
+      theaterModal.classList.add("active");
+
+      // Intentar reproducir si existe el archivo
+      videoPlayer.onerror = function() {
+        videoPlayer.style.display = "none";
+        errorMsg.style.display = "flex";
+      };
+
+      const playPromise = videoPlayer.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Autoplay prevenido por navegador, listo para interactuar con controles
         });
-    </script>
+      }
+    };
+
+    function closeVideoModal() {
+      const theaterModal = document.getElementById("video-theater-modal");
+      const videoPlayer = document.getElementById("theater-video");
+      theaterModal.classList.remove("active");
+      videoPlayer.pause();
+      videoPlayer.src = "";
+    }
+
+    // EJECUTAR AL CARGAR DOM
+    document.addEventListener("DOMContentLoaded", init);
+  </script>
 </body>
 </html>
