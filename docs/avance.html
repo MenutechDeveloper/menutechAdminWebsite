@@ -53,14 +53,18 @@
       margin: 0 auto;
     }
 
-    /* BARRA SUPERIOR DISCRETA */
+    /* BARRA SUPERIOR DISCRETA (SOLO ADMINS AUTENTICADOS) */
     .top-bar {
-      display: flex;
+      display: none; /* Oculta por defecto para visitantes */
       justify-content: flex-end;
       align-items: center;
       gap: 12px;
       margin-bottom: 24px;
       min-height: 42px;
+    }
+
+    body.is-admin-user .top-bar {
+      display: flex; /* Solo se muestra si el usuario logueado tiene rol ADMIN o DEVELOPER */
     }
 
     .btn {
@@ -107,7 +111,7 @@
     .admin-only-btn {
       display: none;
     }
-    body.is-admin .admin-only-btn {
+    body.is-admin-editing .admin-only-btn {
       display: inline-flex;
     }
 
@@ -262,7 +266,7 @@
       gap: 12px;
       width: 200px;
     }
-    body.is-admin .admin-slider-wrap {
+    body.is-admin-editing .admin-slider-wrap {
       display: flex;
     }
 
@@ -300,7 +304,7 @@
       align-items: center;
       gap: 6px;
     }
-    body.is-admin .admin-actions {
+    body.is-admin-editing .admin-actions {
       display: flex;
     }
 
@@ -344,7 +348,7 @@
       margin-top: 12px;
       animation: fadeIn 0.2s ease;
     }
-    .objective-row.editing-inline .inline-edit-panel {
+    body.is-admin-editing .objective-row.editing-inline .inline-edit-panel {
       display: flex;
     }
 
@@ -524,14 +528,14 @@
 
   <div class="container">
 
-    <!-- BARRA SUPERIOR DISCRETA (SOLO ACCIONES ESENCIALES) -->
-    <div class="top-bar">
-      <!-- Botón para nuevo objetivo (visible en modo admin) -->
+    <!-- BARRA SUPERIOR DISCRETA (SOLO VISIBLE SI ES ADMIN AUTENTICADO) -->
+    <div class="top-bar" id="top-bar">
+      <!-- Botón para nuevo objetivo (visible cuando el admin activa edición) -->
       <button class="btn btn-primary admin-only-btn" id="btn-add-inline">
         <i class="fa-solid fa-plus"></i> Agregar Objetivo
       </button>
 
-      <!-- Toggle directo de modo Administrador -->
+      <!-- Toggle de modo de edición -->
       <button class="btn btn-toggle-admin" id="btn-toggle-admin" title="Activar/Desactivar controles de edición">
         <i class="fa-solid fa-lock" id="icon-admin-status"></i>
         <span id="text-admin-status">Editar</span>
@@ -566,12 +570,10 @@
     </div>
   </div>
 
-  <!-- CARGA OPCIONAL DE SUPABASE (PARA DETECTAR SESION ADMIN AUTOMATICAMENTE SI EXISTE) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./supabase.js" onerror="console.log('supabase.js opcional')"></script>
+  <script type="module">
+    import { supabase as sb } from './supabase.js';
 
-  <script>
-    // OBJETIVOS SOLICITADOS POR DEFECTO
+    // OBJETIVOS POR DEFECTO
     const DEFAULT_OBJECTIVES = [
       {
         id: "obj-1",
@@ -611,19 +613,19 @@
     ];
 
     const STORAGE_KEY = "menutech_avances_list_v3";
-    const ADMIN_KEY = "menutech_avance_is_admin";
 
     // ESTADO
     let objectives = [];
-    let isAdmin = false;
+    let isUserAdmin = false;     // Si el usuario autenticado tiene rol de ADMIN o DEVELOPER en profiles
+    let isEditingActive = false; // Si el admin activó el modo de edición
     let editingId = null;
 
     // INICIALIZACION
-    function init() {
+    async function init() {
       loadData();
-      checkAdminStatus();
-      setupEvents();
       renderList();
+      setupEvents();
+      await verifyAdminAuthentication();
     }
 
     function loadData() {
@@ -641,62 +643,89 @@
     }
 
     function saveData() {
+      if (!isUserAdmin) return; // Protección: solo guarda cambios si es admin verificado
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(objectives));
       } catch (e) {
-        console.error("Error guardando en localStorage:", e);
+        console.error("Error guardando:", e);
       }
     }
 
-    function checkAdminStatus() {
-      const urlParams = new URLSearchParams(window.location.search);
-
-      if (urlParams.get("admin") === "true" || urlParams.get("admin") === "1" || urlParams.get("edit") === "true") {
-        setAdminState(true);
-        return;
-      }
-
-      const localAdmin = localStorage.getItem(ADMIN_KEY);
-      if (localAdmin === "true") {
-        setAdminState(true);
-        return;
-      }
-
+    // VERIFICACION ESTRICTA DE SEGURIDAD CON SUPABASE:
+    // Solo usuarios autenticados con rol ADMIN o DEVELOPER en public.profiles tienen acceso de edición.
+    async function verifyAdminAuthentication() {
       try {
-        const sbClient = window.sbClient || window.supabaseClient;
-        if (sbClient && sbClient.auth) {
-          sbClient.auth.getSession().then(({ data }) => {
-            if (data && data.session) {
-              setAdminState(true);
-            }
-          });
+        if (!sb || !sb.auth) {
+          disableAdminUI();
+          return;
         }
-      } catch (e) {}
 
-      setAdminState(false);
+        const { data: { session }, error: sessionError } = await sb.auth.getSession();
+        if (sessionError || !session || !session.user) {
+          disableAdminUI();
+          return;
+        }
+
+        // Consultar el rol del usuario en la tabla profiles
+        const { data: profile, error: profileError } = await sb
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError || !profile) {
+          disableAdminUI();
+          return;
+        }
+
+        const role = (profile.role || '').trim().toUpperCase();
+        const allowedRoles = ['ADMIN', 'DEVELOPER'];
+
+        if (allowedRoles.includes(role)) {
+          enableAdminUI();
+        } else {
+          disableAdminUI();
+        }
+      } catch (err) {
+        console.error("Error en verificación de administrador:", err);
+        disableAdminUI();
+      }
     }
 
-    function setAdminState(adminActive) {
-      isAdmin = adminActive;
-      localStorage.setItem(ADMIN_KEY, isAdmin ? "true" : "false");
+    function enableAdminUI() {
+      isUserAdmin = true;
+      document.body.classList.add("is-admin-user");
+    }
 
+    function disableAdminUI() {
+      isUserAdmin = false;
+      isEditingActive = false;
+      editingId = null;
+      document.body.classList.remove("is-admin-user");
+      document.body.classList.remove("is-admin-editing");
+      renderList();
+    }
+
+    function toggleEditMode() {
+      if (!isUserAdmin) return; // Doble validación de seguridad
+
+      isEditingActive = !isEditingActive;
       const btnToggle = document.getElementById("btn-toggle-admin");
       const icon = document.getElementById("icon-admin-status");
       const text = document.getElementById("text-admin-status");
 
-      if (isAdmin) {
-        document.body.classList.add("is-admin");
+      if (isEditingActive) {
+        document.body.classList.add("is-admin-editing");
         btnToggle.classList.add("active");
         icon.className = "fa-solid fa-lock-open";
-        text.textContent = "Modo Admin Activo";
+        text.textContent = "Modo Edición Activo";
       } else {
-        document.body.classList.remove("is-admin");
+        document.body.classList.remove("is-admin-editing");
         btnToggle.classList.remove("active");
         icon.className = "fa-solid fa-lock";
         text.textContent = "Editar";
-        editingId = null; // Cierra cualquier editor inline abierto
+        editingId = null;
       }
-
       renderList();
     }
 
@@ -772,7 +801,7 @@
 
       objectives.forEach(item => {
         const color = getColorForProgress(item.progress);
-        const isEditing = editingId === item.id;
+        const isEditing = isEditingActive && editingId === item.id;
 
         const row = document.createElement("div");
         row.className = `objective-row ${isEditing ? 'editing-inline' : ''}`;
@@ -783,7 +812,7 @@
           <div style="display:flex; width:100%; align-items:center; gap:20px; flex-wrap:wrap;">
 
             <!-- 1. CUADRITO DE VISTA PREVIA DEL VIDEO -->
-            <div class="video-thumb-box ${color.is100 ? 'is-100' : ''}" onclick="openVideo('${escapeHtml(item.id)}')" title="Ver video de muestra">
+            <div class="video-thumb-box ${color.is100 ? 'is-100' : ''}" onclick="window.openVideo('${escapeHtml(item.id)}')" title="Ver video de muestra">
               <video src="${escapeHtml(item.video || '')}" preload="metadata" muted></video>
               <div class="thumb-play-overlay">
                 <div class="thumb-play-btn">
@@ -809,7 +838,7 @@
                   min="0"
                   max="100"
                   value="${item.progress}"
-                  oninput="handleSliderChange('${escapeHtml(item.id)}', this.value)"
+                  oninput="window.handleSliderChange('${escapeHtml(item.id)}', this.value)"
                 >
               </div>
 
@@ -820,10 +849,10 @@
 
               <!-- BOTONES DE EDICION INLINE (SOLO ADMIN) -->
               <div class="admin-actions">
-                <button class="btn-action-icon" title="Editar datos" onclick="toggleInlineEdit('${escapeHtml(item.id)}')">
+                <button class="btn-action-icon" title="Editar datos" onclick="window.toggleInlineEdit('${escapeHtml(item.id)}')">
                   <i class="fa-solid ${isEditing ? 'fa-xmark' : 'fa-pen'}"></i>
                 </button>
-                <button class="btn-action-icon btn-delete" title="Eliminar objetivo" onclick="deleteObjective('${escapeHtml(item.id)}')">
+                <button class="btn-action-icon btn-delete" title="Eliminar objetivo" onclick="window.deleteObjective('${escapeHtml(item.id)}')">
                   <i class="fa-solid fa-trash"></i>
                 </button>
               </div>
@@ -840,7 +869,7 @@
               <input type="text" class="edit-input edit-input-full" id="edit-desc-${escapeHtml(item.id)}" value="${escapeHtml(item.description || '')}" placeholder="Descripción opcional (se muestra a la derecha del video)">
             </div>
             <div class="edit-actions-bar">
-              <button class="btn btn-primary" onclick="saveInlineEdit('${escapeHtml(item.id)}')">
+              <button class="btn btn-primary" onclick="window.saveInlineEdit('${escapeHtml(item.id)}')">
                 <i class="fa-solid fa-check"></i> Guardar Cambios
               </button>
             </div>
@@ -851,8 +880,9 @@
       });
     }
 
-    // SLIDER INTERACTIVO ADMIN (SIN POPUPS, SE MUEVE EN TIEMPO REAL)
+    // FUNCIONES GLOBALES
     window.handleSliderChange = function(id, val) {
+      if (!isUserAdmin) return;
       const p = Math.max(0, Math.min(100, parseInt(val, 10) || 0));
       const item = objectives.find(o => o.id === id);
       if (!item) return;
@@ -860,7 +890,6 @@
       item.progress = p;
       saveData();
 
-      // Actualizar dinámicamente el pill de porcentaje y colores en pantalla al instante
       const pill = document.querySelector(`.pill-${id}`);
       if (pill) {
         const color = getColorForProgress(p);
@@ -871,13 +900,14 @@
       }
     };
 
-    // TOGGLE MODO EDICION INLINE
     window.toggleInlineEdit = function(id) {
+      if (!isUserAdmin) return;
       editingId = editingId === id ? null : id;
       renderList();
     };
 
     window.saveInlineEdit = function(id) {
+      if (!isUserAdmin) return;
       const item = objectives.find(o => o.id === id);
       if (!item) return;
 
@@ -900,8 +930,8 @@
       renderList();
     };
 
-    // AGREGAR NUEVO OBJETIVO DIRECTO
     function addNewObjective() {
+      if (!isUserAdmin) return;
       const newId = "obj-" + Date.now();
       objectives.unshift({
         id: newId,
@@ -915,8 +945,8 @@
       renderList();
     }
 
-    // ELIMINAR OBJETIVO
     window.deleteObjective = function(id) {
+      if (!isUserAdmin) return;
       const item = objectives.find(o => o.id === id);
       if (!item) return;
 
@@ -968,17 +998,9 @@
     }
 
     function setupEvents() {
-      // Toggle admin
-      document.getElementById("btn-toggle-admin").addEventListener("click", () => {
-        setAdminState(!isAdmin);
-      });
+      document.getElementById("btn-toggle-admin").addEventListener("click", toggleEditMode);
+      document.getElementById("btn-add-inline").addEventListener("click", addNewObjective);
 
-      // Agregar inline
-      document.getElementById("btn-add-inline").addEventListener("click", () => {
-        addNewObjective();
-      });
-
-      // Cerrar modal de video
       document.getElementById("btn-close-theater").addEventListener("click", closeVideoModal);
       document.getElementById("video-theater-modal").addEventListener("click", (e) => {
         if (e.target.id === "video-theater-modal") closeVideoModal();
