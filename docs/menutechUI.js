@@ -2140,64 +2140,61 @@ class MenutechPlatformOrders extends HTMLElement {
 
                 /* Promo Banners & Badges */
                 .promo-carousel-container {
-                    padding: 16px 20px 8px 20px;
+                    padding: 16px 20px 12px 20px;
                     background: #fff;
                     overflow-x: auto;
                     display: flex;
+                    flex-direction: column;
                     gap: 14px;
+                    width: 100%;
+                    box-sizing: border-box;
                     scrollbar-width: none;
                 }
                 .promo-carousel-container::-webkit-scrollbar { display: none; }
                 .promo-banner-card {
-                    flex: 0 0 280px;
-                    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-                    border-radius: 16px;
-                    padding: 14px 16px;
+                    width: 100%;
+                    box-sizing: border-box;
+                    min-height: 130px;
+                    background: #11141a;
+                    background-size: cover;
+                    background-position: center;
+                    border-radius: 18px;
+                    padding: 20px 22px;
                     color: #fff;
                     display: flex;
-                    align-items: center;
-                    gap: 14px;
-                    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+                    flex-direction: column;
+                    justify-content: flex-end;
+                    box-shadow: 0 8px 24px rgba(0,0,0,0.14);
                     position: relative;
                     overflow: hidden;
-                    border: 1px solid rgba(255,255,255,0.1);
+                    border: 1px solid rgba(255,255,255,0.12);
                     cursor: pointer;
-                    transition: transform 0.2s;
+                    transition: transform 0.2s, box-shadow 0.2s;
                 }
-                .promo-banner-card:hover { transform: translateY(-2px); }
+                .promo-banner-card:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0,0,0,0.22); }
                 .promo-banner-card::before {
                     content: '';
                     position: absolute;
-                    top: -20px;
-                    right: -20px;
-                    width: 70px;
-                    height: 70px;
-                    border-radius: 50%;
-                    background: radial-gradient(circle, rgba(255,149,51,0.3) 0%, transparent 70%);
+                    inset: 0;
+                    background: linear-gradient(to top, rgba(10,12,16,0.92) 0%, rgba(10,12,16,0.52) 65%, rgba(10,12,16,0.25) 100%);
+                    pointer-events: none;
                 }
-                .promo-banner-img {
-                    width: 54px;
-                    height: 54px;
-                    border-radius: 12px;
-                    object-fit: cover;
-                    flex-shrink: 0;
-                    background: rgba(255,255,255,0.1);
-                }
-                .promo-banner-content { flex: 1; min-width: 0; }
+                .promo-banner-content { position: relative; z-index: 1; width: 100%; }
                 .promo-banner-headline {
-                    font-size: 1rem;
+                    font-size: 1.25rem;
                     font-weight: 800;
                     color: #ff9533;
-                    margin: 0 0 2px 0;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
+                    margin: 0 0 4px 0;
+                    line-height: 1.2;
+                    text-shadow: 0 2px 8px rgba(0,0,0,0.85);
                 }
                 .promo-banner-desc {
-                    font-size: 0.75rem;
-                    color: #cbd5e1;
+                    font-size: 0.88rem;
+                    color: #f1f5f9;
+                    font-weight: 500;
                     margin: 0;
-                    line-height: 1.3;
+                    line-height: 1.35;
+                    text-shadow: 0 1px 6px rgba(0,0,0,0.85);
                     display: -webkit-box;
                     -webkit-line-clamp: 2;
                     -webkit-box-orient: vertical;
@@ -2372,17 +2369,16 @@ class MenutechPlatformOrders extends HTMLElement {
         // Build promo carousel HTML if active promotions exist
         const promoBannersHtml = (this.promotions && this.promotions.length > 0) ? `
             <div class="promo-carousel-container">
-                ${this.promotions.map(p => `
-                    <div class="promo-banner-card" data-promo-id="${p.id}">
-                        ${p.image_url ? `<img src="${window.optimizeCloudinaryUrl(p.image_url, { width: 120, height: 120, crop: 'fill' })}" class="promo-banner-img" alt="${p.headline || 'Promo'}">` : `
-                            <div class="promo-banner-img" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;background:rgba(255,149,51,0.2);color:#ff9533;">🏷️</div>
-                        `}
+                ${this.promotions.map(p => {
+                    const bgStyle = p.image_url ? `background-image: url('${window.optimizeCloudinaryUrl(p.image_url, { width: 1000, height: 400, crop: 'fill' })}');` : 'background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);';
+                    return `
+                    <div class="promo-banner-card" data-promo-id="${p.id}" style="${bgStyle}">
                         <div class="promo-banner-content">
                             <div class="promo-banner-headline">${p.headline || p.name}</div>
-                            <div class="promo-banner-desc">${p.description || p.conditions?.custom_coupon ? `Use code: ${p.conditions.custom_coupon}` : 'Special offer available now!'}</div>
+                            <div class="promo-banner-desc">${p.description || (p.conditions?.custom_coupon ? 'Use code: ' + p.conditions.custom_coupon : 'Special offer available now!')}</div>
                         </div>
                     </div>
-                `).join('')}
+                `;}).join('')}
             </div>
         ` : '';
 
@@ -3325,7 +3321,7 @@ class MenutechPlatformOrders extends HTMLElement {
             if (promoTagContainer) {
                 promoTagContainer.innerHTML = `
                     <div class="promo-applied-tag">
-                        <span>🏷️ ${bestPromoResult.promo.headline || bestPromoResult.promo.name} Applied!</span>
+                        <span>${bestPromoResult.promo.headline || bestPromoResult.promo.name} Applied!</span>
                         ${this.manualCouponCode ? '<button type="button" class="promo-remove-btn" id="btn-remove-coupon">✕</button>' : ''}
                     </div>
                 `;

@@ -1,0 +1,37 @@
+================================================================================
+MENUTECH - GUÍA DE CUPONES GENERADOS POR LA PLATAFORMA
+================================================================================
+
+1. ¿CÓMO SE GENERA EL CUPÓN?
+--------------------------------------------------------------------------------
+En el módulo de Promociones (promotions.html):
+- Al crear una nueva promoción o seleccionar un tipo de oferta, la plataforma
+  genera automáticamente un código de cupón único (ejemplo: PROMO8X4K).
+- Puedes hacer clic en el botón "Auto-Generate" al lado del campo de cupón
+  si deseas generar un código diferente al instante, o bien escribir uno propio.
+
+
+2. ¿DÓNDE PONE ESE CUPÓN EL CLIENTE / COMENSAL?
+--------------------------------------------------------------------------------
+El comensal introduce el código de cupón directamente en el Carrito de Compras
+del Menú Digital o Widget Menutech:
+
+1. El comensal entra al menú digital y agrega sus platillos o bebidas al carrito.
+2. Al abrir el Carrito de Compras (Order Summary / Tu Pedido), debajo del
+   desglose de los artículos verá el campo:
+
+   ┌─────────────────────────────────────────────────────────────┐
+   │ [ Promo Code or Coupon ]       [ APPLY ]                    │
+   └─────────────────────────────────────────────────────────────┘
+
+3. El cliente escribe o pega el código del cupón (por ejemplo: PROMO8X4K)
+   y presiona el botón "Apply".
+4. La plataforma valida automáticamente:
+   - Que la promoción esté activa.
+   - El monto mínimo de compra si aplica.
+   - El tipo de cliente (nuevo, primera orden, etc.) si fue configurado.
+   - Los platillos válidos o método de pago.
+5. Inmediatamente el descuento se aplica en el resumen de la orden, mostrando
+   el ahorro reflejado en el total y una etiqueta informativa que confirma
+   la promoción aplicada.
+================================================================================
