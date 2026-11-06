@@ -215,8 +215,11 @@
         /* Promo Type Grid Selection */
         .type-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 24px 0; }
         .type-card {
-            background: var(--input); border: 1.5px solid var(--border); border-radius: 20px; padding: 22px; cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; gap: 8px; text-align: left;
+            background: var(--input); border: 1.5px solid var(--border); border-radius: 20px; padding: 20px 22px; cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: row !important; align-items: flex-start !important; gap: 16px !important; text-align: left;
+        }
+        .type-card-icon {
+            width: 48px; min-width: 48px; height: 36px; object-fit: contain; flex-shrink: 0; margin-top: 2px;
         }
         .type-card:hover { border-color: var(--orange); transform: translateY(-3px); box-shadow: 0 10px 30px var(--orange-glow); }
         .type-card-title { font-size: 1rem; font-weight: 800; font-family: 'Outfit'; color: var(--text); }
@@ -229,16 +232,18 @@
 
         /* Preview Card */
         .preview-card-wrap {
-            background: #11141a; color: #fff; border-radius: 24px; padding: 24px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 14px;
+            background: #11141a; color: #fff; border-radius: 24px; padding: 24px; min-height: 220px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: flex-end; gap: 12px;
+            background-size: cover; background-position: center; position: relative; overflow: hidden; transition: background 0.3s;
         }
-        .preview-img-box {
-            width: 100%; height: 160px; border-radius: 16px; background: rgba(255,255,255,0.05);
-            display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; border: 1px dashed rgba(255,255,255,0.2);
+        .preview-card-wrap::before {
+            content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,12,16,0.92) 0%, rgba(10,12,16,0.45) 60%, rgba(10,12,16,0.25) 100%);
+            pointer-events: none;
         }
-        .preview-img-box img { width: 100%; height: 100%; object-fit: cover; }
-        .preview-headline { font-family: 'Outfit'; font-size: 1.4rem; font-weight: 800; color: var(--orange); line-height: 1.2; }
-        .preview-desc { font-size: 0.85rem; color: #cbd5e1; line-height: 1.4; }
+        .preview-card-wrap > * { position: relative; z-index: 1; }
+        .preview-img-box { display: none !important; }
+        .preview-headline { font-family: 'Outfit'; font-size: 1.45rem; font-weight: 800; color: #ff9533; line-height: 1.2; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+        .preview-desc { font-size: 0.9rem; color: #f1f5f9; line-height: 1.4; text-shadow: 0 1px 6px rgba(0,0,0,0.85); font-weight: 500; }
         .preview-badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
         .preview-pill { font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: rgba(255,255,255,0.12); color: #fff; text-transform: uppercase; }
 
@@ -396,46 +401,66 @@
         <div class="modal-card modal-card-lg">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div>
-                    <h3 style="font-size: 1.35rem; font-family:'Outfit'; font-weight:800; color: var(--text);">Select Promotion Type</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Choose the promotional discount model for your digital menu.</p>
+                    <h3 style="font-size: 1.35rem; font-family:'Outfit'; font-weight:800; color: var(--text);">Select menu promo deal type</h3>
                 </div>
                 <button class="btn-action btn-secondary-sm" onclick="closeTypeSelectionModal()">Close</button>
             </div>
 
             <div class="type-grid">
-                <div class="type-card" onclick="selectPromoType('cart_percent')">
-                    <div class="type-card-title">% discount on cart</div>
-                    <div class="type-card-desc">Percentage discount applied to the eligible cart subtotal.</div>
+                <div class="type-card" onclick="selectPromoType('cart_percent')" style="display:flex; align-items:center; gap:16px;">
+                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACYAAAAkCAYAAADl9UilAAAFIklEQVR4nO2Xf2wTZRjHv/XYMTOiuWR6RFswxWjBsKbZlZiFpE3NFrK2k4ryw9gRMgxjmgEywYyIHXEsMhxiQjIT2R+DCkzpgLULbIKrgUHWw9op4/zRJtBFuLnsonDbUtKcf9BfGx30OpzG+CSX3Pe97/P00/fee+49xdioiH9jPPJPA0wV0wYT/c2vVttXSLbXqyTHUc43cf7DOPaWVTJXtEjBKB6dObBhj3Knw/NlMKqElh6B7/C7TP0Z4VTiur+97Pg1QLPc1rOAwNiMgQkXe97mooCqrOZnx95qRRGAwEXWGgEARNDT0d0m0jZUlVKlcmtPC+y2KD4NACql6iwIFZ6dD+B3ATygQOgY09qH2Rqr7bzc2QKAWYmzwe7nHHXNP/luRKY0U7pKNDjMpIrAHQAgc3JuAcCIICwEeFwfBDA/ByQgBTyeFp5gUL6MWicXCkiZsfD59vfvBwUAgr8Zn3QI5+Ka1jEtNACu220MeHs+9EUBulA7RA+3z2s9Iy6mX7EPGXPx67TAVIsKnHkZJHC9vUuFuFDb2boNzD56sA21jd4dpK4SdW+olUGP5wBHaPCKWf0aAGA8gvv/5XtDkdpg+fOHNh5lhT2TTfyV7jmBG3HFYNNXHywqycXVtBXHe2c3rm0Y9y2tR1sVpXDVbJYO/hIBCAra9fXndltVL6VLi/wp5N4hqfG83NjA2Kj4wOOPU9u2mEwmKX7sOis2TeX97YuqvSbTGumzH8Xyu+dWaXvLiR+a1pskk6lKcl4XTRNzOJzcbI3VtkpNl8RtY6NiZk8lWcgc0aRon79/S1pjNARXB7cVS+xYrRZaL/RyW0EwMK8uNmxcWbQO4ND/fWT9hBx/e9nn/fG7JiIwEK4AMm0XVMHNJfOTUuxjEQRyJtvEbw7VuPg8WJYbtpO4DVEEoJyHuYAAIicCADeH+cJkRqzXJXQeFj6vcmYOBhUYhjqdkMMs2EGYJ3pCOH6EbYRmFVYXYA9Ag3oCwLXrCAP54WDoZQCYm09fTtbxzOvow+wklxFGHfbJAAMWFBbtTz61YfT5hU0TDH53mZsH9KVmJwUAIKEv1HwEsDha3zDU2BleCYKBcSm5M54S9HgOcCkl6NKSIS1wSxYYXig4rSeSkrvMGpMtQIDL2X1SpFfCbiITDZUqrX3PYaUvjXBXMfIYg/KGmspEX4v2w93JW5IVNbCY1WviSpH5fiyCLscKaT8bk4QBO1w1TxURuHHftKmqnaurtjWx+xMDiypxeI9ZQcWkjHdl/NbEIsoicAX2bKAAAe7OFCgA+mXFTipFy3qJUzp9qyqhRFy4HKrNiivkZtypiyuvGDYDWZ1qkbe7UDID+vykFFj28TCgkMsV8Hha+FQugxFaAiPZg0ENZknedwl5zYeAgBdllRj35rZ/LS5ODtCwLCtYO9k2a/LAg0KrYz5Gp9d5V3FwNX7aG3wStzMuMNQ/xxdN0RozrGq0ThsMOu0JPbzwxSTf340uYI7sOnEug7GHSjMufweby4wWFWSLMSkIBtZi6s10l7LYWlMo2VT9jJEmpwdFqmBx1OycaiMpo8HObPx3P3j/rsgaTBxoK3ZUrJDMFqtkq6iTjg2IGzLxuUKRVZnUz26NDXuUWyuaw1xqPyI02Hiw0WDJx7eyfWkiqxnjvV21E34MAKIcurx8Uza+hwY2E5EVGG0o2a0hJg0SGpQY6Hey8T00MOSbB3c12Ev0sSZL0gzKGxyV96ybTH1p4v8GKzf+AhefQKVfj3NkAAAAAElFTkSuQmCC" class="type-card-icon" alt="% discount on cart">
+                    <div>
+                        <div class="type-card-title">% discount on cart</div>
+                        <div class="type-card-desc">% discount on your total cart value, usually combined with a minimum order amount.</div>
+                    </div>
                 </div>
 
-                <div class="type-card" onclick="selectPromoType('items_percent')">
-                    <div class="type-card-title">% discount on selected items</div>
-                    <div class="type-card-desc">Percentage discount applied strictly to specific menu products.</div>
+                <div class="type-card" onclick="selectPromoType('items_percent')" style="display:flex; align-items:center; gap:16px;">
+                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAeCAYAAACrI9dtAAAE2klEQVR4nM2YYUwTZxjH/4x5YbmO5EjxIKN+aBdDcaFDWzaqAxYFJ4IKHyxkQJQyR8ikuMEczEyMQYxMFBYlxoEb1SkkUA1CTGEKEcuyogM2oYtr43JEuK3hEsYNvK1hH5CqbQ8igen/W9/n/7z9ve+9z9P36jf1N48XTS89bwBfenl5pxfA2QZjrf19nw6PCXEA9a9Mqzm+PjK8kg7AQ7Esv+V6fNxg0/bKSuPlAc5XlIBsUwEO5ccRNIF//gcoHrZzpe2fNDu2LGgNVMNw4mBsIo2bzwQlOG30QI/1sOU+lyHukrg0GTkJWhpWptlwNu+cIxehcdBnak4EcQMhlxo6Mhhh1qlIKhCSBdNYdSezahYsDmX1Ras0AWDmZhM/Uy4Wlq8O/VrZyawWFlpxeA6yaVjhbAs72eDIBcKhryjaqBk0rhuOKuioCeR+SK3qq0bgVug/VMvs+2tYd+5EN2ovpt3R7JYHzw2JVB8PS5VhpPwpIBkS92a1aUhPLwltSvw3FAB7m6nW5gIQFgmNlLs5cK3pWEsvc5JYreyUAQjP0HWpBo1vX7I9PQN72Sjtmsbr80IJ178sKO/mX/MKTI1T49Oeg0po3qKOASwGbrPJAIBRFmOgXg0KxhhJSh7A9ZBA4FZkJ0HXcqHjiteBcfXBOog980BxuNreV+09zsD8dZvW7vK1DACww+54/CXmbu641tAcWpFEvGtp6mglRXbJne1gtotDjXREmN2JMuhOnc7RhXl4ootg+iLufQIAQEISAOfTBh6WyuxdqbtyZ3J06TPlP2nDZnfJciVib3XreWNDcP3h1EyFv29ALyjBNrzZXQZgYD5WUW8e9TDdNqKgvveC8MgzNgo1EIIgqcdcExy46SfOkkSP0s3CtpaSuj/typxbhh3UNffyw2Tfi0KxTnbtk5+53xlwno/MxYIZmSsBB+z3kQDIoV5H/uy17Edn6erFjisIlc0QGMf4iAOME28Sr0ge7XA4VGtgFIUiVqz4y2viBWTtG9wHAKr3EvNoj1j4Tl2P6m7j2oYhgOfG/YAgSCgatBS/CFOTs3sbnYxECr1zOUvc0XlYKvUj7solE3DkuyyaKclma4cA+MuRVlZ2ICuKKsc9U0zJgXqLbVoO/anqbWlhaF0mKAAuBo378mcaHAtbARLxn9fVFMeQhidHH0O5GLSUFM7UDS3Yv0WlyDw9VJMuWwMXC/PR4snqXs6r1bpFRSK7pDRPF0Ge8Qy5objW4qOZZ2z7F00EACChyj3SU7ZD/g4BQBi1KEyNpt4b/Wzw5CQPQUIiaKUS2o26symb5HsokZbghhKuHypIrfLVNJ9dVFQWij/euVpF4Z64iwfnXLGSkhJ/iEIBPAa+LWuvvcFumVwKMkhAR8YgJXb9R0oF1UJg9t4kTHAy+92redYH6g3pu7Vv0P6YmQfqxZH31UXgwfGC1Id3SUWQlJMkfMe8oJiWYmPeeSZz2aE2HYSpUO3nK+bV0WkpfWe5gQBArlB0icW8f2Y2JJyOF+8uSyN/NVISqA/Ewt5XlwDtw/zCOP3ycZGI/6yoJj4Av4k5RKuPH2pKKK8wmn2/Ii1SVCSyi4sMukiqZj7bAi1BAO+wqW79aCmffZlcnIgQZb82WntAKSe7RQruWaCej17I/xL+A69I9YRLom7yAAAAAElFTkSuQmCC" class="type-card-icon" alt="% discount on selected items">
+                    <div>
+                        <div class="type-card-title">% discount on selected items</div>
+                        <div class="type-card-desc">For example: 30% off on any dessert or drink.</div>
+                    </div>
                 </div>
 
-                <div class="type-card" onclick="selectPromoType('free_delivery')">
-                    <div class="type-card-title">Free delivery</div>
-                    <div class="type-card-desc">100% discount on the diner's delivery fee without discounting food subtotals.</div>
+                <div class="type-card" onclick="selectPromoType('free_delivery')" style="display:flex; align-items:center; gap:16px;">
+                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAWCAYAAABHcFUAAAADAElEQVR4nM2WbUhTURjH/za9WHe93KFMyyFh1EqaiSkU1pbo+qDELLJRzkAtMNCsJmKBGTQMSiILLQKFucRvqzY/OF/aohaoIZNqQ1GyG4W0OmTOxUTsS9PdqSlupn+4H855Xs7vPuc1xD3hwlrTutUGmE+hnNZwa8K950OvAk8b584qzdwWB0wGDjVqjzd1WPiBQ3n4yaWZW+KAb4FDhfEnmAhm6dFTLhDiWc64/xQXSqJ6ev/uqcglRZLenXXXa19bF3HzjJFwF+gwZhP1a3lQb+tP52osT5YavLhY6CsuuLUj3jYFOoIGBQY79sVBKMl+XJQmOu8f9Z93nwcuJwFxDqOnox3GR/pztikI/L24lUoqatY1FZjmJhsPteuqO2+3sXsCWkEpJdAV748E2PAW9TXWONoOrUH1rEbBHFoYqr9JUfzAqp+TzOMCGQvCgl5Pg2EYJ8AgK0OkM+rYXIfBmDqkUIX5Hh/c6Zsc30CcBHO+YAD5SZQqqxYBwGgrjH2o8LVxoYS738vTM8bl6dIJcUTQObiKyfggFwOACyaD5Ybvb3OhtspseWdV25WJqGSdKwwFBkdSxTUAgG4jjE6keS2cNdVTp/xY1YXYFeNwu0AImZ0DsaRTBMcVFg6YOtj640rRLj8oFvaBFQQCgO5a5KoWv3pmp4/0R9k++1h4QsgK1eayQmmLkBdcNjpFhbKy/GpZ9Pz22UoN2g87fC3RUigV0jQRpNPUoEWmsSAqOEginMjPyZbF4KmM5xgw37I2gkdBQFOs1yNk5pH32wXi9kQAgL2xqFfThdiEkwWf5JttVm2jRTma5D34liJqmmbo7xT+3n1T4AMkzKS5+EXrAGhJDgqP8u/YdA1q81cAKWroK6Uh1BwoX43o95ZcaugfmtmnFJIva5ur0ugzyyrOTN7W+KsVD9/Zxnz6GAmKbmqOZcXC4O2aHwoAyPBGc5tJa/spSEzOVOQdjKFeBgTklYfA8aa9/EXfj3JBoqxBfkCsZiiuy8JQq6g1+Ub/A5vnHJbaxQovAAAAAElFTkSuQmCC" class="type-card-icon" alt="Free delivery">
+                    <div>
+                        <div class="type-card-title">Free delivery</div>
+                        <div class="type-card-desc">Free delivery (discounted delivery) for orders over a certain amount.</div>
+                    </div>
                 </div>
 
-                <div class="type-card" onclick="selectPromoType('bogo')">
-                    <div class="type-card-title">Buy one, get one free</div>
-                    <div class="type-card-desc">Buy a designated qualifying product and get another product free.</div>
+                <div class="type-card" onclick="selectPromoType('bogo')" style="display:flex; align-items:center; gap:16px;">
+                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAaCAYAAAAwspV7AAAEWklEQVR4nM2XfUxbVRjGH8a81pRgLmFpmN6xtEM7P1qRyxKhgWKgYFo+m7UoFE1j3JgJ1UExjoSxKTCzmQiJg+johDEFDKVS5qAkBkwGETuRErWRUdPdZFsTQzPkCt6F4B/Id1sKsmzPf+fc95zzO/e973PODZn9m8XDpl0PGsCXdt+XWecYDFlaLW29v2VPIQwHMo7+ZDgsiSNDgxsesmPp47xwDve/12kxn7FPsODWPyclKDKWGbQSsv7+Qs1z8EwMKsym9j7br56NID5ExupgPK55SkpiYgehOHidwyk2i/nbzhEXjw2GZL1CSUhfLXMYD0ukvlIaJBQH1mWP6+nuutr3vXOPZzsg/4kfo0R+RkQz02t+3TYjR80nR/dJ+WCChuI8zicGetvbzFa7jJnbPsiyIpWoqVc8i1FGxe0hb3oHLlUO7S27VZUjSF0dtqH6ONb1mN3a09rZP5jnDPaVhAuhyNJek941hZ+1ep73G7dfBParumbbrIiGewhjDAVVJfHF+rAVKNbBayg/Ndvj3mpu+FAY604aYnEarkm6xdrxo8dfqL0J14wNP59I5sezo9LMsWlPou1s1UftH9b9oY3G10thy+nzdBrO6y+6irdIBETr0PipZhcFLABemMuKFpqcWxj7zkz2yTOPfFPRpCNEwD1glaOTj0f4LdE14gkgCF9pxqtzLlNgFhg3ngNIpMjEHwe7H5Km71Ixud0q8gpsDry71L8MRcjkDfGbOi6JvNoLb53KoloX2wLw77l4nuGu4tLmwXEOAJksPycOComPxDhhDUAi/oWIjhtu7ysboMBLnlPIcCfwRF709Ts+o1K15apM/Y2aen0mTEa1vrr/PHt9AENzOAAy7U46HQyTHAkSNAAAdoNj2Zm9G6EAJKSmHeH7nYUARWvwZhqlQWTy7aK0sIKxllbr0JJVzNth7fd+DhCQJ9GGTZlkCZACfwHA1NTUM6Jo6opPKEjk3Yl+qYRIyZZWzHxXf7rFgRLOYdO02xlw8ysRzsEBuRcA9h/8QRQQiYI6V5K7uBkX7NepFw+KfVTfkiYvFl0t6fRmBNxlejU6CpmoUl3j7bWFRoAfDrDTAWyFR0FVXl1bfIg8AQBMm6Hl/Vs6nek4HUL4g4LrEq0vCeA1AMAXgArzggnWXAkBxEkKqBWSgghSOC6OIsYxx2CgsXay7heJsGrdUePjmGHQ/vaxhRZ3cOv5VSgBKjYHefmKQnmM4DIRysJpqW8832E/MjnNAQQfoqRiVBxLJgTEoj8FgAK8FuO5wgvO0q2TEODH0FBrtB+o4oSVfGLzEb7k+0D+s2tf6Rsmd7DGTESJoVDqrKoMyWsUDzPbQ1mR7+twpPJm5iHTP84RPOoXJFwIOitvVJ36Ur44kvj9/4JsDgUCCTK6HCP2urXdAojTlWyRUvmy9EliZCdBVsv/fWqeQU9VxUKDg4Xg6TTk67UFcjH55TY/kx2CeoB6KP/7/gXgvq0vmCPXUwAAAABJRU5ErkJggg==" class="type-card-icon" alt="Buy one, get one free">
+                    <div>
+                        <div class="type-card-title">Buy one, get one free</div>
+                        <div class="type-card-desc">For example: Buy a main dish and get the second for free.</div>
+                    </div>
                 </div>
 
-                <div class="type-card" onclick="selectPromoType('cart_fixed')">
-                    <div class="type-card-title">Fixed discount amount on cart</div>
-                    <div class="type-card-desc">Fixed currency amount deducted from the diner's cart total.</div>
+                <div class="type-card" onclick="selectPromoType('cart_fixed')" style="display:flex; align-items:center; gap:16px;">
+                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACYAAAAkCAYAAADl9UilAAAEgElEQVR4nO2Xb0wbZRzHv9h5azzUXEJ2MVmd6cwsLCtpuBKZxnbJaBbbGtlezD8Dk6HZeEOB0ZhAdGWGEVccA2OCZu4FDAWyALGUjEIM1ckSerNpk2Gn0mQput1GuES9DUua+kJob+W69U4UE/296vd5vs/3Pn1697uneXfvCPg31kMbDZCt/h6wy+2vWW32pPsyTiuNWHcwbrK96bDb3wcAU+43612e2LiSnPUF4ye2dH7ob+XiAEGRIOIcAh+3WHqiqNpYsEhobygBgKnFQG9/XtchzXmAAxvkauVGbUp9mp/Y4Wrpvha4Ec9qpgxH0eayEhoVlu+bSpIgAGhKre2Wm3MvUxriC7lgqR2LXRp+535QAMAHu3HGw3+Z1UDT39MAwPoxLeBpaK0hR13to1Wl1AnFYJoifR+Zw4LI9PTzfLZJ7X72FQaAMI3Wuu4fAjwK5QKtVp64wXKXemv6Wf5Upom7OpEfurGqGDguHC+yqPGdZGI8ip5GR3IgCuAxBo6O4y9YaHz9IJD4L7x6maCWSLUEWNZFky31FWfYVE8yN3s6nGVoyLogwcHX6vi9c0YgQFeg65PDj2xX4a60OQZfkzPZGRYAkLCd7H+7Ro9TOT2VRAnzuU6kA8FwvaRxSQDP8wXCMg1Ls3vzwW0AuGEMzaA1a3hw+KWz4dXNERCajVUDubYLSn+zdFtaCjMs5oCHM22xEWfvocqq28dGYteg0mBPmWYQAOaux6zSwXFMeSYG078ZicJnNH25g0EDhqEupuQCC3Yeay6WT5I/AcDibX4HACzyi4UAQJL5P0vGLnif9Mxgc5rLDLMBHTLAgO0luzvTT20MM0Hekemhduov0ACE8WZYbfZk07iwC9DhuTLqPanMOa/3o4hI0y9abhUDv8oCw079RaMqLSNXWPOarqetZFuOMB00saIJGua6xvP7C7C29yXCGB3jbOkBHWxW7aurKncwFYNig0gHQ2ATeCLTprEfbzjnNL0OAGbn2Q7nXrpSKi7uH671iRtCkRl7RF9AxruSgLFE935KJliErkLyoihr/Mw76snL3lJ4jI6xneIR477yPkqkZb3EKYOxR5NSAr65Em2Ssz5V0VFmVHxzkeWoMBH3vOjlnS62MrPGgrTkWfbxGJAnlyvk9Z7jxFwmM4pVWFQOBi2YUvLblLweQIjHs7Iilvzq4UlhV3qAhm2f/o1M26bMgQdVsYH5AGN/nlCBCIbcXdNzW/BbzgG3wvmBhEjrrLBr0fOXwWAoHjHCj8CK5MIT8AH5snNWuUzmKUpiXP4JVs3c2a1XipFRKgb2cuotqSkFR2sKFkftU+ZUF1VYhAY2V+O7ZjV+lJrO6dizEfUf+8O7DqUYTJgdLHdVH0habfZkRXVLcmBWOJKLbygaP5hLvrJ7bMG79Vh1dywi7kcqHWo+dZtsBfhKtk+iFO0Y5/c13XMxAEhE4PNzp5X41g3snyhFYLTJclKnyhhU6WAx0Q1KfOsGhgLr/Im2SotxpckSNIOqNtfRNfdNrj6J+r/Byq0/AC6uq3VkSrKBAAAAAElFTkSuQmCC" class="type-card-icon" alt="Fixed discount amount on cart">
+                    <div>
+                        <div class="type-card-title">Fixed discount amount on cart</div>
+                        <div class="type-card-desc">Fixed discount amount on the total cart value, usually combined with a minimum order.</div>
+                    </div>
                 </div>
 
-                <div class="type-card" onclick="selectPromoType('payment_method')">
-                    <div class="type-card-title">Payment method reward</div>
-                    <div class="type-card-desc">Promotional incentive applied when the diner uses an eligible payment method.</div>
+                <div class="type-card" onclick="selectPromoType('payment_method')" style="display:flex; align-items:center; gap:16px;">
+                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAcCAYAAADm63ZmAAAFLElEQVR4nM2Xe0xTVxzHv9hxhrlKPASpJHS6MrKi20WWqpOQFXXgH9ZkY1thiXVx4lYwWhfoXMUH+JpafBQScGFoVljkEcWNsgwlTJYNEmUh7TbXzFEfdTPXVa9Rro/bdN0fUCnysK0s8/vXvb9zz+987vn9zjm/E3HvroCnTZP+b4DR9EzYPb0iXPZuTd9tvBS2j8nSGylzFWZKhpsjggufCN5hf83GYdGMOewxxWTnpRqj4cEJZ9g4Q5JIoS4xb81PZXYED8Xbp1m2l/INF8RBA4ViNoHjPDcBRH4wBfJrTCp1LL4HHhM+4XztUuPmxm/7xACj4k2sSes6Unge76v3VRbmzyYHwoa5XDtXt7ax1+V14LtuvlS9nC4Cxpkprr10y7pDPdsFAJBQpBWUnCxgxY3n7NzaRJatjomyC5aPapznwiYCACXyDmrnpwAXOb5/jkIu6wRGnSkBji82tRibnGoRAKJZrN65LTdbThoAINnLHJHF01+ASIhuHvwTQYkglF6igLtf6L/ltw6H8vLoMusv7urgZwEA4pehZJ9u9jyK355o7BA1BCU60bDR4LMMJjRJ0qJsryY6keDOsB6iMIXn+VjAM5XEUtDAtn4B4hQGj6zwcUQg8vwsHvAJIqaNgOJazJV+IGb+elQUZ06SSuAb4edsuW5FnWsFoEKx1RKnv+/6u+tk8/HjpzuzHfdFwMPghbxdHbuXy5Y8HqoLJvVKnwmAbEXl74fleHEYlOjxTB14UmHD1sw4KUYBChT1wHao4E9TuysycHHCy8P2mWFx1cz6j/NZ7Hs82EiFfsxEyW5krTM17F8VufNcABCZqUTW66xHKgEAAdYTp/eK47gZT8EfM14etqbyRksf886zDgMKB5cdTdWgoCAnLS2edMNrh7nb7jslALgrQgBCyK8woPrqDC2bmji1/50kZEK/WbckI4F0+KG7Duy+ekoAAAYZb2eW0TF8TRhUTAz9FeDURKpErn69Poel5Q8bvS5Ytxh8VXYBhFLQpBzkJgnlPC/Eju1RnHSltflz/+Y7I076cB8OGoouN33SrBK2IZp5MCwkD7cSIHFVZW+ZsntN0frDPTrt4SvB+oZci9Uqssr/GlKik0eBBHtU1Vq9z3IhEikfms6ULrCvMRXW9vR5AUgoFOksBhIfQDyLrFTpyJ9N1WL/p5p4mQQevy38ekpwkBpj8T3rNQASoP9sVUZhI9cjpheh7j12OtdedmBnK6edZ7BUrJzTV1ZvLL/8419KFNdqX0kGXABAGOpmRlkJ4VWefE9M1Yahekq6tOif7DjXRY4nWLRM9QH1dkVV19m1/D0WGQtpCdPb+ob1Kg+SrnanUdpLKXVTOjpQyFCiwBFHW/ke3erSG9ZrAzZGZUSFxqVoaROehzIHuUmoth2r/cbhBRTvan9IkThv1n/ZY4ZEiVyNfHEw44wSvk7sUndeD6Yzk27EUUNaxB+VuT85wECdnbmRcTc/Z2kTXgZkmK+k+131JZYGDpC+pXVnMfg5JCgSGXlnvA+HiRAQUYQs1uNuO1RwvbZdmI4EDdQsTLaKBpsDAOBCvTG3uZ4XgGgV8jTyhcG6HyryRA5njjWctvF4dQwS34zk5Cb5TMXXKUniV9aiDb6aCwEHCaOEeoHLZ+3gIiCVQca74BIxUIPvqDTms2RP6FBhSLzNR3kIvX+zVV+tO+rMAwBI5FhZbtbkJIhNwm1hGhh6a6yE/k+gAvAGbztElbiAPSiLQv+TeJsgqInVU3lD/hf0TxVpKkXlIgAAAABJRU5ErkJggg==" class="type-card-icon" alt="Payment method reward">
+                    <div>
+                        <div class="type-card-title">Payment method reward</div>
+                        <div class="type-card-desc">% discount on your total cart value if you pay with a specific payment method.</div>
+                    </div>
                 </div>
 
-                <div class="type-card" onclick="selectPromoType('free_item')">
-                    <div class="type-card-title">Get a FREE item</div>
-                    <div class="type-card-desc">Automatically adds a free gift product when order conditions are fulfilled.</div>
+                <div class="type-card" onclick="selectPromoType('free_item')" style="display:flex; align-items:center; gap:16px;">
+                    <img src="data:image/png;base64,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" class="type-card-icon" alt="Get a FREE item">
+                    <div>
+                        <div class="type-card-title">Get a FREE item</div>
+                        <div class="type-card-desc">For example: Free drink on any order 0+.</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -472,9 +497,7 @@
                         </div>
                     </div>
 
-                    <div style="margin-top: 20px; padding: 16px; background: var(--input); border: 1px solid var(--border); border-radius: 16px; font-size: 0.8rem; color: var(--text-dim); line-height: 1.4;">
-                        Note: Promotions are created <strong>INACTIVE</strong> by default. You can activate this promotion from the table when ready to launch.
-                    </div>
+
                 </div>
 
                 <!-- Right Separated Form Sections -->
@@ -667,21 +690,15 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Custom Coupon Code (Optional)</label>
-                                <input type="text" id="cond-coupon-code" placeholder="E.g., WELCOME10">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <label style="margin-bottom: 0;">Custom Coupon Code (Auto-Generated)</label>
+                                    <button type="button" onclick="generateAutoCoupon()" style="background: none; border: none; color: var(--orange); font-size: 0.75rem; font-weight: 700; cursor: pointer; text-decoration: underline;">Auto-Generate</button>
+                                </div>
+                                <input type="text" id="cond-coupon-code" placeholder="E.g., PROMO7482" style="margin-top: 6px;">
                             </div>
                         </div>
 
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Start Date (Optional)</label>
-                                <input type="date" id="cond-start-date">
-                            </div>
-                            <div class="form-group">
-                                <label>End Date (Optional)</label>
-                                <input type="date" id="cond-end-date">
-                            </div>
-                        </div>
+
                     </div>
 
                     <!-- Actions -->
@@ -1138,9 +1155,7 @@
             document.getElementById('cond-min-amount').value = '';
             document.getElementById('cond-client-type').value = 'any';
             document.getElementById('cond-order-type').value = 'all';
-            document.getElementById('cond-coupon-code').value = '';
-            document.getElementById('cond-start-date').value = '';
-            document.getElementById('cond-end-date').value = '';
+            generateAutoCoupon();
 
             // Set type defaults
             if (type === 'cart_percent') {
@@ -1190,8 +1205,7 @@
             document.getElementById('cond-order-type').value = otVal;
 
             document.getElementById('cond-coupon-code').value = cond.custom_coupon || cond.coupon_code || '';
-            document.getElementById('cond-start-date').value = cond.start_date || '';
-            document.getElementById('cond-end-date').value = cond.end_date || '';
+            // start_date and end_date removed from editor UI
 
             const cfg = p.config || {};
             if (p.type === 'cart_percent') {
@@ -1374,8 +1388,8 @@
             const clientType = document.getElementById('cond-client-type').value;
             const orderType = document.getElementById('cond-order-type').value;
             const couponCode = document.getElementById('cond-coupon-code').value.trim().toUpperCase();
-            const startDate = document.getElementById('cond-start-date').value || null;
-            const endDate = document.getElementById('cond-end-date').value || null;
+            const startDate = null;
+            const endDate = null;
 
             const conditions = {
                 min_order_amount: isNaN(minAmount) ? null : minAmount,
