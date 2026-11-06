@@ -1388,6 +1388,11 @@ class MenutechPlatformOrders extends HTMLElement {
         this.supabase = null;
         this.menuData = null;
         this.cart = [];
+        this.promotions = [];
+        this.appliedPromo = null;
+        this.manualCouponCode = '';
+        this.discountAmount = 0;
+        this.clientOrderCount = null;
         this.trackingChannel = null;
         this.popupRoot = this.shadowRoot;
     }
@@ -1735,6 +1740,33 @@ class MenutechPlatformOrders extends HTMLElement {
                     this.onlinePaymentEnabled = true;
                 }
             } catch(e) {}
+        }
+
+        // Fetch active promotions for this restaurant
+        this.promotions = [];
+        if (data.user_id && this.supabase) {
+            try {
+                const nowIso = new Date().toISOString();
+                const { data: promos } = await this.supabase
+                    .from('menutech_promotions')
+                    .select('*')
+                    .eq('user_id', data.user_id)
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false });
+
+                if (promos && promos.length > 0) {
+                    // Filter by dates if set
+                    const nowDateStr = nowIso.split('T')[0];
+                    this.promotions = promos.filter(p => {
+                        const cond = p.conditions || {};
+                        if (cond.start_date && cond.start_date > nowDateStr) return false;
+                        if (cond.end_date && cond.end_date < nowDateStr) return false;
+                        return true;
+                    });
+                }
+            } catch(e) {
+                console.warn('Could not fetch promotions:', e);
+            }
         }
 
         this.renderMenu();
@@ -2105,7 +2137,143 @@ class MenutechPlatformOrders extends HTMLElement {
                     animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                     box-sizing: border-box;
                 }
-                .modal-card h3 { margin: 0 0 10px; font-family: 'Outfit', sans-serif; font-size: 1.3rem; color: #1a1c1e; text-transform: uppercase; }
+
+                /* Promo Banners & Badges */
+                .promo-carousel-container {
+                    padding: 16px 20px 8px 20px;
+                    background: #fff;
+                    overflow-x: auto;
+                    display: flex;
+                    gap: 14px;
+                    scrollbar-width: none;
+                }
+                .promo-carousel-container::-webkit-scrollbar { display: none; }
+                .promo-banner-card {
+                    flex: 0 0 280px;
+                    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+                    border-radius: 16px;
+                    padding: 14px 16px;
+                    color: #fff;
+                    display: flex;
+                    align-items: center;
+                    gap: 14px;
+                    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+                    position: relative;
+                    overflow: hidden;
+                    border: 1px solid rgba(255,255,255,0.1);
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                }
+                .promo-banner-card:hover { transform: translateY(-2px); }
+                .promo-banner-card::before {
+                    content: '';
+                    position: absolute;
+                    top: -20px;
+                    right: -20px;
+                    width: 70px;
+                    height: 70px;
+                    border-radius: 50%;
+                    background: radial-gradient(circle, rgba(255,149,51,0.3) 0%, transparent 70%);
+                }
+                .promo-banner-img {
+                    width: 54px;
+                    height: 54px;
+                    border-radius: 12px;
+                    object-fit: cover;
+                    flex-shrink: 0;
+                    background: rgba(255,255,255,0.1);
+                }
+                .promo-banner-content { flex: 1; min-width: 0; }
+                .promo-banner-headline {
+                    font-size: 1rem;
+                    font-weight: 800;
+                    color: #ff9533;
+                    margin: 0 0 2px 0;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .promo-banner-desc {
+                    font-size: 0.75rem;
+                    color: #cbd5e1;
+                    margin: 0;
+                    line-height: 1.3;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+                .promo-item-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    background: #ef4444;
+                    color: #fff;
+                    font-size: 0.7rem;
+                    font-weight: 800;
+                    padding: 2px 8px;
+                    border-radius: 20px;
+                    letter-spacing: 0.5px;
+                    margin-left: 8px;
+                    vertical-align: middle;
+                }
+                .promo-old-price {
+                    text-decoration: line-through;
+                    color: #94a3b8;
+                    font-size: 0.85rem;
+                    margin-right: 6px;
+                    font-weight: 500;
+                }
+                .coupon-input-box {
+                    display: flex;
+                    gap: 8px;
+                    margin-bottom: 12px;
+                }
+                .coupon-input-box input {
+                    flex: 1;
+                    padding: 10px 14px;
+                    border: 1.5px solid #e2e8f0;
+                    border-radius: 10px;
+                    font-size: 0.85rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    outline: none;
+                }
+                .coupon-input-box button {
+                    background: #1e293b;
+                    color: #fff;
+                    border: none;
+                    border-radius: 10px;
+                    padding: 0 16px;
+                    font-size: 0.75rem;
+                    font-weight: 800;
+                    cursor: pointer;
+                    transition: 0.2s;
+                }
+                .coupon-input-box button:hover { background: #0f172a; }
+                .promo-applied-tag {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    background: #ecfdf5;
+                    border: 1px solid #10b981;
+                    padding: 8px 12px;
+                    border-radius: 10px;
+                    margin-bottom: 12px;
+                }
+                .promo-applied-tag span {
+                    color: #047857;
+                    font-size: 0.8rem;
+                    font-weight: 700;
+                }
+                .promo-remove-btn {
+                    background: none;
+                    border: none;
+                    color: #ef4444;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                }
+.modal-card h3 { margin: 0 0 10px; font-family: 'Outfit', sans-serif; font-size: 1.3rem; color: #1a1c1e; text-transform: uppercase; }
                 .modal-card p { margin: 0 0 25px; color: #666; line-height: 1.5; font-size: 0.95rem; }
                 .modal-btn {
                     background: #ff9533; color: #fff; border: none; padding: 14px 30px;
@@ -2131,6 +2299,20 @@ class MenutechPlatformOrders extends HTMLElement {
             <div class="tab ${i === 0 ? 'active' : ''}" data-target="cat-${i}">${cat.name}</div>
         `).join('');
 
+                // Helper to check item discount from active promotions
+        const getItemPromoDiscount = (dishName) => {
+            if (!this.promotions || this.promotions.length === 0) return null;
+            for (const p of this.promotions) {
+                if (p.type === 'items_percent' && p.config && p.config.items) {
+                    const found = p.config.items.find(it => it.name && it.name.trim().toLowerCase() === dishName.trim().toLowerCase());
+                    if (found && found.discount_percent > 0) {
+                        return { promo: p, percent: parseFloat(found.discount_percent) };
+                    }
+                }
+            }
+            return null;
+        };
+
         const sectionsHtml = categories.map((cat, i) => `
             <div class="category-section" id="cat-${i}">
                 <div class="category-header">
@@ -2139,39 +2321,70 @@ class MenutechPlatformOrders extends HTMLElement {
                 </div>
                 ${style === 'mode1' ? `
                     <div class="dish-grid">
-                        ${(cat.dishes || []).map(dish => `
-                            <div class="dish-card" data-dish='${JSON.stringify(dish).replace(/'/g, "&apos;")}'>
+                        ${(cat.dishes || []).map(dish => {
+                            const disc = getItemPromoDiscount(dish.name);
+                            const origPrice = parseFloat(dish.price || 0);
+                            const finalPrice = disc ? Math.max(0, origPrice * (1 - disc.percent / 100)) : origPrice;
+                            return `
+                            <div class="dish-card" data-dish='${JSON.stringify({ ...dish, promoDiscount: disc ? disc.percent : null }).replace(/'/g, "&apos;")}'>
                                 <div class="dish-info">
                                     <div>
-                                        <h3>${dish.name}</h3>
+                                        <h3>${dish.name} ${disc ? `<span class="promo-item-badge">-${disc.percent}%</span>` : ''}</h3>
                                         <p>${dish.description || ''}</p>
                                     </div>
-                                    <div class="dish-price">$${dish.price}</div>
+                                    <div class="dish-price">
+                                        ${disc ? `<span class="promo-old-price">$${origPrice.toFixed(2)}</span>` : ''}
+                                        $${finalPrice.toFixed(2)}
+                                    </div>
                                 </div>
                                 ${dish.image ? `<div class="dish-image"><img src="${window.optimizeCloudinaryUrl(dish.image, { width: 200, height: 200, crop: 'fill' })}" loading="lazy" width="100" height="100"></div>` : ''}
                             </div>
-                        `).join('')}
+                        `;}).join('')}
                     </div>
                 ` : `
                     <div class="mode2-list">
-                        ${(cat.dishes || []).map(dish => `
-                            <div class="mode2-item" data-dish='${JSON.stringify(dish).replace(/'/g, "&apos;")}'>
+                        ${(cat.dishes || []).map(dish => {
+                            const disc = getItemPromoDiscount(dish.name);
+                            const origPrice = parseFloat(dish.price || 0);
+                            const finalPrice = disc ? Math.max(0, origPrice * (1 - disc.percent / 100)) : origPrice;
+                            return `
+                            <div class="mode2-item" data-dish='${JSON.stringify({ ...dish, promoDiscount: disc ? disc.percent : null }).replace(/'/g, "&apos;")}'>
                                 <div class="mode2-top-row">
                                     ${dish.image ? `<div class="mode2-image"><img src="${window.optimizeCloudinaryUrl(dish.image, { width: 200, height: 200, crop: 'fill' })}" loading="lazy" width="80" height="80"></div>` : ''}
                                     <div class="mode2-left">
                                         <div class="mode2-name-price">
-                                            <span class="mode2-name">${dish.name}</span>
-                                            <span class="mode2-price">$${dish.price}</span>
+                                            <span class="mode2-name">${dish.name} ${disc ? `<span class="promo-item-badge">-${disc.percent}%</span>` : ''}</span>
+                                            <span class="mode2-price">
+                                                ${disc ? `<span class="promo-old-price">$${origPrice.toFixed(2)}</span>` : ''}
+                                                $${finalPrice.toFixed(2)}
+                                            </span>
                                         </div>
                                         <p class="mode2-desc">${dish.description || ''}</p>
                                     </div>
                                 </div>
                             </div>
-                        `).join('')}
+                        `;}).join('')}
                     </div>
                 `}
             </div>
         `).join('');
+
+        // Build promo carousel HTML if active promotions exist
+        const promoBannersHtml = (this.promotions && this.promotions.length > 0) ? `
+            <div class="promo-carousel-container">
+                ${this.promotions.map(p => `
+                    <div class="promo-banner-card" data-promo-id="${p.id}">
+                        ${p.image_url ? `<img src="${window.optimizeCloudinaryUrl(p.image_url, { width: 120, height: 120, crop: 'fill' })}" class="promo-banner-img" alt="${p.headline || 'Promo'}">` : `
+                            <div class="promo-banner-img" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;background:rgba(255,149,51,0.2);color:#ff9533;">🏷️</div>
+                        `}
+                        <div class="promo-banner-content">
+                            <div class="promo-banner-headline">${p.headline || p.name}</div>
+                            <div class="promo-banner-desc">${p.description || p.conditions?.custom_coupon ? `Use code: ${p.conditions.custom_coupon}` : 'Special offer available now!'}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        ` : '';
 
         const menuHtml = `
             ${styles}
@@ -2194,6 +2407,7 @@ class MenutechPlatformOrders extends HTMLElement {
                     </div>
                 ` : ''}
                 ${coverHtml}
+                ${promoBannersHtml}
                 <div class="menu-content">
                     ${style === 'mode1' ? `<div class="category-tabs">${tabsHtml}</div>` : ''}
                     <div class="sections-container">${sectionsHtml}</div>
@@ -2498,6 +2712,12 @@ class MenutechPlatformOrders extends HTMLElement {
             baseTotal = parseFloat(selectedSize.querySelector('.opt-price').textContent.replace('$', ''));
         }
 
+        // Apply item promo discount if available
+        let originalPrice = baseTotal;
+        if (dish.promoDiscount && dish.promoDiscount > 0) {
+            baseTotal = Math.max(0, baseTotal * (1 - dish.promoDiscount / 100));
+        }
+
         // Add toppings
         popupContent.querySelectorAll('.option-item[data-type="topping"].active').forEach(item => {
             baseTotal += parseFloat(item.getAttribute('price') || item.getAttribute('data-price') || 0);
@@ -2511,6 +2731,8 @@ class MenutechPlatformOrders extends HTMLElement {
             const item = {
                 name: dish.name,
                 price: baseTotal,
+                original_price: originalPrice,
+                promo_discount_percent: dish.promoDiscount || null,
                 total: total,
                 quantity: qty,
                 instructions: popupContent.querySelector('#dish-instructions').value,
@@ -2580,8 +2802,9 @@ class MenutechPlatformOrders extends HTMLElement {
             popupContent.style.maxWidth = '';
         }
 
-        const total = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
-        const subtotal = total;
+        const subtotal = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
+        const fee = currentVals.type === 'delivery' ? (this.appliedDeliveryFee || 0) : 0;
+        const total = subtotal + fee;
 
         popupContent.innerHTML = `
             <div class="popup-body" style="padding:0">
@@ -2649,7 +2872,7 @@ class MenutechPlatformOrders extends HTMLElement {
                             </div>
                         </div>
 
-                        <!-- Section: Schedule -->
+                        <!-- Section: Choose Available Time -->
                         <div class="cart-section">
                             <div class="cart-section-header">3. CHOOSE AVAILABLE TIME <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                             <div class="cart-section-content">
@@ -2711,18 +2934,25 @@ class MenutechPlatformOrders extends HTMLElement {
                             ${this.cart.map((item, i) => `
                                 <div class="cart-item">
                                     <div class="cart-item-info">
-                                        <h4 style="text-transform:uppercase; font-family:'Helvetica', 'Arial', sans-serif;">${item.name}</h4>
+                                        <h4 style="text-transform:uppercase; font-family:'Helvetica', 'Arial', sans-serif;">
+                                            ${item.name}
+                                            ${item.is_free ? '<span class="promo-item-badge" style="background:#10b981;">FREE</span>' : ''}
+                                        </h4>
                                         <p style="font-size:0.75rem;">${item.size ? item.size : ''} ${item.toppings.length > 0 ? '• ' + item.toppings.join(', ') : ''}</p>
                                         ${item.instructions ? `<p style="color:#ff9533; font-style:italic; font-size:0.75rem;">"${item.instructions}"</p>` : ''}
                                     </div>
                                     <div class="cart-item-right">
-                                        <div class="cart-item-price" style="font-family:'Helvetica', 'Arial', sans-serif;">$${(item.total || (item.price * item.quantity)).toFixed(2)}</div>
+                                        <div class="cart-item-price" style="font-family:'Helvetica', 'Arial', sans-serif;">
+                                            ${item.is_free ? '$0.00' : '$' + (item.total || (item.price * item.quantity)).toFixed(2)}
+                                        </div>
                                         <div style="display:flex; align-items:center; gap:10px;">
-                                            <div class="cart-qty-controls">
-                                                <button class="cart-qty-btn cart-minus" data-index="${i}">-</button>
-                                                <span class="cart-qty-val">${item.quantity}</span>
-                                                <button class="cart-qty-btn cart-plus" data-index="${i}">+</button>
-                                            </div>
+                                            ${!item.is_free ? `
+                                                <div class="cart-qty-controls">
+                                                    <button class="cart-qty-btn cart-minus" data-index="${i}">-</button>
+                                                    <span class="cart-qty-val">${item.quantity}</span>
+                                                    <button class="cart-qty-btn cart-plus" data-index="${i}">+</button>
+                                                </div>
+                                            ` : ''}
                                             <div class="remove-item" data-index="${i}">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px; height:16px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                             </div>
@@ -2733,8 +2963,20 @@ class MenutechPlatformOrders extends HTMLElement {
                         </div>
 
                         <div class="order-summary" style="margin:0; padding:20px; background:#f0f0f0; border-top:1.5px solid #eee;">
+                            <!-- Coupon code input -->
+                            <div class="coupon-input-box">
+                                <input type="text" id="coupon-code-input" placeholder="COUPON CODE" value="${this.manualCouponCode || ''}">
+                                <button type="button" id="btn-apply-coupon">APPLY</button>
+                            </div>
+                            <div id="promo-status-msg" style="font-size:0.75rem; margin-bottom:8px; display:none;"></div>
+                            <div id="promo-tag-container"></div>
+
                             <div class="summary-row"><span>SUBTOTAL</span><span id="summary-subtotal-val">$${subtotal.toFixed(2)}</span></div>
                             <div class="summary-row"><span id="summary-shipping-label">SHIPPING</span><span id="summary-shipping-val">$0.00</span></div>
+                            <div class="summary-row" id="summary-discount-row" style="display:none; color:#10b981; font-weight:700;">
+                                <span id="summary-discount-label">DISCOUNT</span>
+                                <span id="summary-discount-val">-$0.00</span>
+                            </div>
                             <div class="summary-row total" style="border-top-color:#ddd;"><span>TOTAL</span><span id="summary-total-val">$${total.toFixed(2)}</span></div>
                             <button class="add-to-cart" id="send-order-btn" style="margin-top:20px; width:100%;">SEND ORDER • $${total.toFixed(2)}</button>
                         </div>
@@ -2766,8 +3008,8 @@ class MenutechPlatformOrders extends HTMLElement {
             const lf = popupContent.querySelector('#later-fields');
             if (lf) lf.style.display = 'flex';
         }
-        if (currentVals.pay === 'transfer') {
-            popupContent.querySelectorAll('.payment-option').forEach(o => o.classList.toggle('active', o.dataset.pay === 'transfer'));
+        if (currentVals.pay === 'online') {
+            popupContent.querySelectorAll('.payment-option').forEach(o => o.classList.toggle('active', o.dataset.pay === 'online'));
         }
 
         // Exclusive Accordion logic
@@ -2803,6 +3045,8 @@ class MenutechPlatformOrders extends HTMLElement {
                     const currentAddr = popupContent.querySelector('#order-address')?.value;
                     if (currentAddr && currentAddr.trim().length > 3) {
                         this.validateDeliveryAddressCoverage(currentAddr.trim());
+                    } else {
+                        this.updateCartSummaryTotals();
                     }
                 }
             };
@@ -2839,8 +3083,26 @@ class MenutechPlatformOrders extends HTMLElement {
             opt.onclick = () => {
                 payOptions.forEach(o => o.classList.remove('active'));
                 opt.classList.add('active');
+                this.updateCartSummaryTotals();
             };
         });
+
+        // Coupon code apply button
+        const couponBtn = popupContent.querySelector('#btn-apply-coupon');
+        const couponInp = popupContent.querySelector('#coupon-code-input');
+        if (couponBtn && couponInp) {
+            couponBtn.onclick = () => {
+                this.manualCouponCode = couponInp.value.trim().toUpperCase();
+                this.updateCartSummaryTotals(true);
+            };
+            couponInp.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.manualCouponCode = couponInp.value.trim().toUpperCase();
+                    this.updateCartSummaryTotals(true);
+                }
+            };
+        }
 
         const sendBtn = popupContent.querySelector('#send-order-btn');
         if (sendBtn) sendBtn.onclick = () => this.sendOrder();
@@ -2866,25 +3128,270 @@ class MenutechPlatformOrders extends HTMLElement {
                 this.removeItem(index);
             };
         });
+
+        // Evaluate promotions and update initial summary totals
+        this.updateCartSummaryTotals();
     }
 
-    updateCartSummaryTotals() {
+    async getClientOrderCount(phone, email) {
+        if (!this.supabase || (!phone && !email)) return 0;
+        try {
+            let query = this.supabase
+                .from('menutech_orders')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', this.menuData.user_id);
+
+            if (phone && email) {
+                query = query.or(`customer_phone.eq."${phone}",customer_email.eq."${email}"`);
+            } else if (phone) {
+                query = query.eq('customer_phone', phone);
+            } else {
+                query = query.eq('customer_email', email);
+            }
+
+            const { count, error } = await query;
+            if (error) return 0;
+            return count || 0;
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    calculateBestPromotion(orderType, paymentMethod, clientOrdersCount) {
+        if (!this.promotions || this.promotions.length === 0) return null;
+
+        const subtotal = this.cart.reduce((sum, item) => sum + (item.is_free ? 0 : (item.total || item.price)), 0);
+        let bestPromo = null;
+        let maxDiscount = 0;
+        let bestBenefitType = '';
+
+        for (const promo of this.promotions) {
+            const cond = promo.conditions || {};
+            const cfg = promo.config || {};
+
+            // 1. Coupon code check
+            if (cond.custom_coupon && cond.custom_coupon.trim() !== '') {
+                if (!this.manualCouponCode || this.manualCouponCode !== cond.custom_coupon.trim().toUpperCase()) {
+                    continue;
+                }
+            }
+
+            // 2. Minimum order amount check
+            const minOrder = parseFloat(cond.min_order_amount || 0);
+            if (minOrder > 0 && subtotal < minOrder) {
+                continue;
+            }
+
+            // 3. Order type check
+            if (cond.order_types && cond.order_types.length > 0) {
+                if (!cond.order_types.includes(orderType)) continue;
+            }
+
+            // 4. Payment method check
+            if (promo.type === 'payment_method') {
+                const allowed = cfg.payment_methods || cond.payment_methods || [];
+                if (allowed.length > 0 && !allowed.includes(paymentMethod)) {
+                    continue;
+                }
+            } else if (cond.payment_methods && cond.payment_methods.length > 0) {
+                if (!cond.payment_methods.includes(paymentMethod)) continue;
+            }
+
+            // 5. Client type check (based on verified order count)
+            if (cond.client_type && cond.client_type !== 'any' && clientOrdersCount !== null) {
+                if (cond.client_type === 'new_customers' || cond.client_type === 'first_order') {
+                    if (clientOrdersCount > 0) continue;
+                } else if (cond.client_type === 'returning_customers') {
+                    if (clientOrdersCount < 1) continue;
+                }
+            }
+
+            // Calculate discount benefit depending on promo type
+            let benefitAmount = 0;
+            let benefitMeta = {};
+
+            switch (promo.type) {
+                case 'cart_percent': {
+                    const pct = parseFloat(cfg.discount_percent || 0);
+                    let disc = (subtotal * pct) / 100;
+                    const maxCap = parseFloat(cfg.max_discount || 0);
+                    if (maxCap > 0 && disc > maxCap) disc = maxCap;
+                    benefitAmount = disc;
+                    benefitMeta = { type: 'cart_percent', discount: disc, percent: pct };
+                    break;
+                }
+                case 'cart_fixed': {
+                    let disc = parseFloat(cfg.discount_amount || 0);
+                    if (disc > subtotal) disc = subtotal;
+                    benefitAmount = disc;
+                    benefitMeta = { type: 'cart_fixed', discount: disc };
+                    break;
+                }
+                case 'free_delivery': {
+                    if (orderType === 'delivery') {
+                        const fee = this.appliedDeliveryFee || 0;
+                        benefitAmount = fee;
+                        benefitMeta = { type: 'free_delivery', discount: fee };
+                    }
+                    break;
+                }
+                case 'payment_method': {
+                    const pct = parseFloat(cfg.discount_percent || 0);
+                    const fixed = parseFloat(cfg.discount_amount || 0);
+                    let disc = 0;
+                    if (pct > 0) disc = (subtotal * pct) / 100;
+                    else if (fixed > 0) disc = fixed;
+                    if (disc > subtotal) disc = subtotal;
+                    benefitAmount = disc;
+                    benefitMeta = { type: 'payment_method', discount: disc };
+                    break;
+                }
+                case 'bogo': {
+                    // Check if buy_item is in cart
+                    const buyName = (cfg.buy_item || '').trim().toLowerCase();
+                    const getFreeName = (cfg.get_item || '').trim().toLowerCase();
+                    const minQty = parseInt(cfg.min_qty || 1);
+
+                    const buyCartItem = this.cart.find(it => it.name && it.name.trim().toLowerCase() === buyName);
+                    if (buyCartItem && buyCartItem.quantity >= minQty) {
+                        const itemUnitPrice = buyCartItem.price;
+                        benefitAmount = itemUnitPrice;
+                        benefitMeta = { type: 'bogo', discount: itemUnitPrice, freeItemName: cfg.get_item || buyCartItem.name };
+                    }
+                    break;
+                }
+                case 'free_item': {
+                    const freeItemName = cfg.free_item_name;
+                    if (freeItemName) {
+                        benefitAmount = 0.01; // Marker that promo is active
+                        benefitMeta = { type: 'free_item', discount: 0, freeItemName: freeItemName };
+                    }
+                    break;
+                }
+                case 'items_percent': {
+                    // Item percentage is applied on item cards directly
+                    benefitAmount = 0.01;
+                    benefitMeta = { type: 'items_percent', discount: 0 };
+                    break;
+                }
+            }
+
+            if (benefitAmount > maxDiscount || (benefitAmount > 0 && !bestPromo)) {
+                maxDiscount = benefitAmount;
+                bestPromo = { promo, benefitAmount, benefitMeta };
+            }
+        }
+
+        return bestPromo;
+    }
+
+    async updateCartSummaryTotals(manualCouponTrigger = false) {
         const popupContent = this.popupRoot.getElementById('popup-content');
         if (!popupContent) return;
 
-        const subtotal = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
-        const fee = this.appliedDeliveryFee || 0;
-        const total = subtotal + fee;
+        const orderType = popupContent.querySelector('.type-option.active')?.dataset.type || 'pickup';
+        const paymentMethod = popupContent.querySelector('.payment-option.active')?.dataset.pay || 'cash';
+        const phone = popupContent.querySelector('#cust-phone')?.value?.trim() || '';
+        const email = popupContent.querySelector('#cust-email')?.value?.trim() || '';
+
+        // Query real customer order history for client-type validation
+        let clientCount = 0;
+        if (phone || email) {
+            clientCount = await this.getClientOrderCount(phone, email);
+        }
+
+        const bestPromoResult = this.calculateBestPromotion(orderType, paymentMethod, clientCount);
+
+        const subtotal = this.cart.reduce((sum, item) => sum + (item.is_free ? 0 : (item.total || item.price)), 0);
+        let deliveryFee = orderType === 'delivery' ? (this.appliedDeliveryFee || 0) : 0;
+        let discount = 0;
+
+        const statusMsgEl = popupContent.querySelector('#promo-status-msg');
+        const promoTagContainer = popupContent.querySelector('#promo-tag-container');
+
+        if (bestPromoResult) {
+            this.appliedPromo = bestPromoResult.promo;
+            const meta = bestPromoResult.benefitMeta;
+
+            if (meta.type === 'free_delivery') {
+                discount = deliveryFee; // 100% of delivery fee
+            } else if (meta.type === 'bogo' || meta.type === 'cart_percent' || meta.type === 'cart_fixed' || meta.type === 'payment_method') {
+                discount = meta.discount;
+            }
+
+            this.discountAmount = discount;
+
+            // Render active promo tag
+            if (promoTagContainer) {
+                promoTagContainer.innerHTML = `
+                    <div class="promo-applied-tag">
+                        <span>🏷️ ${bestPromoResult.promo.headline || bestPromoResult.promo.name} Applied!</span>
+                        ${this.manualCouponCode ? '<button type="button" class="promo-remove-btn" id="btn-remove-coupon">✕</button>' : ''}
+                    </div>
+                `;
+                const removeBtn = promoTagContainer.querySelector('#btn-remove-coupon');
+                if (removeBtn) {
+                    removeBtn.onclick = () => {
+                        this.manualCouponCode = '';
+                        const inp = popupContent.querySelector('#coupon-code-input');
+                        if (inp) inp.value = '';
+                        this.updateCartSummaryTotals();
+                    };
+                }
+            }
+
+            if (statusMsgEl) {
+                statusMsgEl.style.display = 'block';
+                statusMsgEl.style.color = '#059669';
+                statusMsgEl.textContent = `✓ ${bestPromoResult.promo.headline || 'Promotion applied'}`;
+            }
+        } else {
+            this.appliedPromo = null;
+            this.discountAmount = 0;
+            if (promoTagContainer) promoTagContainer.innerHTML = '';
+
+            if (statusMsgEl) {
+                if (manualCouponTrigger && this.manualCouponCode) {
+                    statusMsgEl.style.display = 'block';
+                    statusMsgEl.style.color = '#dc2626';
+                    statusMsgEl.textContent = '✗ Invalid or non-applicable coupon code.';
+                } else {
+                    statusMsgEl.style.display = 'none';
+                }
+            }
+        }
+
+        const total = Math.max(0, subtotal + deliveryFee - discount);
 
         const subtotalEl = popupContent.querySelector('#summary-subtotal-val');
         const shipLabelEl = popupContent.querySelector('#summary-shipping-label');
         const shipValEl = popupContent.querySelector('#summary-shipping-val');
+        const discountRowEl = popupContent.querySelector('#summary-discount-row');
+        const discountLabelEl = popupContent.querySelector('#summary-discount-label');
+        const discountValEl = popupContent.querySelector('#summary-discount-val');
         const totalEl = popupContent.querySelector('#summary-total-val');
         const sendBtn = popupContent.querySelector('#send-order-btn');
 
         if (subtotalEl) subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
-        if (shipLabelEl) shipLabelEl.textContent = this.appliedDeliveryZone ? `DELIVERY (${this.appliedDeliveryZone.name})` : 'SHIPPING';
-        if (shipValEl) shipValEl.textContent = `$${fee.toFixed(2)}`;
+        if (shipLabelEl) {
+            shipLabelEl.textContent = this.appliedDeliveryZone ? `DELIVERY (${this.appliedDeliveryZone.name})` : 'SHIPPING';
+        }
+        if (shipValEl) {
+            shipValEl.textContent = `$${deliveryFee.toFixed(2)}`;
+        }
+
+        if (discountRowEl) {
+            if (discount > 0) {
+                discountRowEl.style.display = 'flex';
+                if (discountLabelEl) {
+                    discountLabelEl.textContent = this.appliedPromo?.type === 'free_delivery' ? 'FREE DELIVERY' : 'PROMO DISCOUNT';
+                }
+                if (discountValEl) discountValEl.textContent = `-$${discount.toFixed(2)}`;
+            } else {
+                discountRowEl.style.display = 'none';
+            }
+        }
+
         if (totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
         if (sendBtn) sendBtn.textContent = `SEND ORDER • $${total.toFixed(2)}`;
     }
@@ -3083,9 +3590,10 @@ class MenutechPlatformOrders extends HTMLElement {
         // Save to localStorage
         localStorage.setItem('mt_customer_info', JSON.stringify({ name, phone, email, address, reference }));
 
-        const subtotal = this.cart.reduce((sum, item) => sum + (item.total || item.price), 0);
+        const subtotal = this.cart.reduce((sum, item) => sum + (item.is_free ? 0 : (item.total || item.price)), 0);
         const deliveryFee = orderType === 'delivery' ? (this.appliedDeliveryFee || 0) : 0;
-        const total = subtotal + deliveryFee;
+        const discount = this.discountAmount || 0;
+        const total = Math.max(0, subtotal + deliveryFee - discount);
 
         const btn = popupContent.querySelector('#send-order-btn');
         btn.textContent = 'SENDING...';
@@ -3100,6 +3608,15 @@ class MenutechPlatformOrders extends HTMLElement {
                 subtotal: subtotal,
                 delivery_fee: deliveryFee,
                 delivery_zone_name: orderType === 'delivery' ? (this.appliedDeliveryZone?.name || null) : null,
+                discount_amount: discount,
+                applied_promo: this.appliedPromo ? {
+                    id: this.appliedPromo.id,
+                    name: this.appliedPromo.name,
+                    headline: this.appliedPromo.headline,
+                    type: this.appliedPromo.type,
+                    discount: discount,
+                    coupon_code: this.manualCouponCode || null
+                } : null,
                 total: total,
                 customer_name: name,
                 customer_phone: phone,

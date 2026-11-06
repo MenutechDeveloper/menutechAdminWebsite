@@ -749,9 +749,11 @@
 
             if (isOrd) {
                 const deliveryFee = parseFloat(item.delivery_fee || 0);
+                const discountAmount = parseFloat(item.discount_amount || 0);
+                const promoInfo = item.applied_promo || null;
                 const subtotal = item.subtotal !== undefined && item.subtotal !== null
                     ? parseFloat(item.subtotal)
-                    : (deliveryFee > 0 ? (item.total - deliveryFee) : item.total);
+                    : (deliveryFee > 0 ? (item.total - deliveryFee + discountAmount) : (item.total + discountAmount));
                 const deliveryType = item.order_type === 'delivery'
                     ? (item.delivery_zone_name ? `Delivery (${item.delivery_zone_name})` : 'Delivery')
                     : 'Pickup';
@@ -834,9 +836,14 @@
 
                     <div class="details-footer">
                         <div style="display:flex; flex-direction:column; gap:4px;">
+                            <div style="font-size:0.8rem; color:var(--text-dim);">Subtotal: $${subtotal.toFixed(2)}</div>
                             ${deliveryFee > 0 ? `
-                                <div style="font-size:0.8rem; color:var(--text-dim);">Subtotal: $${subtotal.toFixed(2)}</div>
                                 <div style="font-size:0.8rem; color:var(--orange); font-weight:600;">Delivery Fee: $${deliveryFee.toFixed(2)} ${item.delivery_zone_name ? `(${item.delivery_zone_name})` : ''}</div>
+                            ` : ''}
+                            ${discountAmount > 0 ? `
+                                <div style="font-size:0.8rem; color:#10b981; font-weight:700;">
+                                    🏷️ Promo Discount: -$${discountAmount.toFixed(2)} ${promoInfo && (promoInfo.headline || promoInfo.name) ? `(${promoInfo.headline || promoInfo.name})` : ''}
+                                </div>
                             ` : ''}
                             <div class="total-amount">Total: $${item.total.toFixed(2)}</div>
                         </div>

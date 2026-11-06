@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promotions & Deals | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <link rel="stylesheet" href="theme.css">
+    <script src="authGuard.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --orange-hover: #f08a28;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --text-dim: #64748b;
+            --border: #e2e8f0;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 10px 25px -3px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 20px 35px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode {
+            --bg: #0b0f19;
+            --card: #131b2e;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #1e293b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .top-navbar {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .nav-back-btn {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 8px 14px;
+            color: var(--text);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .nav-back-btn:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+        .nav-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-title span.badge {
+            font-size: 0.75rem;
+            background: rgba(255,149,51,0.12);
+            color: var(--orange);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg);
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .user-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; }
+
+        /* Unified Multi-Account Sidebar */
+        .sidebar-container {
+            position: fixed; left: 0; top: 80px; z-index: 2000; display: flex; align-items: flex-start;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sidebar-container.collapsed { transform: translateX(-340px) !important; }
+        .sidebar-panel {
+            width: 340px; height: calc(100vh - 80px); background: var(--card); border-right: 1px solid var(--border);
+            box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden;
+        }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
+        .sidebar-header h3 { font-family: 'Outfit'; font-size: 1.1rem; margin-bottom: 12px; }
+        .search-box {
+            width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-md);
+            font-family: inherit; font-size: 0.85rem; outline: none; background: var(--bg); color: var(--text);
+        }
+        .client-list { flex: 1; overflow-y: auto; padding: 10px 14px; list-style: none; }
+        .client-item {
+            padding: 12px 14px; border-radius: var(--radius-md); cursor: pointer; transition: 0.2s;
+            margin-bottom: 6px; border: 1px solid transparent; display: flex; flex-direction: column; gap: 4px;
+        }
+        .client-item:hover { background: var(--bg); border-color: var(--border); }
+        .client-item.active { background: rgba(255,149,51,0.1); border-color: var(--orange); }
+        .client-item .client-title { font-weight: 700; font-size: 0.9rem; }
+        .client-item .client-domain { font-size: 0.75rem; color: var(--text-dim); }
+
+        .sidebar-tab {
+            width: 36px; height: 48px; background: var(--orange); color: #fff; border-radius: 0 12px 12px 0;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 2px 2px 8px rgba(0,0,0,0.15);
+            margin-top: 15px; border: none; font-size: 1rem;
+        }
+
+        /* Active Context Header Banner */
+        .context-banner {
+            background: linear-gradient(135deg, rgba(255,149,51,0.08) 0%, rgba(255,149,51,0.02) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 18px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .context-info h2 { font-family: 'Outfit'; font-size: 1.25rem; font-weight: 800; }
+        .context-info p { font-size: 0.85rem; color: var(--text-dim); margin-top: 2px; }
+
+        /* Main Content Container */
+        .main-container {
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Promotions Table Card */
+        .table-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        .table-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .table-header h3 { font-family: 'Outfit'; font-size: 1.15rem; font-weight: 700; }
+        .table-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .promo-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .promo-table th {
+            padding: 14px 20px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+        .promo-table td {
+            padding: 16px 20px;
+            font-size: 0.85rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        .promo-table tr:hover td {
+            background: rgba(255,149,51,0.02);
+        }
+        .promo-table tr:last-child td { border-bottom: none; }
+
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(15,23,42,0.06);
+            color: var(--text);
+        }
+        .benefit-tag {
+            font-weight: 800;
+            color: var(--orange);
+            font-size: 0.95rem;
+        }
+
+        /* Custom Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; inset: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--orange); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background: var(--orange);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(255,149,51,0.3);
+        }
+        .btn-primary:hover {
+            background: var(--orange-hover);
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .btn-secondary:hover {
+            border-color: var(--text-dim);
+        }
+        .btn-danger {
+            background: #ef4444;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        .btn-icon {
+            padding: 8px;
+            border-radius: 8px;
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            cursor: pointer;
+        }
+        .btn-icon:hover {
+            color: var(--text);
+            border-color: var(--text);
+        }
+
+        /* Modal Overlay & Containers */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .modal-card {
+            background: var(--card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 { font-family: 'Outfit'; font-size: 1.25rem; font-weight: 700; }
+        .modal-close-btn {
+            background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-dim);
+        }
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Promo Type Grid */
+        .type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+        }
+        .type-item-card {
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: var(--card);
+        }
+        .type-item-card:hover {
+            border-color: var(--orange);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+        .type-item-icon {
+            width: 44px; height: 44px; border-radius: 10px; background: rgba(255,149,51,0.1);
+            color: var(--orange); display: flex; align-items: center; justify-content: center;
+        }
+        .type-item-card h4 { font-size: 1rem; font-weight: 700; }
+        .type-item-card p { font-size: 0.8rem; color: var(--text-dim); line-height: 1.4; }
+
+        /* Configuration Split Screen Layout */
+        .editor-split {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 28px;
+        }
+        @media (max-width: 860px) {
+            .editor-split { grid-template-columns: 1fr; }
+        }
+
+        /* Live Promo Preview Card */
+        .preview-sticky {
+            position: sticky;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .live-promo-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            color: #fff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .live-promo-card::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,149,51,0.4) 0%, transparent 70%);
+        }
+        .live-promo-image-box {
+            width: 100%;
+            height: 140px;
+            border-radius: var(--radius-md);
+            background: rgba(255,255,255,0.06);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .live-promo-image-box img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .live-headline {
+            font-family: 'Outfit';
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--orange);
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+        .live-desc {
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+        .live-condition-pill {
+            display: inline-flex;
+            background: rgba(255,255,255,0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            color: #f8fafc;
+            font-weight: 600;
+        }
+
+        /* Form Fields */
+        .form-section {
+            margin-bottom: 24px;
+        }
+        .form-section-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+        .form-control {
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 0.85rem;
+            background: var(--card);
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus {
+            border-color: var(--orange);
+        }
+
+        /* Image Picker Component */
+        .image-picker-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            text-align: center;
+            background: var(--bg);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .image-picker-zone:hover {
+            border-color: var(--orange);
+        }
+        .image-gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+            margin-top: 12px;
+            padding: 4px;
+        }
+        .gallery-thumb {
+            width: 100%;
+            height: 75px;
+            border-radius: 8px;
+            object-fit: cover;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: 0.2s;
+        }
+        .gallery-thumb.selected {
+            border-color: var(--orange);
+            transform: scale(0.96);
+        }
+
+        /* Items selector table for % discount on items */
+        .items-selector-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+        .items-selector-table th, .items-selector-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Toast Container */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast.success { border-left: 4px solid #10b981; }
+        .toast.error { border-left: 4px solid #ef4444; }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--text-dim);
+        }
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            color: var(--orange);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Unified Multi-Account Sidebar (For non-owners) -->
+    <div class="sidebar-container collapsed" id="sidebar-container" style="display:none;">
+        <div class="sidebar-panel">
+            <div class="sidebar-header">
+                <h3>Accounts</h3>
+                <input type="text" id="client-search" class="search-box" placeholder="Search restaurant...">
+            </div>
+            <ul class="client-list" id="client-list">
+                <!-- Rendered dynamically -->
+            </ul>
+        </div>
+        <button class="sidebar-tab" id="sidebar-tab" title="Toggle Account Switcher">❯</button>
+    </div>
+
+    <!-- Top Navigation -->
+    <nav class="top-navbar">
+        <div class="nav-brand">
+            <a href="index.html" class="nav-back-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Dashboard
+            </a>
+            <div class="nav-title">
+                Promotions & Deals
+                <span class="badge">Marketing</span>
+            </div>
+        </div>
+        <div class="user-pill">
+            <span class="user-dot"></span>
+            <span id="nav-user-label">Loading...</span>
+        </div>
+    </nav>
+
+    <!-- Context Banner -->
+    <div class="context-banner" id="context-banner">
+        <div class="context-info">
+            <h2 id="active-restaurant-name">Restaurant Workspace</h2>
+            <p id="active-restaurant-domain">Loading menu context...</p>
+        </div>
+        <div class="context-actions">
+            <button class="btn btn-secondary" id="btn-preview-menu">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Preview Menu
+            </button>
+            <button class="btn btn-primary" id="btn-add-promo">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Promo Deal
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="main-container">
+        <!-- Promotions Table Card -->
+        <div class="table-card">
+            <div class="table-header">
+                <h3>Configured Promotions</h3>
+                <span id="promo-count-badge" style="font-size: 0.8rem; font-weight: 700; color: var(--text-dim);">0 promotions</span>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="promo-table">
+                    <thead>
+                        <tr>
+                            <th>Name & Headline</th>
+                            <th>Promo Type</th>
+                            <th>Benefit</th>
+                            <th>Key Conditions</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="promo-table-body">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+                <div class="empty-state" id="empty-state-view" style="display: none;">
+                    <div class="empty-state-icon">🏷️</div>
+                    <h4 style="font-size: 1.1rem; margin-bottom: 6px;">No promotions created yet</h4>
+                    <p style="font-size: 0.85rem; max-width: 400px; margin: 0 auto 20px auto;">Create attractive promo deals to boost sales in your digital menu and widget.</p>
+                    <button class="btn btn-primary" id="btn-empty-add-promo">Add Promo Deal</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal 1: Select Promo Type -->
+    <div class="modal-overlay" id="modal-type-select">
+        <div class="modal-card" style="max-width: 820px;">
+            <div class="modal-header">
+                <h3>Select Promotion Type</h3>
+                <button class="modal-close-btn" id="close-modal-type">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="type-grid">
+                    <div class="type-item-card" data-type="cart_percent">
+                        <div class="type-item-icon">%</div>
+                        <h4>% discount on cart</h4>
+                        <p>Apply a percentage discount on the eligible subtotal of the cart.</p>
+                    </div>
+                    <div class="type-item-card" data-type="items_percent">
+                        <div class="type-item-icon">🍕</div>
+                        <h4>% discount on selected items</h4>
+                        <p>Apply specific percentage discounts to selected menu dishes.</p>
+                    </div>
+                    <div class="type-item-card" data-type="free_delivery">
+                        <div class="type-item-icon">🛵</div>
+                        <h4>Free delivery</h4>
+                        <p>100% discount on the customer delivery fee.</p>
+                    </div>
+                    <div class="type-item-card" data-type="bogo">
+                        <div class="type-item-icon">🎁</div>
+                        <h4>Buy one, get one free</h4>
+                        <p>Customer buys a dish and gets another one for free.</p>
+                    </div>
+                    <div class="type-item-card" data-type="cart_fixed">
+                        <div class="type-item-icon">💵</div>
+                        <h4>Fixed discount on cart</h4>
+                        <p>Deduct a fixed dollar amount from the total cart order.</p>
+                    </div>
+                    <div class="type-item-card" data-type="payment_method">
+                        <div class="type-item-icon">💳</div>
+                        <h4>Payment method reward</h4>
+                        <p>Grant a discount when paying with a specific payment method.</p>
+                    </div>
+                    <div class="type-item-card" data-type="free_item">
+                        <div class="type-item-icon">🥤</div>
+                        <h4>Get a FREE item</h4>
+                        <p>Add a free menu item when conditions are met.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Promotion Editor & Preview -->
+    <div class="modal-overlay" id="modal-promo-editor">
+        <div class="modal-card" style="max-width: 1050px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="nav-back-btn" id="btn-back-to-types" style="padding: 6px 12px;">❮ Change Type</button>
+                    <h3 id="editor-modal-title">Configure Promotion</h3>
+                </div>
+                <button class="modal-close-btn" id="close-modal-editor">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="editor-split">
+                    <!-- Left: Real-time Live Preview -->
+                    <div class="preview-sticky">
+                        <span style="font-size: 0.75rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase;">Customer Menu Preview</span>
+                        <div class="live-promo-card">
+                            <div class="live-promo-image-box" id="prev-image-box">
+                                <span style="font-size: 2rem;">🏷️</span>
+                            </div>
+                            <div class="live-headline" id="prev-headline">20% OFF</div>
+                            <div class="live-desc" id="prev-desc">Enjoy discount on your digital menu order.</div>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <span class="live-condition-pill" id="prev-cond-min">Min Order: Any</span>
+                                <span class="live-condition-pill" id="prev-cond-client">All Clients</span>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-dim); background: var(--bg); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                            💡 <strong>Rule:</strong> New promotions are created <strong>INACTIVE by default</strong>. You can manually activate them from the table when ready to launch.
+                        </div>
+                    </div>
+
+                    <!-- Right: Dynamic Configuration Form -->
+                    <form id="promo-form" onsubmit="return false;">
+                        <input type="hidden" id="promo-id">
+                        <input type="hidden" id="promo-type">
+
+                        <!-- Primary Details -->
+                        <div class="form-section">
+                            <div class="form-section-title">1. General Information</div>
+                            <div class="form-grid">
+                                <div class="form-group full-width">
+                                    <label>Internal Name (for your dashboard) *</label>
+                                    <input type="text" id="promo-name" class="form-control" placeholder="e.g. Summer Burger Promo" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Headline (Customer Facing) *</label>
+                                    <input type="text" id="promo-headline" class="form-control" placeholder="e.g. 20% OFF" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Short Description (Optional)</label>
+                                    <input type="text" id="promo-desc" class="form-control" placeholder="e.g. On orders over $30">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Promotion Image -->
+                        <div class="form-section">
+                            <div class="form-section-title">2. Promotion Image</div>
+                            <div class="form-group">
+                                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                    <button type="button" class="btn btn-secondary" id="btn-toggle-existing-imgs">Select from Gallery</button>
+                                    <button type="button" class="btn btn-secondary" id="btn-trigger-upload">Upload New Image</button>
+                                    <input type="file" id="file-image-input" accept="image/*" style="display: none;">
+                                </div>
+                                <input type="hidden" id="promo-image-url">
+
+                                <!-- Gallery picker view -->
+                                <div id="gallery-picker-box" style="display: none; background: var(--bg); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                                    <div style="font-size: 0.8rem; font-weight: 700; margin-bottom: 8px;">Select an existing restaurant image:</div>
+                                    <div class="image-gallery-grid" id="gallery-grid">
+                                        <!-- Loaded dynamically -->
+                                    </div>
+                                </div>
+
+                                <!-- Drag and drop upload zone -->
+                                <div class="image-picker-zone" id="drop-upload-zone" style="display: none;">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--orange); margin-bottom: 6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    <p style="font-size: 0.85rem; font-weight: 600;">Drag & drop image here, or click to browse</p>
+                                    <span style="font-size: 0.75rem; color: var(--text-dim);">PNG, JPG, WEBP up to 5MB</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Type Configuration -->
+                        <div class="form-section" id="section-type-config">
+                            <div class="form-section-title">3. Benefit Configuration</div>
+                            <div id="dynamic-fields-container">
+                                <!-- Injected dynamically according to promo type -->
+                            </div>
+                        </div>
+
+                        <!-- Conditions & Rules -->
+                        <div class="form-section">
+                            <div class="form-section-title">4. Conditions & Eligibility</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Minimum Order Amount ($)</label>
+                                    <input type="number" step="0.01" id="cond-min-order" class="form-control" placeholder="0.00 (No minimum)">
+                                </div>
+                                <div class="form-group">
+                                    <label>Client Type</label>
+                                    <select id="cond-client-type" class="form-control">
+                                        <option value="any">Any client</option>
+                                        <option value="new_customers">New customers (No prior orders)</option>
+                                        <option value="first_order">First order (Not yet completed an order)</option>
+                                        <option value="returning_customers">Returning customers (With past orders)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Order Type Allowed</label>
+                                    <select id="cond-order-type" class="form-control">
+                                        <option value="all">All (Delivery & Pickup)</option>
+                                        <option value="delivery">Delivery only</option>
+                                        <option value="pickup">Pickup only</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Custom Coupon Code (Optional)</label>
+                                    <input type="text" id="cond-coupon-code" class="form-control" placeholder="e.g. SUMMER20" style="text-transform: uppercase;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Start Date (Optional)</label>
+                                    <input type="date" id="cond-start-date" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>End Date (Optional)</label>
+                                    <input type="date" id="cond-end-date" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; border-top: 1px solid var(--border); padding-top: 20px;">
+                            <button type="button" class="btn btn-secondary" id="btn-cancel-editor">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="btn-save-promo">Save Promotion</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <script type="module">
+        import { MT_CONFIG } from './config.js';
+        import { supabase as sb } from './supabase.js';
+
+        let user = null, userRole = null, activeOwnerId = null, activeDomain = null, activeRestaurantName = '';
+        let currentMenuData = null;
+        let promotionsList = [];
+        let restaurantGalleryImages = [];
+
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        };
+
+        async function initAuth() {
+            let session = null;
+            try {
+                const res = await sb.auth.getSession();
+                session = res.data?.session;
+            } catch(e) {}
+
+            // Fallback for app or offline mode
+            if (!session && window.location.search.includes('mock=true')) {
+                session = { user: { id: 'mock-user-id', email: 'owner@menutech.io' } };
+            }
+
+            if (!session) {
+                window.location.href = 'index.html';
+                return;
+            }
+            user = session.user;
+            let prof = null;
+            try {
+                const { data } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+                prof = data;
+            } catch(e) {}
+
+            if (!prof && window.location.search.includes('mock=true')) {
+                prof = { username: 'Taqueria Los Amigos', role: 'owner' };
+            }
+            if (!prof) return;
+
+            userRole = (prof.role || 'user').trim().toUpperCase();
+            document.getElementById('nav-user-label').textContent = `${prof.username || user.email} (${userRole})`;
+
+            if (userRole === 'OWNER') {
+                activeOwnerId = user.id;
+                document.getElementById('sidebar-container').style.display = 'none';
+                await loadOwnerContext();
+            } else {
+                // Admin, Developer, CS
+                document.getElementById('sidebar-container').style.display = 'flex';
+                initSidebar();
+                await loadAdminDefaultContext();
+            }
+        }
+
+        async function loadOwnerContext() {
+            const { data: menu } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
+            currentMenuData = menu;
+            activeDomain = menu?.domain || '';
+            activeRestaurantName = menu?.config?.restaurant_name || 'My Restaurant';
+
+            document.getElementById('active-restaurant-name').textContent = activeRestaurantName;
+            document.getElementById('active-restaurant-domain').textContent = activeDomain ? `Domain: ${activeDomain}` : 'Digital Menu';
+
+            await loadGalleryImages();
+            await loadPromotions();
+        }
+
+        async function loadAdminDefaultContext() {
+            const { data: profiles } = await sb.from('profiles').select('id, username, domain').eq('role', 'owner').order('created_at', { ascending: false });
+            if (profiles && profiles.length > 0) {
+                switchContext(profiles[0].id, profiles[0].domain, profiles[0].username);
+            }
+        }
+
+        async function initSidebar() {
+            const sidebar = document.getElementById('sidebar-container');
+            const tab = document.getElementById('sidebar-tab');
+            const search = document.getElementById('client-search');
+            const list = document.getElementById('client-list');
+
+            tab.onclick = () => {
+                sidebar.classList.toggle('collapsed');
+                tab.textContent = sidebar.classList.contains('collapsed') ? '❯' : '❮';
+            };
+
+            const { data: profiles } = await sb.from('profiles').select('id, username, domain').eq('role', 'owner').order('created_at', { ascending: false });
+            const renderList = (items) => {
+                list.innerHTML = (items || []).map(p => `
+                    <li class="client-item ${p.id === activeOwnerId ? 'active' : ''}" data-id="${p.id}" data-domain="${p.domain || ''}" data-name="${p.username || 'Restaurant'}">
+                        <div class="client-title">${p.username || 'Restaurant'}</div>
+                        <div class="client-domain">${p.domain || 'No custom domain'}</div>
+                    </li>
+                `).join('');
+
+                list.querySelectorAll('.client-item').forEach(el => {
+                    el.onclick = () => {
+                        switchContext(el.dataset.id, el.dataset.domain, el.dataset.name);
+                        sidebar.classList.add('collapsed');
+                        tab.textContent = '❯';
+                    };
+                });
+            };
+
+            renderList(profiles);
+
+            search.oninput = () => {
+                const q = search.value.toLowerCase();
+                const filtered = (profiles || []).filter(p =>
+                    (p.username && p.username.toLowerCase().includes(q)) ||
+                    (p.domain && p.domain.toLowerCase().includes(q))
+                );
+                renderList(filtered);
+            };
+        }
+
+        async function switchContext(ownerId, domain, name) {
+            activeOwnerId = ownerId;
+            activeDomain = domain || '';
+            activeRestaurantName = name || 'Restaurant Workspace';
+
+            document.getElementById('active-restaurant-name').textContent = activeRestaurantName;
+            document.getElementById('active-restaurant-domain').textContent = activeDomain ? `Domain: ${activeDomain}` : 'Digital Menu';
+
+            // Fetch menu
+            const { data: menu } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
+            currentMenuData = menu;
+
+            await loadGalleryImages();
+            await loadPromotions();
+        }
+
+        async function loadGalleryImages() {
+            try {
+                const { data } = await sb.from('galeria').select('image_url').eq('user_id', activeOwnerId).order('created_at', { ascending: false });
+                restaurantGalleryImages = data ? data.map(d => d.image_url) : [];
+            } catch (e) {
+                restaurantGalleryImages = [];
+            }
+        }
+
+        async function loadPromotions() {
+            const tbody = document.getElementById('promo-table-body');
+            const emptyView = document.getElementById('empty-state-view');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">Loading promotions...</td></tr>';
+
+            const { data, error } = await sb
+                .from('menutech_promotions')
+                .select('*')
+                .eq('user_id', activeOwnerId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#ef4444; padding:30px;">Error loading promotions: ${error.message}</td></tr>`;
+                return;
+            }
+
+            promotionsList = data || [];
+            document.getElementById('promo-count-badge').textContent = `${promotionsList.length} promotion${promotionsList.length === 1 ? '' : 's'}`;
+
+            if (promotionsList.length === 0) {
+                tbody.innerHTML = '';
+                emptyView.style.display = 'block';
+                return;
+            }
+
+            emptyView.style.display = 'none';
+            tbody.innerHTML = promotionsList.map(p => {
+                const typeLabels = {
+                    cart_percent: '% discount on cart',
+                    items_percent: '% discount on selected items',
+                    free_delivery: 'Free delivery',
+                    bogo: 'Buy one, get one free',
+                    cart_fixed: 'Fixed discount on cart',
+                    payment_method: 'Payment method reward',
+                    free_item: 'Get a FREE item'
+                };
+
+                let benefitText = '';
+                if (p.type === 'cart_percent') benefitText = `${p.config?.discount_percent || 0}% OFF`;
+                else if (p.type === 'items_percent') benefitText = `Special Items OFF`;
+                else if (p.type === 'free_delivery') benefitText = `100% Free Shipping`;
+                else if (p.type === 'bogo') benefitText = `BOGO Free Item`;
+                else if (p.type === 'cart_fixed') benefitText = `$${parseFloat(p.config?.discount_amount || 0).toFixed(2)} OFF`;
+                else if (p.type === 'payment_method') benefitText = `${p.config?.discount_percent ? p.config.discount_percent + '%' : '$' + p.config?.discount_amount} Reward`;
+                else if (p.type === 'free_item') benefitText = `Free: ${p.config?.free_item_name || 'Gift'}`;
+
+                const minOrder = p.conditions?.min_order_amount ? `Min $${p.conditions.min_order_amount}` : 'No min';
+                const clientType = p.conditions?.client_type && p.conditions.client_type !== 'any' ? p.conditions.client_type.replace('_', ' ') : 'All clients';
+                const coupon = p.conditions?.custom_coupon ? `Coupon: ${p.conditions.custom_coupon}` : '';
+                const conds = [minOrder, clientType, coupon].filter(Boolean).join(' • ');
+
+                const createdDate = p.created_at ? new Date(p.created_at).toLocaleDateString() : 'N/A';
+
+                return `
+                    <tr>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                ${p.image_url ? `<img src="${p.image_url}" style="width:40px; height:40px; border-radius:8px; object-fit:cover;">` : '<div style="width:40px; height:40px; border-radius:8px; background:rgba(255,149,51,0.1); display:flex; align-items:center; justify-content:center; font-size:1.2rem;">🏷️</div>'}
+                                <div>
+                                    <div style="font-weight:700;">${p.headline || p.name}</div>
+                                    <div style="font-size:0.75rem; color:var(--text-dim);">${p.name}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="type-badge">${typeLabels[p.type] || p.type}</span></td>
+                        <td><span class="benefit-tag">${benefitText}</span></td>
+                        <td><span style="font-size:0.8rem; color:var(--text-dim);">${conds}</span></td>
+                        <td>
+                            <label class="switch">
+                                <input type="checkbox" class="status-toggle" data-id="${p.id}" ${p.is_active ? 'checked' : ''}>
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+                        <td style="color:var(--text-dim); font-size:0.8rem;">${createdDate}</td>
+                        <td style="text-align: right;">
+                            <button class="btn-icon btn-edit" data-id="${p.id}" title="Edit Promotion">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                            </button>
+                            <button class="btn-icon btn-delete" data-id="${p.id}" title="Delete Promotion" style="color:#ef4444; border-color:rgba(239,68,68,0.2);">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Toggle promotion active/inactive
+            tbody.querySelectorAll('.status-toggle').forEach(input => {
+                input.onchange = async () => {
+                    const id = input.dataset.id;
+                    const isActive = input.checked;
+                    const { error } = await sb.from('menutech_promotions').update({ is_active: isActive, updated_at: new Date().toISOString() }).eq('id', id);
+                    if (error) {
+                        showToast('Error updating status: ' + error.message, 'error');
+                        input.checked = !isActive;
+                    } else {
+                        showToast(`Promotion ${isActive ? 'activated' : 'deactivated'} successfully!`, 'success');
+                    }
+                };
+            });
+
+            // Edit button handler
+            tbody.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.onclick = () => {
+                    const id = btn.dataset.id;
+                    const promo = promotionsList.find(p => p.id === id);
+                    if (promo) openEditorModal(promo.type, promo);
+                };
+            });
+
+            // Delete button handler
+            tbody.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.onclick = async () => {
+                    const id = btn.dataset.id;
+                    if (confirm('Are you sure you want to delete this promotion?')) {
+                        const { error } = await sb.from('menutech_promotions').delete().eq('id', id);
+                        if (error) {
+                            showToast('Error deleting promotion: ' + error.message, 'error');
+                        } else {
+                            showToast('Promotion deleted', 'success');
+                            loadPromotions();
+                        }
+                    }
+                };
+            });
+        }
+
+        // Preview button in header
+        document.getElementById('btn-preview-menu').onclick = () => {
+            if (activeDomain) {
+                window.open(`menu.html?domain=${activeDomain}`, '_blank');
+            } else if (currentMenuData && currentMenuData.slug) {
+                window.open(`menu.html?n=${currentMenuData.slug}`, '_blank');
+            } else {
+                showToast('No menu slug or domain found for this restaurant', 'error');
+            }
+        };
+
+        // Modal 1: Select Type
+        const modalType = document.getElementById('modal-type-select');
+        const modalEditor = document.getElementById('modal-promo-editor');
+
+        const openTypeModal = () => { modalType.style.display = 'flex'; };
+        const closeTypeModal = () => { modalType.style.display = 'none'; };
+
+        document.getElementById('btn-add-promo').onclick = openTypeModal;
+        document.getElementById('btn-empty-add-promo').onclick = openTypeModal;
+        document.getElementById('close-modal-type').onclick = closeTypeModal;
+
+        modalType.querySelectorAll('.type-item-card').forEach(card => {
+            card.onclick = () => {
+                const type = card.dataset.type;
+                closeTypeModal();
+                openEditorModal(type, null);
+            };
+        });
+
+        // Modal 2: Editor
+        document.getElementById('btn-back-to-types').onclick = () => {
+            modalEditor.style.display = 'none';
+            modalType.style.display = 'flex';
+        };
+        document.getElementById('close-modal-editor').onclick = () => { modalEditor.style.display = 'none'; };
+        document.getElementById('btn-cancel-editor').onclick = () => { modalEditor.style.display = 'none'; };
+
+        function openEditorModal(type, existingPromo = null) {
+            document.getElementById('promo-id').value = existingPromo ? existingPromo.id : '';
+            document.getElementById('promo-type').value = type;
+
+            const typeTitles = {
+                cart_percent: 'Configure: % discount on cart',
+                items_percent: 'Configure: % discount on selected items',
+                free_delivery: 'Configure: Free delivery',
+                bogo: 'Configure: Buy one, get one free',
+                cart_fixed: 'Configure: Fixed discount on cart',
+                payment_method: 'Configure: Payment method reward',
+                free_item: 'Configure: Get a FREE item'
+            };
+            document.getElementById('editor-modal-title').textContent = typeTitles[type] || 'Configure Promotion';
+
+            // Defaults or existing values
+            const defaultHeadlines = {
+                cart_percent: '20% OFF',
+                items_percent: 'Special Deal',
+                free_delivery: 'Free Delivery',
+                bogo: 'Buy 1 Get 1 Free',
+                cart_fixed: '$5 OFF',
+                payment_method: 'Online Payment Reward',
+                free_item: 'Free Gift with Order'
+            };
+
+            document.getElementById('promo-name').value = existingPromo?.name || defaultHeadlines[type] || 'Promo Deal';
+            document.getElementById('promo-headline').value = existingPromo?.headline || defaultHeadlines[type] || 'Promo Deal';
+            document.getElementById('promo-desc').value = existingPromo?.description || '';
+            document.getElementById('promo-image-url').value = existingPromo?.image_url || '';
+
+            // Conditions
+            const cond = existingPromo?.conditions || {};
+            document.getElementById('cond-min-order').value = cond.min_order_amount || '';
+            document.getElementById('cond-client-type').value = cond.client_type || 'any';
+            document.getElementById('cond-order-type').value = cond.order_type || 'all';
+            document.getElementById('cond-coupon-code').value = cond.custom_coupon || '';
+            document.getElementById('cond-start-date').value = cond.start_date || '';
+            document.getElementById('cond-end-date').value = cond.end_date || '';
+
+            // Render dynamic fields for type
+            renderDynamicTypeFields(type, existingPromo?.config || {});
+
+            // Update live preview
+            updateLivePreview();
+
+            // Setup real-time listeners for preview
+            setupPreviewListeners();
+
+            modalEditor.style.display = 'flex';
+        }
+
+        function renderDynamicTypeFields(type, config) {
+            const container = document.getElementById('dynamic-fields-container');
+            container.innerHTML = '';
+
+            const allDishes = [];
+            if (currentMenuData && currentMenuData.config && currentMenuData.config.categories) {
+                currentMenuData.config.categories.forEach(cat => {
+                    (cat.dishes || []).forEach(d => {
+                        allDishes.push({ ...d, categoryName: cat.name });
+                    });
+                });
+            }
+
+            if (type === 'cart_percent') {
+                container.innerHTML = `
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Discount Percentage (%) *</label>
+                            <input type="number" id="cfg-discount-percent" class="form-control" min="1" max="100" value="${config.discount_percent || 20}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Discount Amount ($) (Optional)</label>
+                            <input type="number" step="0.01" id="cfg-max-discount" class="form-control" placeholder="No limit" value="${config.max_discount || ''}">
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'items_percent') {
+                container.innerHTML = `
+                    <div class="form-group">
+                        <label>Select Items and Assign Discount %</label>
+                        <input type="text" id="items-filter-search" class="form-control" placeholder="Search dish..." style="margin-bottom: 8px;">
+                        <div style="max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-md);">
+                            <table class="items-selector-table" id="items-selection-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40px;">Select</th>
+                                        <th>Dish Name</th>
+                                        <th>Orig. Price</th>
+                                        <th>Discount %</th>
+                                        <th>Promo Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${allDishes.map((dish, idx) => {
+                                        const selectedItem = (config.items || []).find(it => it.name === dish.name);
+                                        const isChecked = !!selectedItem;
+                                        const pct = selectedItem ? selectedItem.discount_percent : 20;
+                                        const promoPrice = (dish.price * (1 - pct / 100)).toFixed(2);
+                                        return `
+                                            <tr class="dish-select-row" data-name="${dish.name.toLowerCase()}">
+                                                <td><input type="checkbox" class="dish-checkbox" data-idx="${idx}" data-name="${dish.name}" data-price="${dish.price}" ${isChecked ? 'checked' : ''}></td>
+                                                <td><strong>${dish.name}</strong> <span style="font-size:0.75rem; color:var(--text-dim);">${dish.categoryName}</span></td>
+                                                <td>$${dish.price}</td>
+                                                <td style="width: 100px;">
+                                                    <input type="number" class="form-control dish-pct-input" value="${pct}" min="1" max="100" style="padding: 4px 8px;" ${isChecked ? '' : 'disabled'}>
+                                                </td>
+                                                <td class="dish-promo-preview-price">$${promoPrice}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+
+                // Wire up item selection events
+                const searchInp = container.querySelector('#items-filter-search');
+                searchInp.oninput = () => {
+                    const q = searchInp.value.toLowerCase();
+                    container.querySelectorAll('.dish-select-row').forEach(row => {
+                        row.style.display = row.dataset.name.includes(q) ? '' : 'none';
+                    });
+                };
+
+                container.querySelectorAll('.dish-checkbox').forEach(chk => {
+                    chk.onchange = () => {
+                        const row = chk.closest('tr');
+                        const pctInput = row.querySelector('.dish-pct-input');
+                        pctInput.disabled = !chk.checked;
+                    };
+                });
+
+                container.querySelectorAll('.dish-pct-input').forEach(inp => {
+                    inp.oninput = () => {
+                        const row = inp.closest('tr');
+                        const price = parseFloat(row.querySelector('.dish-checkbox').dataset.price);
+                        const pct = parseFloat(inp.value) || 0;
+                        const promoPrice = (price * (1 - pct / 100)).toFixed(2);
+                        row.querySelector('.dish-promo-preview-price').textContent = `$${promoPrice}`;
+                    };
+                });
+            } else if (type === 'free_delivery') {
+                container.innerHTML = `
+                    <div style="background: rgba(255,149,51,0.06); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                        <p style="font-size: 0.85rem; line-height: 1.5;">
+                            🛵 <strong>Free Delivery Benefit:</strong> Automatically grants 100% discount on the delivery fee paid by the customer when the order type is Delivery. Food subtotals and actual delivery zone operational costs remain tracked in the system.
+                        </p>
+                    </div>
+                `;
+            } else if (type === 'bogo') {
+                container.innerHTML = `
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Customer Buys *</label>
+                            <select id="cfg-bogo-buy" class="form-control">
+                                ${allDishes.map(d => `<option value="${d.name}" ${config.buy_item === d.name ? 'selected' : ''}>${d.name} ($${d.price})</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>And Gets Free *</label>
+                            <select id="cfg-bogo-get" class="form-control">
+                                ${allDishes.map(d => `<option value="${d.name}" ${config.get_item === d.name ? 'selected' : ''}>${d.name} ($${d.price})</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Minimum Purchase Quantity</label>
+                            <input type="number" id="cfg-bogo-min-qty" class="form-control" value="${config.min_qty || 1}" min="1">
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'cart_fixed') {
+                container.innerHTML = `
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Fixed Discount Amount ($) *</label>
+                            <input type="number" step="0.01" id="cfg-fixed-amount" class="form-control" placeholder="e.g. 5.00" value="${config.discount_amount || 5}" required>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'payment_method') {
+                container.innerHTML = `
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Eligible Payment Method *</label>
+                            <select id="cfg-payment-method" class="form-control">
+                                <option value="online" ${config.payment_method === 'online' ? 'selected' : ''}>Online Payment (Stripe)</option>
+                                <option value="cash" ${config.payment_method === 'cash' ? 'selected' : ''}>Cash / Pay at Restaurant</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Discount Percentage (%)</label>
+                            <input type="number" id="cfg-pay-discount-pct" class="form-control" value="${config.discount_percent || 10}" min="1" max="100">
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'free_item') {
+                container.innerHTML = `
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>Free Item to Give *</label>
+                            <select id="cfg-free-item" class="form-control">
+                                ${allDishes.map(d => `<option value="${d.name}" ${config.free_item_name === d.name ? 'selected' : ''}>${d.name} ($${d.price})</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function setupPreviewListeners() {
+            const headlineInp = document.getElementById('promo-headline');
+            const descInp = document.getElementById('promo-desc');
+            const minOrderInp = document.getElementById('cond-min-order');
+            const clientTypeSel = document.getElementById('cond-client-type');
+
+            headlineInp.oninput = updateLivePreview;
+            descInp.oninput = updateLivePreview;
+            minOrderInp.oninput = updateLivePreview;
+            clientTypeSel.onchange = updateLivePreview;
+        }
+
+        function updateLivePreview() {
+            const headline = document.getElementById('promo-headline').value || 'Special Promo';
+            const desc = document.getElementById('promo-desc').value || 'Enjoy special savings on your order!';
+            const minOrder = document.getElementById('cond-min-order').value;
+            const clientType = document.getElementById('cond-client-type').value;
+            const imgUrl = document.getElementById('promo-image-url').value;
+
+            document.getElementById('prev-headline').textContent = headline;
+            document.getElementById('prev-desc').textContent = desc;
+            document.getElementById('prev-cond-min').textContent = minOrder && parseFloat(minOrder) > 0 ? `Min: $${minOrder}` : 'No Min';
+            document.getElementById('prev-cond-client').textContent = clientType !== 'any' ? clientType.replace('_', ' ') : 'All Clients';
+
+            const imgBox = document.getElementById('prev-image-box');
+            if (imgUrl) {
+                imgBox.innerHTML = `<img src="${imgUrl}" alt="Promo Image">`;
+            } else {
+                imgBox.innerHTML = '<span style="font-size: 2rem;">🏷️</span>';
+            }
+        }
+
+        // Image Handling: Existing gallery vs Upload
+        const galleryBox = document.getElementById('gallery-picker-box');
+        const uploadBox = document.getElementById('drop-upload-zone');
+        const fileInput = document.getElementById('file-image-input');
+
+        document.getElementById('btn-toggle-existing-imgs').onclick = () => {
+            uploadBox.style.display = 'none';
+            galleryBox.style.display = galleryBox.style.display === 'none' ? 'block' : 'none';
+            renderGalleryThumbs();
+        };
+
+        document.getElementById('btn-trigger-upload').onclick = () => {
+            galleryBox.style.display = 'none';
+            uploadBox.style.display = uploadBox.style.display === 'none' ? 'block' : 'none';
+        };
+
+        uploadBox.onclick = () => fileInput.click();
+
+        uploadBox.ondragover = (e) => { e.preventDefault(); uploadBox.style.borderColor = 'var(--orange)'; };
+        uploadBox.ondragleave = () => { uploadBox.style.borderColor = 'var(--border)'; };
+        uploadBox.ondrop = (e) => {
+            e.preventDefault();
+            uploadBox.style.borderColor = 'var(--border)';
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleImageUpload(e.dataTransfer.files[0]);
+            }
+        };
+
+        fileInput.onchange = () => {
+            if (fileInput.files && fileInput.files[0]) {
+                handleImageUpload(fileInput.files[0]);
+            }
+        };
+
+        async function handleImageUpload(file) {
+            showToast('Uploading image to Cloudinary...', 'info');
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET || 'Menutech');
+
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.secure_url) {
+                    document.getElementById('promo-image-url').value = data.secure_url;
+                    updateLivePreview();
+                    showToast('Image uploaded successfully!', 'success');
+                    uploadBox.style.display = 'none';
+
+                    // Save to galeria table as well
+                    await sb.from('galeria').insert({
+                        user_id: activeOwnerId,
+                        domain: activeDomain || null,
+                        image_url: data.secure_url
+                    });
+                    await loadGalleryImages();
+                } else {
+                    throw new Error(data.error?.message || 'Upload failed');
+                }
+            } catch (err) {
+                showToast('Upload error: ' + err.message, 'error');
+            }
+        }
+
+        function renderGalleryThumbs() {
+            const grid = document.getElementById('gallery-grid');
+            const currentUrl = document.getElementById('promo-image-url').value;
+
+            if (restaurantGalleryImages.length === 0) {
+                grid.innerHTML = '<p style="font-size:0.8rem; color:var(--text-dim); grid-column:1/-1;">No images in gallery yet.</p>';
+                return;
+            }
+
+            grid.innerHTML = restaurantGalleryImages.map(url => `
+                <img src="${url}" class="gallery-thumb ${url === currentUrl ? 'selected' : ''}" data-url="${url}">
+            `).join('');
+
+            grid.querySelectorAll('.gallery-thumb').forEach(img => {
+                img.onclick = () => {
+                    grid.querySelectorAll('.gallery-thumb').forEach(i => i.classList.remove('selected'));
+                    img.classList.add('selected');
+                    document.getElementById('promo-image-url').value = img.dataset.url;
+                    updateLivePreview();
+                };
+            });
+        }
+
+        // Save Promotion Handler
+        document.getElementById('btn-save-promo').onclick = async () => {
+            const promoId = document.getElementById('promo-id').value;
+            const type = document.getElementById('promo-type').value;
+            const name = document.getElementById('promo-name').value.trim();
+            const headline = document.getElementById('promo-headline').value.trim();
+            const description = document.getElementById('promo-desc').value.trim();
+            const imageUrl = document.getElementById('promo-image-url').value.trim();
+
+            if (!name || !headline) {
+                showToast('Please enter both Promotion Name and Headline', 'error');
+                return;
+            }
+
+            // Collect Type Config
+            let config = {};
+            if (type === 'cart_percent') {
+                config.discount_percent = parseFloat(document.getElementById('cfg-discount-percent').value) || 20;
+                const maxD = document.getElementById('cfg-max-discount').value;
+                if (maxD) config.max_discount = parseFloat(maxD);
+            } else if (type === 'items_percent') {
+                const selectedItems = [];
+                document.querySelectorAll('#items-selection-table .dish-checkbox:checked').forEach(chk => {
+                    const row = chk.closest('tr');
+                    const pct = parseFloat(row.querySelector('.dish-pct-input').value) || 0;
+                    selectedItems.push({
+                        name: chk.dataset.name,
+                        original_price: parseFloat(chk.dataset.price),
+                        discount_percent: pct
+                    });
+                });
+                if (selectedItems.length === 0) {
+                    showToast('Please select at least one dish for items discount', 'error');
+                    return;
+                }
+                config.items = selectedItems;
+            } else if (type === 'free_delivery') {
+                config.free_delivery = true;
+            } else if (type === 'bogo') {
+                config.buy_item = document.getElementById('cfg-bogo-buy').value;
+                config.get_item = document.getElementById('cfg-bogo-get').value;
+                config.min_qty = parseInt(document.getElementById('cfg-bogo-min-qty').value) || 1;
+            } else if (type === 'cart_fixed') {
+                config.discount_amount = parseFloat(document.getElementById('cfg-fixed-amount').value) || 0;
+            } else if (type === 'payment_method') {
+                config.payment_method = document.getElementById('cfg-payment-method').value;
+                config.discount_percent = parseFloat(document.getElementById('cfg-pay-discount-pct').value) || 10;
+            } else if (type === 'free_item') {
+                config.free_item_name = document.getElementById('cfg-free-item').value;
+            }
+
+            // Conditions
+            const conditions = {
+                min_order_amount: parseFloat(document.getElementById('cond-min-order').value) || 0,
+                client_type: document.getElementById('cond-client-type').value,
+                order_type: document.getElementById('cond-order-type').value,
+                custom_coupon: document.getElementById('cond-coupon-code').value.trim().toUpperCase(),
+                start_date: document.getElementById('cond-start-date').value || null,
+                end_date: document.getElementById('cond-end-date').value || null
+            };
+
+            const payload = {
+                user_id: activeOwnerId,
+                domain: activeDomain || null,
+                name: name,
+                type: type,
+                headline: headline,
+                description: description || null,
+                image_url: imageUrl || null,
+                config: config,
+                conditions: conditions,
+                // RULE: Created promotions are inactive by default!
+                is_active: promoId ? promotionsList.find(p => p.id === promoId)?.is_active || false : false,
+                updated_at: new Date().toISOString()
+            };
+
+            if (promoId) {
+                const { error } = await sb.from('menutech_promotions').update(payload).eq('id', promoId);
+                if (error) {
+                    showToast('Error updating promotion: ' + error.message, 'error');
+                    return;
+                }
+                showToast('Promotion updated successfully!', 'success');
+            } else {
+                const { error } = await sb.from('menutech_promotions').insert(payload);
+                if (error) {
+                    showToast('Error creating promotion: ' + error.message, 'error');
+                    return;
+                }
+                showToast('Promotion created (INACTIVE by default). Activate it in the table when ready!', 'success');
+            }
+
+            modalEditor.style.display = 'none';
+            loadPromotions();
+        };
+
+        // Initialize on DOM load
+        initAuth();
+    </script>
+</body>
+</html>
