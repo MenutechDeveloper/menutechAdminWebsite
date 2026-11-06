@@ -340,13 +340,22 @@ class PrintService {
 
     sb.writeln("[C]--------------------------------");
 
-    // Delivery & Subtotal calculation
+    // Delivery, Discount & Subtotal calculation
     final fee = order.deliveryFee ?? 0.0;
-    if (fee > 0) {
-      final sub = order.subtotal ?? (order.totalAmount - fee);
+    final discount = order.discountAmount ?? 0.0;
+    final promoName = order.appliedPromo?['headline'] ?? order.appliedPromo?['name'];
+
+    if (fee > 0 || discount > 0) {
+      final sub = order.subtotal ?? (order.totalAmount - fee + discount);
       sb.writeln("[L]Subtotal:[R]\$ ${sub.toStringAsFixed(2)}");
-      final zoneLabel = order.deliveryZoneName != null ? "Delivery (${order.deliveryZoneName}):" : "Delivery Fee:";
-      sb.writeln("[L]$zoneLabel[R]\$ ${fee.toStringAsFixed(2)}");
+      if (fee > 0) {
+        final zoneLabel = order.deliveryZoneName != null ? "Delivery (${order.deliveryZoneName}):" : "Delivery Fee:";
+        sb.writeln("[L]$zoneLabel[R]\$ ${fee.toStringAsFixed(2)}");
+      }
+      if (discount > 0) {
+        final label = promoName != null ? "Promo ($promoName):" : "Promo Discount:";
+        sb.writeln("[L]$label[R]-\$ ${discount.toStringAsFixed(2)}");
+      }
       sb.writeln("[C]--------------------------------");
     }
 

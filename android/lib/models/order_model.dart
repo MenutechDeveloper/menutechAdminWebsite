@@ -13,6 +13,8 @@ class OrderModel {
   final double? subtotal;
   final double? deliveryFee;
   final String? deliveryZoneName;
+  final double? discountAmount;
+  final Map<String, dynamic>? appliedPromo;
   final List<OrderItem> items;
   final DateTime createdAt;
   final String? customerNotes;
@@ -34,6 +36,8 @@ class OrderModel {
     this.subtotal,
     this.deliveryFee,
     this.deliveryZoneName,
+    this.discountAmount,
+    this.appliedPromo,
     required this.items,
     required this.createdAt,
     this.customerNotes,
@@ -67,6 +71,10 @@ class OrderModel {
       subtotal: json['subtotal'] != null ? (json['subtotal'] as num).toDouble() : null,
       deliveryFee: json['delivery_fee'] != null ? (json['delivery_fee'] as num).toDouble() : null,
       deliveryZoneName: json['delivery_zone_name'],
+      discountAmount: json['discount_amount'] != null ? (json['discount_amount'] as num).toDouble() : null,
+      appliedPromo: json['applied_promo'] is Map<String, dynamic>
+          ? json['applied_promo']
+          : (json['applied_promo'] is String ? (jsonDecode(json['applied_promo']) as Map<String, dynamic>?) : null),
       items: itemsList,
       createdAt: DateTime.parse(json['created_at']).toLocal(),
       customerNotes: json['customer_notes'],

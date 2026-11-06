@@ -21,6 +21,8 @@ class UnifiedItem {
   final double? subtotal;
   final double? deliveryFee;
   final String? deliveryZoneName;
+  final double? discountAmount;
+  final Map<String, dynamic>? appliedPromo;
   final List<OrderItem> items;
   final String? customerNotes;
   final String? paymentMethod;
@@ -51,6 +53,8 @@ class UnifiedItem {
     this.subtotal,
     this.deliveryFee,
     this.deliveryZoneName,
+    this.discountAmount,
+    this.appliedPromo,
     this.items = const [],
     this.customerNotes,
     this.paymentMethod,
@@ -91,6 +95,10 @@ class UnifiedItem {
       subtotal: json['subtotal'] != null ? (json['subtotal'] as num).toDouble() : null,
       deliveryFee: json['delivery_fee'] != null ? (json['delivery_fee'] as num).toDouble() : null,
       deliveryZoneName: json['delivery_zone_name'],
+      discountAmount: json['discount_amount'] != null ? (json['discount_amount'] as num).toDouble() : null,
+      appliedPromo: json['applied_promo'] is Map<String, dynamic>
+          ? json['applied_promo']
+          : (json['applied_promo'] is String ? (jsonDecode(json['applied_promo']) as Map<String, dynamic>?) : null),
       items: itemsList,
       customerNotes: json['customer_notes'],
       paymentMethod: json['payment_method'],
@@ -197,6 +205,8 @@ class UnifiedItem {
       subtotal: subtotal,
       deliveryFee: deliveryFee,
       deliveryZoneName: deliveryZoneName,
+      discountAmount: discountAmount,
+      appliedPromo: appliedPromo,
       items: items,
       createdAt: createdAt,
       customerNotes: customerNotes,
