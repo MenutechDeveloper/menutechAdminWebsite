@@ -53,9 +53,9 @@
       margin: 0 auto;
     }
 
-    /* BARRA SUPERIOR DISCRETA (SOLO ADMINS AUTENTICADOS) */
+    /* BARRA SUPERIOR DISCRETA (SOLO VISIBLE SI ES ADMIN AUTENTICADO) */
     .top-bar {
-      display: none; /* Oculta por defecto para visitantes */
+      display: none; /* Oculta por defecto para visitantes sin sesion */
       justify-content: flex-end;
       align-items: center;
       gap: 12px;
@@ -64,7 +64,7 @@
     }
 
     body.is-admin-user .top-bar {
-      display: flex; /* Solo se muestra si el usuario logueado tiene rol ADMIN o DEVELOPER */
+      display: flex; /* Se muestra automáticamente si la sesión activa es de ADMIN/DEVELOPER */
     }
 
     .btn {
@@ -616,7 +616,7 @@
 
     // ESTADO
     let objectives = [];
-    let isUserAdmin = false;     // Si el usuario autenticado tiene rol de ADMIN o DEVELOPER en profiles
+    let isUserAdmin = false;     // Si el usuario autenticado tiene rol de ADMIN/DEVELOPER/CS/ADMINCS en profiles
     let isEditingActive = false; // Si el admin activó el modo de edición
     let editingId = null;
 
@@ -643,7 +643,7 @@
     }
 
     function saveData() {
-      if (!isUserAdmin) return; // Protección: solo guarda cambios si es admin verificado
+      if (!isUserAdmin) return;
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(objectives));
       } catch (e) {
@@ -651,37 +651,71 @@
       }
     }
 
-    // VERIFICACION ESTRICTA DE SEGURIDAD CON SUPABASE:
-    // Solo usuarios autenticados con rol ADMIN o DEVELOPER en public.profiles tienen acceso de edición.
-    async function verifyAdminAuthentication() {
+    // Helper: Extraer usuario de la sesión de Supabase o directamente de localStorage
+    function getStoredAuthUser() {
       try {
-        if (!sb || !sb.auth) {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.startsWith('sb-') || key.includes('supabase')) && (key.endsWith('-auth-token') || key.includes('auth'))) {
+            const raw = localStorage.getItem(key);
+            if (!raw) continue;
+            const parsed = JSON.parse(raw);
+            const user = parsed.user || (parsed.session ? parsed.session.user : null) || (parsed.currentSession ? parsed.currentSession.user : null);
+            if (user && user.id) return user;
+          }
+        }
+      } catch (e) {
+        console.warn("Error leyendo localStorage de Supabase:", e);
+      }
+      return null;
+    }
+
+    // VERIFICACION ESTRICTA DE SEGURIDAD CON SUPABASE:
+    // Detecta la sesión iniciada en menutech.io (vía sb.auth o localStorage) y consulta public.profiles
+    window.verifyAdminAuth = async function verifyAdminAuthentication() {
+      try {
+        let userId = null;
+
+        // 1. Intentar obtener la sesión activa de Supabase
+        if (sb && sb.auth) {
+          const { data } = await sb.auth.getSession();
+          if (data && data.session && data.session.user) {
+            userId = data.session.user.id;
+          }
+        }
+
+        // 2. Si no la resolvió de inmediato, consultar el token almacenado en localStorage
+        if (!userId) {
+          const storedUser = getStoredAuthUser();
+          if (storedUser && storedUser.id) {
+            userId = storedUser.id;
+          }
+        }
+
+        // Si no hay usuario en sesión, deshabilitar interfaz de admin
+        if (!userId) {
           disableAdminUI();
           return;
         }
 
-        const { data: { session }, error: sessionError } = await sb.auth.getSession();
-        if (sessionError || !session || !session.user) {
-          disableAdminUI();
-          return;
-        }
-
-        // Consultar el rol del usuario en la tabla profiles
-        const { data: profile, error: profileError } = await sb
+        // 3. Consultar el rol del usuario en la tabla profiles
+        const { data, error } = await sb
           .from('profiles')
           .select('role')
-          .eq('id', session.user.id)
-          .single();
+          .eq('id', userId);
 
-        if (profileError || !profile) {
+        const profile = (data && data.length > 0) ? data[0] : null;
+
+        if (error || !profile) {
+          console.warn("No se pudo obtener el perfil para verificación de admin:", error);
           disableAdminUI();
           return;
         }
 
         const role = (profile.role || '').trim().toUpperCase();
-        const allowedRoles = ['ADMIN', 'DEVELOPER'];
+        const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'];
 
-        if (allowedRoles.includes(role)) {
+        if (privilegedRoles.includes(role)) {
           enableAdminUI();
         } else {
           disableAdminUI();
@@ -707,7 +741,7 @@
     }
 
     function toggleEditMode() {
-      if (!isUserAdmin) return; // Doble validación de seguridad
+      if (!isUserAdmin) return;
 
       isEditingActive = !isEditingActive;
       const btnToggle = document.getElementById("btn-toggle-admin");
@@ -1009,9 +1043,20 @@
       window.addEventListener("keydown", (e) => {
         if (e.key === "Escape") closeVideoModal();
       });
+
+      // Escuchar cambios de autenticación en vivo de Supabase
+      if (sb && sb.auth && sb.auth.onAuthStateChange) {
+        sb.auth.onAuthStateChange((event, session) => {
+          window.verifyAdminAuth();
+        });
+      }
     }
 
-    document.addEventListener("DOMContentLoaded", init);
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
   </script>
 </body>
 </html>
