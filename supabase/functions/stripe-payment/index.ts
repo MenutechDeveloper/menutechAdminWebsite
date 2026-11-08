@@ -201,49 +201,13 @@ serve(async (req: Request) => {
       params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
       params.append("line_items[0][quantity]", "1");
 
-      // Verify restaurant Online Payments subscription status & payment mode
-      const { data: payConfig } = await supabaseAdmin
-        .from("menutech_restaurant_payment_configs")
-        .select("*")
-        .eq("restaurant_id", order.user_id)
-        .maybeSingle();
-
-      const isSubscribed = payConfig?.free_access || payConfig?.is_active;
-      if (payConfig && !isSubscribed) {
-        return new Response(
-          JSON.stringify({ error: "Online payments service is currently suspended or inactive for this restaurant" }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Check if Menutech Commission mode is enabled and calculate application_fee_amount
-      let applicationFeeCents = 0;
-      if (payConfig && payConfig.payment_mode === "menutech_commission") {
-        let commPercent = payConfig.commission_percent;
-        if (commPercent === null || commPercent === undefined) {
-          const { data: globalCfg } = await supabaseAdmin
-            .from("menutech_online_payment_config")
-            .select("global_commission_percent")
-            .limit(1)
-            .maybeSingle();
-          commPercent = globalCfg?.global_commission_percent ?? 5.0;
-        }
-        if (commPercent > 0) {
-          applicationFeeCents = Math.round((amountInCents * commPercent) / 100);
-        }
-      }
-
       // Destination Charge: money flows directly to restaurant's connected account
       params.append("transfer_data[destination]", stripeAcc.stripe_account_id);
-      if (applicationFeeCents > 0) {
-        params.append("application_fee_amount", applicationFeeCents.toString());
-      }
 
       // Metadata for webhook correlation
       params.append("metadata[order_id]", order.id);
       params.append("metadata[user_id]", order.user_id);
       params.append("metadata[type]", "order");
-      params.append("metadata[commission_cents]", applicationFeeCents.toString());
 
       params.append("success_url", `${baseOrigin}/menu.html?domain=${order.domain || ''}&order_paid=true&order_id=${order.id}`);
       params.append("cancel_url", `${baseOrigin}/menu.html?domain=${order.domain || ''}&order_canceled=true&order_id=${order.id}`);
@@ -341,46 +305,10 @@ serve(async (req: Request) => {
       params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
       params.append("line_items[0][quantity]", "1");
 
-      // Verify restaurant Online Payments subscription status & payment mode
-      const { data: payConfigRes } = await supabaseAdmin
-        .from("menutech_restaurant_payment_configs")
-        .select("*")
-        .eq("restaurant_id", resv.user_id)
-        .maybeSingle();
-
-      const isResSubscribed = payConfigRes?.free_access || payConfigRes?.is_active;
-      if (payConfigRes && !isResSubscribed) {
-        return new Response(
-          JSON.stringify({ error: "Online payments service is currently suspended or inactive for this restaurant" }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Check if Menutech Commission mode is enabled
-      let applicationFeeCentsRes = 0;
-      if (payConfigRes && payConfigRes.payment_mode === "menutech_commission") {
-        let commPercent = payConfigRes.commission_percent;
-        if (commPercent === null || commPercent === undefined) {
-          const { data: globalCfg } = await supabaseAdmin
-            .from("menutech_online_payment_config")
-            .select("global_commission_percent")
-            .limit(1)
-            .maybeSingle();
-          commPercent = globalCfg?.global_commission_percent ?? 5.0;
-        }
-        if (commPercent > 0) {
-          applicationFeeCentsRes = Math.round((amountInCents * commPercent) / 100);
-        }
-      }
-
       params.append("transfer_data[destination]", stripeAcc.stripe_account_id);
-      if (applicationFeeCentsRes > 0) {
-        params.append("application_fee_amount", applicationFeeCentsRes.toString());
-      }
       params.append("metadata[reservation_id]", resv.id);
       params.append("metadata[user_id]", resv.user_id);
       params.append("metadata[type]", "reservation");
-      params.append("metadata[commission_cents]", applicationFeeCentsRes.toString());
 
       params.append("success_url", `${baseOrigin}/menu.html?domain=${resv.domain || ''}&res_paid=true&res_id=${resv.id}`);
       params.append("cancel_url", `${baseOrigin}/menu.html?domain=${resv.domain || ''}&res_canceled=true&res_id=${resv.id}`);
