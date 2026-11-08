@@ -211,6 +211,80 @@
         .hidden { display: none !important; }
 
         @media (max-width: 768px) { .dashboard-layout { flex-direction: column; } .sidebar-container { position: relative; top: 0; transform: none !important; width: 100%; margin-bottom: 20px; } .sidebar { width: 100%; height: auto; } }
+
+        /* Centralized Administrator View & Tabs */
+        .admin-nav-tabs {
+            display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px;
+        }
+        .admin-nav-tab {
+            background: var(--input); border: 1px solid var(--border); padding: 10px 18px; border-radius: 12px;
+            font-size: 0.82rem; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: all 0.25s ease;
+        }
+        .admin-nav-tab:hover {
+            border-color: var(--orange); color: var(--orange);
+        }
+        .admin-nav-tab.active {
+            background: var(--orange); color: #ffffff; border-color: var(--orange); box-shadow: 0 4px 14px rgba(255, 149, 51, 0.3);
+        }
+        .admin-tab-pane {
+            display: none; animation: fadeIn 0.3s ease-out;
+        }
+        .admin-tab-pane.active {
+            display: block;
+        }
+        .badge-mode {
+            display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .badge-mode.own-stripe {
+            background: rgba(37, 99, 235, 0.12); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.25);
+        }
+        .badge-mode.commission {
+            background: rgba(255, 149, 51, 0.12); color: var(--orange); border: 1px solid rgba(255, 149, 51, 0.3);
+        }
+        .badge-status-pill {
+            display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+        }
+        .badge-status-pill.active { background: rgba(5, 150, 105, 0.12); color: #059669; }
+        .badge-status-pill.pending { background: rgba(217, 119, 6, 0.12); color: #d97706; }
+        .badge-status-pill.suspended { background: rgba(220, 38, 38, 0.12); color: #dc2626; }
+        .badge-free {
+            background: #8b5cf6; color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: 8px; margin-left: 6px; font-weight: 800;
+        }
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999;
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 500px;
+            padding: 30px; box-shadow: 0 25px 60px rgba(0,0,0,0.3); animation: fadeIn 0.25s ease-out;
+        }
+        .modal-card h3 { font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; color: var(--text); }
+        .modal-card p { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--orange); text-transform: uppercase; margin-bottom: 8px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--input);
+            color: var(--text); font-family: inherit; font-size: 0.9rem;
+        }
+        .paywall-card {
+            background: var(--card); border: 2px solid var(--orange); border-radius: 28px; padding: 48px; text-align: center;
+            max-width: 650px; margin: 40px auto; box-shadow: 0 20px 50px rgba(255, 149, 51, 0.12);
+        }
+        .paywall-badge {
+            display: inline-block; background: rgba(255, 149, 51, 0.15); color: var(--orange); font-size: 0.75rem;
+            font-weight: 800; text-transform: uppercase; padding: 6px 16px; border-radius: 30px; margin-bottom: 20px;
+        }
+        .paywall-price {
+            font-size: 3.5rem; font-weight: 800; color: var(--text); margin: 16px 0 8px 0; font-family: 'Outfit', sans-serif;
+        }
+        .paywall-price span { font-size: 1.2rem; font-weight: 600; color: var(--text-dim); }
+        .paywall-features {
+            list-style: none; padding: 0; margin: 24px 0 32px 0; text-align: left; display: inline-block;
+        }
+        .paywall-features li {
+            padding: 8px 0; font-size: 0.95rem; color: var(--text); display: flex; align-items: center; gap: 10px;
+        }
+
     </style>
 </head>
 <body>
@@ -261,7 +335,350 @@
             </div>
 
             <div class="main-content">
-                <div class="config-card">
+
+                <!-- ========================================== -->
+                <!-- 1. ADMINISTRATOR VIEW (7 CENTRAL TABS)     -->
+                <!-- ========================================== -->
+                <div id="admin-view" class="hidden">
+                    <!-- Administrator Navigation Tabs -->
+                    <div class="admin-nav-tabs">
+                        <button class="admin-nav-tab active" onclick="switchAdminTab('overview')" id="tab-btn-overview">Overview</button>
+                        <button class="admin-nav-tab" onclick="switchAdminTab('pricing')" id="tab-btn-pricing">Service Pricing</button>
+                        <button class="admin-nav-tab" onclick="switchAdminTab('subscriptions')" id="tab-btn-subscriptions">Subscriptions</button>
+                        <button class="admin-nav-tab" onclick="switchAdminTab('modes')" id="tab-btn-modes">Payment Modes</button>
+                        <button class="admin-nav-tab" onclick="switchAdminTab('commissions')" id="tab-btn-commissions">Commission Settings</button>
+                        <button class="admin-nav-tab" onclick="switchAdminTab('transactions')" id="tab-btn-transactions">Transactions</button>
+                        <button class="admin-nav-tab" onclick="switchAdminTab('reports')" id="tab-btn-reports">Reports</button>
+                    </div>
+
+                    <!-- TAB 1: OVERVIEW -->
+                    <div id="pane-overview" class="admin-tab-pane active">
+                        <div class="config-card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="lbl-admin-overview-title">Online Payments Overview</h2>
+                                    <p id="lbl-admin-overview-desc" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">High-level business metrics for Online Payments subscriptions and transactions.</p>
+                                </div>
+                                <button class="btn-action btn-secondary" onclick="loadAllAdminData()" style="padding: 10px 18px; font-size: 0.8rem;">Refresh Data</button>
+                            </div>
+                            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-top: 15px;">
+                                <div class="stat-box">
+                                    <label id="lbl-stat-active-subs">Active Subscriptions</label>
+                                    <div class="stat-value" id="stat-active-subs-count">0</div>
+                                </div>
+                                <div class="stat-box">
+                                    <label id="lbl-stat-mrr">Monthly Subscriptions Rev.</label>
+                                    <div class="stat-value" id="stat-mrr-total">$0.00</div>
+                                </div>
+                                <div class="stat-box">
+                                    <label id="lbl-stat-comm-rev">Total Commissions Rev.</label>
+                                    <div class="stat-value" id="stat-comm-rev-total">$0.00</div>
+                                </div>
+                                <div class="stat-box">
+                                    <label id="lbl-stat-processed-vol">Total Volume Processed</label>
+                                    <div class="stat-value" id="stat-processed-vol-total">$0.00</div>
+                                </div>
+                                <div class="stat-box">
+                                    <label id="lbl-stat-payout-dist">Distributed to Restaurants</label>
+                                    <div class="stat-value" id="stat-payout-dist-total">$0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: SERVICE PRICING -->
+                    <div id="pane-pricing" class="admin-tab-pane">
+                        <div class="config-card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="lbl-pricing-title">Monthly Subscription Pricing</h2>
+                                    <p id="lbl-pricing-desc" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Configure the monthly price and commercialization availability of the Online Payments service.</p>
+                                </div>
+                                <div id="pricing-commercial-badge" class="status-badge connected">Commercialization: Active</div>
+                            </div>
+                            <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 24px;">
+                                <div class="info-box">
+                                    <label id="lbl-current-monthly-price">Current Monthly Price</label>
+                                    <div class="value" id="val-current-monthly-price" style="font-size: 1.4rem; font-weight: 800; color: var(--orange);">$29.00 USD</div>
+                                </div>
+                                <div class="info-box">
+                                    <label id="lbl-comm-status-label">Commercialization Status</label>
+                                    <div class="value" id="val-commercialization-status">Available for Purchase</div>
+                                </div>
+                            </div>
+
+                            <!-- Edit Price Form -->
+                            <div style="background: var(--input); border: 1px solid var(--border); border-radius: 18px; padding: 24px; margin-bottom: 30px;">
+                                <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 16px;" id="lbl-update-pricing-title">Update Service Pricing</h3>
+                                <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end;">
+                                    <div style="flex: 1; min-width: 180px;">
+                                        <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--orange); text-transform:uppercase; margin-bottom:8px;" id="lbl-new-price-input">New Monthly Price ($ USD)</label>
+                                        <input type="number" id="input-new-price" step="0.01" min="0" placeholder="29.00" style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:var(--card); color:var(--text);">
+                                    </div>
+                                    <div style="flex: 1; min-width: 180px;">
+                                        <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--orange); text-transform:uppercase; margin-bottom:8px;" id="lbl-commercial-toggle">Commercialization</label>
+                                        <select id="select-commercial-active" style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:var(--card); color:var(--text);">
+                                            <option value="true">Active (Clients can purchase)</option>
+                                            <option value="false">Disabled (Unavailable for clients)</option>
+                                        </select>
+                                    </div>
+                                    <div style="flex: 2; min-width: 240px;">
+                                        <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--orange); text-transform:uppercase; margin-bottom:8px;" id="lbl-price-change-notes">Reason / Notes for Change</label>
+                                        <input type="text" id="input-price-notes" placeholder="e.g. Seasonal promotion, inflation adjustment" style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:var(--card); color:var(--text);">
+                                    </div>
+                                    <div>
+                                        <button class="btn-action btn-orange" onclick="saveServicePricing()" style="height: 46px; padding: 0 24px;" id="btn-save-price-label">Save New Price</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Price Audit Trail / History -->
+                            <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 14px;" id="lbl-pricing-history-title">Price Change Audit History</h3>
+                            <div class="table-responsive">
+                                <table class="custom-table" id="table-price-history">
+                                    <thead>
+                                        <tr>
+                                            <th>Effective Date</th>
+                                            <th>Monthly Price</th>
+                                            <th>Commercialization</th>
+                                            <th>Changed By</th>
+                                            <th>Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-price-history">
+                                        <tr><td colspan="5" style="text-align:center; color:var(--text-dim);">No price change history recorded yet.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: SUBSCRIPTIONS -->
+                    <div id="pane-subscriptions" class="admin-tab-pane">
+                        <div class="config-card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="lbl-subscriptions-mgmt-title">Restaurant Subscriptions</h2>
+                                    <p id="lbl-subscriptions-mgmt-desc" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Manage client online payment subscriptions, manual activations, renewals, and expiration dates.</p>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="text" id="filter-subs-search" placeholder="Filter by name or domain..." oninput="renderSubscriptionsTable()" style="padding: 10px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--input); color: var(--text); font-size: 0.82rem; width: 220px;">
+                                </div>
+                            </div>
+                            <div class="table-responsive" style="margin-top: 15px;">
+                                <table class="custom-table" id="table-subscriptions">
+                                    <thead>
+                                        <tr>
+                                            <th>Restaurant</th>
+                                            <th>Domain</th>
+                                            <th>Service Status</th>
+                                            <th>Expiration Date</th>
+                                            <th>Days Left</th>
+                                            <th>Free Access</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-subscriptions">
+                                        <tr><td colspan="7" style="text-align:center;">Loading subscriptions...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: PAYMENT MODES -->
+                    <div id="pane-modes" class="admin-tab-pane">
+                        <div class="config-card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="lbl-modes-mgmt-title">Authorized Payment Modes</h2>
+                                    <p id="lbl-modes-mgmt-desc" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Authorize restaurants to use Own Stripe Account or Menutech Commission mode.</p>
+                                </div>
+                            </div>
+                            <div class="table-responsive" style="margin-top: 15px;">
+                                <table class="custom-table" id="table-payment-modes">
+                                    <thead>
+                                        <tr>
+                                            <th>Restaurant</th>
+                                            <th>Authorized Mode</th>
+                                            <th>Stripe Connect Status</th>
+                                            <th>Charges Enabled</th>
+                                            <th>Payouts Enabled</th>
+                                            <th>Switch Mode</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-payment-modes">
+                                        <tr><td colspan="6" style="text-align:center;">Loading payment modes...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 5: COMMISSION SETTINGS -->
+                    <div id="pane-commissions" class="admin-tab-pane">
+                        <div class="config-card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="lbl-comm-mgmt-title">Commission Settings</h2>
+                                    <p id="lbl-comm-mgmt-desc" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Set global commission percentage and customize specific restaurant commission rates without altering code.</p>
+                                </div>
+                            </div>
+
+                            <!-- Global Commission Config Card -->
+                            <div style="background: var(--input); border: 1px solid var(--border); border-radius: 18px; padding: 24px; margin-bottom: 30px;">
+                                <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 16px;" id="lbl-global-comm-title">Global Default Commission</h3>
+                                <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+                                    <div style="width: 220px;">
+                                        <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--orange); text-transform:uppercase; margin-bottom:8px;" id="lbl-global-comm-pct">Global Rate (%)</label>
+                                        <input type="number" id="input-global-commission" step="0.1" min="0" max="100" placeholder="5.0" style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:var(--card); color:var(--text);">
+                                    </div>
+                                    <button class="btn-action btn-orange" onclick="saveGlobalCommission()" style="height: 46px; padding: 0 24px;" id="btn-save-global-comm">Update Global Rate</button>
+                                </div>
+                            </div>
+
+                            <!-- Custom Commission per Restaurant -->
+                            <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 14px;" id="lbl-custom-comm-title">Restaurant Commission Rates & Generated Revenue</h3>
+                            <div class="table-responsive">
+                                <table class="custom-table" id="table-commissions">
+                                    <thead>
+                                        <tr>
+                                            <th>Restaurant</th>
+                                            <th>Payment Mode</th>
+                                            <th>Applied Rate</th>
+                                            <th>Rate Type</th>
+                                            <th>Total Generated Revenue</th>
+                                            <th>Total Commission for Menutech</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-commissions">
+                                        <tr><td colspan="7" style="text-align:center;">Loading commission settings...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 6: TRANSACTIONS -->
+                    <div id="pane-transactions" class="admin-tab-pane">
+                        <div class="config-card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="lbl-transactions-title">Global Transactions Feed</h2>
+                                    <p id="lbl-transactions-desc" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Real-time feed of all processed payments across all restaurants.</p>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <button class="btn-action btn-secondary" onclick="exportAdminTransactionsCSV()" style="padding: 10px 18px; font-size: 0.8rem;">Export CSV</button>
+                                    <button class="btn-action btn-secondary" onclick="loadAllPaymentLogs()" style="padding: 10px 18px; font-size: 0.8rem;">Refresh</button>
+                                </div>
+                            </div>
+                            <div class="table-responsive" style="margin-top: 15px;">
+                                <table class="custom-table" id="table-global-transactions">
+                                    <thead>
+                                        <tr>
+                                            <th>Date & Time</th>
+                                            <th>Restaurant</th>
+                                            <th>Customer / Diner</th>
+                                            <th>Total Paid</th>
+                                            <th>Menutech Fee</th>
+                                            <th>Net to Restaurant</th>
+                                            <th>Mode</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-global-transactions">
+                                        <tr><td colspan="8" style="text-align:center;">Loading transactions...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 7: REPORTS -->
+                    <div id="pane-reports" class="admin-tab-pane">
+                        <div class="config-card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 id="lbl-reports-title">Financial & Operational Reports</h2>
+                                    <p id="lbl-reports-desc" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Breakdown of subscriptions revenue, commission earnings, restaurant payouts, refunds, and transfers.</p>
+                                </div>
+                                <button class="btn-action btn-secondary" onclick="exportFinancialSummaryCSV()" style="padding: 10px 18px; font-size: 0.8rem;">Export Financial Report</button>
+                            </div>
+                            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 15px;">
+                                <div class="stat-box">
+                                    <label id="lbl-rep-subs-rev">Monthly Subscriptions Collected</label>
+                                    <div class="stat-value" id="rep-subs-collected">$0.00</div>
+                                </div>
+                                <div class="stat-box">
+                                    <label id="lbl-rep-comm-rev">Commissions Earned</label>
+                                    <div class="stat-value" id="rep-comm-collected">$0.00</div>
+                                </div>
+                                <div class="stat-box">
+                                    <label id="lbl-rep-net-dist">Distributed to Restaurants</label>
+                                    <div class="stat-value" id="rep-net-distributed">$0.00</div>
+                                </div>
+                                <div class="stat-box">
+                                    <label id="lbl-rep-refunds">Total Refunds / Chargebacks</label>
+                                    <div class="stat-value" id="rep-refunds-total">$0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- 2. RESTAURANT VIEW (OWNER INTERFACE)       -->
+                <!-- ========================================== -->
+                <div id="restaurant-view" class="hidden">
+                    <!-- A. Paywall View (When not subscribed) -->
+                    <div id="restaurant-paywall" class="paywall-card hidden">
+                        <div class="paywall-badge">Online Payments Feature</div>
+                        <h2 style="font-size: 2rem; font-weight: 800;" id="lbl-paywall-headline">Activate Online Payments for Your Restaurant</h2>
+                        <p style="color: var(--text-dim); margin-top: 12px; font-size: 1rem;" id="lbl-paywall-subheadline">
+                            Accept credit and debit cards directly from your digital menu and table reservation widget with Stripe Connect.
+                        </p>
+                        <div class="paywall-price" id="lbl-paywall-display-price">$29 <span>/ month</span></div>
+                        <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 20px;">No lock-in contract. Cancel anytime.</p>
+                        <div>
+                            <ul class="paywall-features">
+                                <li>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" style="width:20px;height:20px;"><polyline points="20 6 9 17 4 12"/></svg>
+                                    <span>Accept Visa, Mastercard, AMEX & Apple Pay</span>
+                                </li>
+                                <li>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" style="width:20px;height:20px;"><polyline points="20 6 9 17 4 12"/></svg>
+                                    <span>Automatic deposits directly to your bank account</span>
+                                </li>
+                                <li>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" style="width:20px;height:20px;"><polyline points="20 6 9 17 4 12"/></svg>
+                                    <span>Real-time payment audit log and automated receipts</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <button class="btn-action btn-orange" onclick="requestSubscriptionActivation()" style="font-size: 1rem; padding: 14px 32px; border-radius: 16px; margin: 0 auto;" id="btn-request-activation">
+                                Subscribe Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- B. Subscribed Active Interface -->
+                    <div id="restaurant-active-panel" class="hidden">
+                        <!-- Mode Banner for Restaurant -->
+                        <div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-card); padding: 16px 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+                            <div>
+                                <div style="font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Authorized Payment Mode</div>
+                                <div style="margin-top: 4px;">
+                                    <span id="rest-auth-mode-badge" class="badge-mode own-stripe">Own Stripe Account</span>
+                                </div>
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-dim); text-align: right;">
+                                Subscription Status: <span style="color: var(--success); font-weight: 700;">Active</span>
+                            </div>
+                        </div>
+
+<div class="config-card">
                     <div class="card-header">
                         <div>
                             <h2 id="lbl-stripe-integration-title">Stripe Integration</h2>
@@ -382,9 +799,59 @@
 
                 </div>
             </div>
+
+                    </div>
+                </div>
+
+                <!-- MODAL: Edit Due Date / Notes -->
+                <div id="modal-edit-sub" class="modal-overlay hidden">
+                    <div class="modal-card">
+                        <h3 id="lbl-modal-sub-title">Edit Subscription Details</h3>
+                        <p id="lbl-modal-sub-desc">Update next due date, notes, or toggle free access.</p>
+                        <input type="hidden" id="edit-sub-restaurant-id">
+                        <div class="form-group">
+                            <label id="lbl-edit-due-date">Expiration / Due Date</label>
+                            <input type="date" id="edit-sub-due-date">
+                        </div>
+                        <div class="form-group">
+                            <label id="lbl-edit-free-access">Free Access (No Expiration)</label>
+                            <select id="edit-sub-free-access">
+                                <option value="false">No (Standard Subscription)</option>
+                                <option value="true">Yes (Complimentary / Free Access)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label id="lbl-edit-sub-notes">Internal Notes</label>
+                            <textarea id="edit-sub-notes" rows="3" placeholder="Admin notes..."></textarea>
+                        </div>
+                        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                            <button class="btn-action btn-secondary" onclick="closeEditSubModal()">Cancel</button>
+                            <button class="btn-action btn-orange" onclick="saveSubscriptionEdit()">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL: Custom Commission Percentage -->
+                <div id="modal-edit-comm" class="modal-overlay hidden">
+                    <div class="modal-card">
+                        <h3 id="lbl-modal-comm-title">Set Custom Commission Rate</h3>
+                        <p id="lbl-modal-comm-desc">Override global commission for this specific restaurant.</p>
+                        <input type="hidden" id="edit-comm-restaurant-id">
+                        <div class="form-group">
+                            <label id="lbl-edit-comm-rate">Custom Commission Percentage (%)</label>
+                            <input type="number" id="edit-comm-rate" step="0.1" min="0" max="100" placeholder="e.g. 3.5 (leave empty to use global rate)">
+                        </div>
+                        <p style="font-size: 0.75rem; color: var(--text-dim);">If cleared or set to empty, the global commission rate will be automatically applied.</p>
+                        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                            <button class="btn-action btn-secondary" onclick="closeEditCommModal()">Cancel</button>
+                            <button class="btn-action btn-orange" onclick="saveCustomCommission()">Save Rate</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
-
     <script type="module">
         import { supabase as sb } from './supabase.js';
 
@@ -673,21 +1140,719 @@
             applyLanguage(selectedLang);
         }
 
+
+        // =========================================================
+        // CENTRALIZED ONLINE PAYMENTS ADMIN STATE & METHODS
+        // =========================================================
+        window.activeAdminTab = 'overview';
+        window.allProfiles = [];
+        window.paymentConfigs = {};
+        window.globalOnlinePaymentConfig = { monthly_price: 29.00, is_commercialized: true, global_commission_percent: 5.0 };
+        window.allStripeAccounts = [];
+        window.allPaymentLogs = [];
+        window.priceHistory = [];
+
+        window.switchAdminTab = function(tabName) {
+            window.activeAdminTab = tabName;
+            document.querySelectorAll('.admin-nav-tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.remove('active'));
+
+            const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+            const activePane = document.getElementById(`pane-${tabName}`);
+            if (activeBtn) activeBtn.classList.add('active');
+            if (activePane) activePane.classList.add('active');
+
+            if (tabName === 'overview') renderOverviewTab();
+            if (tabName === 'pricing') renderPricingTab();
+            if (tabName === 'subscriptions') renderSubscriptionsTable();
+            if (tabName === 'modes') renderPaymentModesTable();
+            if (tabName === 'commissions') renderCommissionsTable();
+            if (tabName === 'transactions') renderGlobalTransactionsTable();
+            if (tabName === 'reports') renderReportsTab();
+        };
+
+        window.loadAllAdminData = async function() {
+            try {
+                // 0. Fetch All Authentic Profiles
+                const { data: profiles } = await sb.from('profiles').select('*');
+                window.allProfiles = profiles || [];
+
+                // 1. Fetch Global Online Payment Config
+                const { data: globalConf } = await sb.from('menutech_online_payment_config').select('*').limit(1).maybeSingle();
+                if (globalConf) {
+                    window.globalOnlinePaymentConfig = globalConf;
+                }
+
+                // 2. Fetch Price History
+                const { data: history } = await sb.from('menutech_online_payment_price_history').select('*').order('effective_at', { ascending: false });
+                window.priceHistory = history || [];
+
+                // 3. Fetch All Restaurant Payment Configs
+                const { data: configs } = await sb.from('menutech_restaurant_payment_configs').select('*');
+                window.paymentConfigs = {};
+                (configs || []).forEach(c => {
+                    window.paymentConfigs[c.restaurant_id] = c;
+                });
+
+                // 4. Fetch All Connected Accounts
+                const { data: accounts } = await sb.from('menutech_stripe_accounts').select('*');
+                window.allStripeAccounts = accounts || [];
+
+                // 5. Fetch All Payment Logs
+                await loadAllPaymentLogs();
+
+                // Re-render current admin tab
+                window.switchAdminTab(window.activeAdminTab || 'overview');
+            } catch (err) {
+                console.error("Error loading admin data:", err);
+            }
+        };
+
+        window.loadAllPaymentLogs = async function() {
+            try {
+                const { data: logs, error } = await sb.from('menutech_payment_logs')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(500);
+                window.allPaymentLogs = logs || [];
+                if (window.activeAdminTab === 'transactions') renderGlobalTransactionsTable();
+                if (window.activeAdminTab === 'reports') renderReportsTab();
+                if (window.activeAdminTab === 'overview') renderOverviewTab();
+            } catch (e) {
+                console.error("Error loading all payment logs:", e);
+            }
+        };
+
+        function renderOverviewTab() {
+            const profilesList = window.allProfiles || [];
+            let activeSubsCount = 0;
+            let mrrTotal = 0;
+            const monthlyPrice = parseFloat(window.globalOnlinePaymentConfig?.monthly_price || 29);
+
+            profilesList.forEach(p => {
+                const cfg = window.paymentConfigs[p.id];
+                if (cfg && (cfg.is_active || cfg.status === 'active' || cfg.free_access)) {
+                    activeSubsCount++;
+                    if (!cfg.free_access) {
+                        mrrTotal += monthlyPrice;
+                    }
+                }
+            });
+
+            let totalVolume = 0;
+            let totalCommission = 0;
+            let totalDistributed = 0;
+
+            (window.allPaymentLogs || []).forEach(log => {
+                if (log.status === 'succeeded') {
+                    const amt = parseFloat(log.amount || 0);
+                    const comm = parseFloat(log.commission_amount || 0);
+                    const net = parseFloat(log.net_restaurant_amount || (amt - comm));
+                    totalVolume += amt;
+                    totalCommission += comm;
+                    totalDistributed += net;
+                }
+            });
+
+            document.getElementById('stat-active-subs-count').textContent = activeSubsCount.toString();
+            document.getElementById('stat-mrr-total').textContent = `$${mrrTotal.toFixed(2)}`;
+            document.getElementById('stat-comm-rev-total').textContent = `$${totalCommission.toFixed(2)}`;
+            document.getElementById('stat-processed-vol-total').textContent = `$${totalVolume.toFixed(2)}`;
+            document.getElementById('stat-payout-dist-total').textContent = `$${totalDistributed.toFixed(2)}`;
+        }
+
+        function renderPricingTab() {
+            const conf = window.globalOnlinePaymentConfig || {};
+            const price = parseFloat(conf.monthly_price || 29).toFixed(2);
+            document.getElementById('val-current-monthly-price').textContent = `$${price} USD`;
+            const isComm = conf.is_commercialized !== false;
+
+            const badge = document.getElementById('pricing-commercial-badge');
+            if (isComm) {
+                badge.className = 'status-badge connected';
+                badge.textContent = 'Commercialization: Active';
+                document.getElementById('val-commercialization-status').textContent = 'Available for Purchase';
+            } else {
+                badge.className = 'status-badge disconnected';
+                badge.textContent = 'Commercialization: Inactive';
+                document.getElementById('val-commercialization-status').textContent = 'Suspended / Unavailable';
+            }
+
+            document.getElementById('input-new-price').value = price;
+            document.getElementById('select-commercial-active').value = isComm ? 'true' : 'false';
+
+            // Render Price History Table
+            const tbody = document.getElementById('tbody-price-history');
+            if (!window.priceHistory || window.priceHistory.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-dim);">No price change history recorded yet.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = window.priceHistory.map(item => `
+                <tr>
+                    <td>${new Date(item.effective_at).toLocaleString()}</td>
+                    <td style="font-weight:700; color:var(--orange);">$${parseFloat(item.price).toFixed(2)} USD</td>
+                    <td>${item.is_commercialized ? '<span class="badge-status-pill active">Active</span>' : '<span class="badge-status-pill suspended">Disabled</span>'}</td>
+                    <td>${item.changed_by || 'Admin'}</td>
+                    <td>${item.notes || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        window.saveServicePricing = async function() {
+            const newPrice = parseFloat(document.getElementById('input-new-price').value);
+            const isCommercialized = document.getElementById('select-commercial-active').value === 'true';
+            const notes = document.getElementById('input-price-notes').value.trim();
+
+            if (isNaN(newPrice) || newPrice < 0) {
+                showToast("Please enter a valid price.", "error");
+                return;
+            }
+
+            try {
+                // Update global config
+                const { error: confError } = await sb.from('menutech_online_payment_config')
+                    .update({
+                        monthly_price: newPrice,
+                        is_commercialized: isCommercialized,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', window.globalOnlinePaymentConfig?.id || '00000000-0000-0000-0000-000000000000');
+
+                // Insert into price history
+                await sb.from('menutech_online_payment_price_history').insert({
+                    price: newPrice,
+                    currency: 'usd',
+                    is_commercialized: isCommercialized,
+                    changed_by: user?.id,
+                    notes: notes || 'Updated via Admin Panel'
+                });
+
+                showToast("Pricing updated successfully!", "success");
+                document.getElementById('input-price-notes').value = '';
+                await window.loadAllAdminData();
+            } catch (err) {
+                console.error("Error saving pricing:", err);
+                showToast("Error saving price configuration.", "error");
+            }
+        };
+
+        function renderSubscriptionsTable() {
+            const tbody = document.getElementById('tbody-subscriptions');
+            const search = (document.getElementById('filter-subs-search')?.value || '').toLowerCase();
+            const list = (window.allProfiles || []).filter(p => {
+                if (!search) return true;
+                return (p.username && p.username.toLowerCase().includes(search)) ||
+                       (p.domain && p.domain.toLowerCase().includes(search));
+            });
+
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No restaurants found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = list.map(p => {
+                const cfg = window.paymentConfigs[p.id] || { is_active: false, status: 'pending', due_date: null, free_access: false };
+                const isSubscribed = cfg.is_active || cfg.status === 'active' || cfg.free_access;
+
+                let daysLeft = '-';
+                if (cfg.free_access) {
+                    daysLeft = '<span style="color:#8b5cf6; font-weight:700;">Lifetime / Free</span>';
+                } else if (cfg.due_date) {
+                    const due = new Date(cfg.due_date);
+                    const now = new Date();
+                    const diff = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+                    if (diff < 0) {
+                        daysLeft = `<span style="color:var(--error); font-weight:700;">Expired (${Math.abs(diff)}d ago)</span>`;
+                    } else {
+                        daysLeft = `<span style="color:var(--success); font-weight:700;">${diff} days</span>`;
+                    }
+                }
+
+                return `
+                    <tr>
+                        <td style="font-weight:700;">${p.username || 'Unnamed'}</td>
+                        <td style="color:var(--text-dim);">${p.domain || '-'}</td>
+                        <td>
+                            <span class="badge-status-pill ${isSubscribed ? 'active' : 'suspended'}">
+                                ${isSubscribed ? 'Active' : (cfg.status || 'Inactive')}
+                            </span>
+                            ${cfg.free_access ? '<span class="badge-free">FREE</span>' : ''}
+                        </td>
+                        <td>${cfg.due_date ? cfg.due_date : 'Not Set'}</td>
+                        <td>${daysLeft}</td>
+                        <td>
+                            <button class="btn-action ${cfg.free_access ? 'btn-danger' : 'btn-secondary'}" style="padding:6px 12px; font-size:0.75rem;" onclick="toggleFreeAccess('${p.id}', ${!cfg.free_access})">
+                                ${cfg.free_access ? 'Revoke Free' : 'Grant Free'}
+                            </button>
+                        </td>
+                        <td>
+                            <div style="display:flex; gap:6px;">
+                                ${isSubscribed ? `
+                                    <button class="btn-action btn-secondary" style="padding:6px 10px; font-size:0.75rem;" onclick="renewSubscription('${p.id}')" title="Renew +30 Days">Renew</button>
+                                    <button class="btn-action btn-danger" style="padding:6px 10px; font-size:0.75rem;" onclick="toggleSubscriptionStatus('${p.id}', false)">Suspend</button>
+                                ` : `
+                                    <button class="btn-action btn-orange" style="padding:6px 10px; font-size:0.75rem;" onclick="toggleSubscriptionStatus('${p.id}', true)">Activate</button>
+                                `}
+                                <button class="btn-action btn-secondary" style="padding:6px 10px; font-size:0.75rem;" onclick="openEditSubModal('${p.id}')">Edit</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.toggleSubscriptionStatus = async function(restaurantId, makeActive) {
+            try {
+                const existing = window.paymentConfigs[restaurantId] || {};
+                let newDueDate = existing.due_date;
+                if (makeActive && !newDueDate) {
+                    const d = new Date();
+                    d.setDate(d.getDate() + 30);
+                    newDueDate = d.toISOString().split('T')[0];
+                }
+
+                const payload = {
+                    restaurant_id: restaurantId,
+                    is_active: makeActive,
+                    status: makeActive ? 'active' : 'suspended',
+                    due_date: newDueDate,
+                    updated_at: new Date().toISOString()
+                };
+
+                const { error } = await sb.from('menutech_restaurant_payment_configs').upsert(payload);
+                if (error) throw error;
+
+                showToast(`Subscription ${makeActive ? 'activated' : 'suspended'} successfully!`, "success");
+                await window.loadAllAdminData();
+            } catch (e) {
+                console.error("Error updating subscription status:", e);
+                showToast("Failed to update subscription.", "error");
+            }
+        };
+
+        window.renewSubscription = async function(restaurantId) {
+            try {
+                const existing = window.paymentConfigs[restaurantId] || {};
+                let baseDate = existing.due_date ? new Date(existing.due_date) : new Date();
+                if (baseDate < new Date()) baseDate = new Date();
+                baseDate.setDate(baseDate.getDate() + 30);
+                const nextDue = baseDate.toISOString().split('T')[0];
+
+                const { error } = await sb.from('menutech_restaurant_payment_configs').upsert({
+                    restaurant_id: restaurantId,
+                    is_active: true,
+                    status: 'active',
+                    due_date: nextDue,
+                    subscription_due_date: nextDue,
+                    updated_at: new Date().toISOString()
+                });
+                if (error) throw error;
+
+                // Log payment renewal
+                await sb.from('menutech_online_payment_history').insert({
+                    restaurant_id: restaurantId,
+                    event_type: 'renewal',
+                    amount: window.globalOnlinePaymentConfig?.monthly_price || 29.00,
+                    payment_type: 'monthly_subscription',
+                    period_start: new Date().toISOString().split('T')[0],
+                    period_end: nextDue,
+                    payment_method: 'manual_renewal',
+                    created_by: user?.id,
+                    notes: '1-click Admin Renewal (+30 days)'
+                });
+
+                showToast("Subscription renewed for 30 days!", "success");
+                await window.loadAllAdminData();
+            } catch (err) {
+                console.error("Error renewing subscription:", err);
+                showToast("Failed to renew subscription.", "error");
+            }
+        };
+
+        window.toggleFreeAccess = async function(restaurantId, grantFree) {
+            try {
+                const { error } = await sb.from('menutech_restaurant_payment_configs').upsert({
+                    restaurant_id: restaurantId,
+                    free_access: grantFree,
+                    is_active: grantFree ? true : undefined,
+                    status: grantFree ? 'active' : undefined,
+                    updated_at: new Date().toISOString()
+                });
+                if (error) throw error;
+
+                showToast(`Free access ${grantFree ? 'granted' : 'revoked'}.`, "success");
+                await window.loadAllAdminData();
+            } catch (err) {
+                console.error("Error setting free access:", err);
+                showToast("Failed to modify free access.", "error");
+            }
+        };
+
+        window.openEditSubModal = function(restaurantId) {
+            const cfg = window.paymentConfigs[restaurantId] || {};
+            document.getElementById('edit-sub-restaurant-id').value = restaurantId;
+            document.getElementById('edit-sub-due-date').value = cfg.due_date || '';
+            document.getElementById('edit-sub-free-access').value = cfg.free_access ? 'true' : 'false';
+            document.getElementById('edit-sub-notes').value = cfg.notes || '';
+            document.getElementById('modal-edit-sub').classList.remove('hidden');
+        };
+
+        window.closeEditSubModal = function() {
+            document.getElementById('modal-edit-sub').classList.add('hidden');
+        };
+
+        window.saveSubscriptionEdit = async function() {
+            const restaurantId = document.getElementById('edit-sub-restaurant-id').value;
+            const dueDate = document.getElementById('edit-sub-due-date').value || null;
+            const freeAccess = document.getElementById('edit-sub-free-access').value === 'true';
+            const notes = document.getElementById('edit-sub-notes').value.trim();
+
+            try {
+                const { error } = await sb.from('menutech_restaurant_payment_configs').upsert({
+                    restaurant_id: restaurantId,
+                    due_date: dueDate,
+                    subscription_due_date: dueDate,
+                    free_access: freeAccess,
+                    notes: notes,
+                    updated_at: new Date().toISOString()
+                });
+                if (error) throw error;
+
+                closeEditSubModal();
+                showToast("Subscription details updated!", "success");
+                await window.loadAllAdminData();
+            } catch (err) {
+                console.error("Error saving subscription edit:", err);
+                showToast("Failed to save subscription details.", "error");
+            }
+        };
+
+        function renderPaymentModesTable() {
+            const tbody = document.getElementById('tbody-payment-modes');
+            const list = window.allProfiles || [];
+
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No restaurants found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = list.map(p => {
+                const cfg = window.paymentConfigs[p.id] || { payment_mode: 'own_stripe' };
+                const stAcc = (window.allStripeAccounts || []).find(a => a.user_id === p.id);
+                const isConnected = !!(stAcc && stAcc.stripe_account_id);
+                const isOwnStripe = cfg.payment_mode === 'own_stripe';
+
+                return `
+                    <tr>
+                        <td style="font-weight:700;">${p.username || 'Unnamed'}</td>
+                        <td>
+                            <span class="badge-mode ${isOwnStripe ? 'own-stripe' : 'commission'}">
+                                ${isOwnStripe ? 'Own Stripe Account' : 'Menutech Commission'}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge-status-pill ${isConnected ? 'active' : 'suspended'}">
+                                ${isConnected ? 'Connected' : 'Not Connected'}
+                            </span>
+                        </td>
+                        <td>${stAcc?.charges_enabled ? '✅ Yes' : '❌ No'}</td>
+                        <td>${stAcc?.payouts_enabled ? '✅ Yes' : '❌ No'}</td>
+                        <td>
+                            <button class="btn-action btn-secondary" style="padding:6px 14px; font-size:0.75rem;" onclick="togglePaymentMode('${p.id}', '${isOwnStripe ? 'menutech_commission' : 'own_stripe'}')">
+                                Switch to ${isOwnStripe ? 'Menutech Commission' : 'Own Stripe'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.togglePaymentMode = async function(restaurantId, newMode) {
+            try {
+                const { error } = await sb.from('menutech_restaurant_payment_configs').upsert({
+                    restaurant_id: restaurantId,
+                    payment_mode: newMode,
+                    updated_at: new Date().toISOString()
+                });
+                if (error) throw error;
+
+                showToast(`Payment mode switched to ${newMode === 'own_stripe' ? 'Own Stripe' : 'Menutech Commission'}!`, "success");
+                await window.loadAllAdminData();
+            } catch (e) {
+                console.error("Error toggling payment mode:", e);
+                showToast("Failed to switch payment mode.", "error");
+            }
+        };
+
+        function renderCommissionsTable() {
+            const tbody = document.getElementById('tbody-commissions');
+            const globalRate = parseFloat(window.globalOnlinePaymentConfig?.global_commission_percent || 5.0);
+            document.getElementById('input-global-commission').value = globalRate;
+
+            const list = window.allProfiles || [];
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No restaurants found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = list.map(p => {
+                const cfg = window.paymentConfigs[p.id] || {};
+                const hasCustom = cfg.custom_commission_percent !== null && cfg.custom_commission_percent !== undefined;
+                const appliedRate = hasCustom ? parseFloat(cfg.custom_commission_percent) : globalRate;
+                const mode = cfg.payment_mode || 'own_stripe';
+
+                // Calculate generated revenue for this restaurant from payment logs
+                let totalRestVolume = 0;
+                let totalMenutechComm = 0;
+                (window.allPaymentLogs || []).forEach(log => {
+                    if (log.user_id === p.id && log.status === 'succeeded') {
+                        totalRestVolume += parseFloat(log.amount || 0);
+                        totalMenutechComm += parseFloat(log.commission_amount || 0);
+                    }
+                });
+
+                return `
+                    <tr>
+                        <td style="font-weight:700;">${p.username || 'Unnamed'}</td>
+                        <td>
+                            <span class="badge-mode ${mode === 'own_stripe' ? 'own-stripe' : 'commission'}">
+                                ${mode === 'own_stripe' ? 'Own Stripe' : 'Commission'}
+                            </span>
+                        </td>
+                        <td style="font-weight:700; color:var(--orange);">${appliedRate.toFixed(1)}%</td>
+                        <td>${hasCustom ? '<span class="badge-status-pill pending">Custom</span>' : '<span class="badge-status-pill active">Global Default</span>'}</td>
+                        <td>$${totalRestVolume.toFixed(2)}</td>
+                        <td style="font-weight:700; color:var(--success);">$${totalMenutechComm.toFixed(2)}</td>
+                        <td>
+                            <button class="btn-action btn-secondary" style="padding:6px 12px; font-size:0.75rem;" onclick="openEditCommModal('${p.id}')">
+                                ${hasCustom ? 'Edit Custom' : 'Set Custom'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.saveGlobalCommission = async function() {
+            const newRate = parseFloat(document.getElementById('input-global-commission').value);
+            if (isNaN(newRate) || newRate < 0 || newRate > 100) {
+                showToast("Please enter a valid percentage between 0 and 100.", "error");
+                return;
+            }
+
+            try {
+                const { error } = await sb.from('menutech_online_payment_config')
+                    .update({
+                        global_commission_percent: newRate,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', window.globalOnlinePaymentConfig?.id || '00000000-0000-0000-0000-000000000000');
+
+                if (error) throw error;
+                showToast("Global commission rate updated successfully!", "success");
+                await window.loadAllAdminData();
+            } catch (e) {
+                console.error("Error updating global commission:", e);
+                showToast("Failed to update global commission.", "error");
+            }
+        };
+
+        window.openEditCommModal = function(restaurantId) {
+            const cfg = window.paymentConfigs[restaurantId] || {};
+            document.getElementById('edit-comm-restaurant-id').value = restaurantId;
+            document.getElementById('edit-comm-rate').value = cfg.custom_commission_percent !== null && cfg.custom_commission_percent !== undefined ? cfg.custom_commission_percent : '';
+            document.getElementById('modal-edit-comm').classList.remove('hidden');
+        };
+
+        window.closeEditCommModal = function() {
+            document.getElementById('modal-edit-comm').classList.add('hidden');
+        };
+
+        window.saveCustomCommission = async function() {
+            const restaurantId = document.getElementById('edit-comm-restaurant-id').value;
+            const rateStr = document.getElementById('edit-comm-rate').value.trim();
+            const customRate = rateStr === '' ? null : parseFloat(rateStr);
+
+            if (customRate !== null && (isNaN(customRate) || customRate < 0 || customRate > 100)) {
+                showToast("Enter a valid percentage between 0 and 100.", "error");
+                return;
+            }
+
+            try {
+                const { error } = await sb.from('menutech_restaurant_payment_configs').upsert({
+                    restaurant_id: restaurantId,
+                    custom_commission_percent: customRate,
+                    commission_percent: customRate,
+                    updated_at: new Date().toISOString()
+                });
+                if (error) throw error;
+
+                closeEditCommModal();
+                showToast("Commission rate updated for restaurant!", "success");
+                await window.loadAllAdminData();
+            } catch (e) {
+                console.error("Error saving custom commission:", e);
+                showToast("Failed to save custom commission.", "error");
+            }
+        };
+
+        function renderGlobalTransactionsTable() {
+            const tbody = document.getElementById('tbody-global-transactions');
+            const logs = window.allPaymentLogs || [];
+
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--text-dim);">No transactions found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map(log => {
+                const amt = parseFloat(log.amount || 0);
+                const comm = parseFloat(log.commission_amount || 0);
+                const net = parseFloat(log.net_restaurant_amount || (amt - comm));
+                const prof = (window.allProfiles || []).find(p => p.id === log.user_id);
+                const restName = prof?.username || log.restaurant_name || 'Restaurant';
+
+                return `
+                    <tr>
+                        <td>${new Date(log.created_at).toLocaleString()}</td>
+                        <td style="font-weight:700;">${restName}</td>
+                        <td>${log.payload?.customer_details?.name || log.diner_name || 'Guest'}</td>
+                        <td style="font-weight:700;">$${amt.toFixed(2)}</td>
+                        <td style="color:var(--orange); font-weight:700;">$${comm.toFixed(2)}</td>
+                        <td style="color:var(--success); font-weight:700;">$${net.toFixed(2)}</td>
+                        <td>${log.mode || 'card'}</td>
+                        <td><span class="badge-status-pill ${log.status === 'succeeded' ? 'active' : 'suspended'}">${log.status}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.exportAdminTransactionsCSV = function() {
+            const logs = window.allPaymentLogs || [];
+            if (logs.length === 0) {
+                showToast("No transactions available to export.", "error");
+                return;
+            }
+
+            let csv = "ID,Date,Restaurant,Customer,Amount,Commission,Net Distributed,Status,Event\n\n";
+            logs.forEach(l => {
+                const prof = (window.allProfiles || []).find(p => p.id === l.user_id);
+                const rest = prof?.username || 'Restaurant';
+                const diner = l.payload?.customer_details?.name || 'Guest';
+                csv += `"${l.id}","${l.created_at}","${rest}","${diner}",${l.amount || 0},${l.commission_amount || 0},${l.net_restaurant_amount || 0},"${l.status}","${l.event_type}"
+`;
+            });
+
+            downloadCSVFile(csv, `menutech_admin_transactions_${new Date().toISOString().split('T')[0]}.csv`);
+        };
+
+        function renderReportsTab() {
+            let totalSubsRev = 0;
+            let totalCommRev = 0;
+            let totalDistributed = 0;
+            let totalRefunds = 0;
+
+            const monthlyPrice = parseFloat(window.globalOnlinePaymentConfig?.monthly_price || 29);
+            (window.allProfiles || []).forEach(p => {
+                const cfg = window.paymentConfigs[p.id];
+                if (cfg && (cfg.is_active || cfg.status === 'active') && !cfg.free_access) {
+                    totalSubsRev += monthlyPrice;
+                }
+            });
+
+            (window.allPaymentLogs || []).forEach(log => {
+                if (log.status === 'succeeded') {
+                    const amt = parseFloat(log.amount || 0);
+                    const comm = parseFloat(log.commission_amount || 0);
+                    const net = parseFloat(log.net_restaurant_amount || (amt - comm));
+                    totalCommRev += comm;
+                    totalDistributed += net;
+                } else if (log.status === 'refunded' || log.event_type?.includes('refund')) {
+                    totalRefunds += parseFloat(log.amount || 0);
+                }
+            });
+
+            document.getElementById('rep-subs-collected').textContent = `$${totalSubsRev.toFixed(2)}`;
+            document.getElementById('rep-comm-collected').textContent = `$${totalCommRev.toFixed(2)}`;
+            document.getElementById('rep-net-distributed').textContent = `$${totalDistributed.toFixed(2)}`;
+            document.getElementById('rep-refunds-total').textContent = `$${totalRefunds.toFixed(2)}`;
+        }
+
+        window.exportFinancialSummaryCSV = function() {
+            let csv = "Metric,Value USD\n";
+            csv += `"Monthly Subscriptions Revenue","${document.getElementById('rep-subs-collected').textContent}"
+`;
+            csv += `"Commissions Earned","${document.getElementById('rep-comm-collected').textContent}"
+`;
+            csv += `"Distributed to Restaurants","${document.getElementById('rep-net-distributed').textContent}"
+`;
+            csv += `"Refunds / Chargebacks","${document.getElementById('rep-refunds-total').textContent}"
+`;
+
+            downloadCSVFile(csv, `menutech_financial_report_${new Date().toISOString().split('T')[0]}.csv`);
+        };
+
+        function downloadCSVFile(content, filename) {
+            const blob = new Blob(["﻿" + content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Restaurant-side Paywall Action
+        window.requestSubscriptionActivation = async function() {
+            showToast("Submitting subscription activation request...", "info");
+            try {
+                const { error } = await sb.from('menutech_restaurant_payment_configs').upsert({
+                    restaurant_id: user.id,
+                    status: 'pending',
+                    is_active: false,
+                    updated_at: new Date().toISOString()
+                });
+                if (error) throw error;
+                showToast("Request received! An administrator will activate your online payments shortly.", "success");
+            } catch (e) {
+                console.error("Error requesting activation:", e);
+                showToast("Error sending activation request.", "error");
+            }
+        };
+
+
         async function showApp(profile) {
             document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('top-nav').classList.remove('hidden');
             const pill = document.getElementById('user-display-pill');
 
+            const role = (profile?.role || userRole || 'user').trim().toUpperCase();
             if (profile) {
                 document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
                 document.getElementById('user-role-label').textContent = profile.role || 'User';
-                const role = (profile.role || 'user').trim().toUpperCase();
                 if (role === 'ADMIN') pill.classList.add('admin-glow');
                 else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
                 else pill.classList.add('owner-glow');
             }
 
             await syncLanguageForContext();
+
+            const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'];
+            const isAdmin = privilegedRoles.includes(role);
+
+            const adminView = document.getElementById('admin-view');
+            const restaurantView = document.getElementById('restaurant-view');
+
+            if (isAdmin) {
+                if (adminView) adminView.classList.remove('hidden');
+                if (restaurantView) restaurantView.classList.add('hidden');
+                await window.loadAllAdminData();
+            } else {
+                if (adminView) adminView.classList.add('hidden');
+                if (restaurantView) restaurantView.classList.remove('hidden');
+                await setupRestaurantViewForOwner();
+            }
 
             // Check URL parameters for onboarding return/refresh
             const urlParams = new URLSearchParams(window.location.search);
@@ -697,6 +1862,53 @@
 
             await loadStripeAccount();
             await loadRestaurantPaymentLogs();
+        }
+
+        async function setupRestaurantViewForOwner() {
+            try {
+                // Fetch restaurant payment config
+                const { data: payConfig } = await sb.from('menutech_restaurant_payment_configs')
+                    .select('*')
+                    .eq('restaurant_id', user.id)
+                    .maybeSingle();
+
+                // Fetch global online payment config for monthly price
+                const { data: globalConf } = await sb.from('menutech_online_payment_config')
+                    .select('*')
+                    .limit(1)
+                    .maybeSingle();
+
+                const monthlyPrice = globalConf?.monthly_price ?? 29.00;
+                const priceEl = document.getElementById('lbl-paywall-display-price');
+                if (priceEl) priceEl.innerHTML = `$${monthlyPrice} <span>/ month</span>`;
+
+                const paywall = document.getElementById('restaurant-paywall');
+                const activePanel = document.getElementById('restaurant-active-panel');
+
+                const isSubscribed = payConfig?.free_access || payConfig?.is_active || (payConfig?.status === 'active');
+
+                if (isSubscribed) {
+                    if (paywall) paywall.classList.add('hidden');
+                    if (activePanel) activePanel.classList.remove('hidden');
+
+                    const mode = payConfig?.payment_mode || 'own_stripe';
+                    const modeBadge = document.getElementById('rest-auth-mode-badge');
+                    if (modeBadge) {
+                        if (mode === 'menutech_commission') {
+                            modeBadge.className = 'badge-mode commission';
+                            modeBadge.textContent = 'Menutech Commission';
+                        } else {
+                            modeBadge.className = 'badge-mode own-stripe';
+                            modeBadge.textContent = 'Own Stripe Account';
+                        }
+                    }
+                } else {
+                    if (paywall) paywall.classList.remove('hidden');
+                    if (activePanel) activePanel.classList.add('hidden');
+                }
+            } catch (e) {
+                console.error("Error setting up restaurant view:", e);
+            }
         }
 
         async function loadStripeAccount() {

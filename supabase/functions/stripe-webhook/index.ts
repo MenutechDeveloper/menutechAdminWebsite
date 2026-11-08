@@ -146,7 +146,12 @@ serve(async (req: Request) => {
         console.log(`Reservation ${reservationId} marked as PAID.`);
       }
 
-      // Record Audit Log
+      // Calculate Commission and Net Restaurant Distribution
+      const commissionCents = parseInt(metadata.commission_cents || "0", 10);
+      const commissionAmount = commissionCents > 0 ? commissionCents / 100 : 0;
+      const netRestaurantAmount = Math.max(0, amountTotal - commissionAmount);
+
+      // Record Audit Log with commission breakdown
       await supabaseAdmin.from("menutech_payment_logs").insert({
         user_id: userId || "00000000-0000-0000-0000-000000000000",
         stripe_account_id: session.transfer_data?.destination || null,
@@ -155,6 +160,8 @@ serve(async (req: Request) => {
         event_type: eventType,
         stripe_event_id: eventId,
         amount: amountTotal,
+        commission_amount: commissionAmount,
+        net_restaurant_amount: netRestaurantAmount,
         currency: currency,
         status: "succeeded",
         payload: eventData
