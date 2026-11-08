@@ -1,5 +1,5 @@
 // Supabase Edge Function: stripe-connect
-// Handles Stripe Connect account creation, onboarding links, status updates, and Express login links.
+// Handles Stripe Connect account creation, manual account ID linking, onboarding links, status updates, Express login links, and admin payment config updates.
 // Secrets required: stripe_api (or STRIPE_API_KEY)
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -54,19 +54,22 @@ serve(async (req: Request) => {
     }
 
     const payload = await req.json().catch(() => ({}));
-    const { action, target_user_id } = payload;
+    const { action, target_user_id, stripe_account_id, payment_config } = payload;
 
-    // Caller can manage their own user_id, or if target_user_id is specified, check admin role
+    // Check caller role
+    const { data: callerProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    const callerRole = (callerProfile?.role || "").toUpperCase();
+    const isPrivileged = ["ADMIN", "DEVELOPER", "CS", "ADMINCS"].includes(callerRole);
+
+    // Caller can manage their own user_id, or if target_user_id is specified, must be admin
     let effectiveUserId = user.id;
     if (target_user_id && target_user_id !== user.id) {
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      const role = (profile?.role || "").toUpperCase();
-      if (!["ADMIN", "DEVELOPER", "CS", "ADMINCS"].includes(role)) {
+      if (!isPrivileged) {
         return new Response(
           JSON.stringify({ error: "Forbidden: Cannot modify another user's Stripe account" }),
           { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -97,7 +100,7 @@ serve(async (req: Request) => {
       return data;
     }
 
-    // Handle Action: create_onboarding_link
+    // Action 1: create_onboarding_link
     if (action === "create_onboarding_link") {
       // Check existing record
       const { data: existingAccount } = await supabaseAdmin
@@ -106,9 +109,9 @@ serve(async (req: Request) => {
         .eq("user_id", effectiveUserId)
         .maybeSingle();
 
-      let stripeAccountId = existingAccount?.stripe_account_id;
+      let currentAccountId = existingAccount?.stripe_account_id;
 
-      if (!stripeAccountId) {
+      if (!currentAccountId) {
         // Fetch user email for Stripe account prefill
         const { data: targetUserData } = await supabaseAdmin.auth.admin.getUserById(effectiveUserId);
         const email = targetUserData?.user?.email || "";
@@ -124,12 +127,12 @@ serve(async (req: Request) => {
           body: params.toString()
         });
 
-        stripeAccountId = newAccount.id;
+        currentAccountId = newAccount.id;
 
         // Upsert into Supabase
         await supabaseAdmin.from("menutech_stripe_accounts").upsert({
           user_id: effectiveUserId,
-          stripe_account_id: stripeAccountId,
+          stripe_account_id: currentAccountId,
           details_submitted: newAccount.details_submitted || false,
           charges_enabled: newAccount.charges_enabled || false,
           payouts_enabled: newAccount.payouts_enabled || false,
@@ -145,7 +148,7 @@ serve(async (req: Request) => {
       const returnUrl = `${reqOrigin}/onlinePayment.html?stripe_return=true`;
 
       const linkParams = new URLSearchParams();
-      linkParams.append("account", stripeAccountId);
+      linkParams.append("account", currentAccountId);
       linkParams.append("refresh_url", refreshUrl);
       linkParams.append("return_url", returnUrl);
       linkParams.append("type", "account_onboarding");
@@ -156,10 +159,49 @@ serve(async (req: Request) => {
       });
 
       return new Response(
-        JSON.stringify({ url: linkRes.url, account_id: stripeAccountId }),
+        JSON.stringify({ url: linkRes.url, account_id: currentAccountId }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 
+    // Action 2: link_existing_account (Admin manually links existing Stripe Account ID)
+    } else if (action === "link_existing_account") {
+      if (!isPrivileged) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden: Only administrators can manually link Stripe accounts" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const inputAccountId = (stripe_account_id || "").trim();
+      if (!inputAccountId || !inputAccountId.startsWith("acct_")) {
+        return new Response(
+          JSON.stringify({ error: "Invalid Stripe Account ID. Must begin with 'acct_'" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Verify account existence in Stripe
+      const stripeAccount = await stripeFetch(`/accounts/${inputAccountId}`);
+
+      const recordToSave = {
+        user_id: effectiveUserId,
+        stripe_account_id: stripeAccount.id,
+        details_submitted: stripeAccount.details_submitted || false,
+        charges_enabled: stripeAccount.charges_enabled || false,
+        payouts_enabled: stripeAccount.payouts_enabled || false,
+        country: stripeAccount.country || "US",
+        currency: stripeAccount.default_currency || "usd",
+        updated_at: new Date().toISOString()
+      };
+
+      await supabaseAdmin.from("menutech_stripe_accounts").upsert(recordToSave, { onConflict: "user_id" });
+
+      return new Response(
+        JSON.stringify({ success: true, account: recordToSave }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+
+    // Action 3: get_account_status
     } else if (action === "get_account_status") {
       const { data: existingAccount } = await supabaseAdmin
         .from("menutech_stripe_accounts")
@@ -174,16 +216,21 @@ serve(async (req: Request) => {
         );
       }
 
-      const stripeAccount = await stripeFetch(`/accounts/${existingAccount.stripe_account_id}`);
+      let stripeAccount: any = null;
+      try {
+        stripeAccount = await stripeFetch(`/accounts/${existingAccount.stripe_account_id}`);
+      } catch (err: any) {
+        console.warn("Error fetching account from Stripe API:", err.message);
+      }
 
       const updatedRecord = {
         user_id: effectiveUserId,
         stripe_account_id: existingAccount.stripe_account_id,
-        details_submitted: stripeAccount.details_submitted || false,
-        charges_enabled: stripeAccount.charges_enabled || false,
-        payouts_enabled: stripeAccount.payouts_enabled || false,
-        country: stripeAccount.country || existingAccount.country || "US",
-        currency: stripeAccount.default_currency || existingAccount.currency || "usd",
+        details_submitted: stripeAccount ? (stripeAccount.details_submitted || false) : (existingAccount.details_submitted || false),
+        charges_enabled: stripeAccount ? (stripeAccount.charges_enabled || false) : (existingAccount.charges_enabled || false),
+        payouts_enabled: stripeAccount ? (stripeAccount.payouts_enabled || false) : (existingAccount.payouts_enabled || false),
+        country: stripeAccount?.country || existingAccount.country || "US",
+        currency: stripeAccount?.default_currency || existingAccount.currency || "usd",
         updated_at: new Date().toISOString()
       };
 
@@ -194,6 +241,7 @@ serve(async (req: Request) => {
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 
+    // Action 4: create_login_link
     } else if (action === "create_login_link") {
       const { data: existingAccount } = await supabaseAdmin
         .from("menutech_stripe_accounts")
@@ -217,11 +265,63 @@ serve(async (req: Request) => {
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 
+    // Action 5: disconnect_account
     } else if (action === "disconnect_account") {
+      if (!isPrivileged && effectiveUserId !== user.id) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       await supabaseAdmin.from("menutech_stripe_accounts").delete().eq("user_id", effectiveUserId);
 
       return new Response(
         JSON.stringify({ success: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+
+    // Action 6: update_payment_config (Admin updates payment mode, commissions, service status, due dates)
+    } else if (action === "update_payment_config") {
+      if (!isPrivileged) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden: Only administrators can modify payment configurations" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (!payment_config || typeof payment_config !== "object") {
+        return new Response(
+          JSON.stringify({ error: "Missing 'payment_config' object" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const updateData: any = {
+        user_id: effectiveUserId,
+        updated_at: new Date().toISOString()
+      };
+
+      if (payment_config.service_status !== undefined) updateData.service_status = payment_config.service_status;
+      if (payment_config.payment_mode !== undefined) updateData.payment_mode = payment_config.payment_mode;
+      if (payment_config.commission_rate !== undefined) updateData.commission_rate = parseFloat(payment_config.commission_rate) || 0;
+      if (payment_config.monthly_price !== undefined) updateData.monthly_price = parseFloat(payment_config.monthly_price) || 29.00;
+      if (payment_config.is_free_access !== undefined) updateData.is_free_access = Boolean(payment_config.is_free_access);
+      if (payment_config.next_due_date !== undefined) updateData.next_due_date = payment_config.next_due_date;
+      if (payment_config.service_start_date !== undefined) updateData.service_start_date = payment_config.service_start_date;
+
+      const { data: savedConfig, error: saveErr } = await supabaseAdmin
+        .from("menutech_restaurant_payment_configs")
+        .upsert(updateData, { onConflict: "user_id" })
+        .select()
+        .single();
+
+      if (saveErr) {
+        throw new Error(saveErr.message);
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, config: savedConfig }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 

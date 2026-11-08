@@ -1,5 +1,6 @@
 // Supabase Edge Function: stripe-webhook
 // Validates Stripe webhook signatures and updates orders, reservations, and payment logs idempotently.
+// Also activates restaurant Online Payment subscriptions upon checkout completion.
 // Required Secrets: stripe_webhook_secret (or STRIPE_WEBHOOK_SECRET), stripe_api
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -115,10 +116,11 @@ serve(async (req: Request) => {
       const metadata = session.metadata || {};
       const orderId = metadata.order_id;
       const reservationId = metadata.reservation_id;
-      const userId = metadata.user_id || session.client_reference_id || "";
+      const userId = metadata.user_id || metadata.target_user_id || session.client_reference_id || "";
       const paymentIntentId = session.payment_intent || "";
       const amountTotal = (session.amount_total || 0) / 100;
       const currency = session.currency || "usd";
+      const checkoutType = metadata.type || "";
 
       if (orderId) {
         await supabaseAdmin
@@ -144,6 +146,26 @@ serve(async (req: Request) => {
           .eq("id", reservationId);
 
         console.log(`Reservation ${reservationId} marked as PAID.`);
+      }
+
+      // Online Payments Subscription checkout completed
+      if (checkoutType === "online_payment_subscription" && metadata.target_user_id) {
+        const targetUserId = metadata.target_user_id;
+        const now = new Date();
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 30);
+
+        await supabaseAdmin
+          .from("menutech_restaurant_payment_configs")
+          .upsert({
+            user_id: targetUserId,
+            service_status: "active",
+            service_start_date: now.toISOString(),
+            next_due_date: dueDate.toISOString(),
+            updated_at: now.toISOString()
+          }, { onConflict: "user_id" });
+
+        console.log(`Online Payment Subscription activated for restaurant ${targetUserId}`);
       }
 
       // Record Audit Log

@@ -37,15 +37,15 @@
 
         .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
 
-        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 80px 24px; animation: fadeIn 1s ease-out; }
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 80px 24px; animation: fadeIn 0.8s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        header { text-align: center; margin-bottom: 40px; }
+        header { text-align: center; margin-bottom: 35px; }
         .logo-main { width: 100%; max-width: 240px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
 
         .dashboard-layout { display: flex; min-height: calc(100vh - 160px); gap: 40px; }
 
-        /* Unified Sidebar Container */
+        /* Unified Collapsible Left Sidebar Container */
         .sidebar-container {
             position: fixed; left: 0; top: 120px; z-index: 6000; pointer-events: none; display: flex; align-items: flex-start;
             transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -58,7 +58,8 @@
 
         .search-box { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 24px; position: relative; cursor: default; transition: opacity 0.3s; user-select: none; z-index: 100; box-shadow: 0 20px 50px rgba(0,0,0,0.15); height: 100%; display: flex; flex-direction: column; }
         .search-box label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--orange); text-transform: uppercase; margin-bottom: 15px; margin-left: 5px; pointer-events: none; }
-        .search-box input { width: 100%; margin-bottom: 15px; border-radius: 16px; padding: 14px; background: var(--input); border: 1px solid var(--border); color: var(--text); }
+        .search-box input { width: 100%; margin-bottom: 15px; border-radius: 16px; padding: 14px; background: var(--input); border: 1px solid var(--border); color: var(--text); outline: none; font-family: inherit; font-size: 0.9rem; }
+        .search-box input:focus { border-color: var(--orange); }
 
         .client-list { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
         .client-list::-webkit-scrollbar { width: 4px; }
@@ -78,6 +79,17 @@
         #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
         #top-nav > * { pointer-events: auto; }
 
+        .btn-panel-top { background: var(--card); border: 1.5px solid var(--border); color: var(--text); font-weight: 800; font-size: 0.75rem; padding: 10px 22px; border-radius: 40px; cursor: pointer; transition: 0.3s; letter-spacing: 1px; font-family: inherit; }
+        .btn-panel-top:hover { border-color: var(--orange); transform: translateY(-2px); }
+
+        .theme-switch { width: 44px; height: 44px; border-radius: 50%; background: var(--card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; color: var(--text); }
+        .theme-switch:hover { transform: scale(1.05); border-color: var(--orange); }
+        .theme-switch svg { width: 20px; height: 20px; }
+        body.dark-mode .sun-icon { display: block; }
+        body.dark-mode .moon-icon { display: none; }
+        body:not(.dark-mode) .sun-icon { display: none; }
+        body:not(.dark-mode) .moon-icon { display: block; }
+
         /* Premium User Pill */
         #user-display-pill {
             background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
@@ -85,28 +97,23 @@
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; min-width: 220px; justify-content: flex-start;
         }
         #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
-
         #user-display-pill.admin-glow {
             background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
             background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
         }
         #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
-
         #user-display-pill.dev-glow {
             background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
             background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
         }
         #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
-
         #user-display-pill.owner-glow {
             background: #000;
             background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 20%, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 80%, rgba(255,255,255,0.1) 100%);
             background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
         }
         #user-display-pill.owner-glow #user-name, #user-display-pill.owner-glow #user-role-label { color: #fff !important; }
-
         #user-display-pill #user-name, #user-display-pill #user-role-label { color: var(--text); transition: color 0.3s; }
-
         @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
         .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
@@ -117,74 +124,77 @@
             position: absolute; top: calc(100% + 12px); right: 0; background: var(--card) !important; border: 1px solid var(--border);
             border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
             opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
-            animation: none !important;
         }
         #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .pill-menu-item { display: block; padding: 10px 16px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; color: var(--text); text-decoration: none; cursor: pointer; transition: 0.2s; }
+        .pill-menu-item:hover { background: var(--input); color: var(--orange); }
+        .pill-menu-item.danger:hover { background: rgba(220, 38, 38, 0.1); color: var(--error); }
 
-        .pill-menu-item {
-            padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text);
-            display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none;
+        /* Cards & Tabs */
+        .config-card { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 36px; box-shadow: 0 10px 40px rgba(0,0,0,0.03); }
+        .admin-nav-tabs { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+        .admin-tab-btn {
+            background: var(--input); border: 1px solid var(--border); color: var(--text-dim); padding: 12px 26px; border-radius: 20px;
+            font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: 0.3s; font-family: inherit; letter-spacing: 0.5px; text-transform: uppercase;
         }
-        .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
-        .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+        .admin-tab-btn:hover { border-color: var(--orange); color: var(--text); }
+        .admin-tab-btn.active { background: var(--orange); color: #fff; border-color: var(--orange); box-shadow: 0 6px 20px rgba(255, 149, 51, 0.3); }
 
-        .theme-switch {
-            width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); pointer-events: auto; }
-        .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 15px; }
+        .card-header h2 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--text); }
 
-        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
-        .sun-icon { color: var(--orange); }
-        .moon-icon { color: #8b5cf6; display: none; }
-        body.dark-mode .sun-icon { display: none; }
-        body.dark-mode .moon-icon { display: block; }
+        .status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .status-badge.connected, .status-badge.active { background: rgba(5, 150, 105, 0.12); color: var(--success); border: 1px solid rgba(5, 150, 105, 0.3); }
+        .status-badge.pending, .status-badge.warning { background: rgba(217, 119, 6, 0.12); color: var(--warning); border: 1px solid rgba(217, 119, 6, 0.3); }
+        .status-badge.disconnected, .status-badge.inactive, .status-badge.suspended { background: rgba(220, 38, 38, 0.12); color: var(--error); border: 1px solid rgba(220, 38, 38, 0.3); }
 
-        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
-        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 20px 0; }
+        .info-box { background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 18px 22px; display: flex; flex-direction: column; gap: 6px; }
+        .info-box label { font-size: 0.68rem; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-box .value { font-size: 1.05rem; font-weight: 700; color: var(--text); word-break: break-all; }
 
-        /* Card & Controls */
-        .config-card { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
-        .card-header h2 { font-family: 'Outfit'; font-size: 1.6rem; font-weight: 700; color: var(--text); }
-
-        .status-badge {
-            display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+        .input-group label { font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: 0.5px; }
+        .input-group input, .input-group select {
+            padding: 14px 18px; border-radius: 16px; background: var(--input); border: 1px solid var(--border); color: var(--text);
+            font-size: 0.95rem; font-family: inherit; outline: none; transition: 0.2s;
         }
-        .status-badge.connected { background: rgba(5, 150, 105, 0.12); color: var(--success); border: 1px solid rgba(5, 150, 105, 0.3); }
-        .status-badge.pending { background: rgba(217, 119, 6, 0.12); color: var(--warning); border: 1px solid rgba(217, 119, 6, 0.3); }
-        .status-badge.disconnected { background: rgba(220, 38, 38, 0.12); color: var(--error); border: 1px solid rgba(220, 38, 38, 0.3); }
-
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0; }
-        .info-box { background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
-        .info-box label { font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: 0.5px; }
-        .info-box .value { font-size: 1.1rem; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; }
-        .info-box .value svg { width: 20px; height: 20px; }
+        .input-group input:focus, .input-group select:focus { border-color: var(--orange); }
 
         .btn-action {
-            display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 32px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 0.5px; text-decoration: none;
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 28px; border-radius: 20px;
+            font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 0.5px; text-decoration: none; font-family: inherit;
         }
+        .btn-primary { background: var(--orange); color: #fff; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); }
+        .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.05); }
         .btn-stripe { background: #635bff; color: #ffffff; box-shadow: 0 8px 25px rgba(99, 91, 255, 0.3); }
-        .btn-stripe:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(99, 91, 255, 0.4); filter: brightness(1.05); }
+        .btn-stripe:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(99, 91, 255, 0.4); filter: brightness(1.05); }
         .btn-secondary { background: var(--input); color: var(--text); border: 1px solid var(--border); }
         .btn-secondary:hover { background: var(--border); transform: translateY(-2px); }
         .btn-danger { background: rgba(220, 38, 38, 0.1); color: var(--error); border: 1px solid rgba(220, 38, 38, 0.2); }
         .btn-danger:hover { background: var(--error); color: #ffffff; transform: translateY(-2px); }
+        .btn-success { background: rgba(5, 150, 105, 0.12); color: var(--success); border: 1px solid rgba(5, 150, 105, 0.3); }
+        .btn-success:hover { background: var(--success); color: #ffffff; transform: translateY(-2px); }
 
-        .actions-group { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 30px; }
+        .actions-group { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; border-top: 1px solid var(--border); padding-top: 24px; align-items: center; }
+
+        /* Section Styling */
+        .section-divider-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text); margin-top: 35px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
 
         /* Movements Section */
-        .movements-section { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 30px; }
+        .movements-section { margin-top: 30px; border-top: 1px solid var(--border); padding-top: 24px; }
         .movements-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
-        .movements-header h3 { font-family: 'Outfit'; font-size: 1.4rem; font-weight: 700; color: var(--text); }
+        .movements-header h3 { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--text); }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 24px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 24px; }
         .stat-box { background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 6px; }
         .stat-box label { font-size: 0.65rem; font-weight: 800; color: var(--orange); text-transform: uppercase; }
         .stat-box .stat-val { font-size: 1.3rem; font-weight: 800; color: var(--text); font-family: 'Outfit', sans-serif; }
 
-        .filter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; background: var(--input); padding: 16px; border-radius: 20px; border: 1px solid var(--border); }
+        .filter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; background: var(--input); padding: 16px; border-radius: 20px; border: 1px solid var(--border); }
         .filter-col { display: flex; flex-direction: column; gap: 6px; }
         .filter-col label { font-size: 0.65rem; font-weight: 800; color: var(--orange); text-transform: uppercase; }
-        .filter-col select, .filter-col input { padding: 10px 14px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); color: var(--text); font-size: 0.85rem; }
+        .filter-col select, .filter-col input { padding: 10px 14px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); color: var(--text); font-size: 0.85rem; font-family: inherit; }
 
         .table-responsive { width: 100%; overflow-x: auto; border-radius: 20px; border: 1px solid var(--border); }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
@@ -206,11 +216,13 @@
         @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes toastFadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-        .loader { border: 3px solid rgba(255, 149, 51, 0.1); width: 28px; height: 28px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 1s linear infinite; margin: 0 auto; }
-        @keyframes rotate { to { transform: rotate(360deg); } }
         .hidden { display: none !important; }
 
-        @media (max-width: 768px) { .dashboard-layout { flex-direction: column; } .sidebar-container { position: relative; top: 0; transform: none !important; width: 100%; margin-bottom: 20px; } .sidebar { width: 100%; height: auto; } }
+        @media (max-width: 768px) {
+            .dashboard-layout { flex-direction: column; }
+            .sidebar-container { position: relative; top: 0; transform: none !important; width: 100%; margin-bottom: 20px; }
+            .sidebar { width: 100%; height: auto; }
+        }
     </style>
 </head>
 <body>
@@ -245,6 +257,7 @@
         </header>
 
         <div class="dashboard-layout">
+            <!-- Administrator Sidebar Switcher -->
             <div class="sidebar-container hidden" id="sidebar-container">
                 <div class="sidebar" id="sidebar">
                     <div class="search-box">
@@ -260,127 +273,347 @@
                 <div class="sidebar-tab" id="sidebar-tab">Find Project</div>
             </div>
 
+            <!-- Main Content Area -->
             <div class="main-content">
-                <div class="config-card">
-                    <div class="card-header">
-                        <div>
-                            <h2 id="lbl-stripe-integration-title">Stripe Integration</h2>
-                            <p id="lbl-stripe-integration-desc" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Connect your Stripe account to receive online payments directly for customer orders and reservations.</p>
-                        </div>
-                        <div id="account-status-badge" class="status-badge disconnected">Disconnected</div>
+
+                <!-- ========================================== -->
+                <!-- 1. ADMINISTRATOR VIEW                      -->
+                <!-- ========================================== -->
+                <div id="admin-view-container" class="hidden">
+                    <!-- Strictly 2 Tabs -->
+                    <div class="admin-nav-tabs">
+                        <button class="admin-tab-btn active" id="tab-btn-own-stripe" onclick="switchAdminTab('own_stripe')">1. Own Stripe Account</button>
+                        <button class="admin-tab-btn" id="tab-btn-commission" onclick="switchAdminTab('commission')">2. Menutech Commission</button>
                     </div>
 
-                    <p id="lbl-stripe-express-text" style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6; margin-bottom: 24px;">
-                        Menutech uses Stripe Connect Express to process online payments safely and securely. All bank account information, identity verification, and payouts are handled directly by Stripe. Menutech never collects or stores your bank credentials or secret keys.
-                    </p>
-
-                    <div class="info-grid">
-                        <div class="info-box">
-                            <label id="lbl-acc-id">Stripe Account ID</label>
-                            <div class="value" id="val-account-id">Not Connected</div>
-                        </div>
-                        <div class="info-box">
-                            <label id="lbl-details-sub">Details Submitted</label>
-                            <div class="value" id="val-details-submitted">❌ No</div>
-                        </div>
-                        <div class="info-box">
-                            <label id="lbl-charges-en">Charges Enabled</label>
-                            <div class="value" id="val-charges-enabled">❌ No</div>
-                        </div>
-                        <div class="info-box">
-                            <label id="lbl-payouts-en">Payouts Enabled</label>
-                            <div class="value" id="val-payouts-enabled">❌ No</div>
-                        </div>
-                    </div>
-
-                    <div class="actions-group">
-                        <button class="btn-action btn-stripe" id="btn-connect" onclick="startStripeConnect()">
-                            <svg viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px;"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.883 15.684.2 12.83.2 6.702.2 2.658 3.376 2.658 8.163c0 5.48 7.375 6.082 7.375 8.91 0 1.054-.925 1.545-2.222 1.545-2.296 0-5.185-1.1-7.05-2.148l-.946 5.568c1.697 1.026 4.793 1.83 7.747 1.83 6.327 0 10.463-2.981 10.463-8.083 0-5.748-7.533-6.26-7.533-8.799z"/></svg>
-                            <span id="btn-connect-label">Connect with Stripe</span>
-                        </button>
-
-                        <button class="btn-action btn-secondary" id="btn-dashboard" onclick="openStripeDashboard()" style="display:none;">
-                            <span id="lbl-btn-dashboard">Open Express Dashboard</span>
-                        </button>
-
-                        <button class="btn-action btn-secondary" onclick="checkAccountStatus()">
-                            <span id="lbl-btn-refresh-status">Refresh Status</span>
-                        </button>
-
-                        <button class="btn-action btn-danger" id="btn-disconnect" onclick="disconnectStripeAccount()" style="display:none; margin-left:auto;">
-                            <span id="lbl-btn-disconnect">Disconnect Account</span>
-                        </button>
-                    </div>
-
-                    <!-- Individual Restaurant Payments History & Report Section -->
-                    <div class="movements-section">
-                        <div class="movements-header">
+                    <!-- TAB 1: OWN STRIPE ACCOUNT -->
+                    <div class="config-card" id="admin-tab-own-stripe">
+                        <div class="card-header">
                             <div>
-                                <h3 id="lbl-movements-title">Movements</h3>
-                                <p id="lbl-movements-desc" style="font-size: 0.8rem; color: var(--text-dim); margin-top:2px;">Transactions and charges processed online for this account.</p>
+                                <h2 id="lbl-adm-tab1-title">Own Stripe Account</h2>
+                                <p id="lbl-adm-tab1-desc" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Connect or link the restaurant's personal Stripe account to receive payments directly without Menutech commissions.</p>
                             </div>
-                            <div style="display: flex; gap: 10px;">
-                                <button class="btn-action btn-secondary" style="padding: 10px 18px; font-size: 0.8rem;" id="lbl-btn-download-csv" onclick="downloadCSVReport()">Download CSV Report</button>
-                                <button class="btn-action btn-secondary" style="padding: 10px 18px; font-size: 0.8rem;" id="lbl-btn-refresh-logs" onclick="loadRestaurantPaymentLogs()">Refresh Movements</button>
+                            <div id="admin-stripe-badge" class="status-badge disconnected">Disconnected</div>
+                        </div>
+
+                        <div class="info-grid">
+                            <div class="info-box">
+                                <label id="lbl-adm-acc-id">Stripe Account ID</label>
+                                <div class="value" id="admin-val-acc-id">Not Connected</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-details-sub">Details Submitted</label>
+                                <div class="value" id="admin-val-details">❌ No</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-charges-en">Charges Enabled</label>
+                                <div class="value" id="admin-val-charges">❌ No</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-payouts-en">Payouts Enabled</label>
+                                <div class="value" id="admin-val-payouts">❌ No</div>
                             </div>
                         </div>
 
-                        <div class="stats-grid">
-                            <div class="stat-box">
-                                <label id="lbl-stat-total-rec">Total Received</label>
-                                <div class="stat-val" id="res-stat-volume">$0.00</div>
-                            </div>
-                            <div class="stat-box">
-                                <label id="lbl-stat-succ-pay">Successful Payments</label>
-                                <div class="stat-val" id="res-stat-count">0</div>
-                            </div>
-                            <div class="stat-box">
-                                <label id="lbl-stat-tot-ref">Total Refunded</label>
-                                <div class="stat-val" id="res-stat-refunded">$0.00</div>
+                        <!-- Manual Account ID Link -->
+                        <div style="background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-top: 20px;">
+                            <label style="font-size: 0.72rem; font-weight: 800; color: var(--orange); text-transform: uppercase;" id="lbl-adm-link-title">Link Existing Stripe Account ID</label>
+                            <p style="font-size: 0.8rem; color: var(--text-dim); margin: 4px 0 12px 0;" id="lbl-adm-link-desc">Manually link a pre-existing Stripe account using its Stripe Account ID (starts with acct_).</p>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <input type="text" id="admin-input-account-id" placeholder="acct_1XXXXXXXXXXXX" style="flex:1; min-width: 240px; padding: 12px 16px; border-radius: 14px; background: var(--card); border: 1px solid var(--border); color: var(--text); font-family: inherit;">
+                                <button class="btn-action btn-secondary" onclick="adminLinkExistingStripeAccount()" id="lbl-adm-btn-link">Link Account ID</button>
                             </div>
                         </div>
 
-                        <div class="filter-row">
-                            <div class="filter-col">
-                                <label id="lbl-filter-status">Status</label>
-                                <select id="res-filter-status" onchange="applyRestaurantFilters()">
-                                    <option value="" id="opt-status-all">All</option>
-                                    <option value="succeeded" id="opt-status-succeeded">Succeeded</option>
-                                    <option value="pending" id="opt-status-pending">Pending</option>
-                                    <option value="failed" id="opt-status-failed">Failed</option>
-                                    <option value="refunded" id="opt-status-refunded">Refunded</option>
+                        <div class="actions-group">
+                            <button class="btn-action btn-stripe" id="admin-btn-connect" onclick="adminStartStripeConnect()">
+                                <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.883 15.684.2 12.83.2 6.702.2 2.658 3.376 2.658 8.163c0 5.48 7.375 6.082 7.375 8.91 0 1.054-.925 1.545-2.222 1.545-2.296 0-5.185-1.1-7.05-2.148l-.946 5.568c1.697 1.026 4.793 1.83 7.747 1.83 6.327 0 10.463-2.981 10.463-8.083 0-5.748-7.533-6.26-7.533-8.799z"/></svg>
+                                <span id="admin-btn-connect-lbl">Create / Connect via Stripe</span>
+                            </button>
+                            <button class="btn-action btn-secondary" onclick="adminCheckAccountStatus()" id="lbl-adm-btn-refresh-status">Check Status & Requirements</button>
+                            <button class="btn-action btn-secondary" id="admin-btn-dashboard" onclick="adminOpenStripeDashboard()" style="display:none;" id="lbl-adm-btn-express">Open Express Dashboard</button>
+                            <button class="btn-action btn-primary" onclick="adminAuthorizePaymentMode('own_stripe')" id="lbl-adm-btn-auth-own">Authorize Own Stripe Mode</button>
+                            <button class="btn-action btn-danger" id="admin-btn-disconnect" onclick="adminDisconnectStripeAccount()" style="display:none; margin-left:auto;" id="lbl-adm-btn-disconnect">Disconnect Account</button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: MENUTECH COMMISSION -->
+                    <div class="config-card hidden" id="admin-tab-commission">
+                        <div class="card-header">
+                            <div>
+                                <h2 id="lbl-adm-tab2-title">Menutech Commission</h2>
+                                <p id="lbl-adm-tab2-desc" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Authorize the restaurant to process orders through Menutech while charging a configurable percentage fee per transaction.</p>
+                            </div>
+                            <div id="admin-commission-badge" class="status-badge disconnected">Inactive</div>
+                        </div>
+
+                        <div class="info-grid">
+                            <div class="info-box">
+                                <label id="lbl-adm-comm-mode-status">Modalidad Menutech Commission</label>
+                                <div class="value" id="admin-val-comm-status">No Autorizada</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-comm-current-pct">Current Commission %</label>
+                                <div class="value" id="admin-val-comm-rate">0.00%</div>
+                            </div>
+                        </div>
+
+                        <div style="background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 24px; margin-top: 10px;">
+                            <div class="input-group">
+                                <label id="lbl-adm-input-comm">Transaction Commission Percentage (%)</label>
+                                <input type="number" id="admin-input-commission-pct" step="0.1" min="0" max="100" placeholder="e.g. 5.0" style="max-width: 280px;">
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;" id="lbl-adm-comm-note">This commission fee will be collected as an application fee on every processed customer checkout session.</p>
+                        </div>
+
+                        <div class="actions-group">
+                            <button class="btn-action btn-primary" onclick="adminSaveCommissionConfig(true)" id="lbl-adm-btn-auth-comm">Authorize Menutech Commission</button>
+                            <button class="btn-action btn-secondary" onclick="adminSaveCommissionConfig(false)" id="lbl-adm-btn-update-comm">Update Percentage Only</button>
+                            <button class="btn-action btn-danger" onclick="adminRevokeCommissionMode()" id="lbl-adm-btn-revoke-comm">Revoke Commission Modality</button>
+                        </div>
+                    </div>
+
+                    <!-- GENERAL ACCOUNT INFORMATION SECTION -->
+                    <div class="section-divider-title">
+                        <span id="lbl-adm-general-info-title">General Account Information</span>
+                    </div>
+
+                    <div class="config-card">
+                        <div class="info-grid">
+                            <div class="info-box">
+                                <label id="lbl-adm-info-name">Restaurant Name</label>
+                                <div class="value" id="admin-gen-res-name">-</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-info-svc-status">Online Payments Service</label>
+                                <div class="value" id="admin-gen-svc-status">-</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-info-sub-status">Estado Mensualidad</label>
+                                <div class="value" id="admin-gen-sub-status">-</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-info-price">Monthly Price</label>
+                                <div class="value" id="admin-gen-price">$29.00 USD</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-info-start-date">Start Date</label>
+                                <div class="value" id="admin-gen-start-date">-</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-info-due-date">Due Date</label>
+                                <div class="value" id="admin-gen-due-date">-</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-info-days-left">Days Remaining</label>
+                                <div class="value" id="admin-gen-days-left">-</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-info-auth-mode">Authorized Payment Mode</label>
+                                <div class="value" id="admin-gen-auth-mode">None</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-info-stripe-status">Stripe Connect Status</label>
+                                <div class="value" id="admin-gen-stripe-status">Disconnected</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-info-stripe-acc">Stripe Account ID</label>
+                                <div class="value" id="admin-gen-stripe-acc">-</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-info-comm-rate">Assigned Commission</label>
+                                <div class="value" id="admin-gen-comm-rate">0.00%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ONLINE PAYMENTS SERVICE ACCESS SECTION -->
+                    <div class="section-divider-title">
+                        <span id="lbl-adm-svc-access-title">Online Payments Service Access</span>
+                    </div>
+
+                    <div class="config-card">
+                        <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 20px;" id="lbl-adm-svc-access-desc">
+                            Activate, suspend, or renew the Online Payments service subscription for this restaurant, adjust pricing, due dates, or grant complimentary access.
+                        </p>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                            <div class="input-group">
+                                <label id="lbl-adm-ctrl-status">Service Status</label>
+                                <select id="admin-ctrl-service-status">
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="suspended">Suspended</option>
+                                    <option value="free_access">Free Access</option>
+                                    <option value="overdue">Overdue</option>
                                 </select>
                             </div>
-                            <div class="filter-col">
-                                <label id="lbl-filter-from">From</label>
-                                <input type="date" id="res-filter-from" onchange="applyRestaurantFilters()">
+                            <div class="input-group">
+                                <label id="lbl-adm-ctrl-price">Monthly Price (USD)</label>
+                                <input type="number" id="admin-ctrl-monthly-price" step="0.5" min="0" value="29.00">
                             </div>
-                            <div class="filter-col">
-                                <label id="lbl-filter-to">To</label>
-                                <input type="date" id="res-filter-to" onchange="applyRestaurantFilters()">
+                            <div class="input-group">
+                                <label id="lbl-adm-ctrl-duedate">Due Date</label>
+                                <input type="date" id="admin-ctrl-due-date">
                             </div>
                         </div>
 
-                        <div class="table-responsive">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th id="th-date">Date & Time</th>
-                                        <th id="th-stripe-id">Stripe Payment ID</th>
-                                        <th id="th-related">Related</th>
-                                        <th id="th-amount">Amount</th>
-                                        <th id="th-status">Status</th>
-                                        <th id="th-refunded">Refunded</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="res-logs-body">
-                                    <tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-dim);" id="td-loading-logs">Loading movements...</td></tr>
-                                </tbody>
-                            </table>
+                        <div class="actions-group" style="margin-top: 10px;">
+                            <button class="btn-action btn-success" onclick="adminActivateService(true)" id="lbl-adm-btn-activate">Activate Online Payments</button>
+                            <button class="btn-action btn-danger" onclick="adminActivateService(false)" id="lbl-adm-btn-suspend">Deactivate / Suspend Service</button>
+                            <button class="btn-action btn-primary" onclick="adminRenewService30Days()" id="lbl-adm-btn-renew">Renew +30 Days</button>
+                            <button class="btn-action btn-secondary" onclick="adminGrantFreeAccess()" id="lbl-adm-btn-free">Grant Free Access</button>
+                            <button class="btn-action btn-secondary" onclick="adminSaveServiceAccessControls()" id="lbl-adm-btn-save-access">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- 2. RESTAURANT OWNER VIEW                   -->
+                <!-- ========================================== -->
+                <div id="restaurant-view-container" class="hidden">
+
+                    <!-- CASE A: RESTAURANT DOES NOT HAVE ONLINE PAYMENTS SUBSCRIBED -->
+                    <div class="config-card hidden" id="restaurant-unsubscribed-card">
+                        <div class="card-header">
+                            <div>
+                                <h2 id="lbl-owner-sub-title">Online Payments Service</h2>
+                                <p id="lbl-owner-sub-tagline" style="font-size: 0.9rem; color: var(--text-dim); margin-top: 6px;">
+                                    Start accepting credit and debit card payments directly on your digital menu and table reservation pre-orders.
+                                </p>
+                            </div>
+                            <div class="status-badge disconnected" id="lbl-owner-inactive-badge">Service Inactive</div>
+                        </div>
+
+                        <div style="background: var(--input); border: 1px solid var(--border); border-radius: 24px; padding: 28px; margin: 20px 0;">
+                            <div style="font-size: 0.75rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 8px;" id="lbl-owner-monthly-label">Monthly Subscription</div>
+                            <div style="font-size: 2.2rem; font-weight: 800; font-family: 'Outfit', sans-serif; color: var(--text);" id="owner-unsub-price">$29.00 USD <span style="font-size: 1rem; color: var(--text-dim); font-weight: 500;">/ month</span></div>
+                            <p style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6; margin-top: 14px;" id="lbl-owner-features-text">
+                                • Seamless Stripe integration with daily automatic payouts to your bank account.<br>
+                                • Support for cards, Apple Pay, Google Pay, and localized digital checkout.<br>
+                                • Real-time payment tracking, order status automation, and instant thermal receipt printing.
+                            </p>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 25px;">
+                            <button class="btn-action btn-primary" style="padding: 18px 42px; font-size: 1rem;" id="btn-owner-subscribe" onclick="ownerSubscribeToOnlinePayments()">
+                                SUBSCRIBE TO ONLINE PAYMENTS
+                            </button>
                         </div>
                     </div>
 
+                    <!-- CASE B: RESTAURANT HAS ONLINE PAYMENTS ACTIVE (READ-ONLY) -->
+                    <div class="config-card hidden" id="restaurant-active-card">
+                        <div class="card-header">
+                            <div>
+                                <h2 id="lbl-owner-active-title">Online Payments Status</h2>
+                                <p id="lbl-owner-active-desc" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Overview of your online payment processing subscription and authorized configuration.</p>
+                            </div>
+                            <div class="status-badge connected" id="owner-active-status-badge">Active</div>
+                        </div>
+
+                        <div class="info-grid">
+                            <div class="info-box">
+                                <label id="lbl-own-sub-state">Subscription Status</label>
+                                <div class="value" id="owner-val-sub-state">Active</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-own-price">Monthly Price</label>
+                                <div class="value" id="owner-val-price">$29.00 USD</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-own-due-date">Due Date</label>
+                                <div class="value" id="owner-val-due-date">-</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-own-days-left">Days Remaining</label>
+                                <div class="value" id="owner-val-days-left">-</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-own-auth-mode">Authorized Payment Mode</label>
+                                <div class="value" id="owner-val-auth-mode">-</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-own-stripe-status">Stripe Connection Status</label>
+                                <div class="value" id="owner-val-stripe-status">Connected</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-own-stripe-id">Stripe Account ID</label>
+                                <div class="value" id="owner-val-stripe-id">-</div>
+                            </div>
+                        </div>
+
+                        <!-- Restaurant Payment History Section -->
+                        <div class="movements-section">
+                            <div class="movements-header">
+                                <div>
+                                    <h3 id="lbl-movements-title">My Payments & Movements</h3>
+                                    <p id="lbl-movements-desc" style="font-size: 0.8rem; color: var(--text-dim); margin-top:2px;">Online customer payments and transactions processed for your restaurant.</p>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <button class="btn-action btn-secondary" style="padding: 10px 18px; font-size: 0.8rem;" id="lbl-btn-download-csv" onclick="downloadCSVReport()">Download CSV Report</button>
+                                    <button class="btn-action btn-secondary" style="padding: 10px 18px; font-size: 0.8rem;" id="lbl-btn-refresh-logs" onclick="loadRestaurantPaymentLogs()">Refresh Movements</button>
+                                </div>
+                            </div>
+
+                            <div class="stats-grid">
+                                <div class="stat-box">
+                                    <label id="lbl-stat-total-rec">Total Received</label>
+                                    <div class="stat-val" id="res-stat-volume">$0.00</div>
+                                </div>
+                                <div class="stat-box">
+                                    <label id="lbl-stat-succ-pay">Successful Payments</label>
+                                    <div class="stat-val" id="res-stat-count">0</div>
+                                </div>
+                                <div class="stat-box">
+                                    <label id="lbl-stat-tot-ref">Total Refunded</label>
+                                    <div class="stat-val" id="res-stat-refunded">$0.00</div>
+                                </div>
+                            </div>
+
+                            <div class="filter-row">
+                                <div class="filter-col">
+                                    <label id="lbl-filter-status">Status</label>
+                                    <select id="res-filter-status" onchange="applyRestaurantFilters()">
+                                        <option value="" id="opt-status-all">All</option>
+                                        <option value="succeeded" id="opt-status-succeeded">Succeeded</option>
+                                        <option value="pending" id="opt-status-pending">Pending</option>
+                                        <option value="failed" id="opt-status-failed">Failed</option>
+                                        <option value="refunded" id="opt-status-refunded">Refunded</option>
+                                    </select>
+                                </div>
+                                <div class="filter-col">
+                                    <label id="lbl-filter-from">From</label>
+                                    <input type="date" id="res-filter-from" onchange="applyRestaurantFilters()">
+                                </div>
+                                <div class="filter-col">
+                                    <label id="lbl-filter-to">To</label>
+                                    <input type="date" id="res-filter-to" onchange="applyRestaurantFilters()">
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th id="th-date">Date & Time</th>
+                                            <th id="th-stripe-id">Stripe Payment ID</th>
+                                            <th id="th-related">Related</th>
+                                            <th id="th-amount">Amount</th>
+                                            <th id="th-status">Status</th>
+                                            <th id="th-refunded">Refunded</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="res-logs-body">
+                                        <tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-dim);" id="td-loading-logs">Loading movements...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -388,42 +621,57 @@
     <script type="module">
         import { supabase as sb } from './supabase.js';
 
-        let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
+        let user = null, userRole = null, activeOwnerId = null, activeDomain = null, activeOwnerProfile = null;
         let connectedAccountData = null;
+        let currentRestaurantConfig = null;
+        let globalConfig = null;
         let allOwners = [];
         let rawRestaurantLogs = [];
         let currentLang = 'en';
+        let currentAdminTab = 'own_stripe';
 
         const I18N = {
             en: {
-                stripeIntegrationTitle: "Stripe Integration",
-                stripeIntegrationDesc: "Connect your Stripe account to receive online payments directly for customer orders and reservations.",
-                stripeExpressText: "Menutech uses Stripe Connect Express to process online payments safely and securely. All bank account information, identity verification, and payouts are handled directly by Stripe. Menutech never collects or stores your bank credentials or secret keys.",
-                accId: "Stripe Account ID",
-                detailsSub: "Details Submitted",
-                chargesEn: "Charges Enabled",
-                payoutsEn: "Payouts Enabled",
-                btnConnect: "Connect with Stripe",
-                btnRecheckOnboarding: "Re-check Onboarding",
-                btnCompleteOnboarding: "Complete Onboarding",
-                btnDashboard: "Open Express Dashboard",
-                btnRefreshStatus: "Refresh Status",
-                btnDisconnect: "Disconnect Account",
-                movementsTitle: "Movements",
-                movementsDesc: "Transactions and charges processed online for this account.",
-                btnDownloadCsv: "Download CSV Report",
-                btnRefreshLogs: "Refresh Movements",
-                statTotalRec: "Total Received",
-                statSuccPay: "Successful Payments",
-                statTotRef: "Total Refunded",
-                filterStatus: "Status",
-                filterFrom: "From",
-                filterTo: "To",
-                optAll: "All",
-                optSucceeded: "Succeeded",
-                optPending: "Pending",
-                optFailed: "Failed",
-                optRefunded: "Refunded",
+                findProjectSide: "Find Project",
+                activeProject: "Active Project",
+                noneSelected: "None Selected",
+                pillHome: "Home",
+                pillLogout: "Logout",
+                phDomainOrName: "Domain or Name...",
+                statusDisconnected: "Disconnected",
+                statusConnected: "Connected",
+                statusConnectedEnabled: "Connected & Enabled",
+                statusPending: "Pending Requirements",
+                statusActive: "Active",
+                statusInactive: "Inactive",
+                statusSuspended: "Suspended",
+                statusFreeAccess: "Free Access",
+                statusOverdue: "Overdue",
+                modeNone: "None / Unauthorized",
+                modeOwnStripe: "Own Stripe Account",
+                modeMenutechCommission: "Menutech Commission",
+                yesVal: "✅ Yes",
+                noVal: "❌ No",
+                pendingVal: "❌ Pending",
+                activeVal: "✅ Active",
+                inactiveVal: "❌ Inactive",
+                notConnectedVal: "Not Connected",
+                orderTag: "Order",
+                reservationTag: "Reservation",
+                toastGeneratingLink: "Generating Stripe link...",
+                toastCheckingStatus: "Checking Stripe connection status...",
+                toastStatusUpdated: "Stripe status updated!",
+                toastOpeningDashboard: "Opening Stripe Express Dashboard...",
+                toastDisconnectConfirm: "Are you sure you want to disconnect this Stripe account? Online payments will be disabled.",
+                toastDisconnecting: "Disconnecting Stripe account...",
+                toastDisconnectedSucc: "Stripe account disconnected successfully.",
+                toastConfigSaved: "Configuration saved successfully!",
+                toastServiceActivated: "Online Payments service activated!",
+                toastServiceSuspended: "Online Payments service suspended.",
+                toastRenewed: "Service renewed for 30 days!",
+                toastFreeGranted: "Free access granted to restaurant!",
+                toastNoLogsExport: "No records to export.",
+                toastCsvDownloaded: "CSV report downloaded successfully.",
                 thDate: "Date & Time",
                 thStripeId: "Stripe Payment ID",
                 thRelated: "Related",
@@ -431,66 +679,54 @@
                 thStatus: "Status",
                 thRefunded: "Refunded",
                 tdLoadingLogs: "Loading movements...",
-                tdNoLogs: "No movement records in this account.",
-                statusDisconnected: "Disconnected",
-                statusConnectedEnabled: "Connected & Enabled",
-                statusOnboardingPending: "Onboarding Pending",
-                notConnectedVal: "Not Connected",
-                yesVal: "✅ Yes",
-                noVal: "❌ No",
-                pendingVal: "❌ Pending",
-                activeVal: "✅ Active",
-                inactiveVal: "❌ Inactive",
-                findProjectSide: "Find Project",
-                activeProject: "Active Project",
-                noneSelected: "None Selected",
-                pillHome: "Home",
-                pillLogout: "Logout",
-                phDomainOrName: "Domain or Name...",
-                orderTag: "Order",
-                reservationTag: "Reservation",
-                toastReturnedStripe: "Returned from Stripe Onboarding. Updating account status...",
-                toastGeneratingLink: "Generating Stripe onboarding link...",
-                toastLinkError: "Failed to create onboarding link",
-                toastCheckingStatus: "Checking status with Stripe...",
-                toastStatusUpdated: "Account status updated!",
-                toastNoConnectedAcc: "No connected account found.",
-                toastOpeningDashboard: "Opening Express Dashboard...",
-                toastDisconnectConfirm: "Are you sure you want to disconnect this Stripe account? Online payments for your restaurant will be disabled.",
-                toastDisconnecting: "Disconnecting Stripe account...",
-                toastDisconnectedSucc: "Stripe account disconnected successfully.",
-                toastNoLogsExport: "No records to export.",
-                toastCsvDownloaded: "CSV report downloaded successfully."
+                tdNoLogs: "No movement records found.",
+                optAll: "All",
+                optSucceeded: "Succeeded",
+                optPending: "Pending",
+                optFailed: "Failed",
+                optRefunded: "Refunded"
             },
             es: {
-                stripeIntegrationTitle: "Integración con Stripe",
-                stripeIntegrationDesc: "Conecte su cuenta de Stripe para recibir pagos en línea directamente para pedidos y reservaciones.",
-                stripeExpressText: "Menutech utiliza Stripe Connect Express para procesar pagos en línea de forma segura. Toda la información bancaria, verificación de identidad y transferencias son gestionadas directamente por Stripe. Menutech nunca recopila ni almacena sus credenciales o claves secretas.",
-                accId: "ID de Cuenta Stripe",
-                detailsSub: "Detalles Enviados",
-                chargesEn: "Cobros Habilitados",
-                payoutsEn: "Transferencias Habilitadas",
-                btnConnect: "Conectar con Stripe",
-                btnRecheckOnboarding: "Recomprobar Registro",
-                btnCompleteOnboarding: "Completar Registro",
-                btnDashboard: "Abrir Panel Express",
-                btnRefreshStatus: "Actualizar Estado",
-                btnDisconnect: "Desconectar Cuenta",
-                movementsTitle: "Movimientos",
-                movementsDesc: "Transacciones y cobros procesados en línea para esta cuenta.",
-                btnDownloadCsv: "Descargar Reporte CSV",
-                btnRefreshLogs: "Refrescar Movimientos",
-                statTotalRec: "Total Recibido",
-                statSuccPay: "Pagos Exitosos",
-                statTotRef: "Total Reembolsado",
-                filterStatus: "Estado",
-                filterFrom: "Desde",
-                filterTo: "Hasta",
-                optAll: "Todos",
-                optSucceeded: "Exitoso",
-                optPending: "Pendiente",
-                optFailed: "Fallido",
-                optRefunded: "Reembolsado",
+                findProjectSide: "Buscar Proyecto",
+                activeProject: "Proyecto Activo",
+                noneSelected: "Ninguno Seleccionado",
+                pillHome: "Inicio",
+                pillLogout: "Cerrar Sesión",
+                phDomainOrName: "Dominio o Nombre...",
+                statusDisconnected: "Desconectado",
+                statusConnected: "Conectado",
+                statusConnectedEnabled: "Conectado y Habilitado",
+                statusPending: "Requisitos Pendientes",
+                statusActive: "Activo",
+                statusInactive: "Inactivo",
+                statusSuspended: "Suspendido",
+                statusFreeAccess: "Acceso Gratuito",
+                statusOverdue: "Vencido",
+                modeNone: "Ninguna / No Autorizada",
+                modeOwnStripe: "Cuenta Stripe Propia",
+                modeMenutechCommission: "Menutech Commission",
+                yesVal: "✅ Sí",
+                noVal: "❌ No",
+                pendingVal: "❌ Pendiente",
+                activeVal: "✅ Activo",
+                inactiveVal: "❌ Inactivo",
+                notConnectedVal: "No Conectado",
+                orderTag: "Pedido",
+                reservationTag: "Reserva",
+                toastGeneratingLink: "Generando enlace de Stripe...",
+                toastCheckingStatus: "Verificando estado con Stripe...",
+                toastStatusUpdated: "¡Estado de Stripe actualizado!",
+                toastOpeningDashboard: "Abriendo Panel Express de Stripe...",
+                toastDisconnectConfirm: "¿Está seguro de que desea desconectar esta cuenta de Stripe? Los pagos en línea quedarán deshabilitados.",
+                toastDisconnecting: "Desconectando cuenta de Stripe...",
+                toastDisconnectedSucc: "Cuenta de Stripe desconectada con éxito.",
+                toastConfigSaved: "¡Configuración guardada exitosamente!",
+                toastServiceActivated: "¡Servicio Online Payments activado!",
+                toastServiceSuspended: "Servicio Online Payments suspendido.",
+                toastRenewed: "¡Servicio renovado por 30 días!",
+                toastFreeGranted: "¡Acceso gratuito otorgado al restaurante!",
+                toastNoLogsExport: "No hay registros para exportar.",
+                toastCsvDownloaded: "Reporte CSV descargado con éxito.",
                 thDate: "Fecha y Hora",
                 thStripeId: "ID Pago Stripe",
                 thRelated: "Relacionado",
@@ -498,93 +734,14 @@
                 thStatus: "Estado",
                 thRefunded: "Reembolsado",
                 tdLoadingLogs: "Cargando movimientos...",
-                tdNoLogs: "No hay registros de movimientos en esta cuenta.",
-                statusDisconnected: "Desconectado",
-                statusConnectedEnabled: "Conectado y Habilitado",
-                statusOnboardingPending: "Registro Pendiente",
-                notConnectedVal: "No Conectado",
-                yesVal: "✅ Sí",
-                noVal: "❌ No",
-                pendingVal: "❌ Pendiente",
-                activeVal: "✅ Activo",
-                inactiveVal: "❌ Inactivo",
-                findProjectSide: "Buscar Proyecto",
-                activeProject: "Proyecto Activo",
-                noneSelected: "Ninguno Seleccionado",
-                pillHome: "Inicio",
-                pillLogout: "Cerrar Sesión",
-                phDomainOrName: "Dominio o Nombre...",
-                orderTag: "Pedido",
-                reservationTag: "Reserva",
-                toastReturnedStripe: "Regresó del registro de Stripe. Actualizando estado de la cuenta...",
-                toastGeneratingLink: "Generando enlace de registro de Stripe...",
-                toastLinkError: "Error al generar enlace de registro",
-                toastCheckingStatus: "Verificando estado con Stripe...",
-                toastStatusUpdated: "¡Estado de la cuenta actualizado!",
-                toastNoConnectedAcc: "No se encontró ninguna cuenta conectada.",
-                toastOpeningDashboard: "Abriendo Panel Express...",
-                toastDisconnectConfirm: "¿Está seguro de que desea desconectar esta cuenta de Stripe? Se deshabilitarán los pagos en línea de su restaurante.",
-                toastDisconnecting: "Desconectando cuenta de Stripe...",
-                toastDisconnectedSucc: "Cuenta de Stripe desconectada con éxito.",
-                toastNoLogsExport: "No hay registros para exportar.",
-                toastCsvDownloaded: "Reporte CSV descargado con éxito."
+                tdNoLogs: "No hay registros de movimientos.",
+                optAll: "Todos",
+                optSucceeded: "Exitoso",
+                optPending: "Pendiente",
+                optFailed: "Fallido",
+                optRefunded: "Reembolsado"
             }
         };
-
-        function applyLanguage(lang) {
-            currentLang = (lang === 'es') ? 'es' : 'en';
-            const dict = I18N[currentLang];
-
-            // Static text updates
-            document.getElementById('lbl-stripe-integration-title').textContent = dict.stripeIntegrationTitle;
-            document.getElementById('lbl-stripe-integration-desc').textContent = dict.stripeIntegrationDesc;
-            document.getElementById('lbl-stripe-express-text').textContent = dict.stripeExpressText;
-            document.getElementById('lbl-acc-id').textContent = dict.accId;
-            document.getElementById('lbl-details-sub').textContent = dict.detailsSub;
-            document.getElementById('lbl-charges-en').textContent = dict.chargesEn;
-            document.getElementById('lbl-payouts-en').textContent = dict.payoutsEn;
-            document.getElementById('lbl-btn-dashboard').textContent = dict.btnDashboard;
-            document.getElementById('lbl-btn-refresh-status').textContent = dict.btnRefreshStatus;
-            document.getElementById('lbl-btn-disconnect').textContent = dict.btnDisconnect;
-            document.getElementById('lbl-movements-title').textContent = dict.movementsTitle;
-            document.getElementById('lbl-movements-desc').textContent = dict.movementsDesc;
-            document.getElementById('lbl-btn-download-csv').textContent = dict.btnDownloadCsv;
-            document.getElementById('lbl-btn-refresh-logs').textContent = dict.btnRefreshLogs;
-            document.getElementById('lbl-stat-total-rec').textContent = dict.statTotalRec;
-            document.getElementById('lbl-stat-succ-pay').textContent = dict.statSuccPay;
-            document.getElementById('lbl-stat-tot-ref').textContent = dict.statTotRef;
-            document.getElementById('lbl-filter-status').textContent = dict.filterStatus;
-            document.getElementById('lbl-filter-from').textContent = dict.filterFrom;
-            document.getElementById('lbl-filter-to').textContent = dict.filterTo;
-
-            document.getElementById('opt-status-all').textContent = dict.optAll;
-            document.getElementById('opt-status-succeeded').textContent = dict.optSucceeded;
-            document.getElementById('opt-status-pending').textContent = dict.optPending;
-            document.getElementById('opt-status-failed').textContent = dict.optFailed;
-            document.getElementById('opt-status-refunded').textContent = dict.optRefunded;
-
-            document.getElementById('th-date').textContent = dict.thDate;
-            document.getElementById('th-stripe-id').textContent = dict.thStripeId;
-            document.getElementById('th-related').textContent = dict.thRelated;
-            document.getElementById('th-amount').textContent = dict.thAmount;
-            document.getElementById('th-status').textContent = dict.thStatus;
-            document.getElementById('th-refunded').textContent = dict.thRefunded;
-
-            document.getElementById('lbl-find-project-side').textContent = dict.findProjectSide;
-            document.getElementById('sidebar-tab').textContent = dict.findProjectSide;
-            document.getElementById('lbl-active-project').textContent = dict.activeProject;
-            document.getElementById('client-search').placeholder = dict.phDomainOrName;
-            document.getElementById('lbl-pill-home').textContent = dict.pillHome;
-            document.getElementById('lbl-pill-logout').textContent = dict.pillLogout;
-
-            const activeProjEl = document.getElementById('active-project-name');
-            if (activeProjEl && activeProjEl.textContent === 'None Selected' || activeProjEl.textContent === 'Ninguno Seleccionado') {
-                activeProjEl.textContent = dict.noneSelected;
-            }
-
-            renderStripeUI();
-            applyRestaurantFilters();
-        }
 
         window.showToast = (message, type = 'success') => {
             const container = document.getElementById('toast-container');
@@ -602,6 +759,22 @@
             checkSession();
         });
 
+        function initTheme() {
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            document.getElementById('theme-toggle').onclick = () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            };
+        }
+
+        function initEvents() {
+            document.getElementById('sidebar-tab').onclick = () => document.getElementById('sidebar-container').classList.toggle('collapsed');
+            const pill = document.getElementById('user-display-pill');
+            pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
+            document.addEventListener('click', () => pill.classList.remove('active'));
+            window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
+        }
+
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
             if (!session) { location.href = 'index.html'; return; }
@@ -609,9 +782,10 @@
 
             const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
             if (!profile) {
-                userRole = 'OWNER'; activeOwnerId = user.id; showApp(null); return;
+                userRole = 'OWNER'; activeOwnerId = user.id; activeOwnerProfile = null; showApp(null); return;
             }
 
+            activeOwnerProfile = profile;
             userRole = (profile.role || 'OWNER').trim().toUpperCase();
             const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'];
 
@@ -636,7 +810,7 @@
 
         async function setupContextSwitcher() {
             const search = document.getElementById('client-search');
-            const { data } = await sb.from('profiles').select('*');
+            const { data } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
             allOwners = data || [];
 
             renderOwners(allOwners);
@@ -649,28 +823,33 @@
 
         function renderOwners(owners) {
             const list = document.getElementById('client-list');
-            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.username || 'User'}</span><span class="domain">${o.domain || o.id.substring(0,8)}</span></div>`).join('');
+            list.innerHTML = owners.map(o => `
+                <div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')">
+                    <span class="name">${o.username || 'Restaurant'}</span>
+                    <span class="domain">${o.domain || o.id.substring(0,8)}</span>
+                </div>
+            `).join('');
         }
 
         window.switchContext = async (ownerId) => {
             const owner = allOwners.find(o => o.id === ownerId);
             if (!owner) return;
-            activeOwnerId = ownerId; activeDomain = owner.domain;
+            activeOwnerId = ownerId;
+            activeOwnerProfile = owner;
+            activeDomain = owner.domain;
             document.getElementById('view-domain-title').textContent = activeDomain || "No Domain Set";
             document.getElementById('active-project-name').textContent = owner.username || owner.email;
             document.getElementById('project-info').classList.remove('hidden');
             renderOwners(allOwners);
 
             await syncLanguageForContext();
-            loadStripeAccount();
-            loadRestaurantPaymentLogs();
+            await loadAccountData();
         };
 
         async function syncLanguageForContext() {
             if (!activeOwnerId) return;
             const { data: resData } = await sb.from('menutech_restaurants').select('language').eq('user_id', activeOwnerId).maybeSingle();
-            const selectedLang = resData?.language || localStorage.getItem('menutech_restaurant_language') || 'en';
-            applyLanguage(selectedLang);
+            currentLang = resData?.language || localStorage.getItem('menutech_restaurant_language') || 'en';
         }
 
         async function showApp(profile) {
@@ -689,92 +868,204 @@
 
             await syncLanguageForContext();
 
-            // Check URL parameters for onboarding return/refresh
+            // Check URL parameters for return alerts
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('stripe_return') === 'true') {
-                showToast(I18N[currentLang].toastReturnedStripe, "warning");
+                showToast("Returned from Stripe Onboarding. Updating account status...", "warning");
+            } else if (urlParams.get('sub_success') === 'true') {
+                showToast("Subscription to Online Payments activated successfully!", "success");
             }
 
-            await loadStripeAccount();
-            await loadRestaurantPaymentLogs();
+            await loadAccountData();
         }
 
-        async function loadStripeAccount() {
+        async function loadAccountData() {
             if (!activeOwnerId) return;
 
-            const { data } = await sb.from('menutech_stripe_accounts').select('*').eq('user_id', activeOwnerId).maybeSingle();
-            connectedAccountData = data;
-            renderStripeUI();
+            // Load Global Config
+            const { data: glob } = await sb.from('menutech_online_payment_global_config').select('*').limit(1).maybeSingle();
+            globalConfig = glob || { monthly_price: 29.00 };
 
-            if (data && data.stripe_account_id) {
-                checkAccountStatus(true);
+            // Load Connected Stripe Account
+            const { data: stripeAcc } = await sb.from('menutech_stripe_accounts').select('*').eq('user_id', activeOwnerId).maybeSingle();
+            connectedAccountData = stripeAcc;
+
+            // Load Restaurant Payment Config
+            const { data: payCfg } = await sb.from('menutech_restaurant_payment_configs').select('*').eq('user_id', activeOwnerId).maybeSingle();
+            currentRestaurantConfig = payCfg || {
+                user_id: activeOwnerId,
+                service_status: 'inactive',
+                monthly_price: globalConfig.monthly_price || 29.00,
+                payment_mode: 'none',
+                commission_rate: 0.00,
+                is_free_access: false
+            };
+
+            const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'];
+            const isAdmin = privilegedRoles.includes(userRole);
+
+            if (isAdmin) {
+                document.getElementById('admin-view-container').classList.remove('hidden');
+                document.getElementById('restaurant-view-container').classList.add('hidden');
+                renderAdminUI();
+            } else {
+                document.getElementById('admin-view-container').classList.add('hidden');
+                document.getElementById('restaurant-view-container').classList.remove('hidden');
+                renderRestaurantOwnerUI();
             }
         }
 
-        function renderStripeUI() {
-            const badge = document.getElementById('account-status-badge');
-            const valAccountId = document.getElementById('val-account-id');
-            const valDetails = document.getElementById('val-details-submitted');
-            const valCharges = document.getElementById('val-charges-enabled');
-            const valPayouts = document.getElementById('val-payouts-enabled');
-            const btnConnectLabel = document.getElementById('btn-connect-label');
-            const btnDashboard = document.getElementById('btn-dashboard');
-            const btnDisconnect = document.getElementById('btn-disconnect');
+        // ==========================================
+        // ADMIN VIEW IMPLEMENTATION
+        // ==========================================
+        window.switchAdminTab = (tabName) => {
+            currentAdminTab = tabName;
+            const btnOwn = document.getElementById('tab-btn-own-stripe');
+            const btnComm = document.getElementById('tab-btn-commission');
+            const tabOwn = document.getElementById('admin-tab-own-stripe');
+            const tabComm = document.getElementById('admin-tab-commission');
+
+            if (tabName === 'own_stripe') {
+                btnOwn.classList.add('active');
+                btnComm.classList.remove('active');
+                tabOwn.classList.remove('hidden');
+                tabComm.classList.add('hidden');
+            } else {
+                btnComm.classList.add('active');
+                btnOwn.classList.remove('active');
+                tabComm.classList.remove('hidden');
+                tabOwn.classList.add('hidden');
+            }
+        };
+
+        function renderAdminUI() {
             const dict = I18N[currentLang];
 
-            if (!connectedAccountData || !connectedAccountData.stripe_account_id) {
-                badge.className = 'status-badge disconnected';
-                badge.textContent = dict.statusDisconnected;
-                valAccountId.textContent = dict.notConnectedVal;
+            // Tab 1: Own Stripe Account
+            const stripeBadge = document.getElementById('admin-stripe-badge');
+            const valAccId = document.getElementById('admin-val-acc-id');
+            const valDetails = document.getElementById('admin-val-details');
+            const valCharges = document.getElementById('admin-val-charges');
+            const valPayouts = document.getElementById('admin-val-payouts');
+            const btnDashboard = document.getElementById('admin-btn-dashboard');
+            const btnDisconnect = document.getElementById('admin-btn-disconnect');
+            const inputAccId = document.getElementById('admin-input-account-id');
+
+            if (connectedAccountData && connectedAccountData.stripe_account_id) {
+                valAccId.textContent = connectedAccountData.stripe_account_id;
+                inputAccId.value = connectedAccountData.stripe_account_id;
+                valDetails.textContent = connectedAccountData.details_submitted ? dict.yesVal : dict.pendingVal;
+                valCharges.textContent = connectedAccountData.charges_enabled ? dict.activeVal : dict.inactiveVal;
+                valPayouts.textContent = connectedAccountData.payouts_enabled ? dict.activeVal : dict.inactiveVal;
+
+                if (connectedAccountData.charges_enabled && connectedAccountData.payouts_enabled) {
+                    stripeBadge.className = 'status-badge connected';
+                    stripeBadge.textContent = dict.statusConnectedEnabled;
+                } else {
+                    stripeBadge.className = 'status-badge pending';
+                    stripeBadge.textContent = dict.statusPending;
+                }
+                btnDashboard.style.display = 'inline-flex';
+                btnDisconnect.style.display = 'inline-flex';
+            } else {
+                valAccId.textContent = dict.notConnectedVal;
+                inputAccId.value = '';
                 valDetails.textContent = dict.noVal;
                 valCharges.textContent = dict.noVal;
                 valPayouts.textContent = dict.noVal;
-                btnConnectLabel.textContent = dict.btnConnect;
+                stripeBadge.className = 'status-badge disconnected';
+                stripeBadge.textContent = dict.statusDisconnected;
                 btnDashboard.style.display = 'none';
                 btnDisconnect.style.display = 'none';
-                return;
             }
 
-            const { stripe_account_id, details_submitted, charges_enabled, payouts_enabled } = connectedAccountData;
-            valAccountId.textContent = stripe_account_id;
-            valDetails.textContent = details_submitted ? dict.yesVal : dict.pendingVal;
-            valCharges.textContent = charges_enabled ? dict.activeVal : dict.inactiveVal;
-            valPayouts.textContent = payouts_enabled ? dict.activeVal : dict.inactiveVal;
+            // Tab 2: Menutech Commission
+            const commBadge = document.getElementById('admin-commission-badge');
+            const valCommStatus = document.getElementById('admin-val-comm-status');
+            const valCommRate = document.getElementById('admin-val-comm-rate');
+            const inputCommPct = document.getElementById('admin-input-commission-pct');
 
-            if (charges_enabled && payouts_enabled) {
-                badge.className = 'status-badge connected';
-                badge.textContent = dict.statusConnectedEnabled;
-                btnConnectLabel.textContent = dict.btnRecheckOnboarding;
+            const isCommMode = currentRestaurantConfig.payment_mode === 'menutech_commission';
+            const commRate = parseFloat(currentRestaurantConfig.commission_rate || 0).toFixed(2);
+
+            valCommRate.textContent = `${commRate}%`;
+            inputCommPct.value = commRate;
+
+            if (isCommMode) {
+                commBadge.className = 'status-badge connected';
+                commBadge.textContent = 'Authorized';
+                valCommStatus.textContent = '✅ Autorizada (Activa)';
             } else {
-                badge.className = 'status-badge pending';
-                badge.textContent = dict.statusOnboardingPending;
-                btnConnectLabel.textContent = dict.btnCompleteOnboarding;
+                commBadge.className = 'status-badge disconnected';
+                commBadge.textContent = 'Inactive';
+                valCommStatus.textContent = '❌ No Autorizada';
             }
 
-            btnDashboard.style.display = 'inline-flex';
-            btnDisconnect.style.display = 'inline-flex';
+            // General Information Section
+            document.getElementById('admin-gen-res-name').textContent = activeOwnerProfile?.username || activeOwnerProfile?.domain || 'Restaurant';
+
+            const svcStatus = currentRestaurantConfig.service_status || 'inactive';
+            const statusBadgeMap = {
+                active: `<span class="status-badge active">${dict.statusActive}</span>`,
+                inactive: `<span class="status-badge inactive">${dict.statusInactive}</span>`,
+                suspended: `<span class="status-badge suspended">${dict.statusSuspended}</span>`,
+                free_access: `<span class="status-badge connected">${dict.statusFreeAccess}</span>`,
+                overdue: `<span class="status-badge warning">${dict.statusOverdue}</span>`
+            };
+            document.getElementById('admin-gen-svc-status').innerHTML = statusBadgeMap[svcStatus] || svcStatus;
+
+            // Monthly Fee Status & Calculation
+            const price = parseFloat(currentRestaurantConfig.monthly_price || 29.00).toFixed(2);
+            document.getElementById('admin-gen-price').textContent = `$${price} USD`;
+
+            const startDate = currentRestaurantConfig.service_start_date ? currentRestaurantConfig.service_start_date.substring(0, 10) : '-';
+            const dueDate = currentRestaurantConfig.next_due_date ? currentRestaurantConfig.next_due_date.substring(0, 10) : '-';
+            document.getElementById('admin-gen-start-date').textContent = startDate;
+            document.getElementById('admin-gen-due-date').textContent = dueDate;
+
+            // Days left calculation
+            if (currentRestaurantConfig.next_due_date) {
+                const diffTime = new Date(currentRestaurantConfig.next_due_date) - new Date();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                document.getElementById('admin-gen-days-left').textContent = diffDays > 0 ? `${diffDays} days` : 'Expired';
+                document.getElementById('admin-gen-sub-status').textContent = diffDays > 0 ? 'Al Día' : 'Vencida';
+            } else {
+                document.getElementById('admin-gen-days-left').textContent = '-';
+                document.getElementById('admin-gen-sub-status').textContent = svcStatus === 'free_access' ? 'Acceso Gratuito' : 'Sin Vencimiento';
+            }
+
+            // Mode string
+            let modeStr = dict.modeNone;
+            if (currentRestaurantConfig.payment_mode === 'own_stripe') modeStr = dict.modeOwnStripe;
+            else if (currentRestaurantConfig.payment_mode === 'menutech_commission') modeStr = dict.modeMenutechCommission;
+            document.getElementById('admin-gen-auth-mode').textContent = modeStr;
+
+            document.getElementById('admin-gen-stripe-status').textContent = (connectedAccountData && connectedAccountData.stripe_account_id) ? (connectedAccountData.charges_enabled ? dict.statusConnectedEnabled : dict.statusPending) : dict.statusDisconnected;
+            document.getElementById('admin-gen-stripe-acc').textContent = connectedAccountData?.stripe_account_id || '-';
+            document.getElementById('admin-gen-comm-rate').textContent = `${commRate}%`;
+
+            // Access Controls Form Inputs
+            document.getElementById('admin-ctrl-service-status').value = currentRestaurantConfig.service_status || 'inactive';
+            document.getElementById('admin-ctrl-monthly-price').value = currentRestaurantConfig.monthly_price || 29.00;
+            document.getElementById('admin-ctrl-due-date').value = currentRestaurantConfig.next_due_date ? currentRestaurantConfig.next_due_date.substring(0, 10) : '';
         }
 
-        window.startStripeConnect = async () => {
-            const btn = document.getElementById('btn-connect');
+        // Admin Stripe Actions
+        window.adminStartStripeConnect = async () => {
+            const btn = document.getElementById('admin-btn-connect');
             btn.disabled = true;
             const dict = I18N[currentLang];
             showToast(dict.toastGeneratingLink, "warning");
 
             try {
                 const response = await sb.functions.invoke('stripe-connect', {
-                    body: {
-                        action: 'create_onboarding_link',
-                        target_user_id: activeOwnerId
-                    }
+                    body: { action: 'create_onboarding_link', target_user_id: activeOwnerId }
                 });
 
-                if (response.error) {
-                    showToast("Error: " + (response.error.message || dict.toastLinkError), "error");
-                } else if (response.data && response.data.url) {
+                if (response.data && response.data.url) {
                     window.location.href = response.data.url;
-                } else if (response.data && response.data.error) {
-                    showToast("Stripe error: " + response.data.error, "error");
+                } else if (response.error || response.data?.error) {
+                    showToast("Error: " + (response.error?.message || response.data?.error), "error");
                 }
             } catch (err) {
                 showToast("Exception: " + err.message, "error");
@@ -783,45 +1074,66 @@
             }
         };
 
-        window.checkAccountStatus = async (silent = false) => {
-            if (!activeOwnerId) return;
-            const dict = I18N[currentLang];
-            if (!silent) showToast(dict.toastCheckingStatus, "warning");
+        window.adminLinkExistingStripeAccount = async () => {
+            const accountId = (document.getElementById('admin-input-account-id').value || '').trim();
+            if (!accountId || !accountId.startsWith('acct_')) {
+                showToast("Please enter a valid Stripe Account ID starting with 'acct_'", "warning");
+                return;
+            }
 
             try {
                 const response = await sb.functions.invoke('stripe-connect', {
                     body: {
-                        action: 'get_account_status',
-                        target_user_id: activeOwnerId
+                        action: 'link_existing_account',
+                        target_user_id: activeOwnerId,
+                        stripe_account_id: accountId
                     }
+                });
+
+                if (response.data && response.data.success) {
+                    connectedAccountData = response.data.account;
+                    showToast("Stripe Account ID linked successfully!", "success");
+                    renderAdminUI();
+                } else {
+                    showToast("Error: " + (response.error?.message || response.data?.error), "error");
+                }
+            } catch (err) {
+                showToast("Exception: " + err.message, "error");
+            }
+        };
+
+        window.adminCheckAccountStatus = async () => {
+            const dict = I18N[currentLang];
+            showToast(dict.toastCheckingStatus, "warning");
+
+            try {
+                const response = await sb.functions.invoke('stripe-connect', {
+                    body: { action: 'get_account_status', target_user_id: activeOwnerId }
                 });
 
                 if (response.data && response.data.account) {
                     connectedAccountData = response.data.account;
-                    renderStripeUI();
-                    if (!silent) showToast(dict.toastStatusUpdated, "success");
+                    renderAdminUI();
+                    showToast(dict.toastStatusUpdated, "success");
                 } else if (response.data && response.data.not_connected) {
                     connectedAccountData = null;
-                    renderStripeUI();
-                    if (!silent) showToast(dict.toastNoConnectedAcc, "warning");
-                } else if (response.data && response.data.error && !silent) {
+                    renderAdminUI();
+                    showToast("No Stripe account connected.", "warning");
+                } else if (response.data && response.data.error) {
                     showToast("Error: " + response.data.error, "error");
                 }
             } catch (err) {
-                if (!silent) showToast("Error: " + err.message, "error");
+                showToast("Exception: " + err.message, "error");
             }
         };
 
-        window.openStripeDashboard = async () => {
+        window.adminOpenStripeDashboard = async () => {
             const dict = I18N[currentLang];
             showToast(dict.toastOpeningDashboard, "warning");
 
             try {
                 const response = await sb.functions.invoke('stripe-connect', {
-                    body: {
-                        action: 'create_login_link',
-                        target_user_id: activeOwnerId
-                    }
+                    body: { action: 'create_login_link', target_user_id: activeOwnerId }
                 });
 
                 if (response.data && response.data.url) {
@@ -834,35 +1146,307 @@
             }
         };
 
-        window.disconnectStripeAccount = async () => {
+        window.adminDisconnectStripeAccount = async () => {
             const dict = I18N[currentLang];
-            if (!confirm(dict.toastDisconnectConfirm)) {
-                return;
-            }
+            if (!confirm(dict.toastDisconnectConfirm)) return;
 
             showToast(dict.toastDisconnecting, "warning");
 
             try {
                 const response = await sb.functions.invoke('stripe-connect', {
-                    body: {
-                        action: 'disconnect_account',
-                        target_user_id: activeOwnerId
-                    }
+                    body: { action: 'disconnect_account', target_user_id: activeOwnerId }
                 });
 
                 if (response.data && response.data.success) {
                     connectedAccountData = null;
-                    renderStripeUI();
+                    renderAdminUI();
                     showToast(dict.toastDisconnectedSucc, "success");
                 } else if (response.data && response.data.error) {
-                    showToast("Disconnect error: " + response.data.error, "error");
+                    showToast("Error: " + response.data.error, "error");
                 }
             } catch (err) {
                 showToast("Exception: " + err.message, "error");
             }
         };
 
-        // --- Individual Restaurant Payments History Logic ---
+        window.adminAuthorizePaymentMode = async (mode) => {
+            try {
+                const response = await sb.functions.invoke('stripe-connect', {
+                    body: {
+                        action: 'update_payment_config',
+                        target_user_id: activeOwnerId,
+                        payment_config: { payment_mode: mode }
+                    }
+                });
+
+                if (response.data && response.data.success) {
+                    currentRestaurantConfig = response.data.config;
+                    renderAdminUI();
+                    showToast(`Authorized payment mode: ${mode === 'own_stripe' ? 'Own Stripe Account' : 'Menutech Commission'}`, "success");
+                } else {
+                    showToast("Error: " + (response.error?.message || response.data?.error), "error");
+                }
+            } catch (err) {
+                showToast("Exception: " + err.message, "error");
+            }
+        };
+
+        window.adminSaveCommissionConfig = async (authorize = false) => {
+            const pct = parseFloat(document.getElementById('admin-input-commission-pct').value) || 0;
+            const payload = { commission_rate: pct };
+            if (authorize) payload.payment_mode = 'menutech_commission';
+
+            try {
+                const response = await sb.functions.invoke('stripe-connect', {
+                    body: {
+                        action: 'update_payment_config',
+                        target_user_id: activeOwnerId,
+                        payment_config: payload
+                    }
+                });
+
+                if (response.data && response.data.success) {
+                    currentRestaurantConfig = response.data.config;
+                    renderAdminUI();
+                    showToast(authorize ? "Menutech Commission modality authorized!" : "Commission percentage updated!", "success");
+                } else {
+                    showToast("Error: " + (response.error?.message || response.data?.error), "error");
+                }
+            } catch (err) {
+                showToast("Exception: " + err.message, "error");
+            }
+        };
+
+        window.adminRevokeCommissionMode = async () => {
+            try {
+                const response = await sb.functions.invoke('stripe-connect', {
+                    body: {
+                        action: 'update_payment_config',
+                        target_user_id: activeOwnerId,
+                        payment_config: { payment_mode: 'none' }
+                    }
+                });
+
+                if (response.data && response.data.success) {
+                    currentRestaurantConfig = response.data.config;
+                    renderAdminUI();
+                    showToast("Menutech Commission modality revoked.", "warning");
+                } else {
+                    showToast("Error: " + (response.error?.message || response.data?.error), "error");
+                }
+            } catch (err) {
+                showToast("Exception: " + err.message, "error");
+            }
+        };
+
+        // Service Access Controls
+        window.adminActivateService = async (activate = true) => {
+            const nextDue = new Date();
+            nextDue.setDate(nextDue.getDate() + 30);
+
+            const payload = {
+                service_status: activate ? 'active' : 'suspended',
+                is_free_access: false
+            };
+            if (activate && !currentRestaurantConfig.next_due_date) {
+                payload.next_due_date = nextDue.toISOString();
+            }
+
+            try {
+                const response = await sb.functions.invoke('stripe-connect', {
+                    body: {
+                        action: 'update_payment_config',
+                        target_user_id: activeOwnerId,
+                        payment_config: payload
+                    }
+                });
+
+                if (response.data && response.data.success) {
+                    currentRestaurantConfig = response.data.config;
+                    renderAdminUI();
+                    showToast(activate ? I18N[currentLang].toastServiceActivated : I18N[currentLang].toastServiceSuspended, activate ? "success" : "warning");
+                } else {
+                    showToast("Error: " + (response.error?.message || response.data?.error), "error");
+                }
+            } catch (err) {
+                showToast("Exception: " + err.message, "error");
+            }
+        };
+
+        window.adminRenewService30Days = async () => {
+            const baseDate = (currentRestaurantConfig.next_due_date && new Date(currentRestaurantConfig.next_due_date) > new Date())
+                ? new Date(currentRestaurantConfig.next_due_date)
+                : new Date();
+            baseDate.setDate(baseDate.getDate() + 30);
+
+            try {
+                const response = await sb.functions.invoke('stripe-connect', {
+                    body: {
+                        action: 'update_payment_config',
+                        target_user_id: activeOwnerId,
+                        payment_config: {
+                            service_status: 'active',
+                            next_due_date: baseDate.toISOString()
+                        }
+                    }
+                });
+
+                if (response.data && response.data.success) {
+                    currentRestaurantConfig = response.data.config;
+                    renderAdminUI();
+                    showToast(I18N[currentLang].toastRenewed, "success");
+                } else {
+                    showToast("Error: " + (response.error?.message || response.data?.error), "error");
+                }
+            } catch (err) {
+                showToast("Exception: " + err.message, "error");
+            }
+        };
+
+        window.adminGrantFreeAccess = async () => {
+            try {
+                const response = await sb.functions.invoke('stripe-connect', {
+                    body: {
+                        action: 'update_payment_config',
+                        target_user_id: activeOwnerId,
+                        payment_config: {
+                            service_status: 'free_access',
+                            is_free_access: true,
+                            next_due_date: null
+                        }
+                    }
+                });
+
+                if (response.data && response.data.success) {
+                    currentRestaurantConfig = response.data.config;
+                    renderAdminUI();
+                    showToast(I18N[currentLang].toastFreeGranted, "success");
+                } else {
+                    showToast("Error: " + (response.error?.message || response.data?.error), "error");
+                }
+            } catch (err) {
+                showToast("Exception: " + err.message, "error");
+            }
+        };
+
+        window.adminSaveServiceAccessControls = async () => {
+            const status = document.getElementById('admin-ctrl-service-status').value;
+            const price = parseFloat(document.getElementById('admin-ctrl-monthly-price').value) || 29.00;
+            const dueDateVal = document.getElementById('admin-ctrl-due-date').value;
+
+            const payload = {
+                service_status: status,
+                monthly_price: price,
+                next_due_date: dueDateVal ? new Date(dueDateVal + 'T23:59:59').toISOString() : null,
+                is_free_access: status === 'free_access'
+            };
+
+            try {
+                const response = await sb.functions.invoke('stripe-connect', {
+                    body: {
+                        action: 'update_payment_config',
+                        target_user_id: activeOwnerId,
+                        payment_config: payload
+                    }
+                });
+
+                if (response.data && response.data.success) {
+                    currentRestaurantConfig = response.data.config;
+                    renderAdminUI();
+                    showToast(I18N[currentLang].toastConfigSaved, "success");
+                } else {
+                    showToast("Error: " + (response.error?.message || response.data?.error), "error");
+                }
+            } catch (err) {
+                showToast("Exception: " + err.message, "error");
+            }
+        };
+
+
+        // ==========================================
+        // RESTAURANT OWNER VIEW IMPLEMENTATION
+        // ==========================================
+        function renderRestaurantOwnerUI() {
+            const dict = I18N[currentLang];
+            const hasService = currentRestaurantConfig && (currentRestaurantConfig.service_status === 'active' || currentRestaurantConfig.service_status === 'free_access');
+
+            const unsubCard = document.getElementById('restaurant-unsubscribed-card');
+            const activeCard = document.getElementById('restaurant-active-card');
+
+            if (!hasService) {
+                // Show paywall / subscription option
+                unsubCard.classList.remove('hidden');
+                activeCard.classList.add('hidden');
+
+                const price = parseFloat(currentRestaurantConfig.monthly_price || globalConfig.monthly_price || 29.00).toFixed(2);
+                document.getElementById('owner-unsub-price').innerHTML = `$${price} USD <span style="font-size: 1rem; color: var(--text-dim); font-weight: 500;">/ month</span>`;
+            } else {
+                // Show subscribed read-only overview
+                unsubCard.classList.add('hidden');
+                activeCard.classList.remove('hidden');
+
+                const isFree = currentRestaurantConfig.service_status === 'free_access' || currentRestaurantConfig.is_free_access;
+                const statusBadge = document.getElementById('owner-active-status-badge');
+                statusBadge.className = isFree ? 'status-badge connected' : 'status-badge active';
+                statusBadge.textContent = isFree ? dict.statusFreeAccess : dict.statusActive;
+
+                document.getElementById('owner-val-sub-state').textContent = isFree ? dict.statusFreeAccess : dict.statusActive;
+                document.getElementById('owner-val-price').textContent = isFree ? 'Complimentary ($0.00)' : `$${parseFloat(currentRestaurantConfig.monthly_price || 29.00).toFixed(2)} USD`;
+
+                const dueDate = currentRestaurantConfig.next_due_date ? currentRestaurantConfig.next_due_date.substring(0, 10) : (isFree ? 'Permanent' : '-');
+                document.getElementById('owner-val-due-date').textContent = dueDate;
+
+                if (currentRestaurantConfig.next_due_date) {
+                    const diffTime = new Date(currentRestaurantConfig.next_due_date) - new Date();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    document.getElementById('owner-val-days-left').textContent = diffDays > 0 ? `${diffDays} days` : 'Overdue';
+                } else {
+                    document.getElementById('owner-val-days-left').textContent = isFree ? '∞' : '-';
+                }
+
+                let modeStr = dict.modeNone;
+                if (currentRestaurantConfig.payment_mode === 'own_stripe') modeStr = dict.modeOwnStripe;
+                else if (currentRestaurantConfig.payment_mode === 'menutech_commission') modeStr = dict.modeMenutechCommission;
+                document.getElementById('owner-val-auth-mode').textContent = modeStr;
+
+                const isStripeConn = connectedAccountData && connectedAccountData.stripe_account_id && connectedAccountData.charges_enabled;
+                document.getElementById('owner-val-stripe-status').textContent = isStripeConn ? dict.statusConnectedEnabled : (connectedAccountData?.stripe_account_id ? dict.statusPending : dict.statusDisconnected);
+                document.getElementById('owner-val-stripe-id').textContent = connectedAccountData?.stripe_account_id || dict.notConnectedVal;
+
+                // Load payments history
+                loadRestaurantPaymentLogs();
+            }
+        }
+
+        window.ownerSubscribeToOnlinePayments = async () => {
+            const btn = document.getElementById('btn-owner-subscribe');
+            btn.disabled = true;
+            showToast("Initiating Stripe Checkout for Online Payments subscription...", "warning");
+
+            try {
+                const response = await sb.functions.invoke('stripe-payment', {
+                    body: {
+                        action: 'create_subscription_checkout_session',
+                        target_user_id: activeOwnerId
+                    }
+                });
+
+                if (response.data && response.data.url) {
+                    window.location.href = response.data.url;
+                } else {
+                    showToast("Error: " + (response.error?.message || response.data?.error || "Failed to start checkout"), "error");
+                }
+            } catch (err) {
+                showToast("Exception: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+
+        // ==========================================
+        // MOVEMENTS & PAYMENTS AUDIT HISTORY
+        // ==========================================
         window.loadRestaurantPaymentLogs = async () => {
             if (!activeOwnerId) return;
 
@@ -970,7 +1554,7 @@
                 return;
             }
 
-            const header = [dict.thDate, dict.thStripeId, dict.thRelated, dict.thAmount, "Moneda/Currency", dict.thStatus];
+            const header = [dict.thDate, dict.thStripeId, dict.thRelated, dict.thAmount, "Currency", dict.thStatus];
             const localeStr = currentLang === 'es' ? 'es-MX' : 'en-US';
             const rows = rawRestaurantLogs.map(l => [
                 `"${l.created_at ? new Date(l.created_at).toLocaleString(localeStr) : ''}"`,
@@ -992,22 +1576,6 @@
             document.body.removeChild(link);
             showToast(dict.toastCsvDownloaded, "success");
         };
-
-        function initTheme() {
-            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
-            document.getElementById('theme-toggle').onclick = () => {
-                document.body.classList.toggle('dark-mode');
-                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-            };
-        }
-
-        function initEvents() {
-            document.getElementById('sidebar-tab').onclick = () => document.getElementById('sidebar-container').classList.toggle('collapsed');
-            const pill = document.getElementById('user-display-pill');
-            pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
-            document.addEventListener('click', () => pill.classList.remove('active'));
-            window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
-        }
     </script>
     <script src="i18n.js"></script>
     <script src="chatbot.js"></script>
