@@ -1,5 +1,7 @@
 // Supabase Edge Function: stripe-payment
-// Creates Stripe Checkout sessions for orders and reservations with server-side price validation and Destination Charges.
+// Creates Stripe Checkout sessions for orders and reservations with server-side price validation,
+// supports destination charges and application fee commissions (Menutech Commission mode),
+// and supports Online Payments subscription checkout sessions.
 // Required Secret: stripe_api
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -35,7 +37,7 @@ serve(async (req: Request) => {
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
     const payload = await req.json().catch(() => ({}));
-    const { action, order_id, reservation_id, origin_url } = payload;
+    const { action, order_id, reservation_id, target_user_id, origin_url } = payload;
 
     const baseOrigin = origin_url || req.headers.get("origin") || "https://menutech.io";
 
@@ -128,6 +130,7 @@ serve(async (req: Request) => {
       return { calculatedTotal: Math.round(calculatedTotal * 100) / 100, validatedItems };
     }
 
+    // Action: create_order_checkout_session
     if (action === "create_order_checkout_session") {
       if (!order_id) {
         return new Response(
@@ -171,6 +174,13 @@ serve(async (req: Request) => {
         );
       }
 
+      // Check restaurant payment config for commission
+      const { data: resPayCfg } = await supabaseAdmin
+        .from("menutech_restaurant_payment_configs")
+        .select("*")
+        .eq("user_id", order.user_id)
+        .maybeSingle();
+
       // Fetch menu config to validate and recalculate price
       const { data: menu } = await supabaseAdmin
         .from("menutech_menus")
@@ -204,6 +214,15 @@ serve(async (req: Request) => {
       // Destination Charge: money flows directly to restaurant's connected account
       params.append("transfer_data[destination]", stripeAcc.stripe_account_id);
 
+      // If Menutech Commission mode is active and commission rate is configured, apply application fee
+      if (resPayCfg && resPayCfg.payment_mode === "menutech_commission" && parseFloat(resPayCfg.commission_rate || 0) > 0) {
+        const commissionPct = parseFloat(resPayCfg.commission_rate);
+        const commissionAmountCents = Math.round((amountInCents * commissionPct) / 100);
+        if (commissionAmountCents > 0 && commissionAmountCents < amountInCents) {
+          params.append("payment_intent_data[application_fee_amount]", commissionAmountCents.toString());
+        }
+      }
+
       // Metadata for webhook correlation
       params.append("metadata[order_id]", order.id);
       params.append("metadata[user_id]", order.user_id);
@@ -232,6 +251,7 @@ serve(async (req: Request) => {
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 
+    // Action: create_reservation_checkout_session
     } else if (action === "create_reservation_checkout_session") {
       if (!reservation_id) {
         return new Response(
@@ -275,6 +295,13 @@ serve(async (req: Request) => {
         );
       }
 
+      // Check restaurant payment config for commission
+      const { data: resPayCfg } = await supabaseAdmin
+        .from("menutech_restaurant_payment_configs")
+        .select("*")
+        .eq("user_id", resv.user_id)
+        .maybeSingle();
+
       // Recalculate pre-order items total from menu
       const { data: menu } = await supabaseAdmin
         .from("menutech_menus")
@@ -306,6 +333,15 @@ serve(async (req: Request) => {
       params.append("line_items[0][quantity]", "1");
 
       params.append("transfer_data[destination]", stripeAcc.stripe_account_id);
+
+      if (resPayCfg && resPayCfg.payment_mode === "menutech_commission" && parseFloat(resPayCfg.commission_rate || 0) > 0) {
+        const commissionPct = parseFloat(resPayCfg.commission_rate);
+        const commissionAmountCents = Math.round((amountInCents * commissionPct) / 100);
+        if (commissionAmountCents > 0 && commissionAmountCents < amountInCents) {
+          params.append("payment_intent_data[application_fee_amount]", commissionAmountCents.toString());
+        }
+      }
+
       params.append("metadata[reservation_id]", resv.id);
       params.append("metadata[user_id]", resv.user_id);
       params.append("metadata[type]", "reservation");
@@ -325,6 +361,74 @@ serve(async (req: Request) => {
           payment_status: "pending"
         })
         .eq("id", resv.id);
+
+      return new Response(
+        JSON.stringify({ url: session.url, session_id: session.id }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+
+    // Action: create_subscription_checkout_session (Restaurant subscribes to Online Payments monthly service)
+    } else if (action === "create_subscription_checkout_session") {
+      // Verify JWT auth
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: "Missing Authorization header" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token);
+
+      if (authErr || !user) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized user session" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const effectiveTargetId = target_user_id || user.id;
+
+      // Fetch pricing from restaurant config or fallback to global config
+      const { data: resCfg } = await supabaseAdmin
+        .from("menutech_restaurant_payment_configs")
+        .select("monthly_price")
+        .eq("user_id", effectiveTargetId)
+        .maybeSingle();
+
+      let price = resCfg ? parseFloat(resCfg.monthly_price) : 29.00;
+      if (!price || price <= 0) {
+        const { data: globCfg } = await supabaseAdmin
+          .from("menutech_online_payment_global_config")
+          .select("monthly_price")
+          .limit(1)
+          .maybeSingle();
+        price = globCfg ? parseFloat(globCfg.monthly_price) : 29.00;
+      }
+
+      const amountCents = Math.round(price * 100);
+
+      // Create Stripe Checkout Session (Platform direct payment)
+      const params = new URLSearchParams();
+      params.append("mode", "payment");
+      params.append("payment_method_types[0]", "card");
+      params.append("line_items[0][price_data][currency]", "usd");
+      params.append("line_items[0][price_data][product_data][name]", "Menutech Online Payments - Monthly Subscription");
+      params.append("line_items[0][price_data][product_data][description]", "Monthly access to Menutech Online Payment processing service.");
+      params.append("line_items[0][price_data][unit_amount]", amountCents.toString());
+      params.append("line_items[0][quantity]", "1");
+
+      params.append("metadata[target_user_id]", effectiveTargetId);
+      params.append("metadata[type]", "online_payment_subscription");
+
+      params.append("success_url", `${baseOrigin}/onlinePayment.html?sub_success=true`);
+      params.append("cancel_url", `${baseOrigin}/onlinePayment.html?sub_canceled=true`);
+
+      const session = await stripeFetch("/checkout/sessions", {
+        method: "POST",
+        body: params.toString()
+      });
 
       return new Response(
         JSON.stringify({ url: session.url, session_id: session.id }),
