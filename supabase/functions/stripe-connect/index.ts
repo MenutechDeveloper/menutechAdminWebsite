@@ -112,13 +112,22 @@ serve(async (req: Request) => {
       let currentAccountId = existingAccount?.stripe_account_id;
 
       if (!currentAccountId) {
-        // Fetch user email for Stripe account prefill
+        // Fetch user email & profile for Stripe account prefill
         const { data: targetUserData } = await supabaseAdmin.auth.admin.getUserById(effectiveUserId);
         const email = targetUserData?.user?.email || "";
+
+        const { data: profile } = await supabaseAdmin
+          .from("profiles")
+          .select("username, domain")
+          .eq("id", effectiveUserId)
+          .maybeSingle();
+
+        const businessName = profile?.username || profile?.domain || "Menutech Restaurant";
 
         const params = new URLSearchParams();
         params.append("type", "express");
         if (email) params.append("email", email);
+        params.append("business_profile[name]", businessName);
         params.append("capabilities[card_payments][requested]", "true");
         params.append("capabilities[transfers][requested]", "true");
 
@@ -163,45 +172,7 @@ serve(async (req: Request) => {
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 
-    // Action 2: link_existing_account (Admin manually links existing Stripe Account ID)
-    } else if (action === "link_existing_account") {
-      if (!isPrivileged) {
-        return new Response(
-          JSON.stringify({ error: "Forbidden: Only administrators can manually link Stripe accounts" }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      const inputAccountId = (stripe_account_id || "").trim();
-      if (!inputAccountId || !inputAccountId.startsWith("acct_")) {
-        return new Response(
-          JSON.stringify({ error: "Invalid Stripe Account ID. Must begin with 'acct_'" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Verify account existence in Stripe
-      const stripeAccount = await stripeFetch(`/accounts/${inputAccountId}`);
-
-      const recordToSave = {
-        user_id: effectiveUserId,
-        stripe_account_id: stripeAccount.id,
-        details_submitted: stripeAccount.details_submitted || false,
-        charges_enabled: stripeAccount.charges_enabled || false,
-        payouts_enabled: stripeAccount.payouts_enabled || false,
-        country: stripeAccount.country || "US",
-        currency: stripeAccount.default_currency || "usd",
-        updated_at: new Date().toISOString()
-      };
-
-      await supabaseAdmin.from("menutech_stripe_accounts").upsert(recordToSave, { onConflict: "user_id" });
-
-      return new Response(
-        JSON.stringify({ success: true, account: recordToSave }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-
-    // Action 3: get_account_status
+    // Action 2: get_account_status
     } else if (action === "get_account_status") {
       const { data: existingAccount } = await supabaseAdmin
         .from("menutech_stripe_accounts")
@@ -281,7 +252,7 @@ serve(async (req: Request) => {
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 
-    // Action 6: update_payment_config (Admin updates payment mode, commissions, service status, due dates)
+    // Action 5: update_payment_config (Admin updates payment mode, commissions, service status, due dates with audit trail)
     } else if (action === "update_payment_config") {
       if (!isPrivileged) {
         return new Response(
@@ -309,6 +280,14 @@ serve(async (req: Request) => {
       if (payment_config.is_free_access !== undefined) updateData.is_free_access = Boolean(payment_config.is_free_access);
       if (payment_config.next_due_date !== undefined) updateData.next_due_date = payment_config.next_due_date;
       if (payment_config.service_start_date !== undefined) updateData.service_start_date = payment_config.service_start_date;
+      if (payment_config.commission_authorized_at !== undefined) updateData.commission_authorized_at = payment_config.commission_authorized_at;
+      if (payment_config.commission_authorized_by !== undefined) updateData.commission_authorized_by = payment_config.commission_authorized_by;
+      if (payment_config.commission_revoked_at !== undefined) updateData.commission_revoked_at = payment_config.commission_revoked_at;
+
+      // Ensure modalities are strictly mutually exclusive: if own_stripe is authorized, commission_rate is reset to 0
+      if (payment_config.payment_mode === "own_stripe") {
+        updateData.commission_rate = 0.00;
+      }
 
       const { data: savedConfig, error: saveErr } = await supabaseAdmin
         .from("menutech_restaurant_payment_configs")
