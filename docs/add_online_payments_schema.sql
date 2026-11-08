@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS public.menutech_restaurant_payment_configs (
     is_free_access BOOLEAN DEFAULT FALSE,
     payment_mode TEXT NOT NULL DEFAULT 'none', -- 'none', 'own_stripe', 'menutech_commission'
     commission_rate NUMERIC(5,2) NOT NULL DEFAULT 0.00,
+    commission_authorized_at TIMESTAMPTZ,
+    commission_authorized_by TEXT,
+    commission_revoked_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

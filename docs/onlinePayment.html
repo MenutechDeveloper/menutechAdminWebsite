@@ -315,16 +315,6 @@
                             </div>
                         </div>
 
-                        <!-- Manual Account ID Link -->
-                        <div style="background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-top: 20px;">
-                            <label style="font-size: 0.72rem; font-weight: 800; color: var(--orange); text-transform: uppercase;" id="lbl-adm-link-title">Link Existing Stripe Account ID</label>
-                            <p style="font-size: 0.8rem; color: var(--text-dim); margin: 4px 0 12px 0;" id="lbl-adm-link-desc">Manually link a pre-existing Stripe account using its Stripe Account ID (starts with acct_).</p>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <input type="text" id="admin-input-account-id" placeholder="acct_1XXXXXXXXXXXX" style="flex:1; min-width: 240px; padding: 12px 16px; border-radius: 14px; background: var(--card); border: 1px solid var(--border); color: var(--text); font-family: inherit;">
-                                <button class="btn-action btn-secondary" onclick="adminLinkExistingStripeAccount()" id="lbl-adm-btn-link">Link Account ID</button>
-                            </div>
-                        </div>
-
                         <div class="actions-group">
                             <button class="btn-action btn-stripe" id="admin-btn-connect" onclick="adminStartStripeConnect()">
                                 <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.883 15.684.2 12.83.2 6.702.2 2.658 3.376 2.658 8.163c0 5.48 7.375 6.082 7.375 8.91 0 1.054-.925 1.545-2.222 1.545-2.296 0-5.185-1.1-7.05-2.148l-.946 5.568c1.697 1.026 4.793 1.83 7.747 1.83 6.327 0 10.463-2.981 10.463-8.083 0-5.748-7.533-6.26-7.533-8.799z"/></svg>
@@ -949,11 +939,9 @@
             const valPayouts = document.getElementById('admin-val-payouts');
             const btnDashboard = document.getElementById('admin-btn-dashboard');
             const btnDisconnect = document.getElementById('admin-btn-disconnect');
-            const inputAccId = document.getElementById('admin-input-account-id');
 
             if (connectedAccountData && connectedAccountData.stripe_account_id) {
                 valAccId.textContent = connectedAccountData.stripe_account_id;
-                inputAccId.value = connectedAccountData.stripe_account_id;
                 valDetails.textContent = connectedAccountData.details_submitted ? dict.yesVal : dict.pendingVal;
                 valCharges.textContent = connectedAccountData.charges_enabled ? dict.activeVal : dict.inactiveVal;
                 valPayouts.textContent = connectedAccountData.payouts_enabled ? dict.activeVal : dict.inactiveVal;
@@ -969,7 +957,6 @@
                 btnDisconnect.style.display = 'inline-flex';
             } else {
                 valAccId.textContent = dict.notConnectedVal;
-                inputAccId.value = '';
                 valDetails.textContent = dict.noVal;
                 valCharges.textContent = dict.noVal;
                 valPayouts.textContent = dict.noVal;
@@ -1074,34 +1061,6 @@
             }
         };
 
-        window.adminLinkExistingStripeAccount = async () => {
-            const accountId = (document.getElementById('admin-input-account-id').value || '').trim();
-            if (!accountId || !accountId.startsWith('acct_')) {
-                showToast("Please enter a valid Stripe Account ID starting with 'acct_'", "warning");
-                return;
-            }
-
-            try {
-                const response = await sb.functions.invoke('stripe-connect', {
-                    body: {
-                        action: 'link_existing_account',
-                        target_user_id: activeOwnerId,
-                        stripe_account_id: accountId
-                    }
-                });
-
-                if (response.data && response.data.success) {
-                    connectedAccountData = response.data.account;
-                    showToast("Stripe Account ID linked successfully!", "success");
-                    renderAdminUI();
-                } else {
-                    showToast("Error: " + (response.error?.message || response.data?.error), "error");
-                }
-            } catch (err) {
-                showToast("Exception: " + err.message, "error");
-            }
-        };
-
         window.adminCheckAccountStatus = async () => {
             const dict = I18N[currentLang];
             showToast(dict.toastCheckingStatus, "warning");
@@ -1170,12 +1129,26 @@
         };
 
         window.adminAuthorizePaymentMode = async (mode) => {
+            if (mode === 'own_stripe') {
+                if (!connectedAccountData || !connectedAccountData.stripe_account_id) {
+                    showToast("Cannot authorize Own Stripe Mode: No Stripe account connected.", "error");
+                    return;
+                }
+                if (!connectedAccountData.charges_enabled) {
+                    showToast("Cannot authorize: Stripe charges are not enabled yet. Complete onboarding requirements first.", "warning");
+                    return;
+                }
+            }
+
             try {
                 const response = await sb.functions.invoke('stripe-connect', {
                     body: {
                         action: 'update_payment_config',
                         target_user_id: activeOwnerId,
-                        payment_config: { payment_mode: mode }
+                        payment_config: {
+                            payment_mode: mode,
+                            commission_rate: mode === 'own_stripe' ? 0.00 : undefined
+                        }
                     }
                 });
 
@@ -1192,9 +1165,41 @@
         };
 
         window.adminSaveCommissionConfig = async (authorize = false) => {
-            const pct = parseFloat(document.getElementById('admin-input-commission-pct').value) || 0;
-            const payload = { commission_rate: pct };
-            if (authorize) payload.payment_mode = 'menutech_commission';
+            const pctInput = document.getElementById('admin-input-commission-pct');
+            const pct = parseFloat(pctInput.value);
+
+            if (isNaN(pct) || pct < 0 || pct > 100) {
+                showToast("Please enter a valid commission percentage between 0% and 100%.", "warning");
+                return;
+            }
+
+            if (authorize) {
+                // Must validate connected Stripe account exists
+                if (!connectedAccountData || !connectedAccountData.stripe_account_id) {
+                    showToast("Cannot authorize Menutech Commission: The restaurant must have a connected Stripe account to receive net payouts.", "error");
+                    return;
+                }
+
+                const confirmed = confirm(
+                    `CONFIRM COMMISSION AUTHORIZATION:\n\n` +
+                    `You are about to authorize the 'Menutech Commission' payment modality for this restaurant.\n` +
+                    `- Transaction Commission: ${pct.toFixed(2)}%\n` +
+                    `- Menutech will automatically collect ${pct.toFixed(2)}% on each customer order as an application fee.\n` +
+                    `- The net balance (${(100 - pct).toFixed(2)}%) will transfer to the restaurant's connected Stripe account.\n\n` +
+                    `Do you wish to authorize this modality now?`
+                );
+                if (!confirmed) return;
+            }
+
+            const payload = {
+                commission_rate: pct,
+                action_type: authorize ? 'authorize_commission' : 'update_commission_percentage'
+            };
+            if (authorize) {
+                payload.payment_mode = 'menutech_commission';
+                payload.commission_authorized_at = new Date().toISOString();
+                payload.commission_authorized_by = user.email || user.id;
+            }
 
             try {
                 const response = await sb.functions.invoke('stripe-connect', {
@@ -1208,7 +1213,7 @@
                 if (response.data && response.data.success) {
                     currentRestaurantConfig = response.data.config;
                     renderAdminUI();
-                    showToast(authorize ? "Menutech Commission modality authorized!" : "Commission percentage updated!", "success");
+                    showToast(authorize ? `Menutech Commission (${pct.toFixed(2)}%) authorized successfully!` : `Commission percentage updated to ${pct.toFixed(2)}%!`, "success");
                 } else {
                     showToast("Error: " + (response.error?.message || response.data?.error), "error");
                 }
@@ -1218,19 +1223,33 @@
         };
 
         window.adminRevokeCommissionMode = async () => {
+            const confirmed = confirm(
+                "REVOKE COMMISSION MODALITY:\n\n" +
+                "Are you sure you want to revoke the Menutech Commission modality for this restaurant?\n" +
+                "- Future customer orders will not use this modality.\n" +
+                "- The Stripe Connect account will NOT be disconnected.\n" +
+                "- Previous processed transactions remain intact.\n\n" +
+                "Proceed with revocation?"
+            );
+            if (!confirmed) return;
+
             try {
                 const response = await sb.functions.invoke('stripe-connect', {
                     body: {
                         action: 'update_payment_config',
                         target_user_id: activeOwnerId,
-                        payment_config: { payment_mode: 'none' }
+                        payment_config: {
+                            payment_mode: 'none',
+                            commission_revoked_at: new Date().toISOString(),
+                            action_type: 'revoke_commission'
+                        }
                     }
                 });
 
                 if (response.data && response.data.success) {
                     currentRestaurantConfig = response.data.config;
                     renderAdminUI();
-                    showToast("Menutech Commission modality revoked.", "warning");
+                    showToast("Menutech Commission modality revoked successfully.", "warning");
                 } else {
                     showToast("Error: " + (response.error?.message || response.data?.error), "error");
                 }
