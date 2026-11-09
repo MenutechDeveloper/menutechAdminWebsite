@@ -1,0 +1,9 @@
+--- ONLINEPAYMENT.HTML ---
+1. Selecciona al restaurante en la barra lateral izquierda y entra a la pestaña deseada según la prueba.
+2. Para vincular Connect directo: en pestaña 1 presiona "Create / Connect via Stripe" y luego "Authorize Own Stripe Mode".
+3. Para comisiones Menutech: en pestaña 2 ingresa el porcentaje deseado (ej. 5.0) y presiona "Authorize Menutech Commission".
+
+--- STRIPE DASHBOARD ---
+1. Activa el modo de prueba (Test mode) en tu cuenta principal de Stripe y habilita Stripe Connect en Configuración.
+2. Para cuenta directa (ej. La Salsita): el usuario o tú completan el onboarding de Express mediante el enlace generado por el sistema.
+3. Para comisiones (ej. La Carreta): Stripe retiene automáticamente el application_fee configurado y transfiere el resto a la cuenta vinculada.

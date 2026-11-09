@@ -1,6 +1,6 @@
 // Supabase Edge Function: stripe-connect
 // Handles Stripe Connect account creation, manual account ID linking, onboarding links, status updates, Express login links, and admin payment config updates.
-// Secrets required: stripe_api (or STRIPE_API_KEY)
+// Secret required: stripe_api
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
@@ -19,7 +19,6 @@ serve(async (req: Request) => {
   try {
     const stripeApiKey = (
       Deno.env.get("stripe_api") ||
-      Deno.env.get("STRIPE_API_KEY") ||
       ""
     ).trim();
 
