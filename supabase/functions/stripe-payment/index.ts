@@ -21,7 +21,6 @@ serve(async (req: Request) => {
   try {
     const stripeApiKey = (
       Deno.env.get("stripe_api") ||
-      Deno.env.get("STRIPE_API_KEY") ||
       ""
     ).trim();
 
