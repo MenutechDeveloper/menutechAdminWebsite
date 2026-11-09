@@ -785,28 +785,35 @@
                 sidebarContainer.classList.add('collapsed');
 
                 await setupContextSwitcher();
-                if (!activeOwnerId) {
+                if (!activeOwnerId && allOwners.length > 0) {
+                    await switchContext(allOwners[0].id);
+                } else if (!activeOwnerId) {
                     activeOwnerId = user.id;
-                    activeDomain = profile.domain;
-                    document.getElementById('view-domain-title').textContent = activeDomain || "Admin Workspace";
+                    activeDomain = profile.domain || '';
+                    document.getElementById('view-domain-title').textContent = activeDomain;
                 }
                 showApp(profile);
             } else {
                 activeOwnerId = user.id;
-                activeDomain = profile.domain;
+                activeDomain = profile.domain || '';
+                document.getElementById('view-domain-title').textContent = activeDomain;
                 showApp(profile);
             }
         }
 
         async function setupContextSwitcher() {
             const search = document.getElementById('client-search');
-            const { data } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
+            const { data } = await sb.from('profiles').select('*');
             allOwners = data || [];
 
             renderOwners(allOwners);
             search.oninput = () => {
-                const term = search.value.toLowerCase();
-                const filtered = allOwners.filter(o => (o.username || '').toLowerCase().includes(term) || (o.domain || '').toLowerCase().includes(term));
+                const term = search.value.toLowerCase().trim();
+                const filtered = allOwners.filter(o =>
+                    (o.username || '').toLowerCase().includes(term) ||
+                    (o.domain || '').toLowerCase().includes(term) ||
+                    (o.email || '').toLowerCase().includes(term)
+                );
                 renderOwners(filtered);
             };
         }
@@ -815,7 +822,7 @@
             const list = document.getElementById('client-list');
             list.innerHTML = owners.map(o => `
                 <div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')">
-                    <span class="name">${o.username || 'Restaurant'}</span>
+                    <span class="name">${o.username || o.email || 'Restaurant'}</span>
                     <span class="domain">${o.domain || o.id.substring(0,8)}</span>
                 </div>
             `).join('');
@@ -826,8 +833,8 @@
             if (!owner) return;
             activeOwnerId = ownerId;
             activeOwnerProfile = owner;
-            activeDomain = owner.domain;
-            document.getElementById('view-domain-title').textContent = activeDomain || "No Domain Set";
+            activeDomain = owner.domain || '';
+            document.getElementById('view-domain-title').textContent = activeDomain;
             document.getElementById('active-project-name').textContent = owner.username || owner.email;
             document.getElementById('project-info').classList.remove('hidden');
             renderOwners(allOwners);
