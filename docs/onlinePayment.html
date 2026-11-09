@@ -262,7 +262,7 @@
                 <div class="sidebar" id="sidebar">
                     <div class="search-box">
                         <label id="lbl-find-project-side">Find Project</label>
-                        <input type="text" id="client-search" placeholder="Domain or Name...">
+                        <input type="text" id="client-search">
                         <div class="client-list" id="client-list"></div>
                         <div id="project-info" class="switcher-box hidden" style="width: 100%; margin: 0; padding-top: 15px; border-top: 1px solid var(--border); margin-top: auto;">
                             <label id="lbl-active-project">Active Project</label>
@@ -350,7 +350,7 @@
                         <div style="background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 24px; margin-top: 10px;">
                             <div class="input-group">
                                 <label id="lbl-adm-input-comm">Transaction Commission Percentage (%)</label>
-                                <input type="number" id="admin-input-commission-pct" step="0.1" min="0" max="100" placeholder="e.g. 5.0" style="max-width: 280px;">
+                                <input type="number" id="admin-input-commission-pct" step="0.1" min="0" max="100" style="max-width: 280px;">
                             </div>
                             <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;" id="lbl-adm-comm-note">This commission fee will be collected as an application fee on every processed customer checkout session.</p>
                         </div>
@@ -437,8 +437,8 @@
                                 </select>
                             </div>
                             <div class="input-group">
-                                <label id="lbl-adm-ctrl-price">Monthly Price (USD)</label>
-                                <input type="number" id="admin-ctrl-monthly-price" step="0.5" min="0" value="29.00">
+                                <label id="lbl-adm-ctrl-price">Monthly Price</label>
+                                <input type="number" id="admin-ctrl-monthly-price" step="0.5" min="0">
                             </div>
                             <div class="input-group">
                                 <label id="lbl-adm-ctrl-duedate">Due Date</label>
@@ -448,10 +448,88 @@
 
                         <div class="actions-group" style="margin-top: 10px;">
                             <button class="btn-action btn-success" onclick="adminActivateService(true)" id="lbl-adm-btn-activate">Activate Online Payments</button>
-                            <button class="btn-action btn-danger" onclick="adminActivateService(false)" id="lbl-adm-btn-suspend">Deactivate / Suspend Service</button>
+                            <button class="btn-action btn-danger" onclick="adminActivateService(false)" id="lbl-adm-btn-suspend">Suspend services</button>
                             <button class="btn-action btn-primary" onclick="adminRenewService30Days()" id="lbl-adm-btn-renew">Renew +30 Days</button>
                             <button class="btn-action btn-secondary" onclick="adminGrantFreeAccess()" id="lbl-adm-btn-free">Grant Free Access</button>
                             <button class="btn-action btn-secondary" onclick="adminSaveServiceAccessControls()" id="lbl-adm-btn-save-access">Save Changes</button>
+                        </div>
+                    </div>
+
+                    <!-- ADMIN RESTAURANT MOVEMENTS & COMMISSIONS SECTION -->
+                    <div class="movements-section" id="admin-movements-section">
+                        <div class="movements-header">
+                            <div>
+                                <h3 id="lbl-adm-movements-title">Restaurant Payments & Movements</h3>
+                                <p id="lbl-adm-movements-desc" style="font-size: 0.8rem; color: var(--text-dim); margin-top:2px;">Online customer payments, commission earnings, and transactions processed for this restaurant.</p>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-action btn-secondary" style="padding: 10px 18px; font-size: 0.8rem;" id="lbl-adm-btn-download-csv" onclick="downloadCSVReport()">Download CSV Report</button>
+                                <button class="btn-action btn-secondary" style="padding: 10px 18px; font-size: 0.8rem;" id="lbl-adm-btn-refresh-logs" onclick="loadRestaurantPaymentLogs()">Refresh Movements</button>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <label id="lbl-adm-stat-total-rec">Total Received</label>
+                                <div class="stat-val" id="adm-res-stat-volume">$0.00</div>
+                            </div>
+                            <div class="stat-box">
+                                <label id="lbl-adm-stat-succ-pay">Successful Payments</label>
+                                <div class="stat-val" id="adm-res-stat-count">0</div>
+                            </div>
+                            <div class="stat-box">
+                                <label id="lbl-adm-stat-menutech-comm">Menutech Commission (<span id="adm-res-comm-pct-label">0%</span>)</label>
+                                <div class="stat-val" id="adm-res-stat-commission" style="color: var(--orange);">$0.00</div>
+                            </div>
+                            <div class="stat-box">
+                                <label id="lbl-adm-stat-client-payout">Net to Restaurant</label>
+                                <div class="stat-val" id="adm-res-stat-client-payout" style="color: var(--success);">$0.00</div>
+                            </div>
+                            <div class="stat-box">
+                                <label id="lbl-adm-stat-tot-ref">Total Refunded</label>
+                                <div class="stat-val" id="adm-res-stat-refunded">$0.00</div>
+                            </div>
+                        </div>
+
+                        <div class="filter-row">
+                            <div class="filter-col">
+                                <label id="lbl-adm-filter-status">Status</label>
+                                <select id="adm-res-filter-status" onchange="applyRestaurantFilters()">
+                                    <option value="" id="adm-opt-status-all">All</option>
+                                    <option value="succeeded" id="adm-opt-status-succeeded">Succeeded</option>
+                                    <option value="pending" id="adm-opt-status-pending">Pending</option>
+                                    <option value="failed" id="adm-opt-status-failed">Failed</option>
+                                    <option value="refunded" id="adm-opt-status-refunded">Refunded</option>
+                                </select>
+                            </div>
+                            <div class="filter-col">
+                                <label id="lbl-adm-filter-from">From</label>
+                                <input type="date" id="adm-res-filter-from" onchange="applyRestaurantFilters()">
+                            </div>
+                            <div class="filter-col">
+                                <label id="lbl-adm-filter-to">To</label>
+                                <input type="date" id="adm-res-filter-to" onchange="applyRestaurantFilters()">
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Stripe Payment ID</th>
+                                        <th>Related</th>
+                                        <th>Amount</th>
+                                        <th>Commission</th>
+                                        <th>Net Restaurant</th>
+                                        <th>Status</th>
+                                        <th>Refunded</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adm-res-logs-body">
+                                    <tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--text-dim);">Loading movements...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -1001,18 +1079,18 @@
             const commRate = parseFloat(currentRestaurantConfig.commission_rate || 0).toFixed(2);
 
             valCommRate.textContent = `${commRate}%`;
-            inputCommPct.value = commRate;
+            inputCommPct.value = currentRestaurantConfig.commission_rate != null && currentRestaurantConfig.commission_rate !== '' ? currentRestaurantConfig.commission_rate : '';
 
             const btnRevokeComm = document.getElementById('admin-btn-revoke-comm');
             if (isCommMode) {
                 commBadge.className = 'status-badge connected';
                 commBadge.textContent = 'Authorized';
-                valCommStatus.textContent = '✅ Autorizada (Activa)';
+                valCommStatus.textContent = 'Autorizada';
                 if (btnRevokeComm) btnRevokeComm.style.display = 'inline-flex';
             } else {
                 commBadge.className = 'status-badge disconnected';
                 commBadge.textContent = 'Inactive';
-                valCommStatus.textContent = '❌ No Autorizada';
+                valCommStatus.textContent = 'No Autorizada';
                 if (btnRevokeComm) btnRevokeComm.style.display = 'none';
             }
 
@@ -1061,8 +1139,11 @@
 
             // Access Controls Form Inputs
             document.getElementById('admin-ctrl-service-status').value = currentRestaurantConfig.service_status || 'inactive';
-            document.getElementById('admin-ctrl-monthly-price').value = currentRestaurantConfig.monthly_price || 29.00;
+            document.getElementById('admin-ctrl-monthly-price').value = currentRestaurantConfig.monthly_price != null ? currentRestaurantConfig.monthly_price : '';
             document.getElementById('admin-ctrl-due-date').value = currentRestaurantConfig.next_due_date ? currentRestaurantConfig.next_due_date.substring(0, 10) : '';
+
+            // Load payment logs and commission calculation for admin view
+            loadRestaurantPaymentLogs();
         }
 
         // Admin Stripe Actions
@@ -1511,9 +1592,16 @@
         };
 
         window.applyRestaurantFilters = () => {
-            const status = document.getElementById('res-filter-status').value;
-            const fromDate = document.getElementById('res-filter-from').value;
-            const toDate = document.getElementById('res-filter-to').value;
+            const admStatusEl = document.getElementById('adm-res-filter-status');
+            const ownStatusEl = document.getElementById('res-filter-status');
+            const admFromEl = document.getElementById('adm-res-filter-from');
+            const ownFromEl = document.getElementById('res-filter-from');
+            const admToEl = document.getElementById('adm-res-filter-to');
+            const ownToEl = document.getElementById('res-filter-to');
+
+            const status = (admStatusEl && admStatusEl.value) || (ownStatusEl && ownStatusEl.value) || '';
+            const fromDate = (admFromEl && admFromEl.value) || (ownFromEl && ownFromEl.value) || '';
+            const toDate = (admToEl && admToEl.value) || (ownToEl && ownToEl.value) || '';
 
             let filtered = rawRestaurantLogs.filter(l => {
                 if (status && (l.status || '').toLowerCase() !== status.toLowerCase()) return false;
@@ -1544,21 +1632,50 @@
                 }
             });
 
-            document.getElementById('res-stat-volume').textContent = `$${totalVol.toFixed(2)}`;
-            document.getElementById('res-stat-count').textContent = countSucceeded;
-            document.getElementById('res-stat-refunded').textContent = `$${totalRefunded.toFixed(2)}`;
+            const commRate = parseFloat(currentRestaurantConfig?.commission_rate || 0);
+            const isCommMode = currentRestaurantConfig?.payment_mode === 'menutech_commission';
+            const menutechCommissionTotal = isCommMode ? (totalVol * (commRate / 100)) : 0;
+            const clientPayoutTotal = totalVol - menutechCommissionTotal;
+
+            // Restaurant Owner View Elements
+            const ownVol = document.getElementById('res-stat-volume');
+            const ownCount = document.getElementById('res-stat-count');
+            const ownRef = document.getElementById('res-stat-refunded');
+            if (ownVol) ownVol.textContent = `$${totalVol.toFixed(2)}`;
+            if (ownCount) ownCount.textContent = countSucceeded;
+            if (ownRef) ownRef.textContent = `$${totalRefunded.toFixed(2)}`;
+
+            // Admin View Elements
+            const admVol = document.getElementById('adm-res-stat-volume');
+            const admCount = document.getElementById('adm-res-stat-count');
+            const admCommPctLbl = document.getElementById('adm-res-comm-pct-label');
+            const admCommVal = document.getElementById('adm-res-stat-commission');
+            const admClientPayout = document.getElementById('adm-res-stat-client-payout');
+            const admRef = document.getElementById('adm-res-stat-refunded');
+
+            if (admVol) admVol.textContent = `$${totalVol.toFixed(2)}`;
+            if (admCount) admCount.textContent = countSucceeded;
+            if (admCommPctLbl) admCommPctLbl.textContent = `${commRate.toFixed(1)}%`;
+            if (admCommVal) admCommVal.textContent = `$${menutechCommissionTotal.toFixed(2)}`;
+            if (admClientPayout) admClientPayout.textContent = `$${clientPayoutTotal.toFixed(2)}`;
+            if (admRef) admRef.textContent = `$${totalRefunded.toFixed(2)}`;
         }
 
         function renderRestaurantLogsTable(logs) {
-            const tbody = document.getElementById('res-logs-body');
+            const tbodyOwner = document.getElementById('res-logs-body');
+            const tbodyAdmin = document.getElementById('adm-res-logs-body');
             const dict = I18N[currentLang];
 
             if (!logs || !logs.length) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-dim);">${dict.tdNoLogs}</td></tr>`;
+                if (tbodyOwner) tbodyOwner.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-dim);">${dict.tdNoLogs}</td></tr>`;
+                if (tbodyAdmin) tbodyAdmin.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--text-dim);">${dict.tdNoLogs}</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = logs.map(l => {
+            const commRate = parseFloat(currentRestaurantConfig?.commission_rate || 0);
+            const isCommMode = currentRestaurantConfig?.payment_mode === 'menutech_commission';
+
+            const rowsOwnerHtml = logs.map(l => {
                 const localeStr = currentLang === 'es' ? 'es-MX' : 'en-US';
                 const dateStr = l.created_at ? new Date(l.created_at).toLocaleString(localeStr) : '-';
                 const status = (l.status || 'pending').toLowerCase();
@@ -1590,6 +1707,47 @@
                     <td>${refundStr}</td>
                 </tr>`;
             }).join('');
+
+            const rowsAdminHtml = logs.map(l => {
+                const localeStr = currentLang === 'es' ? 'es-MX' : 'en-US';
+                const dateStr = l.created_at ? new Date(l.created_at).toLocaleString(localeStr) : '-';
+                const status = (l.status || 'pending').toLowerCase();
+                const amt = parseFloat(l.amount) || 0;
+                const currency = (l.currency || 'usd').toUpperCase();
+
+                const commAmt = isCommMode ? (amt * (commRate / 100)) : 0;
+                const netRest = amt - commAmt;
+
+                let relatedStr = '-';
+                if (l.order_id) relatedStr = `${dict.orderTag} #${l.order_id.substring(0,8)}`;
+                else if (l.reservation_id) relatedStr = `${dict.reservationTag} #${l.reservation_id.substring(0,8)}`;
+
+                let refundStr = '$0.00';
+                if (status === 'refunded') {
+                    const refAmt = parseFloat(l.payload?.amount_refunded ? l.payload.amount_refunded / 100 : amt);
+                    refundStr = `$${refAmt.toFixed(2)} ${currency}`;
+                }
+
+                let statusLabel = status;
+                if (status === 'succeeded') statusLabel = dict.optSucceeded;
+                else if (status === 'pending') statusLabel = dict.optPending;
+                else if (status === 'failed') statusLabel = dict.optFailed;
+                else if (status === 'refunded') statusLabel = dict.optRefunded;
+
+                return `<tr>
+                    <td>${dateStr}</td>
+                    <td><code style="font-size:0.75rem; background: var(--input); padding: 4px 8px; border-radius: 8px;">${l.stripe_event_id || l.payload?.payment_intent || l.id.substring(0,8)}</code></td>
+                    <td>${relatedStr}</td>
+                    <td><strong>$${amt.toFixed(2)} ${currency}</strong></td>
+                    <td style="color: var(--orange); font-weight:700;">$${commAmt.toFixed(2)}</td>
+                    <td style="color: var(--success); font-weight:700;">$${netRest.toFixed(2)}</td>
+                    <td><span class="status-pill ${status}">${statusLabel}</span></td>
+                    <td>${refundStr}</td>
+                </tr>`;
+            }).join('');
+
+            if (tbodyOwner) tbodyOwner.innerHTML = rowsOwnerHtml;
+            if (tbodyAdmin) tbodyAdmin.innerHTML = rowsAdminHtml;
         }
 
         window.downloadCSVReport = () => {

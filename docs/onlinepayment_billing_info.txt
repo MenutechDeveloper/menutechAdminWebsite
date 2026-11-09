@@ -1,0 +1,27 @@
+================================================================================
+EXPLICACIÓN DE CONTROLES, TABLAS DE PAGOS Y DIFERENCIA ENTRE BILLING Y ONLINEPAYMENT
+================================================================================
+
+1. ¿QUÉ HACE EL BOTÓN "Renew +30 days"?
+- Extiende la fecha de vencimiento (`next_due_date`) sumándole exactamente 30 días adicionales a partir de la fecha actual (o de la fecha de corte previa).
+- Reactiva el estado del servicio de pagos en línea a "active" en caso de que se encontrara vencido o inactivo.
+
+2. ¿QUÉ HACE EL BOTÓN "Grant free access"?
+- Otorga acceso permanente y gratuito (`free_access`) al servicio de pagos en línea del restaurante sin exigir mensualidad.
+- Elimina la fecha de vencimiento (`next_due_date = null`) para que el restaurante opere sin bloqueos de suscripción.
+
+3. ¿DÓNDE CONSULTAR POR CADA RESTAURANTE CUÁNTO DINERO ENTRÓ Y EL REPORTE DE COMISIONES?
+- En `onlinePayment.html`: al seleccionar el restaurante en la barra lateral izquierda (ej. "la salsita"), ahora tienes directamente en la pantalla de Administrador la sección "Restaurant Payments & Movements".
+- Las tablas en Supabase donde se almacena cada cobro realizado desde el carrito (menú digital o reservaciones) son:
+  * `public.menutech_payment_logs`: Guarda cada evento de pago procesado por Stripe con su `user_id` (restaurante), `amount` (total pagado por el cliente), `currency`, `order_id` o `reservation_id`, `status` ('succeeded', 'refunded', etc.), y fecha exacta.
+  * `public.menutech_orders`: Guarda la orden completa con montos (`total`, `subtotal`), método (`payment_method='card'`), estado del pago (`payment_status='paid'`) y datos del cliente.
+- Cálculo matemático del reporte para la modalidad de comisión (Menutech Commission):
+  * Total Ingresado (Venta Bruta): Suma de todos los pagos con estado 'succeeded' en `menutech_payment_logs` para ese restaurante.
+  * Comisión Menutech: Total Ingresado * (Porcentaje de Comisión elegido / 100). Es lo que gana Menutech por procesar los pagos.
+  * Saldo Neto para el Restaurante: Total Ingresado - Comisión Menutech. Es el dinero neto que le corresponde al cliente.
+  * La tabla en `onlinePayment.html` te desglosa automáticamente por cada orden: Monto Total, Comisión Menutech, Monto Neto Restaurante y permite exportar todo a un reporte CSV (Excel).
+
+4. DIFERENCIA ENTRE `adminBilling.html` Y `onlinePayment.html`:
+- `adminBilling.html`: Es para cobrar la renta o suscripción SaaS mensual general de la plataforma Menutech (planes por uso de menús digitales, página web, QR y software), controlando la suspensión global del servicio de la cuenta (`profiles.is_suspended`).
+- `onlinePayment.html`: Es exclusivamente para gestionar la pasarela de pagos con tarjeta de crédito/débito de los clientes finales (Stripe Connect propio o comisión por checkout en pedidos y reservaciones) y la cuota opcional por habilitar pagos en línea.
+================================================================================
