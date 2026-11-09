@@ -4222,7 +4222,10 @@ const RES_I18N = {
         lead_time_title: "Notice Required",
         lead_time_msg: "Reservations require at least {min} minutes advance notice.",
         accept_modal_btn: "OK",
-        notification_title: "Notification"
+        notification_title: "Notification",
+        payment_method_header: "Payment Method",
+        pay_at_restaurant: "Pay at Restaurant",
+        pay_online_card: "Pay Online (Credit / Debit Card)"
     },
     es: {
         trigger_default: "Reservar una Mesa",
@@ -4299,7 +4302,10 @@ const RES_I18N = {
         lead_time_title: "Anticipación Requerida",
         lead_time_msg: "Las reservaciones requieren al menos {min} minutos de anticipación.",
         accept_modal_btn: "Aceptar",
-        notification_title: "Notificación"
+        notification_title: "Notificación",
+        payment_method_header: "Método de Pago",
+        pay_at_restaurant: "Pagar en el Restaurante",
+        pay_online_card: "Pago en Línea (Tarjeta Débito / Crédito)"
     }
 };
 
@@ -4328,7 +4334,9 @@ class MenutechReservations extends HTMLElement {
         this.step = 1; // 1: DateTime, 2: Preorder Choice, 3: Contact/Review, 4: Tracking/Success
         this.reservationId = null;
         this.reservationStatus = 'pending';
+        this.reservationPaymentStatus = 'unpaid';
         this.resTrackingChannel = null;
+        this.onlinePaymentEnabled = false;
         this.bookingData = {
             guests: 2,
             date: '',
@@ -4336,7 +4344,8 @@ class MenutechReservations extends HTMLElement {
             comments: '',
             name: '',
             phone: '',
-            email: ''
+            email: '',
+            payment_method: 'restaurant'
         };
     }
 
@@ -4428,6 +4437,22 @@ class MenutechReservations extends HTMLElement {
                     .eq('user_id', userId)
                     .maybeSingle();
                 if (menu) this.menuData = menu;
+
+                // Check if online payment is enabled for this restaurant
+                const [stripeAccRes, resCfgRes] = await Promise.all([
+                    this.supabase.from('menutech_stripe_accounts').select('charges_enabled').eq('user_id', userId).maybeSingle(),
+                    this.supabase.from('menutech_restaurant_payment_configs').select('service_status, payment_mode').eq('user_id', userId).maybeSingle()
+                ]);
+
+                const stripeAcc = stripeAccRes?.data;
+                const resCfg = resCfgRes?.data;
+                const isServiceActive = resCfg && ['active', 'free_access'].includes(resCfg.service_status);
+                const hasValidMode = resCfg && ['own_stripe', 'menutech_commission'].includes(resCfg.payment_mode);
+                const chargesEnabled = stripeAcc && stripeAcc.charges_enabled;
+
+                if (isServiceActive && hasValidMode && chargesEnabled) {
+                    this.onlinePaymentEnabled = true;
+                }
             }
 
             this.settings = {
@@ -4905,6 +4930,22 @@ class MenutechReservations extends HTMLElement {
                     <label>${this.t('email_label')}</label>
                     <input type="email" class="field-control" id="field-email" value="${email}" placeholder="${this.t('email_placeholder')}">
                 </div>
+
+                ${(this.preorderCart.length > 0 && this.onlinePaymentEnabled) ? `
+                    <div style="margin-top:15px;">
+                        <label style="font-size:0.8rem; font-weight:800; color:#333; text-transform:uppercase; margin-bottom:8px; display:block;">${this.t('payment_method_header')}</label>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <label class="res-pay-option" style="display:flex; align-items:center; gap:10px; background:#f9f9f9; padding:12px 14px; border-radius:14px; border:1.5px solid #eee; cursor:pointer; font-size:0.85rem; font-weight:600;">
+                                <input type="radio" name="res-payment-choice" value="restaurant" checked style="accent-color:#ff9533;">
+                                <span>${this.t('pay_at_restaurant')}</span>
+                            </label>
+                            <label class="res-pay-option" style="display:flex; align-items:center; gap:10px; background:#fff7ed; padding:12px 14px; border-radius:14px; border:1.5px solid #ff9533; cursor:pointer; font-size:0.85rem; font-weight:700; color:#c2410c;">
+                                <input type="radio" name="res-payment-choice" value="online" style="accent-color:#ff9533;">
+                                <span>💳 ${this.t('pay_online_card')}</span>
+                            </label>
+                        </div>
+                    </div>
+                ` : ''}
 
                 <div style="background:#fdfdfd; border:1px solid #eee; border-radius:18px; padding:18px; margin-top:15px;">
                     <div style="font-size:0.75rem; font-weight:800; color:#ff9533; text-transform:uppercase; margin-bottom:10px;">${this.t('summary_title')}</div>
@@ -5433,9 +5474,13 @@ class MenutechReservations extends HTMLElement {
             return;
         }
 
+        const paymentChoiceEl = body.querySelector('input[name="res-payment-choice"]:checked');
+        const chosenPaymentMethod = paymentChoiceEl ? paymentChoiceEl.value : 'restaurant';
+
         this.bookingData.name = name;
         this.bookingData.phone = phone;
         this.bookingData.email = email;
+        this.bookingData.payment_method = chosenPaymentMethod;
 
         // Save contact info to localStorage
         localStorage.setItem('mt_customer_info', JSON.stringify({ name, phone, email }));
@@ -5459,6 +5504,8 @@ class MenutechReservations extends HTMLElement {
                 reservation_time: this.bookingData.time,
                 comments: this.bookingData.comments,
                 preorder_items: this.preorderCart,
+                payment_method: chosenPaymentMethod,
+                payment_status: chosenPaymentMethod === 'online' ? 'unpaid' : 'not_required',
                 status: 'pending'
             };
 
@@ -5467,6 +5514,31 @@ class MenutechReservations extends HTMLElement {
 
             this.reservationId = inserted.id;
             this.reservationStatus = inserted.status || 'pending';
+            this.reservationPaymentStatus = inserted.payment_status || (chosenPaymentMethod === 'online' ? 'unpaid' : 'not_required');
+
+            // If online payment chosen and has pre-order items, redirect to Stripe checkout session
+            if (chosenPaymentMethod === 'online' && this.preorderCart.length > 0) {
+                btn.textContent = 'CONNECTING TO STRIPE...';
+                try {
+                    const payRes = await this.supabase.functions.invoke('stripe-payment', {
+                        body: {
+                            action: 'create_reservation_checkout_session',
+                            reservation_id: inserted.id,
+                            origin_url: window.location.origin
+                        }
+                    });
+
+                    if (payRes.data && payRes.data.url) {
+                        window.location.href = payRes.data.url;
+                        return;
+                    } else if (payRes.data && payRes.data.error) {
+                        console.warn('Reservation payment error:', payRes.data.error);
+                    }
+                } catch (payErr) {
+                    console.error('Error initiating reservation payment:', payErr);
+                }
+            }
+
             this.step = 4;
             this.renderStep();
             this.startReservationTracking(inserted.id);

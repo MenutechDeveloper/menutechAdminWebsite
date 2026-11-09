@@ -310,6 +310,41 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (item.paymentStatus == 'paid') ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      isEs ? "PAGADO" : "PAID",
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF10B981),
+                      ),
+                    ),
+                  ),
+                ] else if (item.paymentMethod == 'online') ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF9533).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      isEs ? "ONLINE" : "ONLINE",
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFFF9533),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
             subtitle: Column(

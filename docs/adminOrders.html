@@ -866,6 +866,22 @@
                 `;
             } else {
                 // Reservation Details
+                const rawPay = item.payment_method || 'restaurant';
+                const paymentMethod = rawPay === 'online' ? 'Online Payment (Stripe)' : 'Pay at Restaurant';
+                const payStatus = item.payment_status || (item.preorder_items && item.preorder_items.length > 0 ? (rawPay === 'online' ? 'unpaid' : 'restaurant') : 'not_required');
+                let payStatusLabel = 'Not Required';
+                let payStatusClass = 'pending';
+                if (payStatus === 'paid') {
+                    payStatusLabel = 'Paid';
+                    payStatusClass = 'accepted';
+                } else if (payStatus === 'unpaid' || payStatus === 'pending') {
+                    payStatusLabel = 'Unpaid';
+                    payStatusClass = 'pending';
+                } else if (payStatus === 'failed') {
+                    payStatusLabel = 'Failed';
+                    payStatusClass = 'rejected';
+                }
+
                 pane.innerHTML = `
                     <button class="close-details" onclick="closeDetails()">✕</button>
                     <div class="details-header">
@@ -876,10 +892,19 @@
                         <div class="header-badges">
                             <span class="type-badge reservation">📅 Reservation</span>
                             <div class="status-tag ${item.status}">${statusLabel}</div>
+                            ${item.total > 0 ? `<div class="status-tag ${payStatusClass}">💳 ${payStatusLabel}</div>` : ''}
                         </div>
                     </div>
 
                     <div class="details-grid">
+                        <div class="info-group res-label">
+                            <label>Payment Method</label>
+                            <p style="font-size:0.95rem; font-weight:700; color:var(--text);">${paymentMethod}</p>
+                        </div>
+                        <div class="info-group res-label">
+                            <label>Payment Status</label>
+                            <p style="font-size:0.95rem; font-weight:700; color:${payStatus === 'paid' ? '#10b981' : (rawPay === 'online' ? 'var(--orange)' : 'var(--text-dim)')};">${payStatusLabel}</p>
+                        </div>
                         <div class="info-group res-label">
                             <label>Guests</label>
                             <p style="font-size:1rem; color:var(--purple);">${item.party_size} People</p>

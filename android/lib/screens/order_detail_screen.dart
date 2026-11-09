@@ -361,7 +361,9 @@ class _OrderDetailViewState extends State<OrderDetailView> {
                 _buildInfoRow(isEs ? "Teléfono" : "Phone", item.customerPhone),
                 if (item.customerEmail != null) _buildInfoRow(isEs ? "Correo" : "Email", item.customerEmail!),
                 _buildInfoRow(isEs ? "Tipo" : "Type", item.orderType.toUpperCase()),
-                _buildInfoRow(isEs ? "Pago" : "Payment", item.paymentMethod ?? 'N/A'),
+                _buildInfoRow(isEs ? "Método de Pago" : "Payment Method", _formatPaymentMethod(item.paymentMethod, isEs)),
+                _buildInfoRow(isEs ? "Estado del Pago" : "Payment Status", _formatPaymentStatus(item.paymentStatus, isEs),
+                  color: item.paymentStatus == 'paid' ? const Color(0xFF10B981) : (item.paymentMethod == 'online' ? const Color(0xFFFF9533) : null)),
                 if (item.address != null) _buildInfoRow(isEs ? "Dirección" : "Address", item.address!),
                 if (item.reference != null) _buildInfoRow(isEs ? "Referencia" : "Reference", item.reference!),
                 if (item.customerNotes != null) ...[
@@ -451,6 +453,11 @@ class _OrderDetailViewState extends State<OrderDetailView> {
                 _buildInfoRow(isEs ? "Horario" : "Time Slot", item.reservationTime ?? 'N/A'),
                 _buildInfoRow(isEs ? "Teléfono" : "Phone", item.customerPhone),
                 if (item.customerEmail != null) _buildInfoRow(isEs ? "Correo" : "Email", item.customerEmail!),
+                if (item.paymentMethod != null || item.totalAmount > 0) ...[
+                  _buildInfoRow(isEs ? "Método de Pago" : "Payment Method", _formatPaymentMethod(item.paymentMethod, isEs)),
+                  _buildInfoRow(isEs ? "Estado del Pago" : "Payment Status", _formatPaymentStatus(item.paymentStatus, isEs),
+                    color: item.paymentStatus == 'paid' ? const Color(0xFF10B981) : (item.paymentMethod == 'online' ? const Color(0xFFFF9533) : null)),
+                ],
                 if (item.comments != null) ...[
                   const SizedBox(height: 10),
                   Text(isEs ? "Solicitudes Especiales / Comentarios:" : "Special Requests / Comments:", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF8B5CF6))),
@@ -522,6 +529,35 @@ class _OrderDetailViewState extends State<OrderDetailView> {
     );
   }
 
+  String _formatPaymentMethod(String? method, bool isEs) {
+    if (method == 'online') {
+      return isEs ? "Pago en Línea (Stripe)" : "Online Payment (Stripe)";
+    }
+    if (method == 'cash' || method == 'restaurant' || method == null) {
+      return isEs ? "Pagar en Restaurante" : "Pay at Restaurant";
+    }
+    return method.toUpperCase();
+  }
+
+  String _formatPaymentStatus(String? status, bool isEs) {
+    if (status == 'paid') {
+      return isEs ? "PAGADO" : "PAID";
+    }
+    if (status == 'pending' || status == 'unpaid') {
+      return isEs ? "PENDIENTE" : "PENDING";
+    }
+    if (status == 'refunded') {
+      return isEs ? "REEMBOLSADO" : "REFUNDED";
+    }
+    if (status == 'failed') {
+      return isEs ? "FALLIDO" : "FAILED";
+    }
+    if (status == 'not_required') {
+      return isEs ? "NO REQUERIDO" : "NOT REQUIRED";
+    }
+    return status?.toUpperCase() ?? (isEs ? "NO ESPECIFICADO" : "N/A");
+  }
+
   Widget _buildInfoRow(String label, String value, {Color? color}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
@@ -529,7 +565,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 100,
+            width: 120,
             child: Text(
               label,
               style: TextStyle(
