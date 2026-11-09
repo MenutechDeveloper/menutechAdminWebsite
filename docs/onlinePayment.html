@@ -318,11 +318,10 @@
                         <div class="actions-group">
                             <button class="btn-action btn-stripe" id="admin-btn-connect" onclick="adminStartStripeConnect()">
                                 <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.883 15.684.2 12.83.2 6.702.2 2.658 3.376 2.658 8.163c0 5.48 7.375 6.082 7.375 8.91 0 1.054-.925 1.545-2.222 1.545-2.296 0-5.185-1.1-7.05-2.148l-.946 5.568c1.697 1.026 4.793 1.83 7.747 1.83 6.327 0 10.463-2.981 10.463-8.083 0-5.748-7.533-6.26-7.533-8.799z"/></svg>
-                                <span id="admin-btn-connect-lbl">Create / Connect via Stripe</span>
+                                <span id="admin-btn-connect-lbl">Conectar con Stripe</span>
                             </button>
                             <button class="btn-action btn-secondary" onclick="adminCheckAccountStatus()" id="lbl-adm-btn-refresh-status">Check Status & Requirements</button>
                             <button class="btn-action btn-secondary" id="admin-btn-dashboard" onclick="adminOpenStripeDashboard()" style="display:none;" id="lbl-adm-btn-express">Open Express Dashboard</button>
-                            <button class="btn-action btn-primary" onclick="adminAuthorizePaymentMode('own_stripe')" id="lbl-adm-btn-auth-own">Authorize Own Stripe Mode</button>
                             <button class="btn-action btn-danger" id="admin-btn-disconnect" onclick="adminDisconnectStripeAccount()" style="display:none; margin-left:auto;" id="lbl-adm-btn-disconnect">Disconnect Account</button>
                         </div>
                     </div>
@@ -357,9 +356,8 @@
                         </div>
 
                         <div class="actions-group">
-                            <button class="btn-action btn-primary" onclick="adminSaveCommissionConfig(true)" id="lbl-adm-btn-auth-comm">Authorize Menutech Commission</button>
-                            <button class="btn-action btn-secondary" onclick="adminSaveCommissionConfig(false)" id="lbl-adm-btn-update-comm">Update Percentage Only</button>
-                            <button class="btn-action btn-danger" onclick="adminRevokeCommissionMode()" id="lbl-adm-btn-revoke-comm">Revoke Commission Modality</button>
+                            <button class="btn-action btn-primary" onclick="adminSaveCommissionConfig(true)" id="lbl-adm-btn-auth-comm">Guardar y Autorizar Comisión</button>
+                            <button class="btn-action btn-danger" id="admin-btn-revoke-comm" onclick="adminRevokeCommissionMode()" style="display:none; margin-left:auto;" id="lbl-adm-btn-revoke-comm">Revoke Commission Modality</button>
                         </div>
                     </div>
 
@@ -743,6 +741,26 @@
             setTimeout(() => toast.remove(), 6000);
         };
 
+        async function extractFunctionError(response, defaultMsg = "Error en la operación") {
+            if (!response) return defaultMsg;
+            if (response.data && response.data.error) return response.data.error;
+            if (response.error) {
+                if (response.error.context) {
+                    try {
+                        const errJson = await response.error.context.json();
+                        if (errJson && errJson.error) return errJson.error;
+                    } catch (_) {
+                        try {
+                            const errText = await response.error.context.text();
+                            if (errText) return errText;
+                        } catch (_) {}
+                    }
+                }
+                if (response.error.message) return response.error.message;
+            }
+            return defaultMsg;
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             initTheme();
             initEvents();
@@ -985,14 +1003,17 @@
             valCommRate.textContent = `${commRate}%`;
             inputCommPct.value = commRate;
 
+            const btnRevokeComm = document.getElementById('admin-btn-revoke-comm');
             if (isCommMode) {
                 commBadge.className = 'status-badge connected';
                 commBadge.textContent = 'Authorized';
                 valCommStatus.textContent = '✅ Autorizada (Activa)';
+                if (btnRevokeComm) btnRevokeComm.style.display = 'inline-flex';
             } else {
                 commBadge.className = 'status-badge disconnected';
                 commBadge.textContent = 'Inactive';
                 valCommStatus.textContent = '❌ No Autorizada';
+                if (btnRevokeComm) btnRevokeComm.style.display = 'none';
             }
 
             // General Information Section
@@ -1052,14 +1073,27 @@
             showToast(dict.toastGeneratingLink, "warning");
 
             try {
+                // Ensure payment_mode is set to own_stripe
+                await sb.functions.invoke('stripe-connect', {
+                    body: {
+                        action: 'update_payment_config',
+                        target_user_id: activeOwnerId,
+                        payment_config: {
+                            payment_mode: 'own_stripe',
+                            commission_rate: 0.00
+                        }
+                    }
+                }).catch(() => {});
+
                 const response = await sb.functions.invoke('stripe-connect', {
                     body: { action: 'create_onboarding_link', target_user_id: activeOwnerId }
                 });
 
                 if (response.data && response.data.url) {
                     window.location.href = response.data.url;
-                } else if (response.error || response.data?.error) {
-                    showToast("Error: " + (response.error?.message || response.data?.error), "error");
+                } else {
+                    const errorDetail = await extractFunctionError(response, "Error al generar enlace de Stripe Connect");
+                    showToast("Error: " + errorDetail, "error");
                 }
             } catch (err) {
                 showToast("Exception: " + err.message, "error");
@@ -1085,8 +1119,9 @@
                     connectedAccountData = null;
                     renderAdminUI();
                     showToast("No Stripe account connected.", "warning");
-                } else if (response.data && response.data.error) {
-                    showToast("Error: " + response.data.error, "error");
+                } else {
+                    const errorDetail = await extractFunctionError(response, "Error al verificar estado de cuenta");
+                    showToast("Error: " + errorDetail, "error");
                 }
             } catch (err) {
                 showToast("Exception: " + err.message, "error");
@@ -1104,8 +1139,9 @@
 
                 if (response.data && response.data.url) {
                     window.open(response.data.url, '_blank');
-                } else if (response.data && response.data.error) {
-                    showToast("Dashboard error: " + response.data.error, "error");
+                } else {
+                    const errorDetail = await extractFunctionError(response, "Error al abrir dashboard de Stripe");
+                    showToast("Dashboard error: " + errorDetail, "error");
                 }
             } catch (err) {
                 showToast("Exception: " + err.message, "error");
@@ -1127,8 +1163,9 @@
                     connectedAccountData = null;
                     renderAdminUI();
                     showToast(dict.toastDisconnectedSucc, "success");
-                } else if (response.data && response.data.error) {
-                    showToast("Error: " + response.data.error, "error");
+                } else {
+                    const errorDetail = await extractFunctionError(response, "Error al desconectar cuenta de Stripe");
+                    showToast("Error: " + errorDetail, "error");
                 }
             } catch (err) {
                 showToast("Exception: " + err.message, "error");
@@ -1171,7 +1208,7 @@
             }
         };
 
-        window.adminSaveCommissionConfig = async (authorize = false) => {
+        window.adminSaveCommissionConfig = async (authorize = true) => {
             const pctInput = document.getElementById('admin-input-commission-pct');
             const pct = parseFloat(pctInput.value);
 
@@ -1180,33 +1217,13 @@
                 return;
             }
 
-            if (authorize) {
-                // Must validate connected Stripe account exists
-                if (!connectedAccountData || !connectedAccountData.stripe_account_id) {
-                    showToast("Cannot authorize Menutech Commission: The restaurant must have a connected Stripe account to receive net payouts.", "error");
-                    return;
-                }
-
-                const confirmed = confirm(
-                    `CONFIRM COMMISSION AUTHORIZATION:\n\n` +
-                    `You are about to authorize the 'Menutech Commission' payment modality for this restaurant.\n` +
-                    `- Transaction Commission: ${pct.toFixed(2)}%\n` +
-                    `- Menutech will automatically collect ${pct.toFixed(2)}% on each customer order as an application fee.\n` +
-                    `- The net balance (${(100 - pct).toFixed(2)}%) will transfer to the restaurant's connected Stripe account.\n\n` +
-                    `Do you wish to authorize this modality now?`
-                );
-                if (!confirmed) return;
-            }
-
             const payload = {
                 commission_rate: pct,
-                action_type: authorize ? 'authorize_commission' : 'update_commission_percentage'
+                payment_mode: 'menutech_commission',
+                action_type: 'authorize_commission',
+                commission_authorized_at: new Date().toISOString(),
+                commission_authorized_by: user.email || user.id
             };
-            if (authorize) {
-                payload.payment_mode = 'menutech_commission';
-                payload.commission_authorized_at = new Date().toISOString();
-                payload.commission_authorized_by = user.email || user.id;
-            }
 
             try {
                 const response = await sb.functions.invoke('stripe-connect', {
@@ -1220,9 +1237,10 @@
                 if (response.data && response.data.success) {
                     currentRestaurantConfig = response.data.config;
                     renderAdminUI();
-                    showToast(authorize ? `Menutech Commission (${pct.toFixed(2)}%) authorized successfully!` : `Commission percentage updated to ${pct.toFixed(2)}%!`, "success");
+                    showToast(`Menutech Commission (${pct.toFixed(2)}%) guardada y autorizada con éxito!`, "success");
                 } else {
-                    showToast("Error: " + (response.error?.message || response.data?.error), "error");
+                    const errorDetail = await extractFunctionError(response, "Error al guardar configuración de comisión");
+                    showToast("Error: " + errorDetail, "error");
                 }
             } catch (err) {
                 showToast("Exception: " + err.message, "error");
@@ -1258,7 +1276,8 @@
                     renderAdminUI();
                     showToast("Menutech Commission modality revoked successfully.", "warning");
                 } else {
-                    showToast("Error: " + (response.error?.message || response.data?.error), "error");
+                    const errorDetail = await extractFunctionError(response, "Error al revocar modalidad de comisión");
+                    showToast("Error: " + errorDetail, "error");
                 }
             } catch (err) {
                 showToast("Exception: " + err.message, "error");

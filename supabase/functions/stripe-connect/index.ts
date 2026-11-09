@@ -19,12 +19,14 @@ serve(async (req: Request) => {
   try {
     const stripeApiKey = (
       Deno.env.get("stripe_api") ||
+      Deno.env.get("STRIPE_API_KEY") ||
+      Deno.env.get("STRIPE_SECRET_KEY") ||
       ""
     ).trim();
 
     if (!stripeApiKey) {
       return new Response(
-        JSON.stringify({ error: "Secret 'stripe_api' no encontrada en Supabase. Configura el secret 'stripe_api' en tu proyecto." }),
+        JSON.stringify({ error: "Secret 'stripe_api' no encontrada en Supabase. Configura el secret 'stripe_api' en Supabase Secrets." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -126,6 +128,7 @@ serve(async (req: Request) => {
         const params = new URLSearchParams();
         params.append("type", "express");
         if (email) params.append("email", email);
+        params.append("country", "US");
         params.append("business_profile[name]", businessName);
         params.append("capabilities[card_payments][requested]", "true");
         params.append("capabilities[transfers][requested]", "true");
@@ -205,6 +208,26 @@ serve(async (req: Request) => {
       };
 
       await supabaseAdmin.from("menutech_stripe_accounts").upsert(updatedRecord, { onConflict: "user_id" });
+
+      // Automatically ensure payment_mode is own_stripe if charges_enabled and payment_mode is none
+      if (updatedRecord.charges_enabled) {
+        const { data: currentCfg } = await supabaseAdmin
+          .from("menutech_restaurant_payment_configs")
+          .select("payment_mode")
+          .eq("user_id", effectiveUserId)
+          .maybeSingle();
+
+        if (!currentCfg || currentCfg.payment_mode === "none") {
+          await supabaseAdmin
+            .from("menutech_restaurant_payment_configs")
+            .upsert({
+              user_id: effectiveUserId,
+              payment_mode: "own_stripe",
+              commission_rate: 0.00,
+              updated_at: new Date().toISOString()
+            }, { onConflict: "user_id" });
+        }
+      }
 
       return new Response(
         JSON.stringify({ account: updatedRecord }),

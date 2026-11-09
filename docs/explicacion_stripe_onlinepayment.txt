@@ -1,0 +1,46 @@
+================================================================================
+EXPLICACIÓN DEL SISTEMA DE PAGOS EN LÍNEA (ONLINEPAYMENT.HTML) Y STRIPE
+================================================================================
+
+1. ¿QUÉ HACÍA EL BOTÓN "AUTHORIZE OWN STRIPE MODE"?
+--------------------------------------------------------------------------------
+En la arquitectura inicial, conectar Stripe y autorizar la modalidad eran dos pasos separados:
+- Paso 1: Crear la cuenta o enlace de onboarding en Stripe Connect ("Create / Connect via Stripe").
+- Paso 2: Presionar "Authorize Own Stripe Mode" para cambiar en la base de datos (menutech_restaurant_payment_configs) el campo `payment_mode` a `'own_stripe'` y poner la comisión en 0%.
+
+Esto provocaba confusión porque obligaba al administrador a hacer dos clics en dos botones diferentes para la misma función.
+
+Ahora esto ha sido simplificado y unificado:
+- Solo existe 1 solo botón principal: "Conectar con Stripe".
+- Al presionar este botón, el sistema automáticamente configura la modalidad como `own_stripe` y redirige al flujo oficial de Stripe Connect Express.
+- No necesitas botones adicionales de autorización manual.
+
+
+2. MODALIDAD 1: CONECTAR CON STRIPE (OWN STRIPE ACCOUNT)
+--------------------------------------------------------------------------------
+- Botón principal único: "Conectar con Stripe".
+- Genera el enlace de onboarding de Stripe Connect Express.
+- El restaurante vincula su cuenta bancaria o Stripe existente.
+- Todo el dinero de las órdenes y reservaciones entra directamente a la cuenta de Stripe del restaurante sin comisiones de Menutech.
+- Si la Edge Function devuelve un error (por ejemplo, si la clave secreta o permisos de Stripe están incompletos en Supabase), ahora la pantalla muestra el mensaje exacto devuelto por Stripe/Supabase en vez del mensaje genérico "non-2xx status code".
+
+
+3. MODALIDAD 2: COMISIONES (MENUTECH COMMISSION)
+--------------------------------------------------------------------------------
+- Botón principal único: "Guardar y Autorizar Comisión".
+- Anteriormente se bloqueaba al administrador si el restaurante no tenía cuenta de Stripe vinculada previamente arrojando:
+  "Cannot authorize Menutech Commission: The restaurant must have a connected Stripe account to receive net payouts."
+- Ahora, una vez que el administrador da clic en "Active online payment", ya puede seleccionar y autorizar la modalidad de comisión ingresando el porcentaje deseado (ej. 5.0%) y presionando "Guardar y Autorizar Comisión" directamente, sin bloqueos innecesarios.
+
+
+4. CONFIGURACIÓN DEL SECRET EN SUPABASE: `stripe_api`
+--------------------------------------------------------------------------------
+- Las Edge Functions (`stripe-connect` y `stripe-payment`) leen la clave de Stripe estrictamente desde el secret `stripe_api`.
+- Adicionalmente, se añadió compatibilidad con `STRIPE_API_KEY` o `STRIPE_SECRET_KEY` como respaldo.
+- Para verificar o configurar tu clave en el Dashboard de Supabase:
+  1. Ve a tu proyecto Supabase -> Project Settings -> Edge Functions -> Secrets.
+  2. Asegúrate de tener el Secret llamado:
+     Name: stripe_api
+     Value: sk_test_... (o sk_live_...)
+  3. Asegúrate de que tu cuenta de Stripe tenga habilitado Connect en Modo Prueba (Test Mode) o Modo Producción.
+================================================================================
