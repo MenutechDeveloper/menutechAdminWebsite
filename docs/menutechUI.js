@@ -2914,8 +2914,7 @@ class MenutechPlatformOrders extends HTMLElement {
                                 ${this.onlinePaymentEnabled ? `
                                     <div class="payment-option" data-pay="online">
                                         <div style="display:flex; align-items:center; gap:12px;">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                                            Online payment
+                                            Online Payment
                                         </div>
                                     </div>
                                 ` : ''}
@@ -3798,16 +3797,18 @@ class MenutechPlatformOrders extends HTMLElement {
         } else {
             // Dedicated Online Payment Tracking Flow:
             // 1. Received / Pending confirmation
-            // 2. Accepted -> Pay Online
-            // 3. Paid & Preparing
-            // 4. Ready
-            // 5. Delivered
+            // 2. Accepted
+            // 3. Pay (marked check when payment is completed)
+            // 4. Preparing
+            // 5. Ready
+            // 6. Delivered
             const isAcceptedOrBeyond = ['accepted', 'preparing', 'finished', 'delivered'].includes(status);
             const isPreparingOrBeyond = isPaid && ['preparing', 'finished', 'delivered'].includes(status);
 
             steps = [
                 { id: 'pending', label: 'Received', active: true },
-                { id: 'pay', label: isPaid ? 'Payment Confirmed' : 'Accepted & Pay', active: isAcceptedOrBeyond },
+                { id: 'accepted', label: 'Accepted', active: isAcceptedOrBeyond },
+                { id: 'pay', label: 'Pay', active: isPaid },
                 { id: 'preparing', label: 'Preparing', active: isPreparingOrBeyond },
                 { id: 'finished', label: 'Ready', active: isPaid && ['finished', 'delivered'].includes(status) },
                 { id: 'delivered', label: 'Delivered', active: isPaid && status === 'delivered' }
@@ -3886,7 +3887,7 @@ class MenutechPlatformOrders extends HTMLElement {
                     <div class="countdown-box" id="pay-countdown-box">
                         <span>⏱ Time left to pay: <strong id="countdown-timer-val">10:00</strong></span>
                     </div>
-                    <button class="btn-pay-now" id="btn-pay-online-now">PAY ONLINE NOW • $${(parseFloat(order.total || 0)).toFixed(2)}</button>
+                    <button class="btn-pay-now" id="btn-pay-online-now">ONLINE PAYMENT</button>
                     <button class="btn-cancel-online" id="btn-cancel-order-now">CANCEL ORDER</button>
                 ` : ''}
 
