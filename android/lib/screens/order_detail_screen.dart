@@ -176,7 +176,10 @@ class _OrderDetailViewState extends State<OrderDetailView> {
       final targetTab = _getTargetTab(status);
       if (widget.onStatusChanged != null) widget.onStatusChanged!(targetTab);
 
-      if (status == 'accepted') {
+      // If cash order is accepted, automatically advance to preparing.
+      // If online payment order is accepted, hold in accepted (awaiting payment) until customer pays online.
+      final isCashOrder = widget.item.paymentMethod != 'online';
+      if (status == 'accepted' && isCashOrder) {
         Future.delayed(const Duration(milliseconds: 1500), () async {
           final autoUpdates = {
             'status': 'preparing',
@@ -343,7 +346,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
                         Text(DateFormat('MMM d, yyyy - h:mm a').format(item.createdAt), style: const TextStyle(color: Colors.grey)),
                       ],
                     ),
-                    _buildStatusTag(item.status, isReservation: false),
+                    _buildStatusTag(item.status, isReservation: false, item: item),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -444,7 +447,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
                         Text(DateFormat('MMM d, yyyy - h:mm a').format(item.createdAt), style: const TextStyle(color: Colors.grey)),
                       ],
                     ),
-                    _buildStatusTag(item.status, isReservation: true),
+                    _buildStatusTag(item.status, isReservation: true, item: item),
                   ],
                 ),
                 const Divider(height: 40),
@@ -514,16 +517,25 @@ class _OrderDetailViewState extends State<OrderDetailView> {
     );
   }
 
-  Widget _buildStatusTag(String status, {required bool isReservation}) {
-    final color = isReservation ? const Color(0xFF8B5CF6) : const Color(0xFFFF9533);
+  Widget _buildStatusTag(String status, {required bool isReservation, UnifiedItem? item}) {
+    final isOnlineAwaitingPay = !isReservation &&
+        item?.paymentMethod == 'online' &&
+        item?.paymentStatus != 'paid' &&
+        status == 'accepted';
+
+    final label = isOnlineAwaitingPay ? 'PAY' : status.toUpperCase();
+    final color = isReservation ? const Color(0xFF8B5CF6) : (isOnlineAwaitingPay ? const Color(0xFFC2410C) : const Color(0xFFFF9533));
+    final bgColor = isOnlineAwaitingPay ? const Color(0xFFFFF7ED) : color.withOpacity(0.1);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: bgColor,
         borderRadius: BorderRadius.circular(30),
+        border: isOnlineAwaitingPay ? Border.all(color: const Color(0xFFFFEDD5)) : null,
       ),
       child: Text(
-        status.toUpperCase(),
+        label,
         style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
       ),
     );
@@ -634,21 +646,46 @@ class _OrderDetailViewState extends State<OrderDetailView> {
     if (item.status == 'accepted') {
       final isOnlineUnpaid = item.paymentMethod == 'online' && item.paymentStatus != 'paid';
       if (isOnlineUnpaid) {
-        return Row(
+        return Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () => _updateOrderStatus(item.id, 'cancelled'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-                child: Text(isEs ? "CANCELAR" : "CANCEL"),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFFFEDD5)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.timer_outlined, size: 18, color: Color(0xFFC2410C)),
+                  const SizedBox(width: 8),
+                  Text(
+                    isEs
+                        ? "ESPERANDO PAGO DEL CLIENTE (10 MIN)"
+                        : "AWAITING CUSTOMER PAYMENT (10 MIN)",
+                    style: const TextStyle(
+                      color: Color(0xFFC2410C),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
+            SizedBox(
+              width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => _updateOrderStatus(item.id, 'finished'),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF9533), foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-                child: Text(isEs ? "LISTO" : "READY"),
+                onPressed: () => _updateOrderStatus(item.id, 'cancelled'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.all(16),
+                ),
+                child: Text(isEs ? "CANCELAR PEDIDO" : "CANCEL ORDER"),
               ),
             ),
           ],

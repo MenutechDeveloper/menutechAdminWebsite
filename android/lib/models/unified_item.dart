@@ -30,6 +30,7 @@ class UnifiedItem {
   final String? deliveryDate;
   final String? deliveryTime;
   final String? deliveryTimeMode;
+  final DateTime? acceptedAt;
 
   // Reservation specific fields
   final String? reservationDate;
@@ -63,6 +64,7 @@ class UnifiedItem {
     this.deliveryDate,
     this.deliveryTime,
     this.deliveryTimeMode,
+    this.acceptedAt,
     this.reservationDate,
     this.reservationTime,
     this.partySize = 2,
@@ -108,6 +110,7 @@ class UnifiedItem {
       deliveryDate: json['delivery_date'],
       deliveryTime: json['delivery_time'],
       deliveryTimeMode: json['delivery_time_mode'],
+      acceptedAt: json['accepted_at'] != null ? DateTime.tryParse(json['accepted_at'])?.toLocal() : null,
     );
   }
 

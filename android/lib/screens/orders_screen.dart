@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:intl/intl.dart';
 import '../models/unified_item.dart';
 import '../services/supabase_service.dart';
@@ -29,6 +30,10 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   StreamSubscription? _ordersSub;
   StreamSubscription? _resSub;
   Timer? _pollTimer;
+  Timer? _onlineTimeoutTimer;
+  final AudioPlayer _paymentAudioPlayer = AudioPlayer();
+  final Set<String> _paidOrderIds = {};
+  bool _isInitialFetchCompleted = false;
   List<UnifiedItem> _ordersList = [];
   List<UnifiedItem> _resList = [];
   final StreamController<List<UnifiedItem>> _combinedController = StreamController<List<UnifiedItem>>.broadcast();
@@ -49,7 +54,64 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           _fetchLatestData(_supabase.currentUser!.id);
         }
       });
+      _startTimeoutTimer();
     }
+  }
+
+  void _startTimeoutTimer() {
+    _onlineTimeoutTimer?.cancel();
+    _onlineTimeoutTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      _checkOnlinePaymentTimeouts();
+    });
+  }
+
+  void _checkOnlinePaymentTimeouts() {
+    final now = DateTime.now();
+    for (final order in _ordersList) {
+      if (order.paymentMethod == 'online' &&
+          order.paymentStatus != 'paid' &&
+          order.status == 'accepted') {
+        final baseTime = order.acceptedAt ?? order.createdAt;
+        final diff = now.difference(baseTime);
+        if (diff.inMinutes >= 10) {
+          _supabase.client.from('menutech_orders').update({
+            'status': 'cancelled',
+            'rejection_reason': 'Payment timeout (10 minutes expired)',
+          }).eq('id', order.id).catchError((_) {});
+        }
+      }
+    }
+  }
+
+  Future<void> _playPaymentSuccessSound() async {
+    try {
+      await _paymentAudioPlayer.stop();
+      await _paymentAudioPlayer.play(UrlSource('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
+    } catch (e) {
+      debugPrint("Error playing payment success sound: $e");
+    }
+  }
+
+  void _processPaymentStatusTransitions(List<UnifiedItem> newOrders) {
+    for (final newOrd in newOrders) {
+      if (newOrd.paymentMethod == 'online' && newOrd.paymentStatus == 'paid') {
+        final wasAlreadyPaid = _paidOrderIds.contains(newOrd.id);
+        if (!wasAlreadyPaid) {
+          _paidOrderIds.add(newOrd.id);
+          if (_isInitialFetchCompleted) {
+            _playPaymentSuccessSound();
+
+            if (newOrd.status == 'accepted') {
+              _supabase.client.from('menutech_orders').update({
+                'status': 'preparing',
+                'preparing_at': DateTime.now().toIso8601String(),
+              }).eq('id', newOrd.id).catchError((_) {});
+            }
+          }
+        }
+      }
+    }
+    _isInitialFetchCompleted = true;
   }
 
   @override
@@ -77,7 +139,9 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           .eq('user_id', userId)
           .order('created_at', ascending: false);
 
-      _ordersList = (ordersData as List).map((json) => UnifiedItem.fromOrderJson(json)).toList();
+      final newOrders = (ordersData as List).map((json) => UnifiedItem.fromOrderJson(json)).toList();
+      _processPaymentStatusTransitions(newOrders);
+      _ordersList = newOrders;
       _resList = (resData as List).map((json) => UnifiedItem.fromReservationJson(json)).toList();
       _emitCombined();
     } catch (e) {
@@ -95,7 +159,9 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
         .eq('user_id', userId)
         .order('created_at', ascending: false)
         .listen((data) {
-      _ordersList = data.map((json) => UnifiedItem.fromOrderJson(json)).toList();
+      final newOrders = data.map((json) => UnifiedItem.fromOrderJson(json)).toList();
+      _processPaymentStatusTransitions(newOrders);
+      _ordersList = newOrders;
       _emitCombined();
     }, onError: (err) {
       debugPrint("Orders stream error: $err");
@@ -129,6 +195,8 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     }
     WidgetsBinding.instance.removeObserver(this);
     _pollTimer?.cancel();
+    _onlineTimeoutTimer?.cancel();
+    _paymentAudioPlayer.dispose();
     _tabController.dispose();
     _ordersSub?.cancel();
     _resSub?.cancel();
