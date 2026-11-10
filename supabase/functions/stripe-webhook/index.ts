@@ -123,17 +123,31 @@ serve(async (req: Request) => {
       const checkoutType = metadata.type || "";
 
       if (orderId) {
+        // Fetch current order status to advance to preparing if it was accepted
+        const { data: currentOrder } = await supabaseAdmin
+          .from("menutech_orders")
+          .select("status")
+          .eq("id", orderId)
+          .maybeSingle();
+
+        const orderUpdates: Record<string, any> = {
+          payment_status: "paid",
+          payment_method: "online",
+          stripe_payment_intent_id: paymentIntentId,
+          stripe_checkout_session_id: session.id
+        };
+
+        if (currentOrder && currentOrder.status === "accepted") {
+          orderUpdates.status = "preparing";
+          orderUpdates.preparing_at = new Date().toISOString();
+        }
+
         await supabaseAdmin
           .from("menutech_orders")
-          .update({
-            payment_status: "paid",
-            payment_method: "online",
-            stripe_payment_intent_id: paymentIntentId,
-            stripe_checkout_session_id: session.id
-          })
+          .update(orderUpdates)
           .eq("id", orderId);
 
-        console.log(`Order ${orderId} marked as PAID.`);
+        console.log(`Order ${orderId} marked as PAID (status: ${orderUpdates.status || currentOrder?.status}).`);
       }
 
       if (reservationId) {

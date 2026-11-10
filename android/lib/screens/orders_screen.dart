@@ -336,7 +336,9 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      isEs ? "ONLINE" : "ONLINE",
+                      item.status == 'accepted'
+                          ? (isEs ? "ESPERANDO PAGO" : "AWAITING PAYMENT")
+                          : (isEs ? "PAGO EN LÍNEA" : "ONLINE PAYMENT"),
                       style: const TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.bold,

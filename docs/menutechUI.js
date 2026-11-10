@@ -2848,14 +2848,12 @@ class MenutechPlatformOrders extends HTMLElement {
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
                                         PICKUP AT RESTAURANT
                                     </div>
-                                    <div class="option-check">✓</div>
                                 </div>
                                 <div class="type-option" data-type="delivery">
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
                                         HOME DELIVERY
                                     </div>
-                                    <div class="option-check">✓</div>
                                 </div>
                                 <div id="delivery-fields" style="display:none; margin-top:15px;">
                                     <div class="cart-input-group">
@@ -2883,14 +2881,12 @@ class MenutechPlatformOrders extends HTMLElement {
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                         AS SOON AS POSSIBLE (30 MIN APPROX.)
                                     </div>
-                                    <div class="option-check">✓</div>
                                 </div>
                                 <div class="time-option" data-time="later">
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                                         SCHEDULE FOR LATER
                                     </div>
-                                    <div class="option-check">✓</div>
                                 </div>
                                 <div id="later-fields" style="display:none; margin-top:15px; gap:10px;">
                                     <div class="cart-input-group" style="flex:1">
@@ -2914,15 +2910,13 @@ class MenutechPlatformOrders extends HTMLElement {
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
                                         PAY AT RESTAURANT
                                     </div>
-                                    <div class="option-check">✓</div>
                                 </div>
                                 ${this.onlinePaymentEnabled ? `
                                     <div class="payment-option" data-pay="online">
                                         <div style="display:flex; align-items:center; gap:12px;">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                                            ONLINE PAYMENT (STRIPE)
+                                            Online payment
                                         </div>
-                                        <div class="option-check">✓</div>
                                     </div>
                                 ` : ''}
                             </div>
@@ -3746,49 +3740,129 @@ class MenutechPlatformOrders extends HTMLElement {
         const popupContent = this.popupRoot.getElementById('popup-content');
         if (!popupContent) return;
 
-        const status = order.status;
-        const steps = [
-            { id: 'pending', label: 'Received', active: true },
-            { id: 'accepted', label: 'Accepted', active: ['accepted', 'preparing', 'finished', 'delivered'].includes(status) },
-            { id: 'preparing', label: 'Preparing', active: ['preparing', 'finished', 'delivered'].includes(status) },
-            { id: 'finished', label: 'Ready', active: ['finished', 'delivered'].includes(status) },
-            { id: 'delivered', label: 'Delivered', active: status === 'delivered' }
-        ];
-
-        if (status === 'rejected') {
-            steps[1] = { id: 'rejected', label: 'Rejected', active: true, error: true };
-            steps.splice(2);
+        // Clear any previous timer
+        if (this._paymentCountdownInterval) {
+            clearInterval(this._paymentCountdownInterval);
+            this._paymentCountdownInterval = null;
         }
 
-        let currentMsg = "We're processing your order.";
-        if (status === 'accepted') currentMsg = "Your order has been accepted!";
-        if (status === 'preparing') currentMsg = "Chef is preparing your food!";
-        if (status === 'finished') currentMsg = "Your order is ready!";
-        if (status === 'delivered') currentMsg = "Order delivered. Enjoy!";
-        if (status === 'rejected') currentMsg = "Order rejected: " + (order.rejection_reason || "Not specified");
-
+        const status = order.status;
         const isOnlinePayment = order.payment_method === 'online';
         const isPaid = order.payment_status === 'paid';
-        const canPayOnline = isOnlinePayment && !isPaid && status !== 'rejected' && status !== 'delivered';
+
+        // Check 10-minute timeout for online payment if order is accepted and unpaid
+        const TEN_MINUTES_MS = 10 * 60 * 1000;
+        const baseTime = new Date(order.accepted_at || order.created_at).getTime();
+        const now = Date.now();
+        const isExpired = isOnlinePayment && !isPaid && (status === 'accepted' || status === 'pending') && (now - baseTime > TEN_MINUTES_MS);
+
+        if (isExpired && status !== 'cancelled' && status !== 'rejected') {
+            // Auto cancel order
+            this.supabase.from('menutech_orders').update({
+                status: 'cancelled',
+                rejection_reason: 'Payment timeout (10 minutes expired)'
+            }).eq('id', order.id).then(() => {
+                order.status = 'cancelled';
+                order.rejection_reason = 'Payment timeout (10 minutes expired)';
+                this.renderTrackingUI(order);
+            });
+            return;
+        }
+
+        let steps = [];
+        let currentMsg = "We're processing your order.";
+
+        if (!isOnlinePayment) {
+            // Traditional cash / restaurant payment flow
+            steps = [
+                { id: 'pending', label: 'Received', active: true },
+                { id: 'accepted', label: 'Accepted', active: ['accepted', 'preparing', 'finished', 'delivered'].includes(status) },
+                { id: 'preparing', label: 'Preparing', active: ['preparing', 'finished', 'delivered'].includes(status) },
+                { id: 'finished', label: 'Ready', active: ['finished', 'delivered'].includes(status) },
+                { id: 'delivered', label: 'Delivered', active: status === 'delivered' }
+            ];
+
+            if (status === 'accepted') currentMsg = "Your order has been accepted!";
+            if (status === 'preparing') currentMsg = "Chef is preparing your food!";
+            if (status === 'finished') currentMsg = "Your order is ready!";
+            if (status === 'delivered') currentMsg = "Order delivered. Enjoy!";
+            if (status === 'rejected') {
+                steps[1] = { id: 'rejected', label: 'Rejected', active: true, error: true };
+                steps.splice(2);
+                currentMsg = "Order rejected: " + (order.rejection_reason || "Not specified");
+            } else if (status === 'cancelled') {
+                steps[1] = { id: 'cancelled', label: 'Cancelled', active: true, error: true };
+                steps.splice(2);
+                currentMsg = "Order was cancelled.";
+            }
+        } else {
+            // Dedicated Online Payment Tracking Flow:
+            // 1. Received / Pending confirmation
+            // 2. Accepted -> Pay Online
+            // 3. Paid & Preparing
+            // 4. Ready
+            // 5. Delivered
+            const isAcceptedOrBeyond = ['accepted', 'preparing', 'finished', 'delivered'].includes(status);
+            const isPreparingOrBeyond = isPaid && ['preparing', 'finished', 'delivered'].includes(status);
+
+            steps = [
+                { id: 'pending', label: 'Received', active: true },
+                { id: 'pay', label: isPaid ? 'Payment Confirmed' : 'Accepted & Pay', active: isAcceptedOrBeyond },
+                { id: 'preparing', label: 'Preparing', active: isPreparingOrBeyond },
+                { id: 'finished', label: 'Ready', active: isPaid && ['finished', 'delivered'].includes(status) },
+                { id: 'delivered', label: 'Delivered', active: isPaid && status === 'delivered' }
+            ];
+
+            if (status === 'pending') {
+                currentMsg = "Order received! Waiting for restaurant confirmation.";
+            } else if (status === 'accepted' && !isPaid) {
+                currentMsg = "Order accepted! Please complete your online payment to start preparation.";
+            } else if (status === 'preparing' || (status === 'accepted' && isPaid)) {
+                currentMsg = "Payment received! Chef is preparing your food.";
+            } else if (status === 'finished') {
+                currentMsg = "Your order is ready!";
+            } else if (status === 'delivered') {
+                currentMsg = "Order delivered. Enjoy your meal!";
+            } else if (status === 'rejected') {
+                steps = [
+                    { id: 'pending', label: 'Received', active: true },
+                    { id: 'rejected', label: 'Rejected', active: true, error: true }
+                ];
+                currentMsg = "Order rejected: " + (order.rejection_reason || "Not specified");
+            } else if (status === 'cancelled') {
+                steps = [
+                    { id: 'pending', label: 'Received', active: true },
+                    { id: 'cancelled', label: 'Cancelled', active: true, error: true }
+                ];
+                currentMsg = order.rejection_reason || "Order was cancelled.";
+            }
+        }
+
+        const canPayOnline = isOnlinePayment && !isPaid && status === 'accepted';
+        const isTerminal = ['delivered', 'rejected', 'cancelled'].includes(status);
 
         popupContent.innerHTML = `
             <style>
                 .tracking-container { padding: 40px 30px; font-family: 'Plus Jakarta Sans', sans-serif; text-align: center; }
                 .tracking-title { font-family: 'Outfit'; font-size: 1.8rem; margin-bottom: 10px; }
-                .tracking-msg { color: #666; margin-bottom: 40px; line-height: 1.5; }
-                .steps-container { position: relative; display: flex; flex-direction: column; gap: 30px; text-align: left; max-width: 250px; margin: 0 auto; }
+                .tracking-msg { color: #666; margin-bottom: 30px; line-height: 1.5; font-size: 0.95rem; }
+                .steps-container { position: relative; display: flex; flex-direction: column; gap: 28px; text-align: left; max-width: 260px; margin: 0 auto; }
                 .steps-container::before { content: ''; position: absolute; left: 14px; top: 0; bottom: 0; width: 2px; background: #eee; z-index: 0; }
                 .step { display: flex; align-items: center; gap: 20px; position: relative; z-index: 1; }
                 .step-dot { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 2px solid #eee; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: 0.3s; }
                 .step.active .step-dot { border-color: #ff9533; background: #ff9533; color: #fff; box-shadow: 0 0 15px rgba(255,149,51,0.4); }
                 .step.active .step-label { color: #1a1c1e; font-weight: 800; }
-                .step.error .step-dot { border-color: #ef4444; background: #ef4444; }
+                .step.error .step-dot { border-color: #ef4444; background: #ef4444; color: #fff; }
+                .step.error .step-label { color: #ef4444; font-weight: 800; }
                 .step-label { color: #94a3b8; font-weight: 600; font-size: 0.95rem; }
-                .order-id { margin-top: 30px; font-size: 0.7rem; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; }
-                .btn-track-done { margin-top: 20px; width: 100%; padding: 16px; border-radius: 16px; border: none; background: #1a1c1e; color: #fff; font-weight: 700; cursor: pointer; }
+                .order-id { margin-top: 25px; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+                .btn-track-done { margin-top: 15px; width: 100%; padding: 16px; border-radius: 16px; border: none; background: #1a1c1e; color: #fff; font-weight: 700; cursor: pointer; }
                 .btn-pay-now { margin-top: 20px; width: 100%; padding: 18px; border-radius: 16px; border: none; background: #ff9533; color: #fff; font-weight: 800; font-size: 1rem; cursor: pointer; text-transform: uppercase; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); transition: 0.3s; }
                 .btn-pay-now:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); }
+                .btn-cancel-online { margin-top: 10px; width: 100%; padding: 12px; border-radius: 14px; border: 1.5px solid #ef4444; background: transparent; color: #ef4444; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
+                .btn-cancel-online:hover { background: rgba(239, 68, 68, 0.08); }
                 .paid-badge { margin-top: 20px; background: rgba(5, 150, 105, 0.12); color: #059669; border: 1px solid rgba(5, 150, 105, 0.3); padding: 12px 20px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 8px; }
+                .countdown-box { margin-top: 15px; padding: 10px 16px; background: #fff7ed; border-radius: 14px; border: 1px solid #ffedd5; color: #c2410c; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px; }
             </style>
             <div class="tracking-container">
                 <button class="close-popup" style="right: 20px; top: 20px;">
@@ -3807,19 +3881,69 @@ class MenutechPlatformOrders extends HTMLElement {
                 </div>
 
                 ${isPaid ? `
-                    <div><div class="paid-badge">✅ Payment Confirmed (Paid)</div></div>
+                    <div><div class="paid-badge">✓ Payment Confirmed</div></div>
                 ` : canPayOnline ? `
+                    <div class="countdown-box" id="pay-countdown-box">
+                        <span>⏱ Time left to pay: <strong id="countdown-timer-val">10:00</strong></span>
+                    </div>
                     <button class="btn-pay-now" id="btn-pay-online-now">PAY ONLINE NOW • $${(parseFloat(order.total || 0)).toFixed(2)}</button>
+                    <button class="btn-cancel-online" id="btn-cancel-order-now">CANCEL ORDER</button>
                 ` : ''}
 
                 <div class="order-id">Order ID: ${order.id.substring(0, 8)}</div>
-                ${(status === 'delivered' || status === 'rejected') ? `
+                ${isTerminal ? `
                     <button class="btn-track-done" id="track-finish-btn">ORDER AGAIN</button>
                 ` : `
                     <button class="btn-track-done" id="track-close-btn">CLOSE</button>
                 `}
             </div>
         `;
+
+        if (canPayOnline) {
+            // Start 10-minute countdown
+            const updateTimerDisplay = () => {
+                const remaining = Math.max(0, TEN_MINUTES_MS - (Date.now() - baseTime));
+                const mins = Math.floor(remaining / 60000);
+                const secs = Math.floor((remaining % 60000) / 1000);
+                const timerEl = popupContent.querySelector('#countdown-timer-val');
+                if (timerEl) {
+                    timerEl.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                }
+
+                if (remaining <= 0) {
+                    if (this._paymentCountdownInterval) {
+                        clearInterval(this._paymentCountdownInterval);
+                        this._paymentCountdownInterval = null;
+                    }
+                    this.supabase.from('menutech_orders').update({
+                        status: 'cancelled',
+                        rejection_reason: 'Payment timeout (10 minutes expired)'
+                    }).eq('id', order.id).then(() => {
+                        order.status = 'cancelled';
+                        order.rejection_reason = 'Payment timeout (10 minutes expired)';
+                        this.renderTrackingUI(order);
+                    });
+                }
+            };
+
+            updateTimerDisplay();
+            this._paymentCountdownInterval = setInterval(updateTimerDisplay, 1000);
+
+            const cancelBtn = popupContent.querySelector('#btn-cancel-order-now');
+            if (cancelBtn) {
+                cancelBtn.onclick = async () => {
+                    cancelBtn.disabled = true;
+                    cancelBtn.textContent = 'CANCELLING...';
+                    await this.supabase.from('menutech_orders').update({
+                        status: 'cancelled',
+                        rejection_reason: 'Cancelled by customer before payment'
+                    }).eq('id', order.id);
+                    order.status = 'cancelled';
+                    order.rejection_reason = 'Cancelled by customer before payment';
+                    this.renderTrackingUI(order);
+                };
+            }
+        }
 
         const payNowBtn = popupContent.querySelector('#btn-pay-online-now');
         if (payNowBtn) {
@@ -3842,6 +3966,17 @@ class MenutechPlatformOrders extends HTMLElement {
                         this.showModal('PAYMENT ERROR', response.data.error);
                         payNowBtn.textContent = `PAY ONLINE NOW • $${(parseFloat(order.total || 0)).toFixed(2)}`;
                         payNowBtn.disabled = false;
+                    } else if (response.error) {
+                        let errMsg = response.error.message || 'Payment initiation error';
+                        if (response.error.context) {
+                            try {
+                                const ctxJson = await response.error.context.json();
+                                if (ctxJson && ctxJson.error) errMsg = ctxJson.error;
+                            } catch (_) {}
+                        }
+                        this.showModal('PAYMENT ERROR', errMsg);
+                        payNowBtn.textContent = `PAY ONLINE NOW • $${(parseFloat(order.total || 0)).toFixed(2)}`;
+                        payNowBtn.disabled = false;
                     }
                 } catch(e) {
                     this.showModal('ERROR', 'Failed to initiate payment session: ' + e.message);
@@ -3852,6 +3987,10 @@ class MenutechPlatformOrders extends HTMLElement {
         }
 
         popupContent.querySelector('.close-popup').onclick = () => {
+            if (this._paymentCountdownInterval) {
+                clearInterval(this._paymentCountdownInterval);
+                this._paymentCountdownInterval = null;
+            }
             this.popupRoot.getElementById('popup').style.display = 'none';
             this.renderFloatingTracker();
         };
@@ -3859,6 +3998,10 @@ class MenutechPlatformOrders extends HTMLElement {
         const finishBtn = popupContent.querySelector('#track-finish-btn');
         if (finishBtn) {
             finishBtn.onclick = () => {
+                if (this._paymentCountdownInterval) {
+                    clearInterval(this._paymentCountdownInterval);
+                    this._paymentCountdownInterval = null;
+                }
                 localStorage.removeItem('mt_last_order_id');
                 this.popupRoot.getElementById('popup').style.display = 'none';
                 this.renderFloatingTracker();
@@ -3869,14 +4012,13 @@ class MenutechPlatformOrders extends HTMLElement {
         const closeBtn = popupContent.querySelector('#track-close-btn');
         if (closeBtn) {
             closeBtn.onclick = () => {
+                if (this._paymentCountdownInterval) {
+                    clearInterval(this._paymentCountdownInterval);
+                    this._paymentCountdownInterval = null;
+                }
                 this.popupRoot.getElementById('popup').style.display = 'none';
                 this.renderFloatingTracker();
             };
-        }
-
-        if (status === 'delivered' || status === 'rejected') {
-             // We don't remove mt_last_order_id immediately so they can see the result,
-             // but maybe we should after they close.
         }
     }
 
