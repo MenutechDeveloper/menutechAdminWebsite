@@ -531,7 +531,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
 
   String _formatPaymentMethod(String? method, bool isEs) {
     if (method == 'online') {
-      return isEs ? "Pago en Línea (Stripe)" : "Online Payment (Stripe)";
+      return isEs ? "Pago en Línea" : "Online Payment";
     }
     if (method == 'cash' || method == 'restaurant' || method == null) {
       return isEs ? "Pagar en Restaurante" : "Pay at Restaurant";
@@ -631,7 +631,41 @@ class _OrderDetailViewState extends State<OrderDetailView> {
       );
     }
 
-    if (item.status == 'accepted' || item.status == 'preparing') {
+    if (item.status == 'accepted') {
+      final isOnlineUnpaid = item.paymentMethod == 'online' && item.paymentStatus != 'paid';
+      if (isOnlineUnpaid) {
+        return Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _updateOrderStatus(item.id, 'cancelled'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
+                child: Text(isEs ? "CANCELAR" : "CANCEL"),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _updateOrderStatus(item.id, 'finished'),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF9533), foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
+                child: Text(isEs ? "LISTO" : "READY"),
+              ),
+            ),
+          ],
+        );
+      } else {
+        return SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () => _updateOrderStatus(item.id, 'finished'),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF9533), foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
+            child: Text(isEs ? "LISTO" : "READY"),
+          ),
+        );
+      }
+    }
+
+    if (item.status == 'preparing') {
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton(

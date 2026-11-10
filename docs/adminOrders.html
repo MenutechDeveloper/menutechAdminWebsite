@@ -534,7 +534,23 @@
                         } else if (payload.eventType === 'UPDATE') {
                             const idx = unifiedItems.findIndex(i => i.id === payload.new.id && i.entryType === 'order');
                             if (idx !== -1) {
-                                unifiedItems[idx] = mapOrder(payload.new);
+                                const updatedOrd = mapOrder(payload.new);
+                                // If online payment order was in accepted and now payment_status becomes paid, auto-advance to preparing
+                                if (updatedOrd.payment_method === 'online' && updatedOrd.payment_status === 'paid' && updatedOrd.status === 'accepted') {
+                                    sb.from('menutech_orders').update({
+                                        status: 'preparing',
+                                        preparing_at: new Date().toISOString()
+                                    }).eq('id', updatedOrd.id).then(() => {
+                                        updatedOrd.status = 'preparing';
+                                        unifiedItems[idx] = updatedOrd;
+                                        updateCounts();
+                                        renderList();
+                                        if (selectedItemId === payload.new.id) renderDetails(unifiedItems[idx]);
+                                    });
+                                    return;
+                                }
+
+                                unifiedItems[idx] = updatedOrd;
                                 updateCounts();
                                 renderList();
                                 if (selectedItemId === payload.new.id) renderDetails(unifiedItems[idx]);
@@ -579,6 +595,20 @@
         function isInProcess(item) { return item.status === 'accepted' || item.status === 'preparing' || item.status === 'confirmed'; }
         function isReady(item) { return item.status === 'finished' || item.status === 'attended'; }
         function isHistory(item) { return item.status === 'delivered' || item.status === 'rejected' || item.status === 'cancelled'; }
+
+        // Periodically verify 10-minute timeout for unpaid accepted online orders
+        setInterval(() => {
+            const TEN_MINUTES_MS = 10 * 60 * 1000;
+            const now = Date.now();
+            unifiedItems.forEach(item => {
+                if (item.entryType === 'order' && item.payment_method === 'online' && item.payment_status !== 'paid' && item.status === 'accepted') {
+                    const baseTs = new Date(item.accepted_at || item.created_at).getTime();
+                    if (now - baseTs > TEN_MINUTES_MS) {
+                        updateOrderStatus(item.id, 'cancelled');
+                    }
+                }
+            });
+        }, 15000);
 
         function updateCounts() {
             const pending = unifiedItems.filter(isPending).length;
@@ -694,7 +724,12 @@
                 const badgeLabel = isOrd ? '🛒 Order' : '📅 Reservation';
                 const isPaid = item.payment_status === 'paid';
                 const isOnline = item.payment_method === 'online';
-                const payBadgeHtml = isPaid ? '<span class="type-badge paid">💳 Paid</span>' : (isOnline ? '<span class="type-badge unpaid">💳 Online Pending</span>' : '');
+                const isAwaitingPay = isOnline && !isPaid && item.status === 'accepted';
+                const payBadgeHtml = isPaid
+                    ? '<span class="type-badge paid">💳 Paid</span>'
+                    : (isAwaitingPay
+                        ? '<span class="type-badge unpaid">⏳ Awaiting Payment</span>'
+                        : (isOnline ? '<span class="type-badge unpaid">💳 Online Pending</span>' : ''));
 
                 const subDetails = isOrd
                     ? `${item.items.length} items • $${item.total.toFixed(2)}`
@@ -758,9 +793,10 @@
                     ? (item.delivery_zone_name ? `Delivery (${item.delivery_zone_name})` : 'Delivery')
                     : 'Pickup';
                 const rawPay = item.payment_method || 'cash';
-                const paymentMethod = rawPay === 'online' ? 'Online Payment (Stripe)' : (rawPay === 'cash' ? 'Pay at Restaurant / Cash' : rawPay.toUpperCase());
+                const paymentMethod = rawPay === 'online' ? 'Online Payment' : (rawPay === 'cash' ? 'Pay at Restaurant / Cash' : rawPay.toUpperCase());
                 const payStatus = item.payment_status || 'unpaid';
-                const payStatusLabel = payStatus === 'paid' ? 'Paid' : (payStatus === 'pending' || payStatus === 'unpaid' ? 'Unpaid' : payStatus.toUpperCase());
+                const isAwaitingPay = rawPay === 'online' && payStatus !== 'paid' && item.status === 'accepted';
+                const payStatusLabel = payStatus === 'paid' ? 'Paid' : (isAwaitingPay ? 'Awaiting Payment (10m)' : (payStatus === 'pending' || payStatus === 'unpaid' ? 'Unpaid' : payStatus.toUpperCase()));
                 const payStatusClass = payStatus === 'paid' ? 'accepted' : (payStatus === 'failed' ? 'rejected' : 'pending');
 
                 pane.innerHTML = `
@@ -853,7 +889,12 @@
                                 <button class="btn btn-accept" onclick="updateOrderStatus('${item.id}', 'accepted')">Accept</button>
                             ` : ''}
                             ${item.status === 'accepted' ? `
-                                <button class="btn btn-purple" onclick="updateOrderStatus('${item.id}', 'preparing')">Start Preparing</button>
+                                ${rawPay === 'online' && payStatus !== 'paid' ? `
+                                    <button class="btn btn-reject" onclick="updateOrderStatus('${item.id}', 'cancelled')">Cancel Unpaid</button>
+                                    <button class="btn btn-purple" onclick="updateOrderStatus('${item.id}', 'preparing')">Start Preparing (Override)</button>
+                                ` : `
+                                    <button class="btn btn-purple" onclick="updateOrderStatus('${item.id}', 'preparing')">Start Preparing</button>
+                                `}
                             ` : ''}
                             ${item.status === 'preparing' ? `
                                 <button class="btn btn-finish" onclick="updateOrderStatus('${item.id}', 'finished')">Order Ready</button>
@@ -867,7 +908,7 @@
             } else {
                 // Reservation Details
                 const rawPay = item.payment_method || 'restaurant';
-                const paymentMethod = rawPay === 'online' ? 'Online Payment (Stripe)' : 'Pay at Restaurant';
+                const paymentMethod = rawPay === 'online' ? 'Online Payment' : 'Pay at Restaurant';
                 const payStatus = item.payment_status || (item.preorder_items && item.preorder_items.length > 0 ? (rawPay === 'online' ? 'unpaid' : 'restaurant') : 'not_required');
                 let payStatusLabel = 'Not Required';
                 let payStatusClass = 'pending';
