@@ -127,6 +127,7 @@ serve(async (req: Request) => {
           .from("menutech_orders")
           .update({
             payment_status: "paid",
+            payment_method: "online",
             stripe_payment_intent_id: paymentIntentId,
             stripe_checkout_session_id: session.id
           })
@@ -140,6 +141,7 @@ serve(async (req: Request) => {
           .from("menutech_reservations")
           .update({
             payment_status: "paid",
+            payment_method: "online",
             stripe_payment_intent_id: paymentIntentId,
             stripe_checkout_session_id: session.id
           })

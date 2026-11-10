@@ -26,6 +26,7 @@ class UnifiedItem {
   final List<OrderItem> items;
   final String? customerNotes;
   final String? paymentMethod;
+  final String? paymentStatus;
   final String? deliveryDate;
   final String? deliveryTime;
   final String? deliveryTimeMode;
@@ -58,6 +59,7 @@ class UnifiedItem {
     this.items = const [],
     this.customerNotes,
     this.paymentMethod,
+    this.paymentStatus,
     this.deliveryDate,
     this.deliveryTime,
     this.deliveryTimeMode,
@@ -102,6 +104,7 @@ class UnifiedItem {
       items: itemsList,
       customerNotes: json['customer_notes'],
       paymentMethod: json['payment_method'],
+      paymentStatus: json['payment_status'],
       deliveryDate: json['delivery_date'],
       deliveryTime: json['delivery_time'],
       deliveryTimeMode: json['delivery_time_mode'],
@@ -137,6 +140,8 @@ class UnifiedItem {
       partySize: json['party_size'] ?? json['guests_count'] ?? 2,
       comments: json['comments'],
       preorderItems: preorders,
+      paymentMethod: json['payment_method'],
+      paymentStatus: json['payment_status'],
     );
   }
 
@@ -173,6 +178,7 @@ class UnifiedItem {
       }).toList(),
       'customer_notes': customerNotes,
       'payment_method': paymentMethod,
+      'payment_status': paymentStatus,
       'delivery_date': deliveryDate,
       'delivery_time': deliveryTime,
       'delivery_time_mode': deliveryTimeMode,
@@ -211,6 +217,7 @@ class UnifiedItem {
       createdAt: createdAt,
       customerNotes: customerNotes,
       paymentMethod: paymentMethod,
+      paymentStatus: paymentStatus,
       deliveryDate: deliveryDate,
       deliveryTime: deliveryTime,
       deliveryTimeMode: deliveryTimeMode,

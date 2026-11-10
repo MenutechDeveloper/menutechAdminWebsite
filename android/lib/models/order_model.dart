@@ -19,6 +19,7 @@ class OrderModel {
   final DateTime createdAt;
   final String? customerNotes;
   final String? paymentMethod;
+  final String? paymentStatus;
   final String? deliveryDate;
   final String? deliveryTime;
   final String? deliveryTimeMode;
@@ -42,6 +43,7 @@ class OrderModel {
     required this.createdAt,
     this.customerNotes,
     this.paymentMethod,
+    this.paymentStatus,
     this.deliveryDate,
     this.deliveryTime,
     this.deliveryTimeMode,
@@ -79,6 +81,7 @@ class OrderModel {
       createdAt: DateTime.parse(json['created_at']).toLocal(),
       customerNotes: json['customer_notes'],
       paymentMethod: json['payment_method'],
+      paymentStatus: json['payment_status'],
       deliveryDate: json['delivery_date'],
       deliveryTime: json['delivery_time'],
       deliveryTimeMode: json['delivery_time_mode'],

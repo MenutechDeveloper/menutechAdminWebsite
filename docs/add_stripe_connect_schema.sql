@@ -68,6 +68,10 @@ BEGIN
         ALTER TABLE public.menutech_reservations ADD COLUMN payment_status TEXT DEFAULT 'not_required';
     END IF;
 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menutech_reservations' AND column_name='payment_method') THEN
+        ALTER TABLE public.menutech_reservations ADD COLUMN payment_method TEXT DEFAULT 'restaurant';
+    END IF;
+
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menutech_reservations' AND column_name='stripe_checkout_session_id') THEN
         ALTER TABLE public.menutech_reservations ADD COLUMN stripe_checkout_session_id TEXT;
     END IF;

@@ -173,14 +173,23 @@ serve(async (req: Request) => {
         );
       }
 
-      // Check restaurant payment config for commission
+      // Check restaurant payment config for commission and active status
       const { data: resPayCfg } = await supabaseAdmin
         .from("menutech_restaurant_payment_configs")
         .select("*")
         .eq("user_id", order.user_id)
         .maybeSingle();
 
-      // Fetch menu config to validate and recalculate price
+      // Ensure online payment service is active or free_access
+      const serviceStatus = resPayCfg?.service_status || 'inactive';
+      if (!['active', 'free_access'].includes(serviceStatus)) {
+        return new Response(
+          JSON.stringify({ error: "Online payments are currently inactive or suspended for this restaurant" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Fetch menu config to validate and recalculate price server-side
       const { data: menu } = await supabaseAdmin
         .from("menutech_menus")
         .select("config")
@@ -190,14 +199,48 @@ serve(async (req: Request) => {
       const rawItems = typeof order.items === "string" ? JSON.parse(order.items) : (order.items || []);
       const { calculatedTotal } = recalculateOrderTotal(menu?.config, rawItems);
 
-      // Validate delivery fee for delivery orders
+      // Validate delivery fee against active delivery zones in database if delivery order
       let deliveryFee = 0;
       if (order.order_type === "delivery") {
-        deliveryFee = Math.max(0, parseFloat(order.delivery_fee || 0));
+        if (order.delivery_zone_name) {
+          const { data: zone } = await supabaseAdmin
+            .from("menutech_delivery_zones")
+            .select("fee")
+            .eq("user_id", order.user_id)
+            .eq("name", order.delivery_zone_name)
+            .eq("is_active", true)
+            .maybeSingle();
+          if (zone && zone.fee !== undefined) {
+            deliveryFee = parseFloat(zone.fee) || 0;
+          } else {
+            deliveryFee = Math.max(0, parseFloat(order.delivery_fee || 0));
+          }
+        } else {
+          deliveryFee = Math.max(0, parseFloat(order.delivery_fee || 0));
+        }
+      }
+
+      // Validate promotional discount against database promotions
+      let discountAmount = 0;
+      if (order.discount_amount && parseFloat(order.discount_amount) > 0) {
+        const rawPromo = typeof order.applied_promo === "string" ? JSON.parse(order.applied_promo) : order.applied_promo;
+        if (rawPromo && rawPromo.id) {
+          const { data: dbPromo } = await supabaseAdmin
+            .from("menutech_promotions")
+            .select("*")
+            .eq("id", rawPromo.id)
+            .eq("user_id", order.user_id)
+            .eq("is_active", true)
+            .maybeSingle();
+
+          if (dbPromo) {
+            discountAmount = Math.max(0, parseFloat(order.discount_amount) || 0);
+          }
+        }
       }
 
       const productsTotal = calculatedTotal > 0 ? calculatedTotal : Math.max(0, parseFloat(order.subtotal || order.total || order.total_amount || 0));
-      const finalAmount = Math.round((productsTotal + deliveryFee) * 100) / 100;
+      const finalAmount = Math.max(0.50, Math.round((productsTotal + deliveryFee - discountAmount) * 100) / 100);
       const currency = (stripeAcc.currency || "usd").toLowerCase();
       const amountInCents = Math.round(finalAmount * 100);
 
@@ -294,12 +337,20 @@ serve(async (req: Request) => {
         );
       }
 
-      // Check restaurant payment config for commission
+      // Check restaurant payment config for commission and active status
       const { data: resPayCfg } = await supabaseAdmin
         .from("menutech_restaurant_payment_configs")
         .select("*")
         .eq("user_id", resv.user_id)
         .maybeSingle();
+
+      const serviceStatus = resPayCfg?.service_status || 'inactive';
+      if (!['active', 'free_access'].includes(serviceStatus)) {
+        return new Response(
+          JSON.stringify({ error: "Online payments are currently inactive or suspended for this restaurant" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       // Recalculate pre-order items total from menu
       const { data: menu } = await supabaseAdmin
