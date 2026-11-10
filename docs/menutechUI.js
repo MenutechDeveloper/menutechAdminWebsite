@@ -4368,6 +4368,7 @@ class MenutechReservations extends HTMLElement {
     async loadData() {
         if (!this.supabase) await this.initSupabase();
         let domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
+        let schedule = [];
 
         try {
             // Find settings by domain or fallback profile
@@ -4472,6 +4473,20 @@ class MenutechReservations extends HTMLElement {
             this.bookingData.guests = this.settings.min_guests;
         } catch (e) {
             console.error("Error loading reservation configuration:", e);
+            if (!this.settings) {
+                this.settings = {
+                    user_id: null,
+                    enabled: true,
+                    min_guests: 2,
+                    max_guests: 8,
+                    min_lead_time_min: 15,
+                    max_advance_days: 8,
+                    hold_duration_min: 15,
+                    allow_preorder: true,
+                    custom_schedule: []
+                };
+                this.bookingData.guests = this.settings.min_guests;
+            }
         }
     }
 
@@ -4780,10 +4795,18 @@ class MenutechReservations extends HTMLElement {
         const body = this.shadowRoot.getElementById('res-modal-body');
         const title = this.shadowRoot.getElementById('res-modal-title');
 
-        if (!this.settings || !this.settings.enabled) {
-            title.textContent = this.t('res_unavailable_title');
-            body.innerHTML = `<div style="text-align:center; padding:40px; color:#666;">${this.t('res_unavailable_body')}</div>`;
-            return;
+        if (!this.settings) {
+            this.settings = {
+                user_id: null,
+                enabled: true,
+                min_guests: 2,
+                max_guests: 8,
+                min_lead_time_min: 15,
+                max_advance_days: 8,
+                hold_duration_min: 15,
+                allow_preorder: true,
+                custom_schedule: []
+            };
         }
 
         if (this.step === 1) {
