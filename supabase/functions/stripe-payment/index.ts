@@ -159,20 +159,6 @@ serve(async (req: Request) => {
         );
       }
 
-      // Verify connected Stripe account
-      const { data: stripeAcc } = await supabaseAdmin
-        .from("menutech_stripe_accounts")
-        .select("*")
-        .eq("user_id", order.user_id)
-        .maybeSingle();
-
-      if (!stripeAcc || !stripeAcc.stripe_account_id || !stripeAcc.charges_enabled) {
-        return new Response(
-          JSON.stringify({ error: "The restaurant has not connected a valid Stripe account for online payments" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
       // Check restaurant payment config for commission and active status
       const { data: resPayCfg } = await supabaseAdmin
         .from("menutech_restaurant_payment_configs")
@@ -185,6 +171,21 @@ serve(async (req: Request) => {
       if (!['active', 'free_access'].includes(serviceStatus)) {
         return new Response(
           JSON.stringify({ error: "Online payments are currently inactive or suspended for this restaurant" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Verify connected Stripe account
+      const { data: stripeAcc } = await supabaseAdmin
+        .from("menutech_stripe_accounts")
+        .select("*")
+        .eq("user_id", order.user_id)
+        .maybeSingle();
+
+      const isCommissionMode = resPayCfg?.payment_mode === "menutech_commission";
+      if (!isCommissionMode && (!stripeAcc || !stripeAcc.stripe_account_id || !stripeAcc.charges_enabled)) {
+        return new Response(
+          JSON.stringify({ error: "The restaurant has not connected a valid Stripe account for online payments" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -241,7 +242,7 @@ serve(async (req: Request) => {
 
       const productsTotal = calculatedTotal > 0 ? calculatedTotal : Math.max(0, parseFloat(order.subtotal || order.total || order.total_amount || 0));
       const finalAmount = Math.max(0.50, Math.round((productsTotal + deliveryFee - discountAmount) * 100) / 100);
-      const currency = (stripeAcc.currency || "usd").toLowerCase();
+      const currency = ((stripeAcc && stripeAcc.currency) || "usd").toLowerCase();
       const amountInCents = Math.round(finalAmount * 100);
 
       // Create Stripe Checkout Session
@@ -253,15 +254,17 @@ serve(async (req: Request) => {
       params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
       params.append("line_items[0][quantity]", "1");
 
-      // Destination Charge: money flows directly to restaurant's connected account
-      params.append("transfer_data[destination]", stripeAcc.stripe_account_id);
+      // Destination Charge if connected account available
+      if (stripeAcc && stripeAcc.stripe_account_id && stripeAcc.charges_enabled) {
+        params.append("transfer_data[destination]", stripeAcc.stripe_account_id);
 
-      // If Menutech Commission mode is active and commission rate is configured, apply application fee
-      if (resPayCfg && resPayCfg.payment_mode === "menutech_commission" && parseFloat(resPayCfg.commission_rate || 0) > 0) {
-        const commissionPct = parseFloat(resPayCfg.commission_rate);
-        const commissionAmountCents = Math.round((amountInCents * commissionPct) / 100);
-        if (commissionAmountCents > 0 && commissionAmountCents < amountInCents) {
-          params.append("payment_intent_data[application_fee_amount]", commissionAmountCents.toString());
+        // If Menutech Commission mode is active and commission rate is configured, apply application fee
+        if (resPayCfg && resPayCfg.payment_mode === "menutech_commission" && parseFloat(resPayCfg.commission_rate || 0) > 0) {
+          const commissionPct = parseFloat(resPayCfg.commission_rate);
+          const commissionAmountCents = Math.round((amountInCents * commissionPct) / 100);
+          if (commissionAmountCents > 0 && commissionAmountCents < amountInCents) {
+            params.append("payment_intent_data[application_fee_amount]", commissionAmountCents.toString());
+          }
         }
       }
 
@@ -323,20 +326,6 @@ serve(async (req: Request) => {
         );
       }
 
-      // Verify Connected Account
-      const { data: stripeAcc } = await supabaseAdmin
-        .from("menutech_stripe_accounts")
-        .select("*")
-        .eq("user_id", resv.user_id)
-        .maybeSingle();
-
-      if (!stripeAcc || !stripeAcc.stripe_account_id || !stripeAcc.charges_enabled) {
-        return new Response(
-          JSON.stringify({ error: "The restaurant has not connected a valid Stripe account for online payments" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
       // Check restaurant payment config for commission and active status
       const { data: resPayCfg } = await supabaseAdmin
         .from("menutech_restaurant_payment_configs")
@@ -348,6 +337,21 @@ serve(async (req: Request) => {
       if (!['active', 'free_access'].includes(serviceStatus)) {
         return new Response(
           JSON.stringify({ error: "Online payments are currently inactive or suspended for this restaurant" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Verify Connected Account
+      const { data: stripeAcc } = await supabaseAdmin
+        .from("menutech_stripe_accounts")
+        .select("*")
+        .eq("user_id", resv.user_id)
+        .maybeSingle();
+
+      const isCommissionMode = resPayCfg?.payment_mode === "menutech_commission";
+      if (!isCommissionMode && (!stripeAcc || !stripeAcc.stripe_account_id || !stripeAcc.charges_enabled)) {
+        return new Response(
+          JSON.stringify({ error: "The restaurant has not connected a valid Stripe account for online payments" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -371,7 +375,7 @@ serve(async (req: Request) => {
         );
       }
 
-      const currency = (stripeAcc.currency || "usd").toLowerCase();
+      const currency = ((stripeAcc && stripeAcc.currency) || "usd").toLowerCase();
       const amountInCents = Math.round(finalAmount * 100);
 
       const params = new URLSearchParams();
@@ -382,13 +386,16 @@ serve(async (req: Request) => {
       params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
       params.append("line_items[0][quantity]", "1");
 
-      params.append("transfer_data[destination]", stripeAcc.stripe_account_id);
+      // Destination Charge if connected account available
+      if (stripeAcc && stripeAcc.stripe_account_id && stripeAcc.charges_enabled) {
+        params.append("transfer_data[destination]", stripeAcc.stripe_account_id);
 
-      if (resPayCfg && resPayCfg.payment_mode === "menutech_commission" && parseFloat(resPayCfg.commission_rate || 0) > 0) {
-        const commissionPct = parseFloat(resPayCfg.commission_rate);
-        const commissionAmountCents = Math.round((amountInCents * commissionPct) / 100);
-        if (commissionAmountCents > 0 && commissionAmountCents < amountInCents) {
-          params.append("payment_intent_data[application_fee_amount]", commissionAmountCents.toString());
+        if (resPayCfg && resPayCfg.payment_mode === "menutech_commission" && parseFloat(resPayCfg.commission_rate || 0) > 0) {
+          const commissionPct = parseFloat(resPayCfg.commission_rate);
+          const commissionAmountCents = Math.round((amountInCents * commissionPct) / 100);
+          if (commissionAmountCents > 0 && commissionAmountCents < amountInCents) {
+            params.append("payment_intent_data[application_fee_amount]", commissionAmountCents.toString());
+          }
         }
       }
 

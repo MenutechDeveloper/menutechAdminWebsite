@@ -1731,12 +1731,18 @@ class MenutechPlatformOrders extends HTMLElement {
                     return;
                 }
 
-                const { data: stripeAcc } = await this.supabase
-                    .from('menutech_stripe_accounts')
-                    .select('charges_enabled')
-                    .eq('user_id', data.user_id)
-                    .maybeSingle();
-                if (stripeAcc && stripeAcc.charges_enabled) {
+                const [stripeAccRes, resCfgRes] = await Promise.all([
+                    this.supabase.from('menutech_stripe_accounts').select('charges_enabled').eq('user_id', data.user_id).maybeSingle(),
+                    this.supabase.from('menutech_restaurant_payment_configs').select('service_status, payment_mode').eq('user_id', data.user_id).maybeSingle()
+                ]);
+                const stripeAcc = stripeAccRes?.data;
+                const resCfg = resCfgRes?.data;
+                const isServiceActive = resCfg && ['active', 'free_access'].includes(resCfg.service_status);
+                const isCommissionMode = resCfg && resCfg.payment_mode === 'menutech_commission';
+                const isOwnStripeMode = resCfg && resCfg.payment_mode === 'own_stripe';
+                const chargesEnabled = Boolean(stripeAcc && stripeAcc.charges_enabled);
+
+                if (isServiceActive && (isCommissionMode || (isOwnStripeMode && chargesEnabled) || chargesEnabled)) {
                     this.onlinePaymentEnabled = true;
                 }
             } catch(e) {}
@@ -4448,10 +4454,12 @@ class MenutechReservations extends HTMLElement {
                 const stripeAcc = stripeAccRes?.data;
                 const resCfg = resCfgRes?.data;
                 const isServiceActive = resCfg && ['active', 'free_access'].includes(resCfg.service_status);
-                const hasValidMode = resCfg && ['own_stripe', 'menutech_commission'].includes(resCfg.payment_mode);
-                const chargesEnabled = stripeAcc && stripeAcc.charges_enabled;
+                const isCommissionMode = resCfg && resCfg.payment_mode === 'menutech_commission';
+                const isOwnStripeMode = resCfg && resCfg.payment_mode === 'own_stripe';
+                const chargesEnabled = Boolean(stripeAcc && stripeAcc.charges_enabled);
 
-                if (isServiceActive && hasValidMode && chargesEnabled) {
+                // Online payment is active if service is active AND (commission mode OR own stripe account is connected with charges enabled)
+                if (isServiceActive && (isCommissionMode || (isOwnStripeMode && chargesEnabled) || chargesEnabled)) {
                     this.onlinePaymentEnabled = true;
                 }
             }
