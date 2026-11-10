@@ -602,8 +602,8 @@
             const now = Date.now();
             unifiedItems.forEach(item => {
                 if (item.entryType === 'order' && item.payment_method === 'online' && item.payment_status !== 'paid' && item.status === 'accepted') {
-                    const baseTs = new Date(item.accepted_at || item.created_at).getTime();
-                    if (now - baseTs > TEN_MINUTES_MS) {
+                    const baseTs = item.accepted_at ? new Date(item.accepted_at).getTime() : null;
+                    if (baseTs && (now - baseTs > TEN_MINUTES_MS)) {
                         updateOrderStatus(item.id, 'cancelled');
                     }
                 }

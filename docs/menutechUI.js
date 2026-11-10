@@ -3749,11 +3749,12 @@ class MenutechPlatformOrders extends HTMLElement {
         const isOnlinePayment = order.payment_method === 'online';
         const isPaid = order.payment_status === 'paid';
 
-        // Check 10-minute timeout for online payment if order is accepted and unpaid
+        // Check 10-minute timeout for online payment ONLY once accepted and unpaid
         const TEN_MINUTES_MS = 10 * 60 * 1000;
-        const baseTime = new Date(order.accepted_at || order.created_at).getTime();
+        // Strictly use accepted_at for the 10m countdown. If accepted_at is missing, default to now (newly accepted) to prevent instant cancellation
+        const acceptedTime = order.accepted_at ? new Date(order.accepted_at).getTime() : (status === 'accepted' ? Date.now() : null);
         const now = Date.now();
-        const isExpired = isOnlinePayment && !isPaid && (status === 'accepted' || status === 'pending') && (now - baseTime > TEN_MINUTES_MS);
+        const isExpired = isOnlinePayment && !isPaid && status === 'accepted' && acceptedTime && (now - acceptedTime > TEN_MINUTES_MS);
 
         if (isExpired && status !== 'cancelled' && status !== 'rejected') {
             // Auto cancel order
@@ -3901,9 +3902,10 @@ class MenutechPlatformOrders extends HTMLElement {
         `;
 
         if (canPayOnline) {
-            // Start 10-minute countdown
+            // Start 10-minute countdown based on acceptedTime
+            const countdownStartTime = acceptedTime || Date.now();
             const updateTimerDisplay = () => {
-                const remaining = Math.max(0, TEN_MINUTES_MS - (Date.now() - baseTime));
+                const remaining = Math.max(0, TEN_MINUTES_MS - (Date.now() - countdownStartTime));
                 const mins = Math.floor(remaining / 60000);
                 const secs = Math.floor((remaining % 60000) / 1000);
                 const timerEl = popupContent.querySelector('#countdown-timer-val');
@@ -5225,6 +5227,21 @@ class MenutechReservations extends HTMLElement {
                                 this.showModal(this.t('res_error_title'), response.data.error);
                                 payResBtn.textContent = `PAY PRE-ORDER NOW • $${preorderTotal.toFixed(2)}`;
                                 payResBtn.disabled = false;
+                            } else if (response.error) {
+                                let errMsg = response.error.message || 'Payment initiation error';
+                                if (response.error.context) {
+                                    try {
+                                        const ctxJson = await response.error.context.json();
+                                        if (ctxJson && ctxJson.error) errMsg = ctxJson.error;
+                                    } catch (_) {}
+                                }
+                                this.showModal(this.t('res_error_title'), errMsg);
+                                payResBtn.textContent = `PAY PRE-ORDER NOW • $${preorderTotal.toFixed(2)}`;
+                                payResBtn.disabled = false;
+                            } else {
+                                this.showModal(this.t('res_error_title'), 'Could not connect to payment processor. Please try again.');
+                                payResBtn.textContent = `PAY PRE-ORDER NOW • $${preorderTotal.toFixed(2)}`;
+                                payResBtn.disabled = false;
                             }
                         } catch(e) {
                             this.showModal(this.t('res_error_title'), 'Error: ' + e.message);
@@ -5707,9 +5724,21 @@ class MenutechReservations extends HTMLElement {
                         return;
                     } else if (payRes.data && payRes.data.error) {
                         console.warn('Reservation payment error:', payRes.data.error);
+                        this.showModal(this.t('res_error_title'), payRes.data.error);
+                    } else if (payRes.error) {
+                        let errMsg = payRes.error.message || 'Payment initiation error';
+                        if (payRes.error.context) {
+                            try {
+                                const ctxJson = await payRes.error.context.json();
+                                if (ctxJson && ctxJson.error) errMsg = ctxJson.error;
+                            } catch (_) {}
+                        }
+                        console.warn('Reservation payment edge function error:', errMsg);
+                        this.showModal(this.t('res_error_title'), errMsg);
                     }
                 } catch (payErr) {
                     console.error('Error initiating reservation payment:', payErr);
+                    this.showModal(this.t('res_error_title'), 'Payment error: ' + payErr.message);
                 }
             }
 
