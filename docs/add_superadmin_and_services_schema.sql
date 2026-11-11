@@ -3,9 +3,9 @@
 -- ==============================================================================
 
 -- 1. Ensure `services_enabled` JSONB column exists on public.profiles
--- Default enables online_payment, promotions, reservations
+-- Default disables services until configured in onlinePayment, promotions, or reservations
 ALTER TABLE public.profiles
-ADD COLUMN IF NOT EXISTS services_enabled JSONB DEFAULT '{"online_payment": true, "promotions": true, "reservations": true}'::jsonb;
+ADD COLUMN IF NOT EXISTS services_enabled JSONB DEFAULT '{"online_payment": false, "promotions": false, "reservations": false}'::jsonb;
 
 -- 2. SECURITY DEFINER Function to check administrative roles without triggering RLS recursion
 -- This function runs with the privileges of the creator and bypasses RLS on public.profiles,
