@@ -45,6 +45,14 @@
         }
         #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
 
+        #user-display-pill.superadmin-glow {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b) !important;
+            color: #fff !important;
+            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+        #user-display-pill.superadmin-glow #user-name, #user-display-pill.superadmin-glow #user-role-label { color: #fff !important; }
+
         #user-display-pill.admin-glow {
             background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
             background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
@@ -209,11 +217,55 @@
         </div>
     </div>
 
+    <div id="create-user-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">Nuevo Usuario</div>
+            <div class="modal-subtitle">Crear cuenta de acceso para la plataforma</div>
+            <div class="modal-body">
+                <div>
+                    <label for="new-user-username">Nombre / Restaurante</label>
+                    <input type="text" id="new-user-username" placeholder="Nombre visible">
+                </div>
+                <div>
+                    <label for="new-user-email">Correo Electrónico</label>
+                    <input type="email" id="new-user-email" placeholder="usuario@correo.com" autocomplete="off">
+                </div>
+                <div>
+                    <label for="new-user-pass">Contraseña (Mínimo 6 caracteres)</label>
+                    <input type="password" id="new-user-pass" placeholder="••••••••" autocomplete="new-password">
+                </div>
+                <div>
+                    <label for="new-user-domain">Dominio (opcional)</label>
+                    <input type="text" id="new-user-domain" placeholder="mirestaurante.com">
+                </div>
+                <div>
+                    <label for="new-user-role">Rol</label>
+                    <select id="new-user-role" style="width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; color: var(--text); font-weight: 700;">
+                        <option value="owner">Owner</option>
+                        <option value="admin">Admin</option>
+                        <option value="superadmin">Superadmin</option>
+                        <option value="developer">Developer</option>
+                        <option value="CS">CS</option>
+                        <option value="design">Design</option>
+                        <option value="retention">Retention</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeCreateUserModal()">CANCELAR</button>
+                <button class="btn btn-save" id="btn-submit-create-user" onclick="submitCreateUser()">CREAR USUARIO</button>
+            </div>
+        </div>
+    </div>
+
     <div id="app" class="hidden">
         <header><img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo"></header>
         <div class="container">
             <div id="admin-tools" class="hidden">
-                <div class="section-title">All Users</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 15px;">
+                    <div class="section-title" style="margin-bottom: 0;">All Users</div>
+                    <button class="btn btn-save" onclick="openCreateUserModal()" style="padding: 12px 24px; font-size: 0.85rem; font-weight: 800; border-radius: 14px;">+ NUEVO USUARIO</button>
+                </div>
                 <div style="margin-bottom: 30px;"><input type="text" id="user-search" placeholder="Search users or domains..." style="width: 100%; max-width: 400px; background: var(--input); border: 1px solid var(--border); border-radius: 14px; padding: 14px 20px; color: var(--text);"></div>
                 <div id="user-list" class="user-list"></div>
             </div>
@@ -257,22 +309,33 @@
                 return;
             }
 
-            const allowedRoles = ['admin', 'developer'];
-            if (!data || !allowedRoles.includes(data.role)) { document.getElementById('no-access').classList.remove('hidden'); }
+            const allowedRoles = ['admin', 'superadmin', 'developer'];
+            const userRoleNormalized = (data?.role || '').toLowerCase();
+            if (!data || !allowedRoles.includes(userRoleNormalized)) {
+                location.href = "index.html";
+                return;
+            }
             else {
-                userRole = data.role;
+                userRole = userRoleNormalized;
                 const pill = document.getElementById('user-display-pill');
                 document.getElementById('user-name').textContent = data.username || user.email.split('@')[0];
                 document.getElementById('user-role-label').textContent = data.role;
-                if (data.role === 'admin') pill.classList.add('admin-glow');
-                else if (data.role === 'developer') pill.classList.add('dev-glow');
+                if (userRoleNormalized === 'superadmin') pill.classList.add('superadmin-glow');
+                else if (userRoleNormalized === 'admin') pill.classList.add('admin-glow');
+                else if (userRoleNormalized === 'developer') pill.classList.add('dev-glow');
                 else pill.classList.add('owner-glow');
 
                 document.getElementById('app').classList.remove('hidden');
                 document.getElementById('top-nav').classList.remove('hidden');
 
-                if (userRole === 'admin') { document.getElementById('admin-tools').classList.remove('hidden'); loadAllUsers(); }
-                else if (userRole === 'developer') { document.getElementById('dev-tools').classList.remove('hidden'); loadAssignedOwners(); }
+                if (userRoleNormalized === 'admin' || userRoleNormalized === 'superadmin') {
+                    document.getElementById('admin-tools').classList.remove('hidden');
+                    loadAllUsers();
+                }
+                else if (userRoleNormalized === 'developer') {
+                    document.getElementById('dev-tools').classList.remove('hidden');
+                    loadAssignedOwners();
+                }
             }
         }
 
@@ -299,25 +362,104 @@
             const list = document.getElementById(targetId);
             list.innerHTML = (users || []).map(u => `
                 <div class="user-card">
-                    <div class="user-info"><h3>${u.username || 'No Name'}</h3>${u.domain ? `<div style="font-size: 0.75rem; color: var(--orange); font-weight: 600;">${u.domain}</div>` : ''}</div>
+                    <div class="user-info">
+                        <h3>${u.username || 'No Name'}</h3>
+                        <div style="font-size: 0.75rem; color: var(--text-dim); font-weight: 500; margin-top: 2px;">${u.email || ''}</div>
+                        ${u.domain ? `<div style="font-size: 0.75rem; color: var(--orange); font-weight: 600;">${u.domain}</div>` : ''}
+                    </div>
                     <div class="controls"><input type="text" value="${u.username || ''}" id="user-${u.id}" ${!isAdminView ? 'disabled' : ''}><input type="text" value="${u.domain || ''}" id="dom-${u.id}" ${!isAdminView ? 'disabled' : ''}></div>
                     <div class="badge-container">
                         ${isAdminView ? `
                             <select id="role-${u.id}" style="width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">
-                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
-                                <option value="developer" ${u.role === 'developer' ? 'selected' : ''}>Developer</option>
-                                <option value="owner" ${u.role === 'owner' ? 'selected' : ''}>Owner</option>
-                                <option value="design" ${u.role === 'design' ? 'selected' : ''}>Design</option>
-                                <option value="adminDesign" ${u.role === 'adminDesign' ? 'selected' : ''}>Admin Design</option>
-                                <option value="CS" ${u.role === 'CS' ? 'selected' : ''}>CS</option>
-                                <option value="adminCS" ${u.role === 'adminCS' ? 'selected' : ''}>Admin CS</option>
-                                <option value="retention" ${u.role === 'retention' ? 'selected' : ''}>Retention</option>
+                                <option value="superadmin" ${String(u.role).toLowerCase() === 'superadmin' ? 'selected' : ''}>Superadmin</option>
+                                <option value="admin" ${String(u.role).toLowerCase() === 'admin' ? 'selected' : ''}>Admin</option>
+                                <option value="developer" ${String(u.role).toLowerCase() === 'developer' ? 'selected' : ''}>Developer</option>
+                                <option value="owner" ${String(u.role).toLowerCase() === 'owner' ? 'selected' : ''}>Owner</option>
+                                <option value="design" ${String(u.role).toLowerCase() === 'design' ? 'selected' : ''}>Design</option>
+                                <option value="adminDesign" ${String(u.role).toLowerCase() === 'admindesign' ? 'selected' : ''}>Admin Design</option>
+                                <option value="CS" ${String(u.role).toUpperCase() === 'CS' ? 'selected' : ''}>CS</option>
+                                <option value="adminCS" ${String(u.role).toLowerCase() === 'admincs' ? 'selected' : ''}>Admin CS</option>
+                                <option value="retention" ${String(u.role).toLowerCase() === 'retention' ? 'selected' : ''}>Retention</option>
                             </select>
                         ` : `<span class="badge badge-${u.role}">${u.role}</span>`}
                     </div>
                     <div class="actions">${isAdminView ? `<button class="btn btn-save" onclick="updateUser('${u.id}')">SAVE</button><button class="btn btn-pass" onclick="openResetModal('${u.id}', '${(u.username || u.domain || u.id || 'Usuario').replace(/'/g, "\\'")}')">PASS</button>` : ''}<button class="btn btn-access" onclick="manageGallery('${u.id}')">GALLERY</button></div>
                 </div>`).join('');
         }
+
+        window.openCreateUserModal = () => {
+            document.getElementById('new-user-username').value = '';
+            document.getElementById('new-user-email').value = '';
+            document.getElementById('new-user-pass').value = '';
+            document.getElementById('new-user-domain').value = '';
+            document.getElementById('new-user-role').value = 'owner';
+            document.getElementById('create-user-modal').classList.add('active');
+        };
+
+        window.closeCreateUserModal = () => {
+            document.getElementById('create-user-modal').classList.remove('active');
+        };
+
+        window.submitCreateUser = async () => {
+            const username = document.getElementById('new-user-username').value.trim();
+            const email = document.getElementById('new-user-email').value.trim();
+            const password = document.getElementById('new-user-pass').value;
+            const domain = document.getElementById('new-user-domain').value.trim();
+            const role = document.getElementById('new-user-role').value;
+            const btn = document.getElementById('btn-submit-create-user');
+
+            if (!email || !password) {
+                window.showToast("Correo y contraseña son requeridos", "error");
+                return;
+            }
+            if (password.length < 6) {
+                window.showToast("La contraseña debe tener al menos 6 caracteres", "error");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = "CREANDO...";
+
+            try {
+                const { data, error } = await sb.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            username: username || email.split('@')[0],
+                            domain: domain || null,
+                            role: role
+                        }
+                    }
+                });
+
+                if (error) {
+                    window.showToast(error.message, "error");
+                    btn.disabled = false;
+                    btn.textContent = "CREAR USUARIO";
+                    return;
+                }
+
+                if (data && data.user) {
+                    await sb.from('profiles').upsert({
+                        id: data.user.id,
+                        email: email,
+                        username: username || email.split('@')[0],
+                        domain: domain || null,
+                        role: role
+                    });
+                }
+
+                window.showToast("Usuario creado exitosamente", "success");
+                closeCreateUserModal();
+                loadAllUsers();
+            } catch (err) {
+                window.showToast(err.message || "Error al crear usuario", "error");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "CREAR USUARIO";
+            }
+        };
 
         window.updateUser = async (id) => {
             const u = document.getElementById(`user-${id}`).value;

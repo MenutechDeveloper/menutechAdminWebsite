@@ -1,0 +1,36 @@
+================================================================================
+INFORMACIÓN SOBRE ADMIN BILLING (adminBilling.html)
+================================================================================
+
+1. ¿QUÉ ES Y PARA QUÉ SIRVE ADMIN BILLING?
+   `adminBilling.html` es el módulo de facturación interna de la plataforma SaaS Menutech.
+   Sirve para administrar y cobrar la MENSUALIDAD del software a los restaurantes/clientes
+   que utilizan la plataforma Menutech.
+
+2. FUNCIONES PRINCIPALES:
+   - Configuración de Paquetes de Software (menutech_packages):
+     Define los planes mensuales que Menutech ofrece a sus clientes (ejemplo: Plan Básico,
+     Plan Pro, etc.), incluyendo precio mensual y características.
+   - Seguimiento de Suscripciones de Clientes (menutech_subscriptions):
+     Rastrea el estado de la suscripción de cada restaurante (Activa, Vencida, Por Vencer),
+     la fecha de inicio y la fecha de expiración.
+   - Registro de Pagos de Mensualidad (menutech_subscription_payments):
+     Permite registrar los pagos que los dueños de restaurantes realizan a Menutech
+     por el uso de la plataforma (efectivo, transferencia, tarjeta, etc.).
+   - Renovación con 1 Clic (+30 Días):
+     Permite extender la membresía del cliente por 30 días adicionales de forma rápida.
+   - Suspensión de Servicio (profiles.is_suspended):
+     Si un restaurante no paga su mensualidad de software, permite marcarlo como
+     suspendido ("Suspender Servicio"). Esto deshabilita el menú público y pedidos de sus comensales
+     hasta que regularice su cuenta, sin borrar su información.
+
+3. DIFERENCIA CLAVE CON ONLINE PAYMENT (onlinePayment.html):
+   - `adminBilling.html`: Es la suscripción de SOFTWARE que el restaurante le paga a MENUTECH
+     (SaaS mensual / renta de la plataforma).
+   - `onlinePayment.html`: Es la pasarela de pagos en línea (Stripe Connect) que usan los COMENSALES
+     del restaurante para pagar su comida/platillos por internet y la comisión (%) que Menutech retiene
+     por cada transacción procesada.
+
+4. PERMISOS DE ACCESO:
+   - Exclusivo para administradores (`admin` y `superadmin`).
+================================================================================

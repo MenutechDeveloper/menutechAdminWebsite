@@ -97,6 +97,13 @@
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; min-width: 220px; justify-content: flex-start;
         }
         #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
+        #user-display-pill.superadmin-glow {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b) !important;
+            color: #fff !important;
+            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+        #user-display-pill.superadmin-glow #user-name, #user-display-pill.superadmin-glow #user-role-label { color: #fff !important; }
         #user-display-pill.admin-glow {
             background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
             background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
@@ -868,12 +875,17 @@
 
             const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
             if (!profile) {
-                userRole = 'OWNER'; activeOwnerId = user.id; activeOwnerProfile = null; showApp(null); return;
+                location.href = 'index.html'; return;
             }
 
             activeOwnerProfile = profile;
             userRole = (profile.role || 'OWNER').trim().toUpperCase();
-            const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'];
+            const privilegedRoles = ['ADMIN', 'SUPERADMIN'];
+
+            if (!privilegedRoles.includes(userRole)) {
+                location.href = 'index.html';
+                return;
+            }
 
             if (privilegedRoles.includes(userRole)) {
                 const sidebarContainer = document.getElementById('sidebar-container');
@@ -954,7 +966,8 @@
                 document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
                 document.getElementById('user-role-label').textContent = profile.role || 'User';
                 const role = (profile.role || 'user').trim().toUpperCase();
-                if (role === 'ADMIN') pill.classList.add('admin-glow');
+                if (role === 'SUPERADMIN') pill.classList.add('superadmin-glow');
+                else if (role === 'ADMIN') pill.classList.add('admin-glow');
                 else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
                 else pill.classList.add('owner-glow');
             }
@@ -994,7 +1007,7 @@
                 is_free_access: false
             };
 
-            const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'];
+            const privilegedRoles = ['ADMIN', 'SUPERADMIN'];
             const isAdmin = privilegedRoles.includes(userRole);
 
             if (isAdmin) {
