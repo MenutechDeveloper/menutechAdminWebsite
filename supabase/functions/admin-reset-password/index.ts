@@ -57,7 +57,7 @@ serve(async (req: Request) => {
       .eq("id", caller.id)
       .single();
 
-    const allowedRoles = ["admin", "developer"];
+        const allowedRoles = ["admin", "superadmin", "developer"];
     if (profileError || !profile || !allowedRoles.includes(profile.role)) {
       return new Response(
         JSON.stringify({ error: "Acceso denegado. Se requieren permisos de administrador." }),

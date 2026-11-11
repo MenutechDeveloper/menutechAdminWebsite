@@ -88,6 +88,14 @@
         }
         #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
 
+        #user-display-pill.superadmin-glow {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b) !important;
+            color: #fff !important;
+            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+        #user-display-pill.superadmin-glow #user-name, #user-display-pill.superadmin-glow #user-role-label { color: #fff !important; }
+
         #user-display-pill.admin-glow {
             background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
             background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
@@ -643,10 +651,10 @@
             const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
             userRole = (profile?.role || 'OWNER').trim().toUpperCase();
 
-            const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'];
+            const privilegedRoles = ['ADMIN', 'SUPERADMIN'];
             if (!privilegedRoles.includes(userRole)) {
                 showToast(I18N_BILLING[currentLang].msgAccessDenied, "error");
-                setTimeout(() => location.href = 'index.html', 2000);
+                location.href = 'index.html';
                 return;
             }
 
@@ -673,7 +681,8 @@
                 document.getElementById('user-name').textContent = profile.username || user?.email?.split('@')[0] || 'Admin';
                 document.getElementById('user-role-label').textContent = profile.role || 'User';
                 const role = (profile.role || 'user').trim().toUpperCase();
-                if (role === 'ADMIN') pill.classList.add('admin-glow');
+                if (role === 'SUPERADMIN') pill.classList.add('superadmin-glow');
+                else if (role === 'ADMIN') pill.classList.add('admin-glow');
                 else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
             }
 
