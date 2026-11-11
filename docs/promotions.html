@@ -961,12 +961,31 @@
             return parts.length ? parts.join(' | ') : 'None';
         }
 
+        async function syncPromotionsServiceState() {
+            if (!activeOwnerId) return;
+            try {
+                const { data: activeList } = await sb.from('menutech_promotions')
+                    .select('id')
+                    .eq('user_id', activeOwnerId)
+                    .eq('is_active', true)
+                    .limit(1);
+                const hasActive = Boolean(activeList && activeList.length > 0);
+                const { data: prof } = await sb.from('profiles').select('services_enabled').eq('id', activeOwnerId).maybeSingle();
+                const svcs = (prof && prof.services_enabled) ? { ...prof.services_enabled } : {};
+                svcs.promotions = hasActive;
+                await sb.from('profiles').update({ services_enabled: svcs }).eq('id', activeOwnerId);
+            } catch(e) {
+                console.warn("Could not sync promotions in services_enabled:", e);
+            }
+        }
+
         window.togglePromoStatus = async (id, isActive) => {
             const { error } = await sb.from('menutech_promotions').update({ is_active: isActive }).eq('id', id);
             if (error) {
                 showToast("Error toggling promotion status: " + error.message, "error");
                 await loadPromotionsForActiveOwner();
             } else {
+                await syncPromotionsServiceState();
                 showToast(isActive ? "Promotion activated for public menu." : "Promotion deactivated.", "success");
                 await loadPromotionsForActiveOwner();
             }
@@ -978,6 +997,7 @@
             if (error) {
                 showToast("Error deleting promotion: " + error.message, "error");
             } else {
+                await syncPromotionsServiceState();
                 showToast("Promotion deleted successfully.", "success");
                 await loadPromotionsForActiveOwner();
             }

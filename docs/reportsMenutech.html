@@ -3,102 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports Menutech</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>Reports Menutech | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
     <script src="authGuard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+
         :root {
-            --bg: #FBF9F5;
-            --card: #FFFFFF;
-            --border: #F0ECE1;
-            --text: #2D241E;
-            --text-dim: #8C827A;
-            --orange: #FF7A00;
-            --orange-glow: rgba(255, 122, 0, 0.15);
-            --danger: #EF4444;
-            --success: #10B981;
-            --success-bg: rgba(16, 185, 129, 0.12);
-            --pending-bg: rgba(245, 158, 11, 0.12);
-            --pending: #F59E0B;
+            --orange: #ff9533;
+            --purple: #8b5cf6;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #10b981;
+            --error: #dc2626;
+            --info: #f59e0b;
+            --dev: #8b5cf6;
         }
 
         body.dark-mode {
-            --bg: #0C0D0E;
-            --card: #141618;
-            --border: #22262A;
-            --text: #F1F3F5;
-            --text-dim: #717882;
-            --orange-glow: rgba(255, 122, 0, 0.25);
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            padding: 30px 40px;
-            transition: background-color 0.3s, color 0.3s;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(139, 92, 246, 0.08) 0%, transparent 40%); }
+
+        .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 80px 24px; animation: fadeIn 1s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        header { text-align: center; margin-bottom: 25px; }
+        .logo-main { width: 100%; max-width: 200px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
+
+        .dashboard-layout { display: flex; min-height: calc(100vh - 160px); gap: 20px; position: relative; }
+
+        /* Unified Sidebar Container */
+        .sidebar-container {
+            position: fixed; left: 0; top: 120px; z-index: 6000; pointer-events: none; display: flex; align-items: flex-start;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        .sidebar-container > * { pointer-events: auto; }
+        .sidebar-container.collapsed { transform: translateX(-340px) !important; }
 
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
+        .sidebar { width: 340px; height: 600px; display: flex; flex-direction: column; gap: 20px; }
+        .main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+
+        .search-box { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 24px; position: relative; cursor: default; transition: opacity 0.3s; user-select: none; z-index: 100; box-shadow: 0 20px 50px rgba(0,0,0,0.15); height: 100%; display: flex; flex-direction: column; }
+        .search-box label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--orange); text-transform: uppercase; margin-bottom: 15px; margin-left: 5px; pointer-events: none; }
+        .search-box input { width: 100%; margin-bottom: 15px; border-radius: 16px; padding: 14px; background: var(--input); border: 1px solid var(--border); color: var(--text); }
+
+        .client-list { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
+        .client-list::-webkit-scrollbar { width: 4px; }
+        .client-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .client-item { padding: 14px 18px; border-radius: 16px; background: var(--input); border: 1px solid var(--border); cursor: pointer; transition: 0.3s; }
+        .client-item:hover { border-color: var(--orange); }
+        .client-item.active { border-color: var(--orange); background: rgba(255,149,51,0.08); }
+        .client-item .name { font-weight: 700; font-size: 0.85rem; display: block; }
+        .client-item .domain { font-size: 0.7rem; color: var(--text-dim); }
+
+        .sidebar-tab {
+            width: 45px; height: 160px; background: var(--orange); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 0 16px 16px 0; cursor: pointer; writing-mode: vertical-lr; text-orientation: mixed; font-weight: 800; font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; box-shadow: 10px 0 30px rgba(255, 149, 51, 0.2); transition: 0.4s; margin-top: 40px; position: relative;
         }
+        .sidebar-tab:hover { width: 55px; padding-left: 10px; }
 
-        .btn-panel {
-            background: #fff;
-            border: 1px solid var(--border);
-            color: var(--text);
-            font-weight: 800;
-            padding: 10px 22px;
-            border-radius: 999px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            transition: 0.3s;
-        }
-        body.dark-mode .btn-panel { background: var(--card); }
-        .btn-panel:hover { border-color: var(--orange); color: var(--orange); transform: translateY(-1px); }
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
+        #top-nav > * { pointer-events: auto; }
 
-        .top-right { display: flex; align-items: center; gap: 15px; }
-
-        .theme-toggle-btn {
-            background: #fff;
-            border: 1px solid var(--border);
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text);
-            transition: 0.3s;
-        }
-        body.dark-mode .theme-toggle-btn { background: var(--card); }
-
+        /* Premium User Pill */
         #user-display-pill {
-            background: #fff;
-            border: 1px solid var(--border);
-            padding: 8px 18px;
-            border-radius: 999px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            position: relative;
-            transition: 0.3s;
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; min-width: 220px; justify-content: flex-start;
         }
-        body.dark-mode #user-display-pill { background: var(--card); }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
+
+        #user-display-pill.admin-glow {
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
+
         #user-display-pill.superadmin-glow {
             background: linear-gradient(135deg, #ff416c, #ff4b2b) !important;
             color: #fff !important;
@@ -106,63 +101,83 @@
             border: 1px solid rgba(255, 255, 255, 0.2) !important;
         }
         #user-display-pill.superadmin-glow #user-name, #user-display-pill.superadmin-glow #user-role-label { color: #fff !important; }
-        #user-display-pill.admin-glow {
-            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
-            background-size: 400% 400%; animation: foil-shine 25s ease infinite;
-            border: none !important;
-        }
-        #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
 
-
-        @keyframes foil-shine {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        #user-display-pill.dev-glow {
+            background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
         }
+        #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
+
+        #user-display-pill.owner-glow {
+            background: #000;
+            background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 20%, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 80%, rgba(255,255,255,0.1) 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.owner-glow #user-name, #user-display-pill.owner-glow #user-role-label { color: #fff !important; }
+
+        #user-display-pill #user-name, #user-display-pill #user-role-label { color: var(--text); transition: color 0.3s; }
+
+        @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
         .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
-        #user-name { font-weight: 800; font-size: 0.85rem; }
+        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
         #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        .tabs-nav {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
+        .pill-menu {
+            position: absolute; top: calc(100% + 12px); right: 0; background: var(--card) !important; border: 1px solid var(--border);
+            border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
+            animation: none !important;
+        }
+        #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .pill-menu-item {
+            padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text);
+            display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none;
+        }
+        .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
+        .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+
+        .theme-switch {
+            width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); pointer-events: auto; }
+        .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
+
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
+        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
+
+        /* Tabs Styling */
+        .tabs-container {
+            display: flex; gap: 10px; margin-bottom: 20px; background: var(--card); padding: 10px; border-radius: 24px; border: 1px solid var(--border);
+            overflow-x: auto; scrollbar-width: none;
         }
         .tab-btn {
-            background: var(--card);
-            border: 1px solid var(--border);
-            color: var(--text-dim);
-            padding: 12px 28px;
-            border-radius: 999px;
-            font-size: 0.88rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
-            font-family: inherit;
+            flex: 1; padding: 12px 20px; border-radius: 16px; border: none; background: transparent; color: var(--text-dim);
+            font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: 0.3s; white-space: nowrap;
+            display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit;
         }
-        .tab-btn:hover { border-color: var(--orange); color: var(--text); }
-        .tab-btn.active {
-            background: var(--orange);
-            color: #fff;
-            border-color: var(--orange);
-            box-shadow: 0 4px 15px var(--orange-glow);
-        }
+        .tab-btn.active { background: var(--orange); color: #fff; box-shadow: 0 8px 20px rgba(255, 149, 51, 0.2); }
 
+        /* Filters Card */
         .filters-card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 22px 28px;
             margin-bottom: 24px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.02);
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px;
             align-items: end;
         }
 
-        .filter-group { display: flex; flex-direction: column; gap: 6px; }
+        .filter-group { display: flex; flex-direction: column; gap: 6px; position: relative; }
         .filter-group label {
             font-size: 0.7rem;
             font-weight: 800;
@@ -171,10 +186,10 @@
             color: var(--text-dim);
         }
         .filter-control {
-            background: #FAFAFA;
+            background: var(--input);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 10px 14px;
+            border-radius: 14px;
+            padding: 11px 14px;
             color: var(--text);
             font-family: inherit;
             font-size: 0.85rem;
@@ -183,15 +198,90 @@
             transition: 0.3s;
             width: 100%;
         }
-        body.dark-mode .filter-control { background: #1a1d20; }
         .filter-control:focus { border-color: var(--orange); }
+
+        /* Custom Searchable Dropdown for Restaurants */
+        .searchable-select {
+            position: relative;
+            width: 100%;
+        }
+        .select-trigger {
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 11px 14px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: 0.3s;
+            user-select: none;
+        }
+        .select-trigger:hover, .searchable-select.open .select-trigger { border-color: var(--orange); }
+        .select-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            z-index: 500;
+            display: none;
+            padding: 8px;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .searchable-select.open .select-dropdown { display: flex; }
+        .dropdown-search-input {
+            width: 100%;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            color: var(--text);
+            font-family: inherit;
+            outline: none;
+        }
+        .dropdown-search-input:focus { border-color: var(--orange); }
+        .dropdown-options-list {
+            max-height: 220px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-right: 4px;
+        }
+        .dropdown-options-list::-webkit-scrollbar { width: 4px; }
+        .dropdown-options-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        .dropdown-option {
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .dropdown-option:hover, .dropdown-option.selected {
+            background: rgba(255, 149, 51, 0.1);
+            color: var(--orange);
+            font-weight: 700;
+        }
 
         .btn-clear {
             background: transparent;
             border: 1px solid var(--border);
             color: var(--text-dim);
             padding: 10px 16px;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 0.82rem;
             font-weight: 700;
             cursor: pointer;
@@ -203,14 +293,14 @@
         .table-card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 20px;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.02);
         }
 
         table { width: 100%; border-collapse: collapse; text-align: left; }
         thead th {
-            background: #FAF8F5;
+            background: rgba(255, 149, 51, 0.05);
             padding: 16px 20px;
             font-size: 0.72rem;
             font-weight: 800;
@@ -219,7 +309,6 @@
             color: var(--text-dim);
             border-bottom: 1px solid var(--border);
         }
-        body.dark-mode thead th { background: #17191C; }
         tbody tr { border-bottom: 1px solid var(--border); transition: background 0.2s; }
         tbody tr:last-child { border-bottom: none; }
         tbody tr:hover { background: rgba(0,0,0,0.015); }
@@ -241,17 +330,17 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .badge-status.paid, .badge-status.ready, .badge-status.finished, .badge-status.attended {
-            background: var(--success-bg);
+        .badge-status.paid, .badge-status.succeeded, .badge-status.ready, .badge-status.finished, .badge-status.attended {
+            background: rgba(16, 185, 129, 0.12);
             color: var(--success);
         }
         .badge-status.pending, .badge-status.preparing, .badge-status.accepted {
-            background: var(--pending-bg);
-            color: var(--pending);
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--info);
         }
         .badge-status.failed, .badge-status.cancelled, .badge-status.rejected {
             background: rgba(239, 68, 68, 0.12);
-            color: var(--danger);
+            color: var(--error);
         }
 
         .btn-view {
@@ -288,68 +377,123 @@
             max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto;
             padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.25);
         }
-        .modal-header { font-size: 1.1rem; font-weight: 800; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        .modal-header { font-size: 1.1rem; font-weight: 800; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; font-family: 'Outfit', sans-serif; }
         .modal-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.85rem; }
         .modal-row .label { color: var(--text-dim); font-weight: 700; text-transform: uppercase; font-size: 0.72rem; }
         .modal-row .val { font-weight: 600; text-align: right; max-width: 60%; word-break: break-all; }
         .modal-close-btn {
             width: 100%; margin-top: 20px; background: var(--orange); color: #fff; border: none;
-            padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer;
+            padding: 12px; border-radius: 14px; font-weight: 800; cursor: pointer; text-transform: uppercase;
         }
+
+        /* Toast Notification */
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast { min-width: 320px; max-width: 440px; padding: 18px 24px; border-radius: 24px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.9rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1), toastFadeOut 0.5s 5.5s forwards; line-height: 1.4; }
+        .toast.success { border-left: 6px solid var(--success); }
+        .toast.error { border-left: 6px solid var(--error); }
+        .toast.warning { border-left: 6px solid var(--orange); }
+        @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastFadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <div class="top-bar">
-        <a href="index.html" class="btn-panel">PANEL</a>
-        <div class="top-right">
-            <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            </button>
+    <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
+
+    <div id="top-nav" class="hidden">
+        <div><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="theme-switch" id="theme-toggle">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
             <div id="user-display-pill">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px; height:18px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <div class="pill-info">
                     <div id="user-name">&nbsp;</div>
                     <div id="user-role-label">&nbsp;</div>
+                </div>
+                <div class="pill-menu">
+                    <a href="index.html" class="pill-menu-item">Home</a>
+                    <a href="reservations.html" class="pill-menu-item">Reservation Settings</a>
+                    <div class="pill-menu-item danger" onclick="logout()">Logout</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="tabs-nav">
-        <button class="tab-btn active" id="tab-btn-logs" onclick="switchTab('logs')">Logs de Pago</button>
-        <button class="tab-btn" id="tab-btn-orders" onclick="switchTab('orders')">Órdenes</button>
-    </div>
+    <div class="container hidden" id="main-app">
+        <header>
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
+        </header>
 
-    <div class="filters-card">
-        <div class="filter-group">
-            <label for="filter-restaurant">Restaurante</label>
-            <select id="filter-restaurant" class="filter-control" onchange="applyFilters()">
-                <option value="">Todos los restaurantes</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label for="filter-status">Estado</label>
-            <select id="filter-status" class="filter-control" onchange="applyFilters()">
-                <option value="">Todos los estados</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label for="filter-date-from">Desde</label>
-            <input type="date" id="filter-date-from" class="filter-control" onchange="applyFilters()">
-        </div>
-        <div class="filter-group">
-            <label for="filter-date-to">Hasta</label>
-            <input type="date" id="filter-date-to" class="filter-control" onchange="applyFilters()">
-        </div>
-        <div class="filter-group">
-            <label for="filter-search">Buscar</label>
-            <input type="text" id="filter-search" class="filter-control" placeholder="ID, cliente, monto..." oninput="applyFilters()">
-        </div>
-        <button class="btn-clear" onclick="clearFilters()">Limpiar</button>
-    </div>
+        <div class="dashboard-layout">
+            <div class="sidebar-container hidden" id="sidebar-container">
+                <div class="sidebar" id="sidebar">
+                    <div class="search-box">
+                        <label>Find Project</label>
+                        <input type="text" id="client-search" placeholder="Domain or Name...">
+                        <div class="client-list" id="client-list"></div>
+                        <div id="project-info" class="switcher-box hidden" style="width: 100%; margin: 0; padding-top: 15px; border-top: 1px solid var(--border); margin-top: auto;">
+                            <label>Active Project</label>
+                            <div id="active-project-name" style="font-weight: 700; padding: 12px; background: var(--input); border-radius: 14px; border: 1px solid var(--border); font-size: 0.8rem; margin-top: 8px;">None Selected</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar-tab" id="sidebar-tab">Find Project</div>
+            </div>
 
-    <div class="table-card">
-        <div id="table-container"></div>
+            <div class="main-content">
+                <div class="tabs-container">
+                    <button class="tab-btn active" id="tab-btn-logs" onclick="switchTab('logs')">Logs de Pago</button>
+                    <button class="tab-btn" id="tab-btn-orders" onclick="switchTab('orders')">Órdenes</button>
+                </div>
+
+                <div class="filters-card">
+                    <div class="filter-group">
+                        <label>Restaurante</label>
+                        <div class="searchable-select" id="restaurant-select-wrapper">
+                            <div class="select-trigger" id="select-trigger-label" onclick="toggleRestaurantDropdown(event)">
+                                <span id="selected-restaurant-text">Todos los restaurantes</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                            </div>
+                            <div class="select-dropdown" id="restaurant-dropdown">
+                                <input type="text" id="dropdown-search" class="dropdown-search-input" placeholder="Buscar restaurante..." oninput="filterDropdownOptions()" onclick="event.stopPropagation()">
+                                <div class="dropdown-options-list" id="dropdown-options">
+                                    <!-- populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="filter-restaurant" value="">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-status">Estado</label>
+                        <select id="filter-status" class="filter-control" onchange="applyFilters()">
+                            <option value="">Todos los estados</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-date-from">Desde</label>
+                        <input type="date" id="filter-date-from" class="filter-control" onchange="applyFilters()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-date-to">Hasta</label>
+                        <input type="date" id="filter-date-to" class="filter-control" onchange="applyFilters()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-search">Buscar</label>
+                        <input type="text" id="filter-search" class="filter-control" placeholder="ID, cliente, monto..." oninput="applyFilters()">
+                    </div>
+                    <button class="btn-clear" onclick="clearFilters()">Limpiar</button>
+                </div>
+
+                <div class="table-card">
+                    <div id="table-container"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="detail-modal" class="modal-overlay" onclick="closeModal(event)">
@@ -363,21 +507,50 @@
     <script type="module">
         import { supabase as sb } from './supabase.js';
 
+        let user = null;
+        let userRole = null;
         let currentTab = 'logs';
         let rawLogs = [];
         let rawOrders = [];
         let allRestaurants = [];
+        let allOwners = [];
+        let activeRestaurantId = null;
 
-        window.toggleTheme = () => {
-            document.body.classList.toggle('dark-mode');
-            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-        };
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'toastFadeOut 0.5s forwards';
+                setTimeout(() => toast.remove(), 500);
+            }, 5000);
+        }
 
-        if (localStorage.getItem('theme') === 'dark') {
-            document.body.classList.add('dark-mode');
+        function initTheme() {
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            document.getElementById('theme-toggle').onclick = () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            };
+        }
+
+        function initEvents() {
+            document.getElementById('sidebar-tab').onclick = () => document.getElementById('sidebar-container').classList.toggle('collapsed');
+            const pill = document.getElementById('user-display-pill');
+            pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
+            document.addEventListener('click', () => {
+                pill.classList.remove('active');
+                document.getElementById('restaurant-select-wrapper').classList.remove('open');
+            });
+            window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
         }
 
         async function init() {
+            initTheme();
+            initEvents();
+
             if (window.location.search.includes('mock=true')) {
                 mockData();
                 return;
@@ -385,26 +558,53 @@
 
             const { data: { session } } = await sb.auth.getSession();
             if (!session) { location.href = 'index.html'; return; }
+            user = session.user;
 
-            const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
-            const role = (profile?.role || '').trim().toUpperCase();
+            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            userRole = (profile?.role || '').trim().toUpperCase();
 
-            if (!['ADMIN', 'SUPERADMIN'].includes(role)) {
+            if (!['ADMIN', 'SUPERADMIN', 'DEVELOPER'].includes(userRole)) {
                 location.href = 'index.html';
                 return;
             }
 
-            const pill = document.getElementById('user-display-pill');
-            document.getElementById('user-name').textContent = profile?.username || session.user.email.split('@')[0];
-            document.getElementById('user-role-label').textContent = role;
-            if (role === 'SUPERADMIN') pill.classList.add('superadmin-glow');
-            else if (role === 'ADMIN') pill.classList.add('admin-glow');
+            showApp(profile);
+
+            document.getElementById('sidebar-container').classList.remove('hidden');
+            document.getElementById('sidebar-container').classList.add('collapsed');
 
             await loadRestaurants();
             await fetchData();
         }
 
+        function showApp(profile) {
+            if (window.revealPage) window.revealPage();
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('top-nav').classList.remove('hidden');
+
+            const pill = document.getElementById('user-display-pill');
+            const nameEl = document.getElementById('user-name');
+            const roleEl = document.getElementById('user-role-label');
+
+            if (profile) {
+                nameEl.textContent = profile.username || user.email.split('@')[0];
+                roleEl.textContent = profile.role || 'User';
+
+                const role = (profile.role || 'user').trim().toUpperCase();
+                if (role === 'SUPERADMIN') pill.classList.add('superadmin-glow');
+                else if (role === 'ADMIN') pill.classList.add('admin-glow');
+                else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
+                else pill.classList.add('owner-glow');
+            }
+        }
+
         function mockData() {
+            if (window.revealPage) window.revealPage();
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('top-nav').classList.remove('hidden');
+            document.getElementById('sidebar-container').classList.remove('hidden');
+            document.getElementById('sidebar-container').classList.add('collapsed');
+
             const pill = document.getElementById('user-display-pill');
             document.getElementById('user-name').textContent = 'SuperAdmin';
             document.getElementById('user-role-label').textContent = 'SUPERADMIN';
@@ -414,16 +614,17 @@
                 { id: '1', username: 'Taquería Los Hermanos', domain: 'taquerialoshermanos.com' },
                 { id: '2', username: 'Sushi Bistro', domain: 'sushibistro.com' }
             ];
+            allOwners = [...allRestaurants];
+            setupContextSwitcher();
             populateRestaurantFilter();
 
             rawLogs = [
                 { id: 'txn_9981a384', order_id: 'ord_1001a1b2', amount: 48.50, currency: 'usd', status: 'succeeded', payment_method_type: 'stripe', created_at: '2026-10-11T14:20:00Z', restaurant_domain: 'taquerialoshermanos.com', user_id: '1' },
-                { id: 'txn_9982b572', order_id: 'ord_1002c3d4', amount: 29.00, currency: 'usd', status: 'pending', payment_method_type: 'cash', created_at: '2026-10-11T14:15:00Z', restaurant_domain: 'sushibistro.com', user_id: '2' }
+                { id: 'txn_9981a385', order_id: 'ord_1002a2c3', amount: 112.00, currency: 'usd', status: 'pending', payment_method_type: 'stripe', created_at: '2026-10-12T16:45:00Z', restaurant_domain: 'sushibistro.com', user_id: '2' }
             ];
 
             rawOrders = [
-                { id: 'ord_1001a1b2', domain: 'taquerialoshermanos.com', customer_name: 'Carlos Ruiz', customer_phone: '5551234567', total: 48.50, status: 'ready', payment_status: 'paid', payment_method: 'stripe', order_type: 'pickup', created_at: '2026-10-11T14:20:00Z' },
-                { id: 'ord_1002c3d4', domain: 'sushibistro.com', customer_name: 'Ana Lopez', customer_phone: '5559876543', total: 29.00, status: 'preparing', payment_status: 'pending', payment_method: 'cash', order_type: 'delivery', created_at: '2026-10-11T14:15:00Z' }
+                { id: 'ord_1001a1b2', customer_name: 'Carlos Ruiz', customer_phone: '+1 555-0192', order_type: 'delivery', total: 48.50, status: 'delivered', payment_status: 'paid', domain: 'taquerialoshermanos.com', created_at: '2026-10-11T14:15:00Z', user_id: '1' }
             ];
 
             updateStatusFilter();
@@ -433,19 +634,119 @@
         async function loadRestaurants() {
             const { data } = await sb.from('profiles').select('id, username, domain').order('username', { ascending: true });
             allRestaurants = data || [];
+            allOwners = [...allRestaurants];
+            setupContextSwitcher();
             populateRestaurantFilter();
         }
 
-        function populateRestaurantFilter() {
-            const sel = document.getElementById('filter-restaurant');
-            sel.innerHTML = '<option value="">Todos los restaurantes</option>';
-            allRestaurants.forEach(r => {
-                const opt = document.createElement('option');
-                opt.value = r.domain || r.username || r.id;
-                opt.textContent = r.username || r.domain || 'Sin nombre';
-                sel.appendChild(opt);
-            });
+        function setupContextSwitcher() {
+            renderOwners(allOwners);
+            document.getElementById('client-search').oninput = (e) => {
+                const term = e.target.value.toLowerCase().trim();
+                renderOwners(allOwners.filter(o =>
+                    (o.username || '').toLowerCase().includes(term) ||
+                    (o.domain || '').toLowerCase().includes(term)
+                ));
+            };
         }
+
+        function renderOwners(owners) {
+            const list = document.getElementById('client-list');
+            list.innerHTML = owners.map(o => `
+                <div class="client-item ${activeRestaurantId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')">
+                    <span class="name">${o.username || 'User'}</span>
+                    <span class="domain">${o.domain || o.id.substring(0,8)}</span>
+                </div>
+            `).join('');
+        }
+
+        window.switchContext = (ownerId) => {
+            const owner = allOwners.find(o => o.id === ownerId);
+            if (!owner) return;
+            activeRestaurantId = ownerId;
+            document.getElementById('active-project-name').textContent = owner.username || owner.domain;
+            document.getElementById('project-info').classList.remove('hidden');
+            renderOwners(allOwners);
+
+            selectRestaurantFilter(owner.domain || owner.username || owner.id, owner.username || owner.domain);
+            document.getElementById('sidebar-container').classList.add('collapsed');
+        };
+
+        /* Searchable Restaurant Dropdown Functions */
+        window.toggleRestaurantDropdown = (e) => {
+            if (e) e.stopPropagation();
+            const wrapper = document.getElementById('restaurant-select-wrapper');
+            wrapper.classList.toggle('open');
+            if (wrapper.classList.contains('open')) {
+                const input = document.getElementById('dropdown-search');
+                input.value = '';
+                filterDropdownOptions();
+                input.focus();
+            }
+        };
+
+        function populateRestaurantFilter() {
+            const list = document.getElementById('dropdown-options');
+            let html = `
+                <div class="dropdown-option ${!document.getElementById('filter-restaurant').value ? 'selected' : ''}" onclick="selectRestaurantFilter('', 'Todos los restaurantes')">
+                    <span>Todos los restaurantes</span>
+                </div>
+            `;
+
+            allRestaurants.forEach(r => {
+                const val = r.domain || r.username || r.id;
+                const text = r.username || r.domain || 'Sin nombre';
+                const isSelected = document.getElementById('filter-restaurant').value === val;
+                html += `
+                    <div class="dropdown-option ${isSelected ? 'selected' : ''}" onclick="selectRestaurantFilter('${val}', '${text.replace(/'/g, "\\'")}')">
+                        <span>${text}</span>
+                        ${r.domain ? `<small style="color:var(--text-dim);font-size:0.7rem;">${r.domain}</small>` : ''}
+                    </div>
+                `;
+            });
+
+            list.innerHTML = html;
+        }
+
+        window.filterDropdownOptions = () => {
+            const term = (document.getElementById('dropdown-search').value || '').toLowerCase().trim();
+            const list = document.getElementById('dropdown-options');
+            const currentVal = document.getElementById('filter-restaurant').value;
+
+            let html = `
+                <div class="dropdown-option ${!currentVal ? 'selected' : ''}" onclick="selectRestaurantFilter('', 'Todos los restaurantes')">
+                    <span>Todos los restaurantes</span>
+                </div>
+            `;
+
+            allRestaurants
+                .filter(r => {
+                    const u = (r.username || '').toLowerCase();
+                    const d = (r.domain || '').toLowerCase();
+                    return !term || u.includes(term) || d.includes(term);
+                })
+                .forEach(r => {
+                    const val = r.domain || r.username || r.id;
+                    const text = r.username || r.domain || 'Sin nombre';
+                    const isSelected = currentVal === val;
+                    html += `
+                        <div class="dropdown-option ${isSelected ? 'selected' : ''}" onclick="selectRestaurantFilter('${val}', '${text.replace(/'/g, "\\'")}')">
+                            <span>${text}</span>
+                            ${r.domain ? `<small style="color:var(--text-dim);font-size:0.7rem;">${r.domain}</small>` : ''}
+                        </div>
+                    `;
+                });
+
+            list.innerHTML = html;
+        };
+
+        window.selectRestaurantFilter = (val, text) => {
+            document.getElementById('filter-restaurant').value = val;
+            document.getElementById('selected-restaurant-text').textContent = text || 'Todos los restaurantes';
+            document.getElementById('restaurant-select-wrapper').classList.remove('open');
+            populateRestaurantFilter();
+            applyFilters();
+        };
 
         async function fetchData() {
             const { data: logs } = await sb.from('menutech_payment_logs').select('*').order('created_at', { ascending: false });
@@ -488,7 +789,7 @@
         };
 
         window.clearFilters = () => {
-            document.getElementById('filter-restaurant').value = '';
+            selectRestaurantFilter('', 'Todos los restaurantes');
             document.getElementById('filter-status').value = '';
             document.getElementById('filter-date-from').value = '';
             document.getElementById('filter-date-to').value = '';
@@ -506,8 +807,13 @@
             const items = currentTab === 'logs' ? rawLogs : rawOrders;
 
             return items.filter(it => {
-                const rest = (it.restaurant_domain || it.domain || '').toLowerCase();
-                if (rFilter && !rest.includes(rFilter)) return false;
+                const rest = (it.restaurant_domain || it.domain || it.user_id || '').toLowerCase();
+                if (rFilter) {
+                    const matchDirect = rest.includes(rFilter);
+                    const restObj = allRestaurants.find(r => (r.domain || '').toLowerCase() === rFilter || (r.username || '').toLowerCase() === rFilter || r.id === rFilter);
+                    const matchId = restObj && (it.user_id === restObj.id || it.domain === restObj.domain || it.restaurant_domain === restObj.domain);
+                    if (!matchDirect && !matchId) return false;
+                }
 
                 const st = (it.status || '').toLowerCase();
                 if (sFilter && st !== sFilter) return false;

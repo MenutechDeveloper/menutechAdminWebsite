@@ -890,6 +890,15 @@
             if (error) {
                 showToast("Error saving settings: " + error.message, "error");
             } else {
+                // Sync services_enabled on profile
+                try {
+                    const { data: prof } = await sb.from('profiles').select('services_enabled').eq('id', activeOwnerId).maybeSingle();
+                    const svcs = (prof && prof.services_enabled) ? { ...prof.services_enabled } : {};
+                    svcs.reservations = payload.enabled;
+                    await sb.from('profiles').update({ services_enabled: svcs }).eq('id', activeOwnerId);
+                } catch(e) {
+                    console.warn("Could not sync services_enabled on profile:", e);
+                }
                 showToast("Reservation settings saved successfully!");
             }
 

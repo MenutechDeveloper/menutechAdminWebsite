@@ -1402,6 +1402,14 @@
 
                 if (response.data && response.data.success) {
                     currentRestaurantConfig = response.data.config;
+                    try {
+                        const { data: prof } = await sb.from('profiles').select('services_enabled').eq('id', activeOwnerId).maybeSingle();
+                        const svcs = (prof && prof.services_enabled) ? { ...prof.services_enabled } : {};
+                        svcs.online_payment = activate;
+                        await sb.from('profiles').update({ services_enabled: svcs }).eq('id', activeOwnerId);
+                    } catch(e) {
+                        console.warn("Could not sync online_payment on profile:", e);
+                    }
                     renderAdminUI();
                     showToast(activate ? I18N[currentLang].toastServiceActivated : I18N[currentLang].toastServiceSuspended, activate ? "success" : "warning");
                 } else {
@@ -1491,6 +1499,14 @@
 
                 if (response.data && response.data.success) {
                     currentRestaurantConfig = response.data.config;
+                    try {
+                        const { data: prof } = await sb.from('profiles').select('services_enabled').eq('id', activeOwnerId).maybeSingle();
+                        const svcs = (prof && prof.services_enabled) ? { ...prof.services_enabled } : {};
+                        svcs.online_payment = (status === 'active' || status === 'free_access');
+                        await sb.from('profiles').update({ services_enabled: svcs }).eq('id', activeOwnerId);
+                    } catch(e) {
+                        console.warn("Could not sync online_payment on profile:", e);
+                    }
                     renderAdminUI();
                     showToast(I18N[currentLang].toastConfigSaved, "success");
                 } else {
