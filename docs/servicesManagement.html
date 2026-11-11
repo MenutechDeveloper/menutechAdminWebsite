@@ -105,9 +105,17 @@
         #user-display-pill.superadmin-glow #user-name, #user-display-pill.superadmin-glow #user-role-label { color: #fff !important; }
         #user-display-pill.admin-glow {
             background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite;
             border: none !important;
         }
         #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
+
+
+        @keyframes foil-shine {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
 
         .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
         #user-name { font-weight: 800; font-size: 0.85rem; }

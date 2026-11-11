@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Migration: Add Superadmin Role and Restaurant Services Controls
+-- Migration: Add Superadmin Role, Restaurant Services Controls, and Non-Recursive RLS
 -- ==============================================================================
 
 -- 1. Ensure `services_enabled` JSONB column exists on public.profiles
@@ -7,35 +7,51 @@
 ALTER TABLE public.profiles
 ADD COLUMN IF NOT EXISTS services_enabled JSONB DEFAULT '{"online_payment": true, "promotions": true, "reservations": true}'::jsonb;
 
--- 2. Update RLS policies to recognize 'superadmin' alongside 'admin' and 'developer'
+-- 2. SECURITY DEFINER Function to check administrative roles without triggering RLS recursion
+-- This function runs with the privileges of the creator and bypasses RLS on public.profiles,
+-- completely preventing "infinite recursion detected in policy for relation profiles".
+CREATE OR REPLACE FUNCTION public.is_admin_or_superadmin(user_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    user_role text;
+BEGIN
+    IF user_id IS NULL THEN
+        RETURN false;
+    END IF;
 
--- Helper condition check for privileged roles in policies:
--- (UPPER(role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER', 'CS', 'ADMINCS'))
+    SELECT role INTO user_role
+    FROM public.profiles
+    WHERE id = user_id;
 
--- profiles table policies
+    RETURN UPPER(COALESCE(user_role, '')) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER');
+END;
+$$;
+
+-- Grant execution to authenticated and anon users
+GRANT EXECUTE ON FUNCTION public.is_admin_or_superadmin(uuid) TO authenticated, anon;
+
+-- 3. Update public.profiles RLS policies
+-- Users can always read/write their own profile, while admins and superadmins can manage all profiles
 DROP POLICY IF EXISTS "Superadmin and Admins can manage all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Users can read/update own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can view and update all profiles" ON public.profiles;
+
 CREATE POLICY "Superadmin and Admins can manage all profiles"
 ON public.profiles
 FOR ALL
 TO authenticated
 USING (
-    EXISTS (
-        SELECT 1 FROM public.profiles p
-        WHERE p.id = auth.uid()
-        AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-    )
-    OR auth.uid() = id
+    auth.uid() = id OR public.is_admin_or_superadmin(auth.uid())
 )
 WITH CHECK (
-    EXISTS (
-        SELECT 1 FROM public.profiles p
-        WHERE p.id = auth.uid()
-        AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-    )
-    OR auth.uid() = id
+    auth.uid() = id OR public.is_admin_or_superadmin(auth.uid())
 );
 
--- menutech_payment_logs table policies
+-- 4. menutech_payment_logs table policies
 DO $$
 BEGIN
     IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'menutech_payment_logs') THEN
@@ -45,25 +61,15 @@ BEGIN
         FOR ALL
         TO authenticated
         USING (
-            EXISTS (
-                SELECT 1 FROM public.profiles p
-                WHERE p.id = auth.uid()
-                AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-            )
-            OR auth.uid() = user_id
+            auth.uid() = user_id OR public.is_admin_or_superadmin(auth.uid())
         )
         WITH CHECK (
-            EXISTS (
-                SELECT 1 FROM public.profiles p
-                WHERE p.id = auth.uid()
-                AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-            )
-            OR auth.uid() = user_id
+            auth.uid() = user_id OR public.is_admin_or_superadmin(auth.uid())
         );
     END IF;
 END $$;
 
--- menutech_orders table policies
+-- 5. menutech_orders table policies
 DO $$
 BEGIN
     IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'menutech_orders') THEN
@@ -73,25 +79,15 @@ BEGIN
         FOR ALL
         TO authenticated
         USING (
-            EXISTS (
-                SELECT 1 FROM public.profiles p
-                WHERE p.id = auth.uid()
-                AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-            )
-            OR auth.uid() = user_id
+            auth.uid() = user_id OR public.is_admin_or_superadmin(auth.uid())
         )
         WITH CHECK (
-            EXISTS (
-                SELECT 1 FROM public.profiles p
-                WHERE p.id = auth.uid()
-                AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-            )
-            OR auth.uid() = user_id
+            auth.uid() = user_id OR public.is_admin_or_superadmin(auth.uid())
         );
     END IF;
 END $$;
 
--- menutech_reservations table policies
+-- 6. menutech_reservations table policies
 DO $$
 BEGIN
     IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'menutech_reservations') THEN
@@ -101,25 +97,15 @@ BEGIN
         FOR ALL
         TO authenticated
         USING (
-            EXISTS (
-                SELECT 1 FROM public.profiles p
-                WHERE p.id = auth.uid()
-                AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-            )
-            OR auth.uid() = user_id
+            auth.uid() = user_id OR public.is_admin_or_superadmin(auth.uid())
         )
         WITH CHECK (
-            EXISTS (
-                SELECT 1 FROM public.profiles p
-                WHERE p.id = auth.uid()
-                AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-            )
-            OR auth.uid() = user_id
+            auth.uid() = user_id OR public.is_admin_or_superadmin(auth.uid())
         );
     END IF;
 END $$;
 
--- menutech_packages policies
+-- 7. menutech_packages policies
 DO $$
 BEGIN
     IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'menutech_packages') THEN
@@ -129,23 +115,15 @@ BEGIN
         FOR ALL
         TO authenticated
         USING (
-            EXISTS (
-                SELECT 1 FROM public.profiles p
-                WHERE p.id = auth.uid()
-                AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-            )
+            public.is_admin_or_superadmin(auth.uid())
         )
         WITH CHECK (
-            EXISTS (
-                SELECT 1 FROM public.profiles p
-                WHERE p.id = auth.uid()
-                AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-            )
+            public.is_admin_or_superadmin(auth.uid())
         );
     END IF;
 END $$;
 
--- menutech_subscriptions policies
+-- 8. menutech_subscriptions policies
 DO $$
 BEGIN
     IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'menutech_subscriptions') THEN
@@ -155,25 +133,15 @@ BEGIN
         FOR ALL
         TO authenticated
         USING (
-            EXISTS (
-                SELECT 1 FROM public.profiles p
-                WHERE p.id = auth.uid()
-                AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-            )
-            OR auth.uid() = user_id
+            auth.uid() = user_id OR public.is_admin_or_superadmin(auth.uid())
         )
         WITH CHECK (
-            EXISTS (
-                SELECT 1 FROM public.profiles p
-                WHERE p.id = auth.uid()
-                AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-            )
-            OR auth.uid() = user_id
+            auth.uid() = user_id OR public.is_admin_or_superadmin(auth.uid())
         );
     END IF;
 END $$;
 
--- menutech_subscription_payments policies
+-- 9. menutech_subscription_payments policies
 DO $$
 BEGIN
     IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'menutech_subscription_payments') THEN
@@ -183,25 +151,15 @@ BEGIN
         FOR ALL
         TO authenticated
         USING (
-            EXISTS (
-                SELECT 1 FROM public.profiles p
-                WHERE p.id = auth.uid()
-                AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-            )
-            OR auth.uid() = user_id
+            auth.uid() = user_id OR public.is_admin_or_superadmin(auth.uid())
         )
         WITH CHECK (
-            EXISTS (
-                SELECT 1 FROM public.profiles p
-                WHERE p.id = auth.uid()
-                AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-            )
-            OR auth.uid() = user_id
+            auth.uid() = user_id OR public.is_admin_or_superadmin(auth.uid())
         );
     END IF;
 END $$;
 
--- menutech_restaurant_payment_configs policies
+-- 10. menutech_restaurant_payment_configs policies
 DO $$
 BEGIN
     IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'menutech_restaurant_payment_configs') THEN
@@ -211,20 +169,10 @@ BEGIN
         FOR ALL
         TO authenticated
         USING (
-            EXISTS (
-                SELECT 1 FROM public.profiles p
-                WHERE p.id = auth.uid()
-                AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-            )
-            OR auth.uid() = user_id
+            auth.uid() = user_id OR public.is_admin_or_superadmin(auth.uid())
         )
         WITH CHECK (
-            EXISTS (
-                SELECT 1 FROM public.profiles p
-                WHERE p.id = auth.uid()
-                AND UPPER(p.role) IN ('ADMIN', 'SUPERADMIN', 'DEVELOPER')
-            )
-            OR auth.uid() = user_id
+            auth.uid() = user_id OR public.is_admin_or_superadmin(auth.uid())
         );
     END IF;
 END $$;
