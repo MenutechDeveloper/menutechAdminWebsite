@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Avance de Objetivos</title>
+  <title>Avance de Funciones</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -55,7 +55,7 @@
 
     /* BARRA SUPERIOR DISCRETA (SOLO VISIBLE SI ES ADMIN AUTENTICADO) */
     .top-bar {
-      display: none; /* Oculta por defecto para visitantes sin sesion */
+      display: none;
       justify-content: flex-end;
       align-items: center;
       gap: 12px;
@@ -64,7 +64,7 @@
     }
 
     body.is-admin-user .top-bar {
-      display: flex; /* Se muestra automáticamente si la sesión activa es de ADMIN/DEVELOPER */
+      display: flex;
     }
 
     .btn {
@@ -108,6 +108,16 @@
       transform: translateY(-1px);
     }
 
+    .btn-ghost {
+      background: #ffffff;
+      color: #334155;
+      border-color: #cbd5e1;
+    }
+    .btn-ghost:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+
     .admin-only-btn {
       display: none;
     }
@@ -115,7 +125,7 @@
       display: inline-flex;
     }
 
-    /* LISTA VERTICAL DE OBJETIVOS (FILA POR FILA) */
+    /* LISTA VERTICAL DE FUNCIONES (FILA POR FILA) */
     .objectives-list {
       display: flex;
       flex-direction: column;
@@ -128,8 +138,7 @@
       border-radius: var(--radius-lg);
       padding: 16px 22px;
       display: flex;
-      align-items: center;
-      gap: 20px;
+      flex-direction: column;
       box-shadow: var(--shadow-sm);
       transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
       position: relative;
@@ -140,7 +149,50 @@
       box-shadow: var(--shadow-md);
     }
 
-    /* 1. CUADRITO DE VISTA PREVIA DEL VIDEO */
+    .row-main {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    /* ARRASTRAR PARA REORDENAR (SOLO EN MODO EDICION) */
+    .drag-handle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-sm);
+      color: #94a3b8;
+      cursor: grab;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    body.is-admin-editing .drag-handle {
+      display: flex;
+    }
+    .drag-handle:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .objective-row.dragging {
+      opacity: 0.45;
+      border-style: dashed;
+      border-color: var(--color-orange);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+    }
+    .objective-row.drop-target {
+      border-color: var(--color-orange);
+      box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+    }
+
+    /* 1. CUADRITO DE VISTA PREVIA */
     .video-thumb-box {
       width: 90px;
       height: 62px;
@@ -163,15 +215,17 @@
       box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
     }
 
-    .video-thumb-box video {
+    .video-thumb-box video,
+    .video-thumb-box img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       pointer-events: none;
-      opacity: 0.85;
+      opacity: 0.9;
       transition: opacity 0.2s;
     }
-    .video-thumb-box:hover video {
+    .video-thumb-box:hover video,
+    .video-thumb-box:hover img {
       opacity: 1;
     }
 
@@ -181,7 +235,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(15, 23, 42, 0.35);
+      background: rgba(15, 23, 42, 0.3);
       transition: background 0.2s;
     }
     .video-thumb-box:hover .thumb-play-overlay {
@@ -210,7 +264,24 @@
       background: #16a34a;
     }
 
-    /* 2. COLUMNA INFORMACION (TITULO Y DESCRIPCION A LA DERECHA DEL VIDEO) */
+    /* Indicador de varias piezas (reel) */
+    .thumb-count-badge {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: rgba(15, 23, 42, 0.75);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      backdrop-filter: blur(2px);
+    }
+
+    /* 2. COLUMNA INFORMACION */
     .obj-info-col {
       flex: 1;
       min-width: 0;
@@ -235,7 +306,7 @@
       font-weight: 450;
     }
 
-    /* 3. PROGRESO Y CONTROLES SEGUN MODO */
+    /* 3. PROGRESO Y CONTROLES */
     .obj-progress-col {
       display: flex;
       align-items: center;
@@ -244,7 +315,6 @@
       flex-shrink: 0;
     }
 
-    /* Para visitantes (sin admin): SOLO porcentaje con color dinámico, NADA de barra/línea */
     .progress-pill {
       font-size: 14px;
       font-weight: 800;
@@ -259,7 +329,6 @@
       transition: all 0.3s ease;
     }
 
-    /* Para admin: LA LINEA INTERACTIVA (slider para mover a gusto directamente en la interfaz) */
     .admin-slider-wrap {
       display: none;
       align-items: center;
@@ -335,36 +404,319 @@
       border-color: #fca5a5;
     }
 
-    /* MODO EDICION INLINE (DENTRO DE LA PROPIA FILA, SIN POPUPS) */
-    .inline-edit-panel {
+    /* ============================================================
+       VISOR DE MEDIOS (SLIDE LIMPIO, SIN TITULOS NI BOTONES)
+       ============================================================ */
+    .viewer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 12, 20, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 3000;
       display: none;
-      flex-direction: column;
-      gap: 12px;
-      width: 100%;
-      background: #f8fafc;
-      border: 1px dashed #cbd5e1;
-      border-radius: var(--radius-md);
-      padding: 14px 16px;
-      margin-top: 12px;
-      animation: fadeIn 0.2s ease;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
     }
-    body.is-admin-editing .objective-row.editing-inline .inline-edit-panel {
+    .viewer-overlay.active {
       display: flex;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-4px); }
-      to { opacity: 1; transform: translateY(0); }
+    .viewer-stage-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      max-width: 1400px;
+      width: 100%;
+      animation: modalFadeIn 0.22s ease-out;
     }
 
-    .edit-inputs-grid {
+    .viewer-stage {
+      position: relative;
+      background: #000;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-modal);
+      width: min(88vw, 1100px);
+      max-height: 86vh;
+      transition: width 0.25s ease;
+    }
+    /* Cuando hay nota lateral, el escenario se reduce para dejarle sitio */
+    .viewer-stage-wrap.has-note .viewer-stage {
+      width: min(58vw, 820px);
+    }
+
+    .viewer-track {
+      display: flex;
+      transition: transform 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
+      will-change: transform;
+    }
+
+    .viewer-slide {
+      flex: 0 0 100%;
+      width: 100%;
+      height: 86vh;
+      max-height: 86vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    .viewer-slide img,
+    .viewer-slide video {
+      display: block;
+      max-width: 100%;
+      max-height: 86vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    /* Nota lateral: solo aparece si la imagen actual tiene nota */
+    .viewer-note-panel {
+      width: 320px;
+      max-width: 34vw;
+      max-height: 80vh;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.98);
+      color: #0f172a;
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      box-shadow: var(--shadow-modal);
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      display: none;
+      animation: modalFadeIn 0.25s ease-out;
+    }
+    .viewer-note-panel.visible {
+      display: block;
+    }
+    .viewer-note-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 10px;
+    }
+    .viewer-note-text {
+      color: #1e293b;
+      font-weight: 500;
+    }
+
+    /* ============================================================
+       EDITOR DE FUNCION (MODAL)
+       ============================================================ */
+    .editor-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 3200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .editor-overlay.active {
+      display: flex;
+    }
+
+    .editor-modal {
+      background: #ffffff;
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 1080px;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: var(--shadow-modal);
+      animation: modalFadeIn 0.22s ease-out;
+    }
+
+    .editor-header {
+      padding: 16px 22px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .editor-header h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+    }
+    .editor-close {
+      background: transparent;
+      border: none;
+      font-size: 22px;
+      line-height: 1;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .editor-close:hover { color: #0f172a; }
+
+    .editor-body {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 0;
+      overflow: hidden;
+      flex: 1;
+      min-height: 0;
     }
 
-    .edit-input {
-      padding: 8px 12px;
+    .editor-left {
+      padding: 18px 22px;
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+      overflow-y: auto;
+      background: #f8fafc;
+    }
+
+    .editor-right {
+      padding: 18px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    .editor-stage-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .editor-stage {
+      position: relative;
+      background: #0f172a;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      width: 100%;
+      max-height: 46vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+    }
+    .editor-stage img,
+    .editor-stage video {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 46vh;
+      object-fit: contain;
+    }
+    .editor-stage canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .editor-stage.drawing canvas {
+      pointer-events: auto;
+      cursor: crosshair;
+    }
+
+    .editor-empty {
+      color: #94a3b8;
+      font-size: 13px;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    .draw-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .draw-toolbar .swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: var(--radius-full);
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 1px #cbd5e1;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .draw-toolbar .swatch:hover { transform: scale(1.12); }
+    .draw-toolbar .swatch.active { box-shadow: 0 0 0 2px #0f172a; }
+
+    .draw-toolbar .size-dot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-full);
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      cursor: pointer;
+    }
+    .draw-toolbar .size-dot span {
+      display: block;
+      border-radius: var(--radius-full);
+      background: #0f172a;
+    }
+    .draw-toolbar .size-dot.active {
+      border-color: #0f172a;
+      background: #f1f5f9;
+    }
+
+    .tool-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      color: #334155;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .tool-btn:hover { background: #f1f5f9; }
+    .tool-btn.active {
+      background: #0f172a;
+      color: #fff;
+      border-color: #0f172a;
+    }
+
+    .field-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .edit-input,
+    .edit-textarea {
+      width: 100%;
+      padding: 9px 12px;
       background: #ffffff;
       border: 1px solid #cbd5e1;
       border-radius: var(--radius-sm);
@@ -374,153 +726,133 @@
       outline: none;
       transition: all 0.2s ease;
     }
-    .edit-input:focus {
+    .edit-input:focus,
+    .edit-textarea:focus {
+      border-color: #ea580c;
+      box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.12);
+    }
+    .edit-textarea {
+      resize: vertical;
+      min-height: 62px;
+      line-height: 1.5;
+    }
+
+    .field-group { display: flex; flex-direction: column; }
+
+    /* Lista de imagenes dentro del editor */
+    .images-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .image-item {
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      padding: 10px;
+      display: flex;
+      gap: 10px;
+      background: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .image-item.active {
       border-color: #ea580c;
       box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.12);
     }
 
-    .edit-input-full {
-      grid-column: span 2;
-    }
-
-    .edit-actions-bar {
+    .image-item-thumb {
+      width: 64px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: #0f172a;
+      flex-shrink: 0;
       display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-
-    /* REPRODUCTOR DE VIDEO MODAL FLOTANTE (GRANDE, PLAY, PAUSE, FULLSCREEN) */
-    .video-modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      z-index: 2000;
-      display: none;
       align-items: center;
       justify-content: center;
-      padding: 24px;
     }
-    .video-modal-overlay.active {
-      display: flex;
+    .image-item-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-item-thumb .ph {
+      color: #64748b;
+      font-size: 16px;
     }
 
-    .video-theater {
-      background: #000000;
-      border-radius: var(--radius-lg);
-      width: 100%;
-      max-width: 900px;
-      overflow: hidden;
-      box-shadow: var(--shadow-modal);
-      position: relative;
+    .image-item-body {
+      flex: 1;
+      min-width: 0;
       display: flex;
       flex-direction: column;
-      animation: modalFadeIn 0.22s ease-out;
+      gap: 6px;
     }
 
+    .image-item-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .mini-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-sm);
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .mini-btn:hover { background: #f8fafc; color: #0f172a; }
+    .mini-btn.danger:hover { background: #fef2f2; color: #ef4444; border-color: #fca5a5; }
+
+    .note-indicator {
+      font-size: 11px;
+      color: #ea580c;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .editor-footer {
+      padding: 14px 22px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #fff;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
     @keyframes modalFadeIn {
       from { opacity: 0; transform: scale(0.97) translateY(8px); }
       to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
-    .video-theater-header {
-      background: rgba(15, 23, 42, 0.96);
-      padding: 14px 22px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .video-theater-title {
-      font-family: 'Outfit', sans-serif;
-      font-weight: 700;
-      font-size: 16px;
-      color: #ffffff;
-    }
-
-    .video-theater-close {
-      background: transparent;
-      border: none;
-      color: #94a3b8;
-      font-size: 20px;
-      cursor: pointer;
-      padding: 4px;
-      transition: color 0.2s;
-    }
-    .video-theater-close:hover {
-      color: #ffffff;
-    }
-
-    .video-theater-body {
-      background: #000000;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .video-theater video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: #000;
-    }
-
-    .video-error-placeholder {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      color: #94a3b8;
-      text-align: center;
-      padding: 30px;
-    }
-    .video-error-placeholder i {
-      font-size: 40px;
-      color: #ea580c;
-    }
-    .video-error-placeholder p {
-      font-size: 14px;
-      max-width: 440px;
-      line-height: 1.4;
-    }
-    .video-path-preview {
-      font-family: monospace;
-      font-size: 12px;
-      background: rgba(255, 255, 255, 0.12);
-      padding: 5px 12px;
-      border-radius: 4px;
-      color: #f1f5f9;
-    }
-
     /* RESPONSIVE */
+    @media (max-width: 860px) {
+      .editor-body { grid-template-columns: 1fr; }
+      .editor-left { border-right: none; border-bottom: 1px solid #e2e8f0; }
+      .viewer-stage-wrap { flex-direction: column; gap: 16px; }
+      .viewer-note-panel { width: 100%; max-width: 88vw; max-height: 30vh; }
+    }
+
     @media (max-width: 768px) {
-      body {
-        padding: 20px 14px 40px;
-      }
-      .objective-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 14px;
-      }
-      .obj-progress-col {
-        width: 100%;
-        justify-content: space-between;
-        margin-left: 0;
-      }
-      .admin-slider-wrap {
-        width: 100%;
-      }
-      .edit-inputs-grid {
-        grid-template-columns: 1fr;
-      }
-      .edit-input-full {
-        grid-column: span 1;
-      }
+      body { padding: 20px 14px 40px; }
+      .row-main { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .obj-progress-col { width: 100%; justify-content: space-between; margin-left: 0; }
+      .admin-slider-wrap { width: 100%; }
     }
   </style>
 </head>
@@ -530,42 +862,73 @@
 
     <!-- BARRA SUPERIOR DISCRETA (SOLO VISIBLE SI ES ADMIN AUTENTICADO) -->
     <div class="top-bar" id="top-bar">
-      <!-- Botón para nuevo objetivo (visible cuando el admin activa edición) -->
       <button class="btn btn-primary admin-only-btn" id="btn-add-inline">
-        <i class="fa-solid fa-plus"></i> Agregar Objetivo
+        <i class="fa-solid fa-plus"></i> Agregar Función
       </button>
-
-      <!-- Toggle de modo de edición -->
       <button class="btn btn-toggle-admin" id="btn-toggle-admin" title="Activar/Desactivar controles de edición">
         <i class="fa-solid fa-lock" id="icon-admin-status"></i>
         <span id="text-admin-status">Editar</span>
       </button>
     </div>
 
-    <!-- LISTA VERTICAL DE OBJETIVOS (UNO DEBAJO DEL OTRO EN FILA) -->
-    <div class="objectives-list" id="objectives-list">
-      <!-- Los objetivos se renderizan aquí dinámicamente -->
-    </div>
+    <!-- LISTA VERTICAL DE FUNCIONES -->
+    <div class="objectives-list" id="objectives-list"></div>
 
   </div>
 
-  <!-- REPRODUCTOR DE VIDEO MODAL FLOTANTE (GRANDE, PLAY, PAUSE, FULLSCREEN) -->
-  <div class="video-modal-overlay" id="video-theater-modal">
-    <div class="video-theater">
-      <div class="video-theater-header">
-        <span class="video-theater-title" id="theater-title">Video de Muestra</span>
-        <button class="video-theater-close" id="btn-close-theater">&times;</button>
+  <!-- VISOR DE MEDIOS (SLIDE LIMPIO) -->
+  <div class="viewer-overlay" id="viewer-modal">
+    <div class="viewer-stage-wrap">
+      <div class="viewer-stage" id="viewer-stage">
+        <div class="viewer-track" id="viewer-track"></div>
       </div>
-      <div class="video-theater-body">
-        <video id="theater-video" controls playsinline></video>
-        <div class="video-error-placeholder" id="video-error-msg">
-          <i class="fa-solid fa-film"></i>
-          <p>Ruta local configurada para este objetivo:</p>
-          <span class="video-path-preview" id="video-path-text"></span>
-          <p style="font-size: 12px; color: #64748b; margin-top: 6px;">
-            Coloca el archivo de video en la ruta especificada de tu proyecto para reproducirlo.
-          </p>
+      <div class="viewer-note-panel" id="viewer-note-panel">
+        <div class="viewer-note-label">Nota</div>
+        <div class="viewer-note-text" id="viewer-note-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDITOR DE FUNCION -->
+  <div class="editor-overlay" id="editor-modal">
+    <div class="editor-modal">
+      <div class="editor-header">
+        <h3>Editar Función</h3>
+        <button class="editor-close" id="btn-close-editor">&times;</button>
+      </div>
+      <div class="editor-body">
+        <div class="editor-left">
+          <span class="field-label">Dibujar sobre la imagen seleccionada</span>
+          <div class="editor-stage-wrap">
+            <div class="editor-stage" id="editor-stage"></div>
+            <div class="draw-toolbar" id="draw-toolbar"></div>
+          </div>
         </div>
+        <div class="editor-right">
+          <div class="field-group">
+            <label class="field-label" for="ed-title">Nombre</label>
+            <input type="text" class="edit-input" id="ed-title" placeholder="Nombre de la función">
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="ed-desc">Descripción (opcional)</label>
+            <input type="text" class="edit-input" id="ed-desc" placeholder="Descripción opcional">
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="ed-video">Ruta del video (opcional)</label>
+            <input type="text" class="edit-input" id="ed-video" placeholder="ej. ./assets/misAvances/img/video.mp4">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Imágenes / Reel</label>
+            <div class="images-list" id="images-list"></div>
+            <button class="btn btn-ghost" id="btn-add-image" style="margin-top:10px; justify-content:center;">
+              <i class="fa-solid fa-image"></i> Agregar imagen
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="editor-footer">
+        <button class="btn btn-ghost" id="btn-cancel-editor">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save-editor"><i class="fa-solid fa-check"></i> Guardar Cambios</button>
       </div>
     </div>
   </div>
@@ -573,52 +936,70 @@
   <script type="module">
     import { supabase as sb } from './supabase.js';
 
-    // OBJETIVOS POR DEFECTO
+    // DATOS POR DEFECTO (cada funcion puede tener video y/o varias imagenes)
     const DEFAULT_OBJECTIVES = [
       {
         id: "obj-1",
         title: "Online payment",
         description: "Integración de pasarela de pagos con Stripe Connect para pedidos y reservas.",
         progress: 95,
-        video: "./assets/misAvances/img/onlinepayment.mp4"
+        video: "./assets/misAvances/img/onlinepayment.mp4",
+        images: []
       },
       {
         id: "obj-2",
         title: "Menu creation",
         description: "Constructor visual de categorías y platillos en tiempo real.",
         progress: 100,
-        video: "./assets/misAvances/img/menucreation.mp4"
+        video: "./assets/misAvances/img/menucreation.mp4",
+        images: []
       },
       {
         id: "obj-3",
         title: "Generador de menu con MenutechIA",
         description: "Lectura de fotos de menú físico e importación automática con IA.",
         progress: 85,
-        video: "./assets/misAvances/img/menutechia.mp4"
+        video: "./assets/misAvances/img/menutechia.mp4",
+        images: []
       },
       {
         id: "obj-4",
         title: "App Android Flutter",
         description: "Aplicación nativa para restaurantes con alertas sonoras y comanderas.",
         progress: 90,
-        video: "./assets/misAvances/img/appflutter.mp4"
+        video: "./assets/misAvances/img/appflutter.mp4",
+        images: []
       },
       {
         id: "obj-5",
         title: "Google play store",
         description: "Preparación de bundle AAB y publicación en Google Play Console.",
         progress: 60,
-        video: "./assets/misAvances/img/playstore.mp4"
+        video: "./assets/misAvances/img/playstore.mp4",
+        images: []
       }
     ];
 
-    const STORAGE_KEY = "menutech_avances_list_v3";
+    const STORAGE_KEY = "menutech_avances_list_v4";
 
     // ESTADO
     let objectives = [];
-    let isUserAdmin = false;     // Si el usuario autenticado tiene rol de ADMIN/DEVELOPER/CS/ADMINCS en profiles
-    let isEditingActive = false; // Si el admin activó el modo de edición
+    let isUserAdmin = false;
+    let isEditingActive = false;
     let editingId = null;
+
+    // Estado del visor (slide)
+    let viewerItems = [];
+    let viewerIndex = 0;
+
+    // Estado del editor
+    let editorItem = null;
+    let activeImageIndex = -1;   // imagen seleccionada para dibujar
+    let drawColor = "#ef4444";
+    let drawSize = 4;
+    let drawMode = true;
+    let isDrawing = false;
+    let currentStroke = null;
 
     // INICIALIZACION
     async function init() {
@@ -633,12 +1014,13 @@
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
           objectives = JSON.parse(saved);
+          objectives.forEach(o => { if (!Array.isArray(o.images)) o.images = []; });
         } else {
-          objectives = [...DEFAULT_OBJECTIVES];
+          objectives = JSON.parse(JSON.stringify(DEFAULT_OBJECTIVES));
           saveData();
         }
       } catch (e) {
-        objectives = [...DEFAULT_OBJECTIVES];
+        objectives = JSON.parse(JSON.stringify(DEFAULT_OBJECTIVES));
       }
     }
 
@@ -670,13 +1052,10 @@
       return null;
     }
 
-    // VERIFICACION ESTRICTA DE SEGURIDAD CON SUPABASE:
-    // Detecta la sesión iniciada en menutech.io (vía sb.auth o localStorage) y consulta public.profiles
     window.verifyAdminAuth = async function verifyAdminAuthentication() {
       try {
         let userId = null;
 
-        // 1. Intentar obtener la sesión activa de Supabase
         if (sb && sb.auth) {
           const { data } = await sb.auth.getSession();
           if (data && data.session && data.session.user) {
@@ -684,7 +1063,6 @@
           }
         }
 
-        // 2. Si no la resolvió de inmediato, consultar el token almacenado en localStorage
         if (!userId) {
           const storedUser = getStoredAuthUser();
           if (storedUser && storedUser.id) {
@@ -692,13 +1070,11 @@
           }
         }
 
-        // Si no hay usuario en sesión, deshabilitar interfaz de admin
         if (!userId) {
           disableAdminUI();
           return;
         }
 
-        // 3. Consultar el rol del usuario en la tabla profiles
         const { data, error } = await sb
           .from('profiles')
           .select('role')
@@ -763,52 +1139,20 @@
       renderList();
     }
 
-    // CALCULO DEL COLOR DINAMICO PROGRESIVO:
-    // Estado normal/inicial: naranja (#ea580c)
-    // Conforme avanza se vuelve más verde hasta llegar a verde esmeralda (#16a34a) al 100%
+    // COLOR DINAMICO PROGRESIVO
     function getColorForProgress(pct) {
       const p = Math.max(0, Math.min(100, Number(pct) || 0));
 
       if (p >= 100) {
-        return {
-          color: "#16a34a",
-          bg: "#dcfce7",
-          text: "#15803d",
-          border: "#86efac",
-          is100: true
-        };
+        return { color: "#16a34a", bg: "#dcfce7", text: "#15803d", border: "#86efac", is100: true };
       } else if (p >= 80) {
-        return {
-          color: "#65a30d",
-          bg: "#ecfccb",
-          text: "#4d7c0f",
-          border: "#bef264",
-          is100: false
-        };
+        return { color: "#65a30d", bg: "#ecfccb", text: "#4d7c0f", border: "#bef264", is100: false };
       } else if (p >= 60) {
-        return {
-          color: "#eab308",
-          bg: "#fef9c3",
-          text: "#a16207",
-          border: "#fde047",
-          is100: false
-        };
+        return { color: "#eab308", bg: "#fef9c3", text: "#a16207", border: "#fde047", is100: false };
       } else if (p >= 35) {
-        return {
-          color: "#f97316",
-          bg: "#ffedd5",
-          text: "#c2410c",
-          border: "#fed7aa",
-          is100: false
-        };
+        return { color: "#f97316", bg: "#ffedd5", text: "#c2410c", border: "#fed7aa", is100: false };
       } else {
-        return {
-          color: "#ea580c",
-          bg: "#ffedd5",
-          text: "#c2410c",
-          border: "#fdba74",
-          is100: false
-        };
+        return { color: "#ea580c", bg: "#ffedd5", text: "#c2410c", border: "#fdba74", is100: false };
       }
     }
 
@@ -819,6 +1163,30 @@
       return div.innerHTML;
     }
 
+    // Devuelve la primera pieza de medio disponible (para la miniatura)
+    function getPrimaryMedia(item) {
+      if (Array.isArray(item.images) && item.images.length > 0) {
+        return { type: "image", src: item.images[0].src || "" };
+      }
+      if (item.video) {
+        return { type: "video", src: item.video };
+      }
+      return { type: "none", src: "" };
+    }
+
+    function getMediaCount(item) {
+      const imgs = Array.isArray(item.images) ? item.images.length : 0;
+      return imgs + (item.video ? 1 : 0);
+    }
+
+    // Construye la lista de medios (video primero, luego imagenes)
+    function buildMediaList(item) {
+      const list = [];
+      if (item.video) list.push({ type: "video", src: item.video, note: "" });
+      (item.images || []).forEach(img => list.push({ type: "image", src: img.src || "", note: img.note || "", strokes: img.strokes || [] }));
+      return list;
+    }
+
     // RENDERIZAR LISTA
     function renderList() {
       const listContainer = document.getElementById("objectives-list");
@@ -827,7 +1195,7 @@
       if (objectives.length === 0) {
         listContainer.innerHTML = `
           <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:36px; text-align:center; color:#64748b;">
-            No hay objetivos registrados.
+            No hay funciones registradas.
           </div>
         `;
         return;
@@ -835,83 +1203,134 @@
 
       objectives.forEach(item => {
         const color = getColorForProgress(item.progress);
-        const isEditing = isEditingActive && editingId === item.id;
+        const primary = getPrimaryMedia(item);
+        const mediaCount = getMediaCount(item);
 
         const row = document.createElement("div");
-        row.className = `objective-row ${isEditing ? 'editing-inline' : ''}`;
+        row.className = "objective-row";
         row.dataset.id = item.id;
 
-        // Renderizado del HTML de la fila
-        row.innerHTML = `
-          <div style="display:flex; width:100%; align-items:center; gap:20px; flex-wrap:wrap;">
+        let thumbInner = `<div class="thumb-play-overlay"><div class="thumb-play-btn"><i class="fa-regular fa-image"></i></div></div>`;
+        if (primary.type === "video") {
+          thumbInner = `<video src="${escapeHtml(primary.src)}" preload="metadata" muted></video>` +
+            `<div class="thumb-play-overlay"><div class="thumb-play-btn"><i class="fa-solid fa-play"></i></div></div>`;
+        } else if (primary.type === "image") {
+          thumbInner = `<img src="${escapeHtml(primary.src)}" alt="">` +
+            `<div class="thumb-play-overlay"><div class="thumb-play-btn"><i class="fa-solid fa-expand"></i></div></div>`;
+        }
 
-            <!-- 1. CUADRITO DE VISTA PREVIA DEL VIDEO -->
-            <div class="video-thumb-box ${color.is100 ? 'is-100' : ''}" onclick="window.openVideo('${escapeHtml(item.id)}')" title="Ver video de muestra">
-              <video src="${escapeHtml(item.video || '')}" preload="metadata" muted></video>
-              <div class="thumb-play-overlay">
-                <div class="thumb-play-btn">
-                  <i class="fa-solid fa-play"></i>
-                </div>
-              </div>
+        const countBadge = mediaCount > 1 ? `<div class="thumb-count-badge"><i class="fa-solid fa-layer-group"></i>${mediaCount}</div>` : "";
+
+        row.innerHTML = `
+          <div class="row-main">
+
+            <div class="drag-handle" title="Arrastra para reordenar"><i class="fa-solid fa-grip-vertical"></i></div>
+
+            <div class="video-thumb-box ${color.is100 ? 'is-100' : ''}" onclick="window.openViewer('${escapeHtml(item.id)}')" title="Ver contenido">
+              ${thumbInner}
+              ${countBadge}
             </div>
 
-            <!-- 2. TITULO Y DESCRIPCION (SOLO SI TIENE DESCRIPCION SE MUESTRA A LA DERECHA) -->
             <div class="obj-info-col">
               <span class="obj-title">${escapeHtml(item.title)}</span>
               ${item.description ? `<p class="obj-desc">${escapeHtml(item.description)}</p>` : ''}
             </div>
 
-            <!-- 3. PROGRESO Y CONTROLES -->
             <div class="obj-progress-col">
-
-              <!-- PARA ADMIN: LINEA / SLIDER INTERACTIVO DIRECTO (MOVER A GUSTO SIN POPUPS) -->
               <div class="admin-slider-wrap">
-                <input
-                  type="range"
-                  class="admin-range-slider"
-                  min="0"
-                  max="100"
-                  value="${item.progress}"
-                  oninput="window.handleSliderChange('${escapeHtml(item.id)}', this.value)"
-                >
+                <input type="range" class="admin-range-slider" min="0" max="100" value="${item.progress}"
+                  oninput="window.handleSliderChange('${escapeHtml(item.id)}', this.value)">
               </div>
 
-              <!-- PARA VISITANTES (Y ADMIN): PORCENTAJE EN COLOR DINAMICO (SIN LINEA PARA VISITANTES) -->
               <span class="progress-pill pill-${escapeHtml(item.id)}" style="background-color: ${color.bg}; color: ${color.text}; border-color: ${color.border};">
                 ${item.progress}%
               </span>
 
-              <!-- BOTONES DE EDICION INLINE (SOLO ADMIN) -->
               <div class="admin-actions">
-                <button class="btn-action-icon" title="Editar datos" onclick="window.toggleInlineEdit('${escapeHtml(item.id)}')">
-                  <i class="fa-solid ${isEditing ? 'fa-xmark' : 'fa-pen'}"></i>
+                <button class="btn-action-icon" title="Editar función" onclick="window.openEditor('${escapeHtml(item.id)}')">
+                  <i class="fa-solid fa-pen"></i>
                 </button>
-                <button class="btn-action-icon btn-delete" title="Eliminar objetivo" onclick="window.deleteObjective('${escapeHtml(item.id)}')">
+                <button class="btn-action-icon btn-delete" title="Eliminar función" onclick="window.deleteObjective('${escapeHtml(item.id)}')">
                   <i class="fa-solid fa-trash"></i>
                 </button>
               </div>
-
             </div>
 
-          </div>
-
-          <!-- PANEL DE EDICION INLINE (SIN POPUPS, SE ABRE EN LA MISMA FILA) -->
-          <div class="inline-edit-panel">
-            <div class="edit-inputs-grid">
-              <input type="text" class="edit-input" id="edit-title-${escapeHtml(item.id)}" value="${escapeHtml(item.title)}" placeholder="Nombre del objetivo">
-              <input type="text" class="edit-input" id="edit-video-${escapeHtml(item.id)}" value="${escapeHtml(item.video || '')}" placeholder="Ruta video (ej. ./assets/video.mp4)">
-              <input type="text" class="edit-input edit-input-full" id="edit-desc-${escapeHtml(item.id)}" value="${escapeHtml(item.description || '')}" placeholder="Descripción opcional (se muestra a la derecha del video)">
-            </div>
-            <div class="edit-actions-bar">
-              <button class="btn btn-primary" onclick="window.saveInlineEdit('${escapeHtml(item.id)}')">
-                <i class="fa-solid fa-check"></i> Guardar Cambios
-              </button>
-            </div>
           </div>
         `;
 
         listContainer.appendChild(row);
       });
+
+      attachDragHandlers();
+    }
+
+    // ============================================================
+    // ARRASTRAR Y SOLTAR PARA REORDENAR
+    // ============================================================
+    function attachDragHandlers() {
+      const rows = document.querySelectorAll(".objective-row");
+      rows.forEach(row => {
+        const handle = row.querySelector(".drag-handle");
+        if (!handle) return;
+
+        handle.setAttribute("draggable", "true");
+
+        handle.addEventListener("dragstart", (e) => {
+          if (!isUserAdmin || !isEditingActive) { e.preventDefault(); return; }
+          row.classList.add("dragging");
+          e.dataTransfer.effectAllowed = "move";
+          try { e.dataTransfer.setData("text/plain", row.dataset.id); } catch (err) {}
+        });
+
+        handle.addEventListener("dragend", () => {
+          row.classList.remove("dragging");
+          document.querySelectorAll(".objective-row").forEach(r => r.classList.remove("drop-target"));
+          commitDragOrder();
+        });
+
+        row.addEventListener("dragover", (e) => {
+          if (!isUserAdmin || !isEditingActive) return;
+          const dragging = document.querySelector(".objective-row.dragging");
+          if (!dragging || dragging === row) return;
+          e.preventDefault();
+
+          const list = document.getElementById("objectives-list");
+          const rect = row.getBoundingClientRect();
+          const after = (e.clientY - rect.top) > rect.height / 2;
+
+          document.querySelectorAll(".objective-row").forEach(r => r.classList.remove("drop-target"));
+          row.classList.add("drop-target");
+
+          if (after) {
+            list.insertBefore(dragging, row.nextSibling);
+          } else {
+            list.insertBefore(dragging, row);
+          }
+        });
+
+        row.addEventListener("drop", (e) => {
+          if (!isUserAdmin || !isEditingActive) return;
+          e.preventDefault();
+          document.querySelectorAll(".objective-row").forEach(r => r.classList.remove("drop-target"));
+          commitDragOrder();
+        });
+      });
+    }
+
+    // Lee el orden visual del DOM y lo guarda en el estado
+    function commitDragOrder() {
+      if (!isUserAdmin || !isEditingActive) return;
+      const ids = Array.from(document.querySelectorAll(".objective-row")).map(r => r.dataset.id);
+      const reordered = [];
+      ids.forEach(id => {
+        const found = objectives.find(o => o.id === id);
+        if (found) reordered.push(found);
+      });
+      if (reordered.length === objectives.length) {
+        objectives = reordered;
+        saveData();
+      }
     }
 
     // FUNCIONES GLOBALES
@@ -934,49 +1353,20 @@
       }
     };
 
-    window.toggleInlineEdit = function(id) {
-      if (!isUserAdmin) return;
-      editingId = editingId === id ? null : id;
-      renderList();
-    };
-
-    window.saveInlineEdit = function(id) {
-      if (!isUserAdmin) return;
-      const item = objectives.find(o => o.id === id);
-      if (!item) return;
-
-      const titleInput = document.getElementById(`edit-title-${id}`);
-      const descInput = document.getElementById(`edit-desc-${id}`);
-      const videoInput = document.getElementById(`edit-video-${id}`);
-
-      if (titleInput && titleInput.value.trim()) {
-        item.title = titleInput.value.trim();
-      }
-      if (descInput) {
-        item.description = descInput.value.trim();
-      }
-      if (videoInput) {
-        item.video = videoInput.value.trim();
-      }
-
-      editingId = null;
-      saveData();
-      renderList();
-    };
-
     function addNewObjective() {
       if (!isUserAdmin) return;
       const newId = "obj-" + Date.now();
       objectives.unshift({
         id: newId,
-        title: "Nuevo Objetivo",
+        title: "Nueva Función",
         description: "",
         progress: 10,
-        video: "./assets/misAvances/img/video.mp4"
+        video: "",
+        images: []
       });
-      editingId = newId;
       saveData();
       renderList();
+      window.openEditor(newId);
     }
 
     window.deleteObjective = function(id) {
@@ -992,63 +1382,462 @@
       }
     };
 
-    // REPRODUCTOR DE VIDEO MODAL FLOTANTE (GRANDE, PLAY/PAUSE/FULLSCREEN)
-    window.openVideo = function(id) {
+    // ============================================================
+    // VISOR DE MEDIOS (SLIDE)
+    // ============================================================
+    window.openViewer = function(id) {
       const item = objectives.find(o => o.id === id);
       if (!item) return;
 
-      const theaterModal = document.getElementById("video-theater-modal");
-      const theaterTitle = document.getElementById("theater-title");
-      const videoPlayer = document.getElementById("theater-video");
-      const errorMsg = document.getElementById("video-error-msg");
-      const videoPathText = document.getElementById("video-path-text");
+      viewerItems = buildMediaList(item);
+      if (viewerItems.length === 0) return;
 
-      theaterTitle.textContent = item.title;
-      videoPathText.textContent = item.video || "(sin ruta configurada)";
+      viewerIndex = 0;
+      const track = document.getElementById("viewer-track");
+      track.innerHTML = "";
 
-      errorMsg.style.display = "none";
-      videoPlayer.style.display = "block";
-      videoPlayer.src = item.video || "";
+      viewerItems.forEach(m => {
+        const slide = document.createElement("div");
+        slide.className = "viewer-slide";
+        if (m.type === "video") {
+          slide.innerHTML = `<video src="${escapeHtml(m.src)}" controls playsinline></video>`;
+        } else {
+          slide.innerHTML = `<img src="${escapeHtml(m.src)}" alt="" draggable="false">`;
+        }
+        track.appendChild(slide);
+      });
 
-      theaterModal.classList.add("active");
-
-      videoPlayer.onerror = function() {
-        videoPlayer.style.display = "none";
-        errorMsg.style.display = "flex";
-      };
-
-      const playPromise = videoPlayer.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {});
-      }
+      updateViewerTransform();
+      updateViewerNote();
+      document.getElementById("viewer-modal").classList.add("active");
     };
 
-    function closeVideoModal() {
-      const theaterModal = document.getElementById("video-theater-modal");
-      const videoPlayer = document.getElementById("theater-video");
-      theaterModal.classList.remove("active");
-      videoPlayer.pause();
-      videoPlayer.src = "";
+    function updateViewerTransform() {
+      const track = document.getElementById("viewer-track");
+      track.style.transform = `translateX(${-viewerIndex * 100}%)`;
+    }
+
+    function updateViewerNote() {
+      const wrap = document.querySelector(".viewer-stage-wrap");
+      const panel = document.getElementById("viewer-note-panel");
+      const textEl = document.getElementById("viewer-note-text");
+      const current = viewerItems[viewerIndex];
+      if (current && current.type === "image" && current.note && current.note.trim()) {
+        textEl.textContent = current.note;
+        panel.classList.add("visible");
+        wrap.classList.add("has-note");
+      } else {
+        panel.classList.remove("visible");
+        wrap.classList.remove("has-note");
+      }
+    }
+
+    function closeViewer() {
+      const modal = document.getElementById("viewer-modal");
+      modal.classList.remove("active");
+      document.querySelectorAll("#viewer-track video").forEach(v => v.pause());
+      document.getElementById("viewer-track").innerHTML = "";
+      viewerItems = [];
+      viewerIndex = 0;
+    }
+
+    function viewerGo(delta) {
+      const next = viewerIndex + delta;
+      if (next < 0 || next >= viewerItems.length) return;
+      document.querySelectorAll("#viewer-track video").forEach(v => v.pause());
+      viewerIndex = next;
+      updateViewerTransform();
+      updateViewerNote();
+    }
+
+    // Gestos de deslizamiento (swipe)
+    function setupViewerGestures() {
+      const stage = document.getElementById("viewer-stage");
+      let startX = 0, startY = 0, dragging = false;
+
+      stage.addEventListener("touchstart", (e) => {
+        if (e.touches.length !== 1) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        dragging = true;
+      }, { passive: true });
+
+      stage.addEventListener("touchend", (e) => {
+        if (!dragging) return;
+        dragging = false;
+        const dx = e.changedTouches[0].clientX - startX;
+        const dy = e.changedTouches[0].clientY - startY;
+        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+          viewerGo(dx < 0 ? 1 : -1);
+        }
+      }, { passive: true });
+
+      stage.addEventListener("wheel", (e) => {
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 30) {
+          viewerGo(e.deltaX > 0 ? 1 : -1);
+        }
+      }, { passive: true });
+    }
+
+    // ============================================================
+    // EDITOR
+    // ============================================================
+    window.openEditor = function(id) {
+      if (!isUserAdmin) return;
+      const item = objectives.find(o => o.id === id);
+      if (!item) return;
+
+      editingId = id;
+      editorItem = JSON.parse(JSON.stringify(item));
+      if (!Array.isArray(editorItem.images)) editorItem.images = [];
+      editorItem.images.forEach(img => {
+        if (!Array.isArray(img.strokes)) img.strokes = [];
+      });
+
+      document.getElementById("ed-title").value = editorItem.title || "";
+      document.getElementById("ed-desc").value = editorItem.description || "";
+      document.getElementById("ed-video").value = editorItem.video || "";
+
+      activeImageIndex = editorItem.images.length > 0 ? 0 : -1;
+
+      renderImagesList();
+      renderEditorStage();
+      document.getElementById("editor-modal").classList.add("active");
+    };
+
+    function closeEditor() {
+      document.getElementById("editor-modal").classList.remove("active");
+      editorItem = null;
+      activeImageIndex = -1;
+      isDrawing = false;
+      currentStroke = null;
+    }
+
+    function renderImagesList() {
+      const wrap = document.getElementById("images-list");
+      wrap.innerHTML = "";
+
+      if (!editorItem || editorItem.images.length === 0) {
+        wrap.innerHTML = `<div style="font-size:12px; color:#94a3b8; padding:6px 2px;">Sin imágenes todavía.</div>`;
+        return;
+      }
+
+      editorItem.images.forEach((img, idx) => {
+        const el = document.createElement("div");
+        el.className = "image-item" + (idx === activeImageIndex ? " active" : "");
+        const hasDraw = Array.isArray(img.strokes) && img.strokes.length > 0;
+
+        el.innerHTML = `
+          <div class="image-item-thumb">
+            ${img.src ? `<img src="${escapeHtml(img.src)}" alt="" onerror="this.style.display='none'">` : `<span class="ph"><i class="fa-regular fa-image"></i></span>`}
+          </div>
+          <div class="image-item-body">
+            <input type="text" class="edit-input" data-role="src" placeholder="Ruta de la imagen (ej. ./assets/img/foto.png)" value="${escapeHtml(img.src || '')}">
+            <textarea class="edit-textarea" data-role="note" placeholder="Nota de esta imagen (se muestra al lado en el visor)">${escapeHtml(img.note || '')}</textarea>
+            <div>
+              ${hasDraw ? `<span class="note-indicator"><i class="fa-solid fa-paintbrush"></i> Con dibujo</span>` : ''}
+            </div>
+          </div>
+          <div class="image-item-actions">
+            <button class="mini-btn" data-role="up" title="Subir"><i class="fa-solid fa-arrow-up"></i></button>
+            <button class="mini-btn" data-role="down" title="Bajar"><i class="fa-solid fa-arrow-down"></i></button>
+            <button class="mini-btn danger" data-role="remove" title="Quitar"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        `;
+
+        el.addEventListener("click", (e) => {
+          if (e.target.closest("input, textarea, button")) return;
+          activeImageIndex = idx;
+          renderImagesList();
+          renderEditorStage();
+        });
+
+        el.querySelector('[data-role="src"]').addEventListener("input", (e) => {
+          editorItem.images[idx].src = e.target.value.trim();
+          if (idx === activeImageIndex) renderEditorStage();
+          const thumbImg = el.querySelector(".image-item-thumb img");
+          if (thumbImg) thumbImg.src = e.target.value.trim();
+        });
+
+        el.querySelector('[data-role="note"]').addEventListener("input", (e) => {
+          editorItem.images[idx].note = e.target.value;
+        });
+
+        el.querySelector('[data-role="up"]').addEventListener("click", () => {
+          if (idx === 0) return;
+          swapImages(idx, idx - 1);
+        });
+        el.querySelector('[data-role="down"]').addEventListener("click", () => {
+          if (idx === editorItem.images.length - 1) return;
+          swapImages(idx, idx + 1);
+        });
+        el.querySelector('[data-role="remove"]').addEventListener("click", () => {
+          editorItem.images.splice(idx, 1);
+          if (activeImageIndex >= editorItem.images.length) activeImageIndex = editorItem.images.length - 1;
+          renderImagesList();
+          renderEditorStage();
+        });
+
+        wrap.appendChild(el);
+      });
+    }
+
+    function swapImages(a, b) {
+      const arr = editorItem.images;
+      const tmp = arr[a]; arr[a] = arr[b]; arr[b] = tmp;
+      if (activeImageIndex === a) activeImageIndex = b;
+      else if (activeImageIndex === b) activeImageIndex = a;
+      renderImagesList();
+      renderEditorStage();
+    }
+
+    // Referencias del lienzo activo del editor (para listeners globales únicos)
+    let editorCanvasEl = null;
+    let editorSetupCanvasFn = null;
+
+    function renderEditorStage() {
+      const stage = document.getElementById("editor-stage");
+      const toolbar = document.getElementById("draw-toolbar");
+      stage.innerHTML = "";
+      toolbar.innerHTML = "";
+
+      const img = (editorItem && activeImageIndex >= 0) ? editorItem.images[activeImageIndex] : null;
+
+      if (!img || !img.src) {
+        stage.classList.remove("drawing");
+        stage.innerHTML = `<div class="editor-empty">Selecciona o agrega una imagen para ver la vista previa y dibujar.</div>`;
+        editorCanvasEl = null;
+        editorSetupCanvasFn = null;
+        return;
+      }
+
+      stage.innerHTML = `<img src="${escapeHtml(img.src)}" alt="" draggable="false"><canvas></canvas>`;
+      const imgEl = stage.querySelector("img");
+      const canvas = stage.querySelector("canvas");
+
+      const setupCanvas = () => {
+        const rect = imgEl.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.max(1, Math.round(rect.width * dpr));
+        canvas.height = Math.max(1, Math.round(rect.height * dpr));
+        redrawStrokes(canvas, img.strokes);
+      };
+
+      editorCanvasEl = canvas;
+      editorSetupCanvasFn = setupCanvas;
+
+      if (imgEl.complete) setupCanvas();
+      imgEl.addEventListener("load", setupCanvas);
+
+      toolbar.appendChild(buildToolbar());
+
+      if (drawMode) stage.classList.add("drawing");
+
+      const getPos = (ev) => {
+        const r = canvas.getBoundingClientRect();
+        const cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+        const cy = (ev.touches ? ev.touches[0].clientY : ev.clientY) - r.top;
+        return { x: cx / r.width, y: cy / r.height };
+      };
+
+      const start = (ev) => {
+        if (!drawMode) return;
+        ev.preventDefault();
+        isDrawing = true;
+        currentStroke = { color: drawColor, w: drawSize, pts: [getPos(ev)] };
+      };
+      const move = (ev) => {
+        if (!isDrawing || !currentStroke) return;
+        ev.preventDefault();
+        currentStroke.pts.push(getPos(ev));
+        redrawStrokes(canvas, img.strokes.concat([currentStroke]));
+      };
+
+      canvas.addEventListener("mousedown", start);
+      canvas.addEventListener("mousemove", move);
+      canvas.addEventListener("touchstart", start, { passive: false });
+      canvas.addEventListener("touchmove", move, { passive: false });
+    }
+
+    // Finaliza el trazo actual (listener global único, registrado en setupEvents)
+    function endStroke() {
+      if (!isDrawing || !currentStroke) return;
+      const img = (editorItem && activeImageIndex >= 0) ? editorItem.images[activeImageIndex] : null;
+      isDrawing = false;
+      if (img) {
+        img.strokes.push(currentStroke);
+        if (editorCanvasEl) redrawStrokes(editorCanvasEl, img.strokes);
+      }
+      currentStroke = null;
+    }
+
+    function buildToolbar() {
+      const wrap = document.createElement("div");
+      wrap.style.display = "flex";
+      wrap.style.alignItems = "center";
+      wrap.style.gap = "8px";
+      wrap.style.flexWrap = "wrap";
+
+      const btnMode = document.createElement("button");
+      btnMode.className = "tool-btn" + (drawMode ? " active" : "");
+      btnMode.title = drawMode ? "Dibujando (clic para solo navegar)" : "Solo navegar (clic para dibujar)";
+      btnMode.innerHTML = `<i class="fa-solid fa-pencil"></i>`;
+      btnMode.addEventListener("click", () => {
+        drawMode = !drawMode;
+        renderEditorStage();
+      });
+      wrap.appendChild(btnMode);
+
+      const colors = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#a855f7", "#0f172a", "#ffffff"];
+      colors.forEach(c => {
+        const sw = document.createElement("div");
+        sw.className = "swatch" + (c === drawColor ? " active" : "");
+        sw.style.background = c;
+        sw.title = "Color";
+        sw.addEventListener("click", () => { drawColor = c; renderEditorStage(); });
+        wrap.appendChild(sw);
+      });
+
+      [3, 6, 12].forEach(sz => {
+        const b = document.createElement("div");
+        b.className = "size-dot" + (sz === drawSize ? " active" : "");
+        b.innerHTML = `<span style="width:${sz + 2}px;height:${sz + 2}px;"></span>`;
+        b.title = "Grosor";
+        b.addEventListener("click", () => { drawSize = sz; renderEditorStage(); });
+        wrap.appendChild(b);
+      });
+
+      const undo = document.createElement("button");
+      undo.className = "tool-btn";
+      undo.title = "Deshacer";
+      undo.innerHTML = `<i class="fa-solid fa-rotate-left"></i>`;
+      undo.addEventListener("click", () => {
+        const img = editorItem.images[activeImageIndex];
+        if (img && img.strokes.length > 0) {
+          img.strokes.pop();
+          renderEditorStage();
+        }
+      });
+      wrap.appendChild(undo);
+
+      const clear = document.createElement("button");
+      clear.className = "tool-btn";
+      clear.title = "Limpiar dibujo";
+      clear.innerHTML = `<i class="fa-solid fa-eraser"></i>`;
+      clear.addEventListener("click", () => {
+        const img = editorItem.images[activeImageIndex];
+        if (img) { img.strokes = []; renderEditorStage(); }
+      });
+      wrap.appendChild(clear);
+
+      return wrap;
+    }
+
+    function redrawStrokes(canvas, strokes) {
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!strokes) return;
+      const dpr = window.devicePixelRatio || 1;
+
+      strokes.forEach(s => {
+        if (!s.pts || s.pts.length === 0) return;
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = s.w * dpr;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+        s.pts.forEach((p, i) => {
+          const x = p.x * canvas.width;
+          const y = p.y * canvas.height;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        if (s.pts.length === 1) {
+          ctx.arc(s.pts[0].x * canvas.width, s.pts[0].y * canvas.height, (s.w * dpr) / 2, 0, Math.PI * 2);
+          ctx.fillStyle = s.color;
+          ctx.fill();
+        } else {
+          ctx.stroke();
+        }
+      });
+    }
+
+    function addImageToEditor() {
+      if (!editorItem) return;
+      editorItem.images.push({ src: "", note: "", strokes: [] });
+      activeImageIndex = editorItem.images.length - 1;
+      renderImagesList();
+      renderEditorStage();
+      const inputs = document.querySelectorAll('#images-list [data-role="src"]');
+      if (inputs[activeImageIndex]) inputs[activeImageIndex].focus();
+    }
+
+    function saveEditor() {
+      if (!isUserAdmin || !editorItem) return;
+      const item = objectives.find(o => o.id === editorItem.id);
+      if (!item) return;
+
+      item.title = document.getElementById("ed-title").value.trim() || item.title;
+      item.description = document.getElementById("ed-desc").value.trim();
+      item.video = document.getElementById("ed-video").value.trim();
+
+      item.images = editorItem.images
+        .filter(img => (img.src || "").trim())
+        .map(img => ({
+          src: img.src.trim(),
+          note: (img.note || "").trim(),
+          strokes: img.strokes || []
+        }));
+
+      saveData();
+      closeEditor();
+      renderList();
     }
 
     function setupEvents() {
       document.getElementById("btn-toggle-admin").addEventListener("click", toggleEditMode);
       document.getElementById("btn-add-inline").addEventListener("click", addNewObjective);
 
-      document.getElementById("btn-close-theater").addEventListener("click", closeVideoModal);
-      document.getElementById("video-theater-modal").addEventListener("click", (e) => {
-        if (e.target.id === "video-theater-modal") closeVideoModal();
+      document.getElementById("viewer-modal").addEventListener("click", (e) => {
+        if (e.target.id === "viewer-modal") closeViewer();
+      });
+      setupViewerGestures();
+
+      document.getElementById("btn-close-editor").addEventListener("click", closeEditor);
+      document.getElementById("btn-cancel-editor").addEventListener("click", closeEditor);
+      document.getElementById("btn-save-editor").addEventListener("click", saveEditor);
+      document.getElementById("btn-add-image").addEventListener("click", addImageToEditor);
+      document.getElementById("editor-modal").addEventListener("click", (e) => {
+        if (e.target.id === "editor-modal") closeEditor();
       });
 
       window.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closeVideoModal();
+        if (e.key === "Escape") {
+          if (document.getElementById("editor-modal").classList.contains("active")) closeEditor();
+          else closeViewer();
+        }
+        if (document.getElementById("viewer-modal").classList.contains("active")) {
+          if (e.key === "ArrowRight") viewerGo(1);
+          if (e.key === "ArrowLeft") viewerGo(-1);
+        }
       });
 
-      // Escuchar cambios de autenticación en vivo de Supabase
+      document.getElementById("ed-title").addEventListener("input", (e) => { if (editorItem) editorItem.title = e.target.value; });
+      document.getElementById("ed-desc").addEventListener("input", (e) => { if (editorItem) editorItem.description = e.target.value; });
+      document.getElementById("ed-video").addEventListener("input", (e) => { if (editorItem) editorItem.video = e.target.value; });
+
+      // Listeners globales únicos para terminar el trazo y reajustar el lienzo
+      window.addEventListener("mouseup", endStroke);
+      window.addEventListener("touchend", endStroke);
+      window.addEventListener("resize", () => {
+        if (document.getElementById("editor-modal").classList.contains("active") && editorSetupCanvasFn) {
+          editorSetupCanvasFn();
+        }
+      });
+
       if (sb && sb.auth && sb.auth.onAuthStateChange) {
-        sb.auth.onAuthStateChange((event, session) => {
-          window.verifyAdminAuth();
-        });
+        sb.auth.onAuthStateChange(() => { window.verifyAdminAuth(); });
       }
     }
 
