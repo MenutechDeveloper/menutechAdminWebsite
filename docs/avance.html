@@ -32,11 +32,7 @@
       --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.35);
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background-color: var(--bg);
@@ -48,10 +44,7 @@
       line-height: 1.5;
     }
 
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
+    .container { max-width: 1000px; margin: 0 auto; }
 
     /* BARRA SUPERIOR DISCRETA (SOLO VISIBLE SI ES ADMIN AUTENTICADO) */
     .top-bar {
@@ -62,10 +55,7 @@
       margin-bottom: 24px;
       min-height: 42px;
     }
-
-    body.is-admin-user .top-bar {
-      display: flex;
-    }
+    body.is-admin-user .top-bar { display: flex; }
 
     .btn {
       display: inline-flex;
@@ -88,49 +78,24 @@
       border-color: #cbd5e1;
       box-shadow: var(--shadow-sm);
     }
-    .btn-toggle-admin:hover {
-      background: #f8fafc;
-      border-color: #94a3b8;
-    }
-    .btn-toggle-admin.active {
-      background: #0f172a;
-      color: #ffffff;
-      border-color: #0f172a;
-    }
+    .btn-toggle-admin:hover { background: #f8fafc; border-color: #94a3b8; }
+    .btn-toggle-admin.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
 
     .btn-primary {
       background: #ea580c;
       color: #ffffff;
       box-shadow: 0 2px 4px rgba(234, 88, 12, 0.2);
     }
-    .btn-primary:hover {
-      background: #c2410c;
-      transform: translateY(-1px);
-    }
+    .btn-primary:hover { background: #c2410c; transform: translateY(-1px); }
 
-    .btn-ghost {
-      background: #ffffff;
-      color: #334155;
-      border-color: #cbd5e1;
-    }
-    .btn-ghost:hover {
-      background: #f8fafc;
-      border-color: #94a3b8;
-    }
+    .btn-ghost { background: #ffffff; color: #334155; border-color: #cbd5e1; }
+    .btn-ghost:hover { background: #f8fafc; border-color: #94a3b8; }
 
-    .admin-only-btn {
-      display: none;
-    }
-    body.is-admin-editing .admin-only-btn {
-      display: inline-flex;
-    }
+    .admin-only-btn { display: none; }
+    body.is-admin-editing .admin-only-btn { display: inline-flex; }
 
-    /* LISTA VERTICAL DE FUNCIONES (FILA POR FILA) */
-    .objectives-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+    /* LISTA VERTICAL DE FUNCIONES */
+    .objectives-list { display: flex; flex-direction: column; gap: 16px; }
 
     .objective-row {
       background: var(--card-bg);
@@ -143,21 +108,11 @@
       transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
       position: relative;
     }
+    .objective-row:hover { border-color: #cbd5e1; box-shadow: var(--shadow-md); }
 
-    .objective-row:hover {
-      border-color: #cbd5e1;
-      box-shadow: var(--shadow-md);
-    }
+    .row-main { display: flex; width: 100%; align-items: center; gap: 20px; flex-wrap: wrap; }
 
-    .row-main {
-      display: flex;
-      width: 100%;
-      align-items: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    /* ARRASTRAR PARA REORDENAR (SOLO EN MODO EDICION) */
+    /* ARRASTRAR PARA REORDENAR */
     .drag-handle {
       display: none;
       align-items: center;
@@ -170,16 +125,9 @@
       flex-shrink: 0;
       transition: background 0.15s, color 0.15s;
     }
-    body.is-admin-editing .drag-handle {
-      display: flex;
-    }
-    .drag-handle:hover {
-      background: #f1f5f9;
-      color: #0f172a;
-    }
-    .drag-handle:active {
-      cursor: grabbing;
-    }
+    body.is-admin-editing .drag-handle { display: flex; }
+    .drag-handle:hover { background: #f1f5f9; color: #0f172a; }
+    .drag-handle:active { cursor: grabbing; }
 
     .objective-row.dragging {
       opacity: 0.45;
@@ -192,8 +140,8 @@
       box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
     }
 
-    /* 1. CUADRITO DE VISTA PREVIA */
-    .video-thumb-box {
+    /* MINIATURA */
+    .media-thumb-box {
       width: 90px;
       height: 62px;
       flex-shrink: 0;
@@ -208,15 +156,13 @@
       align-items: center;
       justify-content: center;
     }
-
-    .video-thumb-box:hover {
+    .media-thumb-box:hover {
       transform: scale(1.04);
       border-color: #ea580c;
       box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
     }
-
-    .video-thumb-box video,
-    .video-thumb-box img {
+    .media-thumb-box video,
+    .media-thumb-box img {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -224,10 +170,8 @@
       opacity: 0.9;
       transition: opacity 0.2s;
     }
-    .video-thumb-box:hover video,
-    .video-thumb-box:hover img {
-      opacity: 1;
-    }
+    .media-thumb-box:hover video,
+    .media-thumb-box:hover img { opacity: 1; }
 
     .thumb-play-overlay {
       position: absolute;
@@ -235,12 +179,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(15, 23, 42, 0.3);
+      background: rgba(15, 23, 42, 0.28);
       transition: background 0.2s;
     }
-    .video-thumb-box:hover .thumb-play-overlay {
-      background: rgba(15, 23, 42, 0.1);
-    }
+    .media-thumb-box:hover .thumb-play-overlay { background: rgba(15, 23, 42, 0.08); }
 
     .thumb-play-btn {
       width: 28px;
@@ -255,16 +197,9 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
       transition: transform 0.2s, background 0.2s, color 0.2s;
     }
-    .video-thumb-box:hover .thumb-play-btn {
-      transform: scale(1.12);
-      background: #ea580c;
-      color: #ffffff;
-    }
-    .video-thumb-box.is-100:hover .thumb-play-btn {
-      background: #16a34a;
-    }
+    .media-thumb-box:hover .thumb-play-btn { transform: scale(1.12); background: #ea580c; color: #ffffff; }
+    .media-thumb-box.is-100:hover .thumb-play-btn { background: #16a34a; }
 
-    /* Indicador de varias piezas (reel) */
     .thumb-count-badge {
       position: absolute;
       top: 5px;
@@ -275,21 +210,11 @@
       font-weight: 700;
       padding: 1px 6px;
       border-radius: var(--radius-full);
-      display: flex;
-      align-items: center;
-      gap: 3px;
       backdrop-filter: blur(2px);
     }
 
-    /* 2. COLUMNA INFORMACION */
-    .obj-info-col {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
+    /* INFORMACION */
+    .obj-info-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
     .obj-title {
       font-family: 'Outfit', sans-serif;
       font-size: 17px;
@@ -298,22 +223,10 @@
       letter-spacing: -0.01em;
       line-height: 1.3;
     }
+    .obj-desc { font-size: 13px; color: #64748b; line-height: 1.45; font-weight: 450; }
 
-    .obj-desc {
-      font-size: 13px;
-      color: #64748b;
-      line-height: 1.45;
-      font-weight: 450;
-    }
-
-    /* 3. PROGRESO Y CONTROLES */
-    .obj-progress-col {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-left: auto;
-      flex-shrink: 0;
-    }
+    /* PROGRESO Y CONTROLES */
+    .obj-progress-col { display: flex; align-items: center; gap: 16px; margin-left: auto; flex-shrink: 0; }
 
     .progress-pill {
       font-size: 14px;
@@ -329,15 +242,8 @@
       transition: all 0.3s ease;
     }
 
-    .admin-slider-wrap {
-      display: none;
-      align-items: center;
-      gap: 12px;
-      width: 200px;
-    }
-    body.is-admin-editing .admin-slider-wrap {
-      display: flex;
-    }
+    .admin-slider-wrap { display: none; align-items: center; gap: 12px; width: 200px; }
+    body.is-admin-editing .admin-slider-wrap { display: flex; }
 
     .admin-range-slider {
       flex: 1;
@@ -362,20 +268,10 @@
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
       transition: transform 0.15s, background 0.15s;
     }
-    .admin-range-slider::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
-      background: #ea580c;
-    }
+    .admin-range-slider::-webkit-slider-thumb:hover { transform: scale(1.2); background: #ea580c; }
 
-    /* ACCIONES ADMIN EN FILA */
-    .admin-actions {
-      display: none;
-      align-items: center;
-      gap: 6px;
-    }
-    body.is-admin-editing .admin-actions {
-      display: flex;
-    }
+    .admin-actions { display: none; align-items: center; gap: 6px; }
+    body.is-admin-editing .admin-actions { display: flex; }
 
     .btn-action-icon {
       width: 34px;
@@ -391,18 +287,8 @@
       font-size: 13px;
       transition: all 0.2s ease;
     }
-
-    .btn-action-icon:hover {
-      background: #f8fafc;
-      color: #0f172a;
-      border-color: #cbd5e1;
-    }
-
-    .btn-action-icon.btn-delete:hover {
-      background: #fef2f2;
-      color: #ef4444;
-      border-color: #fca5a5;
-    }
+    .btn-action-icon:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+    .btn-action-icon.btn-delete:hover { background: #fef2f2; color: #ef4444; border-color: #fca5a5; }
 
     /* ============================================================
        VISOR DE MEDIOS (SLIDE LIMPIO, SIN TITULOS NI BOTONES)
@@ -419,9 +305,7 @@
       justify-content: center;
       padding: 24px;
     }
-    .viewer-overlay.active {
-      display: flex;
-    }
+    .viewer-overlay.active { display: flex; }
 
     .viewer-stage-wrap {
       display: flex;
@@ -443,10 +327,7 @@
       max-height: 86vh;
       transition: width 0.25s ease;
     }
-    /* Cuando hay nota lateral, el escenario se reduce para dejarle sitio */
-    .viewer-stage-wrap.has-note .viewer-stage {
-      width: min(58vw, 820px);
-    }
+    .viewer-stage-wrap.has-note .viewer-stage { width: min(58vw, 820px); }
 
     .viewer-track {
       display: flex;
@@ -465,8 +346,9 @@
       background: #000;
     }
 
-    .viewer-slide img,
-    .viewer-slide video {
+    .viewer-media { position: relative; display: inline-flex; max-width: 100%; max-height: 86vh; }
+    .viewer-media img,
+    .viewer-media video {
       display: block;
       max-width: 100%;
       max-height: 86vh;
@@ -476,8 +358,9 @@
       user-select: none;
       -webkit-user-drag: none;
     }
+    .viewer-media canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 
-    /* Nota lateral: solo aparece si la imagen actual tiene nota */
+    /* Nota lateral */
     .viewer-note-panel {
       width: 320px;
       max-width: 34vw;
@@ -494,22 +377,8 @@
       display: none;
       animation: modalFadeIn 0.25s ease-out;
     }
-    .viewer-note-panel.visible {
-      display: block;
-    }
-    .viewer-note-label {
-      font-family: 'Outfit', sans-serif;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #94a3b8;
-      margin-bottom: 10px;
-    }
-    .viewer-note-text {
-      color: #1e293b;
-      font-weight: 500;
-    }
+    .viewer-note-panel.visible { display: block; }
+    .viewer-note-text { color: #1e293b; font-weight: 500; }
 
     /* ============================================================
        EDITOR DE FUNCION (MODAL)
@@ -526,9 +395,7 @@
       justify-content: center;
       padding: 20px;
     }
-    .editor-overlay.active {
-      display: flex;
-    }
+    .editor-overlay.active { display: flex; }
 
     .editor-modal {
       background: #ffffff;
@@ -550,11 +417,7 @@
       align-items: center;
       justify-content: space-between;
     }
-    .editor-header h3 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 17px;
-      font-weight: 700;
-    }
+    .editor-header h3 { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 700; }
     .editor-close {
       background: transparent;
       border: none;
@@ -595,12 +458,7 @@
       overflow-y: auto;
     }
 
-    .editor-stage-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: center;
-    }
+    .editor-stage-wrap { display: flex; flex-direction: column; gap: 10px; align-items: center; }
 
     .editor-stage {
       position: relative;
@@ -629,26 +487,11 @@
       height: 100%;
       pointer-events: none;
     }
-    .editor-stage.drawing canvas {
-      pointer-events: auto;
-      cursor: crosshair;
-    }
+    .editor-stage.drawing canvas { pointer-events: auto; cursor: crosshair; }
 
-    .editor-empty {
-      color: #94a3b8;
-      font-size: 13px;
-      padding: 40px 20px;
-      text-align: center;
-    }
+    .editor-empty { color: #94a3b8; font-size: 13px; padding: 40px 20px; text-align: center; }
 
-    .draw-toolbar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-      width: 100%;
-    }
+    .draw-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; width: 100%; }
 
     .draw-toolbar .swatch {
       width: 22px;
@@ -673,15 +516,8 @@
       background: #fff;
       cursor: pointer;
     }
-    .draw-toolbar .size-dot span {
-      display: block;
-      border-radius: var(--radius-full);
-      background: #0f172a;
-    }
-    .draw-toolbar .size-dot.active {
-      border-color: #0f172a;
-      background: #f1f5f9;
-    }
+    .draw-toolbar .size-dot span { display: block; border-radius: var(--radius-full); background: #0f172a; }
+    .draw-toolbar .size-dot.active { border-color: #0f172a; background: #f1f5f9; }
 
     .tool-btn {
       width: 32px;
@@ -695,13 +531,10 @@
       align-items: center;
       justify-content: center;
       transition: all 0.15s;
+      font-size: 13px;
     }
     .tool-btn:hover { background: #f1f5f9; }
-    .tool-btn.active {
-      background: #0f172a;
-      color: #fff;
-      border-color: #0f172a;
-    }
+    .tool-btn.active { background: #0f172a; color: #fff; border-color: #0f172a; }
 
     .field-label {
       font-size: 11px;
@@ -727,26 +560,31 @@
       transition: all 0.2s ease;
     }
     .edit-input:focus,
-    .edit-textarea:focus {
-      border-color: #ea580c;
-      box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.12);
-    }
-    .edit-textarea {
-      resize: vertical;
-      min-height: 62px;
-      line-height: 1.5;
-    }
+    .edit-textarea:focus { border-color: #ea580c; box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.12); }
+    .edit-textarea { resize: vertical; min-height: 56px; line-height: 1.5; }
 
     .field-group { display: flex; flex-direction: column; }
 
-    /* Lista de imagenes dentro del editor */
-    .images-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+    /* Zona de carga (drag & drop) */
+    .dropzone {
+      border: 2px dashed #cbd5e1;
+      border-radius: var(--radius-md);
+      padding: 22px 16px;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fff;
     }
+    .dropzone:hover { border-color: #94a3b8; color: #64748b; }
+    .dropzone.dragover { border-color: #ea580c; background: #fff7ed; color: #ea580c; }
+    .dropzone.uploading { opacity: 0.7; pointer-events: none; }
 
-    .image-item {
+    /* Lista de medios del editor */
+    .media-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .media-item {
       border: 1px solid #e2e8f0;
       border-radius: var(--radius-md);
       padding: 10px;
@@ -755,12 +593,9 @@
       background: #fff;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .image-item.active {
-      border-color: #ea580c;
-      box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.12);
-    }
+    .media-item.active { border-color: #ea580c; box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.12); }
 
-    .image-item-thumb {
+    .media-item-thumb {
       width: 64px;
       height: 48px;
       border-radius: var(--radius-sm);
@@ -770,33 +605,14 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
     }
-    .image-item-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .image-item-thumb .ph {
-      color: #64748b;
-      font-size: 16px;
-    }
+    .media-item-thumb img,
+    .media-item-thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    .image-item-body {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+    .media-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 
-    .image-item-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex-shrink: 0;
-    }
-
-    .mini-btn {
+    .media-remove {
       width: 26px;
       height: 26px;
       border-radius: var(--radius-sm);
@@ -804,23 +620,15 @@
       background: #fff;
       color: #64748b;
       cursor: pointer;
-      font-size: 11px;
+      font-size: 15px;
+      line-height: 1;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
       transition: all 0.15s;
     }
-    .mini-btn:hover { background: #f8fafc; color: #0f172a; }
-    .mini-btn.danger:hover { background: #fef2f2; color: #ef4444; border-color: #fca5a5; }
-
-    .note-indicator {
-      font-size: 11px;
-      color: #ea580c;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
+    .media-remove:hover { background: #fef2f2; color: #ef4444; border-color: #fca5a5; }
 
     .editor-footer {
       padding: 14px 22px;
@@ -831,10 +639,6 @@
       background: #fff;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
     @keyframes modalFadeIn {
       from { opacity: 0; transform: scale(0.97) translateY(8px); }
       to { opacity: 1; transform: scale(1) translateY(0); }
@@ -860,7 +664,6 @@
 
   <div class="container">
 
-    <!-- BARRA SUPERIOR DISCRETA (SOLO VISIBLE SI ES ADMIN AUTENTICADO) -->
     <div class="top-bar" id="top-bar">
       <button class="btn btn-primary admin-only-btn" id="btn-add-inline">
         <i class="fa-solid fa-plus"></i> Agregar Función
@@ -871,7 +674,6 @@
       </button>
     </div>
 
-    <!-- LISTA VERTICAL DE FUNCIONES -->
     <div class="objectives-list" id="objectives-list"></div>
 
   </div>
@@ -883,7 +685,6 @@
         <div class="viewer-track" id="viewer-track"></div>
       </div>
       <div class="viewer-note-panel" id="viewer-note-panel">
-        <div class="viewer-note-label">Nota</div>
         <div class="viewer-note-text" id="viewer-note-text"></div>
       </div>
     </div>
@@ -910,25 +711,19 @@
             <input type="text" class="edit-input" id="ed-title" placeholder="Nombre de la función">
           </div>
           <div class="field-group">
-            <label class="field-label" for="ed-desc">Descripción (opcional)</label>
-            <input type="text" class="edit-input" id="ed-desc" placeholder="Descripción opcional">
+            <label class="field-label" for="ed-desc">Descripción</label>
+            <input type="text" class="edit-input" id="ed-desc" placeholder="Descripción">
           </div>
           <div class="field-group">
-            <label class="field-label" for="ed-video">Ruta del video (opcional)</label>
-            <input type="text" class="edit-input" id="ed-video" placeholder="ej. ./assets/misAvances/img/video.mp4">
-          </div>
-          <div class="field-group">
-            <label class="field-label">Imágenes / Reel</label>
-            <div class="images-list" id="images-list"></div>
-            <button class="btn btn-ghost" id="btn-add-image" style="margin-top:10px; justify-content:center;">
-              <i class="fa-solid fa-image"></i> Agregar imagen
-            </button>
+            <span class="field-label">Imagen/Video</span>
+            <div class="dropzone" id="dropzone">Arrastra imágenes o videos aquí</div>
+            <div class="media-list" id="media-list" style="margin-top:10px;"></div>
           </div>
         </div>
       </div>
       <div class="editor-footer">
         <button class="btn btn-ghost" id="btn-cancel-editor">Cancelar</button>
-        <button class="btn btn-primary" id="btn-save-editor"><i class="fa-solid fa-check"></i> Guardar Cambios</button>
+        <button class="btn btn-primary" id="btn-save-editor">Guardar Cambios</button>
       </div>
     </div>
   </div>
@@ -936,51 +731,52 @@
   <script type="module">
     import { supabase as sb } from './supabase.js';
 
-    // DATOS POR DEFECTO (cada funcion puede tener video y/o varias imagenes)
+    // Cloudinary (solo para este archivo)
+    const CLOUDINARY = {
+      CLOUD_NAME: "dp776nphp",
+      UPLOAD_PRESET: "vit0x7dr"
+    };
+
+    const TABLE = "avances";
+
+    // Datos de ejemplo (solo si la tabla está vacía)
     const DEFAULT_OBJECTIVES = [
       {
         id: "obj-1",
         title: "Online payment",
         description: "Integración de pasarela de pagos con Stripe Connect para pedidos y reservas.",
         progress: 95,
-        video: "./assets/misAvances/img/onlinepayment.mp4",
-        images: []
+        media: [{ type: "video", url: "./assets/misAvances/img/onlinepayment.mp4", note: "", strokes: [] }]
       },
       {
         id: "obj-2",
         title: "Menu creation",
         description: "Constructor visual de categorías y platillos en tiempo real.",
         progress: 100,
-        video: "./assets/misAvances/img/menucreation.mp4",
-        images: []
+        media: [{ type: "video", url: "./assets/misAvances/img/menucreation.mp4", note: "", strokes: [] }]
       },
       {
         id: "obj-3",
         title: "Generador de menu con MenutechIA",
         description: "Lectura de fotos de menú físico e importación automática con IA.",
         progress: 85,
-        video: "./assets/misAvances/img/menutechia.mp4",
-        images: []
+        media: [{ type: "video", url: "./assets/misAvances/img/menutechia.mp4", note: "", strokes: [] }]
       },
       {
         id: "obj-4",
         title: "App Android Flutter",
         description: "Aplicación nativa para restaurantes con alertas sonoras y comanderas.",
         progress: 90,
-        video: "./assets/misAvances/img/appflutter.mp4",
-        images: []
+        media: [{ type: "video", url: "./assets/misAvances/img/appflutter.mp4", note: "", strokes: [] }]
       },
       {
         id: "obj-5",
         title: "Google play store",
         description: "Preparación de bundle AAB y publicación en Google Play Console.",
         progress: 60,
-        video: "./assets/misAvances/img/playstore.mp4",
-        images: []
+        media: [{ type: "video", url: "./assets/misAvances/img/playstore.mp4", note: "", strokes: [] }]
       }
     ];
-
-    const STORAGE_KEY = "menutech_avances_list_v4";
 
     // ESTADO
     let objectives = [];
@@ -988,52 +784,118 @@
     let isEditingActive = false;
     let editingId = null;
 
-    // Estado del visor (slide)
+    // Visor
     let viewerItems = [];
     let viewerIndex = 0;
 
-    // Estado del editor
+    // Editor
     let editorItem = null;
-    let activeImageIndex = -1;   // imagen seleccionada para dibujar
+    let activeMediaIndex = -1;
     let drawColor = "#ef4444";
-    let drawSize = 4;
+    let drawSize = 6;
     let drawMode = true;
     let isDrawing = false;
     let currentStroke = null;
+    let editorCanvasEl = null;
+    let editorSetupCanvasFn = null;
 
     // INICIALIZACION
     async function init() {
-      loadData();
+      await loadData();
       renderList();
       setupEvents();
       await verifyAdminAuthentication();
     }
 
-    function loadData() {
+    function newId() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return "av-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+    }
+
+    function normalizeMedia(media) {
+      if (!Array.isArray(media)) return [];
+      return media.map(m => ({
+        type: m.type === "video" ? "video" : "image",
+        url: m.url || m.src || "",
+        note: m.note || "",
+        strokes: Array.isArray(m.strokes) ? m.strokes : []
+      })).filter(m => m.url);
+    }
+
+    async function loadData() {
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          objectives = JSON.parse(saved);
-          objectives.forEach(o => { if (!Array.isArray(o.images)) o.images = []; });
+        const { data, error } = await sb
+          .from(TABLE)
+          .select("*")
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          objectives = data.map(row => ({
+            id: row.id,
+            title: row.title || "",
+            description: row.description || "",
+            progress: Number(row.progress) || 0,
+            media: normalizeMedia(row.media)
+          }));
         } else {
+          // Tabla vacía: se muestran los ejemplos (no se guardan)
           objectives = JSON.parse(JSON.stringify(DEFAULT_OBJECTIVES));
-          saveData();
         }
       } catch (e) {
+        console.error("Error cargando avances:", e);
         objectives = JSON.parse(JSON.stringify(DEFAULT_OBJECTIVES));
       }
     }
 
+    // Persistencia en Supabase (solo admin)
+    let saveTimer = null;
     function saveData() {
       if (!isUserAdmin) return;
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(persistAll, 250);
+    }
+
+    async function persistAll() {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(objectives));
+        for (let i = 0; i < objectives.length; i++) {
+          const o = objectives[i];
+          await sb.from(TABLE).upsert({
+            id: o.id,
+            title: o.title || "",
+            description: o.description || "",
+            progress: Number(o.progress) || 0,
+            media: o.media || [],
+            sort_order: i,
+            updated_at: new Date().toISOString()
+          });
+        }
       } catch (e) {
-        console.error("Error guardando:", e);
+        console.error("Error guardando avances:", e);
       }
     }
 
-    // Helper: Extraer usuario de la sesión de Supabase o directamente de localStorage
+    async function persistOne(item) {
+      if (!isUserAdmin) return;
+      try {
+        const index = objectives.findIndex(o => o.id === item.id);
+        await sb.from(TABLE).upsert({
+          id: item.id,
+          title: item.title || "",
+          description: item.description || "",
+          progress: Number(item.progress) || 0,
+          media: item.media || [],
+          sort_order: index < 0 ? 0 : index,
+          updated_at: new Date().toISOString()
+        });
+      } catch (e) {
+        console.error("Error guardando avance:", e);
+      }
+    }
+
+    // Helper: usuario de Supabase en localStorage
     function getStoredAuthUser() {
       try {
         for (let i = 0; i < localStorage.length; i++) {
@@ -1058,44 +920,26 @@
 
         if (sb && sb.auth) {
           const { data } = await sb.auth.getSession();
-          if (data && data.session && data.session.user) {
-            userId = data.session.user.id;
-          }
+          if (data && data.session && data.session.user) userId = data.session.user.id;
         }
 
         if (!userId) {
           const storedUser = getStoredAuthUser();
-          if (storedUser && storedUser.id) {
-            userId = storedUser.id;
-          }
+          if (storedUser && storedUser.id) userId = storedUser.id;
         }
 
-        if (!userId) {
-          disableAdminUI();
-          return;
-        }
+        if (!userId) { disableAdminUI(); return; }
 
-        const { data, error } = await sb
-          .from('profiles')
-          .select('role')
-          .eq('id', userId);
-
+        const { data, error } = await sb.from('profiles').select('role').eq('id', userId);
         const profile = (data && data.length > 0) ? data[0] : null;
 
-        if (error || !profile) {
-          console.warn("No se pudo obtener el perfil para verificación de admin:", error);
-          disableAdminUI();
-          return;
-        }
+        if (error || !profile) { disableAdminUI(); return; }
 
         const role = (profile.role || '').trim().toUpperCase();
         const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'];
 
-        if (privilegedRoles.includes(role)) {
-          enableAdminUI();
-        } else {
-          disableAdminUI();
-        }
+        if (privilegedRoles.includes(role)) enableAdminUI();
+        else disableAdminUI();
       } catch (err) {
         console.error("Error en verificación de administrador:", err);
         disableAdminUI();
@@ -1139,21 +983,13 @@
       renderList();
     }
 
-    // COLOR DINAMICO PROGRESIVO
     function getColorForProgress(pct) {
       const p = Math.max(0, Math.min(100, Number(pct) || 0));
-
-      if (p >= 100) {
-        return { color: "#16a34a", bg: "#dcfce7", text: "#15803d", border: "#86efac", is100: true };
-      } else if (p >= 80) {
-        return { color: "#65a30d", bg: "#ecfccb", text: "#4d7c0f", border: "#bef264", is100: false };
-      } else if (p >= 60) {
-        return { color: "#eab308", bg: "#fef9c3", text: "#a16207", border: "#fde047", is100: false };
-      } else if (p >= 35) {
-        return { color: "#f97316", bg: "#ffedd5", text: "#c2410c", border: "#fed7aa", is100: false };
-      } else {
-        return { color: "#ea580c", bg: "#ffedd5", text: "#c2410c", border: "#fdba74", is100: false };
-      }
+      if (p >= 100) return { bg: "#dcfce7", text: "#15803d", border: "#86efac", is100: true };
+      if (p >= 80)  return { bg: "#ecfccb", text: "#4d7c0f", border: "#bef264", is100: false };
+      if (p >= 60)  return { bg: "#fef9c3", text: "#a16207", border: "#fde047", is100: false };
+      if (p >= 35)  return { bg: "#ffedd5", text: "#c2410c", border: "#fed7aa", is100: false };
+      return { bg: "#ffedd5", text: "#c2410c", border: "#fdba74", is100: false };
     }
 
     function escapeHtml(str) {
@@ -1163,28 +999,13 @@
       return div.innerHTML;
     }
 
-    // Devuelve la primera pieza de medio disponible (para la miniatura)
     function getPrimaryMedia(item) {
-      if (Array.isArray(item.images) && item.images.length > 0) {
-        return { type: "image", src: item.images[0].src || "" };
-      }
-      if (item.video) {
-        return { type: "video", src: item.video };
-      }
-      return { type: "none", src: "" };
+      const list = Array.isArray(item.media) ? item.media : [];
+      return list.length > 0 ? list[0] : { type: "none", url: "" };
     }
 
     function getMediaCount(item) {
-      const imgs = Array.isArray(item.images) ? item.images.length : 0;
-      return imgs + (item.video ? 1 : 0);
-    }
-
-    // Construye la lista de medios (video primero, luego imagenes)
-    function buildMediaList(item) {
-      const list = [];
-      if (item.video) list.push({ type: "video", src: item.video, note: "" });
-      (item.images || []).forEach(img => list.push({ type: "image", src: img.src || "", note: img.note || "", strokes: img.strokes || [] }));
-      return list;
+      return Array.isArray(item.media) ? item.media.length : 0;
     }
 
     // RENDERIZAR LISTA
@@ -1210,23 +1031,22 @@
         row.className = "objective-row";
         row.dataset.id = item.id;
 
-        let thumbInner = `<div class="thumb-play-overlay"><div class="thumb-play-btn"><i class="fa-regular fa-image"></i></div></div>`;
+        let thumbInner = `<div class="thumb-play-overlay"><div class="thumb-play-btn"></div></div>`;
         if (primary.type === "video") {
-          thumbInner = `<video src="${escapeHtml(primary.src)}" preload="metadata" muted></video>` +
+          thumbInner = `<video src="${escapeHtml(primary.url)}" preload="metadata" muted></video>` +
             `<div class="thumb-play-overlay"><div class="thumb-play-btn"><i class="fa-solid fa-play"></i></div></div>`;
         } else if (primary.type === "image") {
-          thumbInner = `<img src="${escapeHtml(primary.src)}" alt="">` +
+          thumbInner = `<img src="${escapeHtml(primary.url)}" alt="">` +
             `<div class="thumb-play-overlay"><div class="thumb-play-btn"><i class="fa-solid fa-expand"></i></div></div>`;
         }
 
-        const countBadge = mediaCount > 1 ? `<div class="thumb-count-badge"><i class="fa-solid fa-layer-group"></i>${mediaCount}</div>` : "";
+        const countBadge = mediaCount > 1 ? `<div class="thumb-count-badge">${mediaCount}</div>` : "";
 
         row.innerHTML = `
           <div class="row-main">
-
             <div class="drag-handle" title="Arrastra para reordenar"><i class="fa-solid fa-grip-vertical"></i></div>
 
-            <div class="video-thumb-box ${color.is100 ? 'is-100' : ''}" onclick="window.openViewer('${escapeHtml(item.id)}')" title="Ver contenido">
+            <div class="media-thumb-box ${color.is100 ? 'is-100' : ''}" onclick="window.openViewer('${escapeHtml(item.id)}')" title="Ver contenido">
               ${thumbInner}
               ${countBadge}
             </div>
@@ -1255,7 +1075,6 @@
                 </button>
               </div>
             </div>
-
           </div>
         `;
 
@@ -1265,9 +1084,7 @@
       attachDragHandlers();
     }
 
-    // ============================================================
     // ARRASTRAR Y SOLTAR PARA REORDENAR
-    // ============================================================
     function attachDragHandlers() {
       const rows = document.querySelectorAll(".objective-row");
       rows.forEach(row => {
@@ -1302,11 +1119,8 @@
           document.querySelectorAll(".objective-row").forEach(r => r.classList.remove("drop-target"));
           row.classList.add("drop-target");
 
-          if (after) {
-            list.insertBefore(dragging, row.nextSibling);
-          } else {
-            list.insertBefore(dragging, row);
-          }
+          if (after) list.insertBefore(dragging, row.nextSibling);
+          else list.insertBefore(dragging, row);
         });
 
         row.addEventListener("drop", (e) => {
@@ -1318,7 +1132,6 @@
       });
     }
 
-    // Lee el orden visual del DOM y lo guarda en el estado
     function commitDragOrder() {
       if (!isUserAdmin || !isEditingActive) return;
       const ids = Array.from(document.querySelectorAll(".objective-row")).map(r => r.dataset.id);
@@ -1333,7 +1146,6 @@
       }
     }
 
-    // FUNCIONES GLOBALES
     window.handleSliderChange = function(id, val) {
       if (!isUserAdmin) return;
       const p = Math.max(0, Math.min(100, parseInt(val, 10) || 0));
@@ -1341,7 +1153,6 @@
       if (!item) return;
 
       item.progress = p;
-      saveData();
 
       const pill = document.querySelector(`.pill-${id}`);
       if (pill) {
@@ -1351,25 +1162,25 @@
         pill.style.color = color.text;
         pill.style.borderColor = color.border;
       }
+      persistOne(item);
     };
 
     function addNewObjective() {
       if (!isUserAdmin) return;
-      const newId = "obj-" + Date.now();
-      objectives.unshift({
-        id: newId,
+      const item = {
+        id: newId(),
         title: "Nueva Función",
         description: "",
         progress: 10,
-        video: "",
-        images: []
-      });
-      saveData();
+        media: []
+      };
+      objectives.unshift(item);
       renderList();
-      window.openEditor(newId);
+      saveData();
+      window.openEditor(item.id);
     }
 
-    window.deleteObjective = function(id) {
+    window.deleteObjective = async function(id) {
       if (!isUserAdmin) return;
       const item = objectives.find(o => o.id === id);
       if (!item) return;
@@ -1377,8 +1188,13 @@
       if (confirm(`¿Eliminar "${item.title}"?`)) {
         objectives = objectives.filter(o => o.id !== id);
         if (editingId === id) editingId = null;
-        saveData();
         renderList();
+        try {
+          await sb.from(TABLE).delete().eq("id", id);
+          saveData();
+        } catch (e) {
+          console.error("Error eliminando:", e);
+        }
       }
     };
 
@@ -1389,7 +1205,7 @@
       const item = objectives.find(o => o.id === id);
       if (!item) return;
 
-      viewerItems = buildMediaList(item);
+      viewerItems = Array.isArray(item.media) ? item.media : [];
       if (viewerItems.length === 0) return;
 
       viewerIndex = 0;
@@ -1399,11 +1215,31 @@
       viewerItems.forEach(m => {
         const slide = document.createElement("div");
         slide.className = "viewer-slide";
+
+        const wrap = document.createElement("div");
+        wrap.className = "viewer-media";
+
         if (m.type === "video") {
-          slide.innerHTML = `<video src="${escapeHtml(m.src)}" controls playsinline></video>`;
+          const v = document.createElement("video");
+          v.src = m.url;
+          v.controls = true;
+          v.playsInline = true;
+          wrap.appendChild(v);
         } else {
-          slide.innerHTML = `<img src="${escapeHtml(m.src)}" alt="" draggable="false">`;
+          const img = document.createElement("img");
+          img.src = m.url;
+          img.alt = "";
+          img.draggable = false;
+          wrap.appendChild(img);
+
+          if (Array.isArray(m.strokes) && m.strokes.length > 0) {
+            const canvas = document.createElement("canvas");
+            wrap.appendChild(canvas);
+            attachViewerStrokes(img, canvas, m.strokes);
+          }
         }
+
+        slide.appendChild(wrap);
         track.appendChild(slide);
       });
 
@@ -1411,6 +1247,46 @@
       updateViewerNote();
       document.getElementById("viewer-modal").classList.add("active");
     };
+
+    function attachViewerStrokes(img, canvas, strokes) {
+      const draw = () => {
+        const rect = img.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        drawStrokesOn(canvas, strokes);
+      };
+      if (img.complete) draw();
+      else img.addEventListener("load", draw);
+    }
+
+    function drawStrokesOn(canvas, strokes) {
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!strokes) return;
+      strokes.forEach(s => {
+        if (!s.pts || s.pts.length === 0) return;
+        ctx.strokeStyle = s.color || "#ef4444";
+        ctx.lineWidth = (s.w || 0.006) * canvas.width;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+        s.pts.forEach((p, i) => {
+          const x = p.x * canvas.width;
+          const y = p.y * canvas.height;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        if (s.pts.length === 1) {
+          ctx.arc(s.pts[0].x * canvas.width, s.pts[0].y * canvas.height, ((s.w || 0.006) * canvas.width) / 2, 0, Math.PI * 2);
+          ctx.fillStyle = s.color || "#ef4444";
+          ctx.fill();
+        } else {
+          ctx.stroke();
+        }
+      });
+    }
 
     function updateViewerTransform() {
       const track = document.getElementById("viewer-track");
@@ -1450,7 +1326,6 @@
       updateViewerNote();
     }
 
-    // Gestos de deslizamiento (swipe)
     function setupViewerGestures() {
       const stage = document.getElementById("viewer-stage");
       let startX = 0, startY = 0, dragging = false;
@@ -1467,9 +1342,7 @@
         dragging = false;
         const dx = e.changedTouches[0].clientX - startX;
         const dy = e.changedTouches[0].clientY - startY;
-        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
-          viewerGo(dx < 0 ? 1 : -1);
-        }
+        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) viewerGo(dx < 0 ? 1 : -1);
       }, { passive: true });
 
       stage.addEventListener("wheel", (e) => {
@@ -1489,18 +1362,19 @@
 
       editingId = id;
       editorItem = JSON.parse(JSON.stringify(item));
-      if (!Array.isArray(editorItem.images)) editorItem.images = [];
-      editorItem.images.forEach(img => {
-        if (!Array.isArray(img.strokes)) img.strokes = [];
+      if (!Array.isArray(editorItem.media)) editorItem.media = [];
+      editorItem.media.forEach(m => {
+        if (!Array.isArray(m.strokes)) m.strokes = [];
       });
 
       document.getElementById("ed-title").value = editorItem.title || "";
       document.getElementById("ed-desc").value = editorItem.description || "";
-      document.getElementById("ed-video").value = editorItem.video || "";
 
-      activeImageIndex = editorItem.images.length > 0 ? 0 : -1;
+      // Selecciona la primera imagen para dibujar
+      activeMediaIndex = editorItem.media.findIndex(m => m.type === "image");
+      if (activeMediaIndex < 0 && editorItem.media.length > 0) activeMediaIndex = 0;
 
-      renderImagesList();
+      renderMediaList();
       renderEditorStage();
       document.getElementById("editor-modal").classList.add("active");
     };
@@ -1508,73 +1382,50 @@
     function closeEditor() {
       document.getElementById("editor-modal").classList.remove("active");
       editorItem = null;
-      activeImageIndex = -1;
+      activeMediaIndex = -1;
       isDrawing = false;
       currentStroke = null;
     }
 
-    function renderImagesList() {
-      const wrap = document.getElementById("images-list");
+    function renderMediaList() {
+      const wrap = document.getElementById("media-list");
       wrap.innerHTML = "";
 
-      if (!editorItem || editorItem.images.length === 0) {
-        wrap.innerHTML = `<div style="font-size:12px; color:#94a3b8; padding:6px 2px;">Sin imágenes todavía.</div>`;
-        return;
-      }
+      if (!editorItem || editorItem.media.length === 0) return;
 
-      editorItem.images.forEach((img, idx) => {
+      editorItem.media.forEach((m, idx) => {
         const el = document.createElement("div");
-        el.className = "image-item" + (idx === activeImageIndex ? " active" : "");
-        const hasDraw = Array.isArray(img.strokes) && img.strokes.length > 0;
+        el.className = "media-item" + (idx === activeMediaIndex ? " active" : "");
+
+        const thumbHtml = m.type === "video"
+          ? `<video src="${escapeHtml(m.url)}" muted preload="metadata"></video>`
+          : `<img src="${escapeHtml(m.url)}" alt="" onerror="this.style.display='none'">`;
+
+        const noteHtml = m.type === "image"
+          ? `<textarea class="edit-textarea" data-role="note" placeholder="Nota">${escapeHtml(m.note || '')}</textarea>`
+          : ``;
 
         el.innerHTML = `
-          <div class="image-item-thumb">
-            ${img.src ? `<img src="${escapeHtml(img.src)}" alt="" onerror="this.style.display='none'">` : `<span class="ph"><i class="fa-regular fa-image"></i></span>`}
+          <div class="media-item-thumb">${thumbHtml}</div>
+          <div class="media-item-body">
+            ${noteHtml}
           </div>
-          <div class="image-item-body">
-            <input type="text" class="edit-input" data-role="src" placeholder="Ruta de la imagen (ej. ./assets/img/foto.png)" value="${escapeHtml(img.src || '')}">
-            <textarea class="edit-textarea" data-role="note" placeholder="Nota de esta imagen (se muestra al lado en el visor)">${escapeHtml(img.note || '')}</textarea>
-            <div>
-              ${hasDraw ? `<span class="note-indicator"><i class="fa-solid fa-paintbrush"></i> Con dibujo</span>` : ''}
-            </div>
-          </div>
-          <div class="image-item-actions">
-            <button class="mini-btn" data-role="up" title="Subir"><i class="fa-solid fa-arrow-up"></i></button>
-            <button class="mini-btn" data-role="down" title="Bajar"><i class="fa-solid fa-arrow-down"></i></button>
-            <button class="mini-btn danger" data-role="remove" title="Quitar"><i class="fa-solid fa-trash"></i></button>
-          </div>
+          <button class="media-remove" data-role="remove" title="Quitar">&times;</button>
         `;
 
-        el.addEventListener("click", (e) => {
-          if (e.target.closest("input, textarea, button")) return;
-          activeImageIndex = idx;
-          renderImagesList();
+        el.querySelector(".media-item-thumb").addEventListener("click", () => {
+          activeMediaIndex = idx;
+          renderMediaList();
           renderEditorStage();
         });
 
-        el.querySelector('[data-role="src"]').addEventListener("input", (e) => {
-          editorItem.images[idx].src = e.target.value.trim();
-          if (idx === activeImageIndex) renderEditorStage();
-          const thumbImg = el.querySelector(".image-item-thumb img");
-          if (thumbImg) thumbImg.src = e.target.value.trim();
-        });
+        const noteEl = el.querySelector('[data-role="note"]');
+        if (noteEl) noteEl.addEventListener("input", (e) => { editorItem.media[idx].note = e.target.value; });
 
-        el.querySelector('[data-role="note"]').addEventListener("input", (e) => {
-          editorItem.images[idx].note = e.target.value;
-        });
-
-        el.querySelector('[data-role="up"]').addEventListener("click", () => {
-          if (idx === 0) return;
-          swapImages(idx, idx - 1);
-        });
-        el.querySelector('[data-role="down"]').addEventListener("click", () => {
-          if (idx === editorItem.images.length - 1) return;
-          swapImages(idx, idx + 1);
-        });
         el.querySelector('[data-role="remove"]').addEventListener("click", () => {
-          editorItem.images.splice(idx, 1);
-          if (activeImageIndex >= editorItem.images.length) activeImageIndex = editorItem.images.length - 1;
-          renderImagesList();
+          editorItem.media.splice(idx, 1);
+          if (activeMediaIndex >= editorItem.media.length) activeMediaIndex = editorItem.media.length - 1;
+          renderMediaList();
           renderEditorStage();
         });
 
@@ -1582,36 +1433,31 @@
       });
     }
 
-    function swapImages(a, b) {
-      const arr = editorItem.images;
-      const tmp = arr[a]; arr[a] = arr[b]; arr[b] = tmp;
-      if (activeImageIndex === a) activeImageIndex = b;
-      else if (activeImageIndex === b) activeImageIndex = a;
-      renderImagesList();
-      renderEditorStage();
-    }
-
-    // Referencias del lienzo activo del editor (para listeners globales únicos)
-    let editorCanvasEl = null;
-    let editorSetupCanvasFn = null;
-
     function renderEditorStage() {
       const stage = document.getElementById("editor-stage");
       const toolbar = document.getElementById("draw-toolbar");
       stage.innerHTML = "";
       toolbar.innerHTML = "";
 
-      const img = (editorItem && activeImageIndex >= 0) ? editorItem.images[activeImageIndex] : null;
+      const m = (editorItem && activeMediaIndex >= 0) ? editorItem.media[activeMediaIndex] : null;
 
-      if (!img || !img.src) {
+      if (!m) {
         stage.classList.remove("drawing");
-        stage.innerHTML = `<div class="editor-empty">Selecciona o agrega una imagen para ver la vista previa y dibujar.</div>`;
+        stage.innerHTML = `<div class="editor-empty">Agrega una imagen o video</div>`;
         editorCanvasEl = null;
         editorSetupCanvasFn = null;
         return;
       }
 
-      stage.innerHTML = `<img src="${escapeHtml(img.src)}" alt="" draggable="false"><canvas></canvas>`;
+      if (m.type === "video") {
+        stage.classList.remove("drawing");
+        stage.innerHTML = `<video src="${escapeHtml(m.url)}" controls playsinline></video>`;
+        editorCanvasEl = null;
+        editorSetupCanvasFn = null;
+        return;
+      }
+
+      stage.innerHTML = `<img src="${escapeHtml(m.url)}" alt="" draggable="false"><canvas></canvas>`;
       const imgEl = stage.querySelector("img");
       const canvas = stage.querySelector("canvas");
 
@@ -1621,7 +1467,7 @@
         const dpr = window.devicePixelRatio || 1;
         canvas.width = Math.max(1, Math.round(rect.width * dpr));
         canvas.height = Math.max(1, Math.round(rect.height * dpr));
-        redrawStrokes(canvas, img.strokes);
+        drawStrokesOn(canvas, m.strokes);
       };
 
       editorCanvasEl = canvas;
@@ -1645,13 +1491,14 @@
         if (!drawMode) return;
         ev.preventDefault();
         isDrawing = true;
-        currentStroke = { color: drawColor, w: drawSize, pts: [getPos(ev)] };
+        const r = canvas.getBoundingClientRect();
+        currentStroke = { color: drawColor, w: drawSize / Math.max(1, r.width), pts: [getPos(ev)] };
       };
       const move = (ev) => {
         if (!isDrawing || !currentStroke) return;
         ev.preventDefault();
         currentStroke.pts.push(getPos(ev));
-        redrawStrokes(canvas, img.strokes.concat([currentStroke]));
+        drawStrokesOn(canvas, m.strokes.concat([currentStroke]));
       };
 
       canvas.addEventListener("mousedown", start);
@@ -1660,14 +1507,13 @@
       canvas.addEventListener("touchmove", move, { passive: false });
     }
 
-    // Finaliza el trazo actual (listener global único, registrado en setupEvents)
     function endStroke() {
       if (!isDrawing || !currentStroke) return;
-      const img = (editorItem && activeImageIndex >= 0) ? editorItem.images[activeImageIndex] : null;
+      const m = (editorItem && activeMediaIndex >= 0) ? editorItem.media[activeMediaIndex] : null;
       isDrawing = false;
-      if (img) {
-        img.strokes.push(currentStroke);
-        if (editorCanvasEl) redrawStrokes(editorCanvasEl, img.strokes);
+      if (m && m.type === "image") {
+        m.strokes.push(currentStroke);
+        if (editorCanvasEl) drawStrokesOn(editorCanvasEl, m.strokes);
       }
       currentStroke = null;
     }
@@ -1681,12 +1527,9 @@
 
       const btnMode = document.createElement("button");
       btnMode.className = "tool-btn" + (drawMode ? " active" : "");
-      btnMode.title = drawMode ? "Dibujando (clic para solo navegar)" : "Solo navegar (clic para dibujar)";
+      btnMode.title = "Dibujar";
       btnMode.innerHTML = `<i class="fa-solid fa-pencil"></i>`;
-      btnMode.addEventListener("click", () => {
-        drawMode = !drawMode;
-        renderEditorStage();
-      });
+      btnMode.addEventListener("click", () => { drawMode = !drawMode; renderEditorStage(); });
       wrap.appendChild(btnMode);
 
       const colors = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#a855f7", "#0f172a", "#ffffff"];
@@ -1713,103 +1556,131 @@
       undo.title = "Deshacer";
       undo.innerHTML = `<i class="fa-solid fa-rotate-left"></i>`;
       undo.addEventListener("click", () => {
-        const img = editorItem.images[activeImageIndex];
-        if (img && img.strokes.length > 0) {
-          img.strokes.pop();
-          renderEditorStage();
-        }
+        const m = editorItem.media[activeMediaIndex];
+        if (m && m.strokes.length > 0) { m.strokes.pop(); renderEditorStage(); }
       });
       wrap.appendChild(undo);
 
       const clear = document.createElement("button");
       clear.className = "tool-btn";
-      clear.title = "Limpiar dibujo";
+      clear.title = "Limpiar";
       clear.innerHTML = `<i class="fa-solid fa-eraser"></i>`;
       clear.addEventListener("click", () => {
-        const img = editorItem.images[activeImageIndex];
-        if (img) { img.strokes = []; renderEditorStage(); }
+        const m = editorItem.media[activeMediaIndex];
+        if (m) { m.strokes = []; renderEditorStage(); }
       });
       wrap.appendChild(clear);
 
       return wrap;
     }
 
-    function redrawStrokes(canvas, strokes) {
-      const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (!strokes) return;
-      const dpr = window.devicePixelRatio || 1;
+    // ============================================================
+    // SUBIDA A CLOUDINARY (drag & drop)
+    // ============================================================
+    async function uploadToCloudinary(file) {
+      const isVideo = file.type.startsWith("video/");
+      const endpoint = isVideo ? "video/upload" : "image/upload";
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("upload_preset", CLOUDINARY.UPLOAD_PRESET);
 
-      strokes.forEach(s => {
-        if (!s.pts || s.pts.length === 0) return;
-        ctx.strokeStyle = s.color;
-        ctx.lineWidth = s.w * dpr;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.beginPath();
-        s.pts.forEach((p, i) => {
-          const x = p.x * canvas.width;
-          const y = p.y * canvas.height;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        if (s.pts.length === 1) {
-          ctx.arc(s.pts[0].x * canvas.width, s.pts[0].y * canvas.height, (s.w * dpr) / 2, 0, Math.PI * 2);
-          ctx.fillStyle = s.color;
-          ctx.fill();
-        } else {
-          ctx.stroke();
-        }
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY.CLOUD_NAME}/${endpoint}`, {
+        method: "POST",
+        body: fd
       });
+      if (!res.ok) throw new Error("No se pudo subir el archivo");
+      const data = await res.json();
+      return { type: isVideo ? "video" : "image", url: data.secure_url, note: "", strokes: [] };
     }
 
-    function addImageToEditor() {
+    async function handleFiles(fileList) {
       if (!editorItem) return;
-      editorItem.images.push({ src: "", note: "", strokes: [] });
-      activeImageIndex = editorItem.images.length - 1;
-      renderImagesList();
-      renderEditorStage();
-      const inputs = document.querySelectorAll('#images-list [data-role="src"]');
-      if (inputs[activeImageIndex]) inputs[activeImageIndex].focus();
+      const files = Array.from(fileList || []).filter(f => f.type.startsWith("image/") || f.type.startsWith("video/"));
+      if (files.length === 0) return;
+
+      const dz = document.getElementById("dropzone");
+      dz.classList.add("uploading");
+      dz.textContent = "Subiendo...";
+
+      try {
+        for (const file of files) {
+          const media = await uploadToCloudinary(file);
+          editorItem.media.push(media);
+        }
+        // Selecciona la última imagen agregada para dibujar
+        const lastImg = editorItem.media.map(m => m.type).lastIndexOf("image");
+        if (lastImg >= 0) activeMediaIndex = lastImg;
+        else activeMediaIndex = editorItem.media.length - 1;
+      } catch (e) {
+        console.error(e);
+        alert("Error al subir el archivo. Intenta de nuevo.");
+      } finally {
+        dz.classList.remove("uploading");
+        dz.textContent = "Arrastra imágenes o videos aquí";
+        renderMediaList();
+        renderEditorStage();
+      }
     }
 
-    function saveEditor() {
+    async function saveEditor() {
       if (!isUserAdmin || !editorItem) return;
       const item = objectives.find(o => o.id === editorItem.id);
       if (!item) return;
 
       item.title = document.getElementById("ed-title").value.trim() || item.title;
       item.description = document.getElementById("ed-desc").value.trim();
-      item.video = document.getElementById("ed-video").value.trim();
+      item.media = editorItem.media.map(m => ({
+        type: m.type,
+        url: m.url,
+        note: (m.note || "").trim(),
+        strokes: m.strokes || []
+      }));
 
-      item.images = editorItem.images
-        .filter(img => (img.src || "").trim())
-        .map(img => ({
-          src: img.src.trim(),
-          note: (img.note || "").trim(),
-          strokes: img.strokes || []
-        }));
-
-      saveData();
       closeEditor();
       renderList();
+      await persistOne(item);
+      saveData();
     }
 
     function setupEvents() {
       document.getElementById("btn-toggle-admin").addEventListener("click", toggleEditMode);
       document.getElementById("btn-add-inline").addEventListener("click", addNewObjective);
 
+      // Visor
       document.getElementById("viewer-modal").addEventListener("click", (e) => {
         if (e.target.id === "viewer-modal") closeViewer();
       });
       setupViewerGestures();
 
+      // Editor
       document.getElementById("btn-close-editor").addEventListener("click", closeEditor);
       document.getElementById("btn-cancel-editor").addEventListener("click", closeEditor);
       document.getElementById("btn-save-editor").addEventListener("click", saveEditor);
-      document.getElementById("btn-add-image").addEventListener("click", addImageToEditor);
       document.getElementById("editor-modal").addEventListener("click", (e) => {
         if (e.target.id === "editor-modal") closeEditor();
+      });
+
+      // Zona de carga
+      const dz = document.getElementById("dropzone");
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*,video/*";
+      fileInput.multiple = true;
+      fileInput.style.display = "none";
+      document.body.appendChild(fileInput);
+
+      dz.addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", () => {
+        handleFiles(fileInput.files);
+        fileInput.value = "";
+      });
+
+      dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("dragover"); });
+      dz.addEventListener("dragleave", () => dz.classList.remove("dragover"));
+      dz.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dz.classList.remove("dragover");
+        handleFiles(e.dataTransfer.files);
       });
 
       window.addEventListener("keydown", (e) => {
@@ -1825,9 +1696,7 @@
 
       document.getElementById("ed-title").addEventListener("input", (e) => { if (editorItem) editorItem.title = e.target.value; });
       document.getElementById("ed-desc").addEventListener("input", (e) => { if (editorItem) editorItem.description = e.target.value; });
-      document.getElementById("ed-video").addEventListener("input", (e) => { if (editorItem) editorItem.video = e.target.value; });
 
-      // Listeners globales únicos para terminar el trazo y reajustar el lienzo
       window.addEventListener("mouseup", endStroke);
       window.addEventListener("touchend", endStroke);
       window.addEventListener("resize", () => {
