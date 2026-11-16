@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS public.avances (
     progress INTEGER NOT NULL DEFAULT 0,
     -- media: [{ type: "image"|"video", url, note, strokes: [{color, w, pts:[{x,y}]}] }]
     media JSONB NOT NULL DEFAULT '[]'::jsonb,
+    -- subfunctions: [{ id, title, description, progress, media, subfunctions: [] }]
+    subfunctions JSONB NOT NULL DEFAULT '[]'::jsonb,
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -25,6 +27,10 @@ CREATE TABLE IF NOT EXISTS public.avances (
 -- 3. Indices
 CREATE INDEX IF NOT EXISTS idx_avances_sort_order ON public.avances (sort_order);
 CREATE INDEX IF NOT EXISTS idx_avances_created_at ON public.avances (created_at);
+
+-- 3b. Si la tabla ya existia sin subfunciones, se agrega la columna
+ALTER TABLE public.avances
+    ADD COLUMN IF NOT EXISTS subfunctions JSONB NOT NULL DEFAULT '[]'::jsonb;
 
 -- 4. Row Level Security
 ALTER TABLE public.avances ENABLE ROW LEVEL SECURITY;

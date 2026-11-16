@@ -140,6 +140,73 @@
       box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
     }
 
+    /* SUBFUNCIONES */
+    .subfunctions-wrap {
+      display: none;
+      margin-top: 14px;
+      padding-left: 18px;
+      border-left: 2px solid #e2e8f0;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .subfunctions-wrap.open { display: flex; }
+
+    .objective-row.is-sub {
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      background: #f8fafc;
+    }
+    .objective-row.is-sub .media-thumb-box { width: 74px; height: 52px; }
+    .objective-row.is-sub .obj-title { font-size: 15px; }
+    .objective-row.is-sub .progress-pill { font-size: 13px; padding: 4px 12px; min-width: 52px; }
+
+    .sub-toggle-btn {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: none;
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 3px 6px;
+      margin-top: 4px;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      align-self: flex-start;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sub-toggle-btn.visible { display: inline-flex; }
+    .sub-toggle-btn:hover { background: #f1f5f9; color: #0f172a; }
+    .sub-toggle-btn .chev { transition: transform 0.2s ease; font-size: 10px; }
+    .sub-toggle-btn.open .chev { transform: rotate(90deg); }
+
+    .btn-add-sub {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: var(--radius-full);
+      border: 1px dashed #cbd5e1;
+      background: #ffffff;
+      color: #64748b;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+    body.is-admin-editing .btn-add-sub { display: inline-flex; }
+    .btn-add-sub:hover { border-color: #ea580c; color: #ea580c; background: #fff7ed; }
+
+    .computed-hint {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
     /* MINIATURA */
     .media-thumb-box {
       width: 90px;
@@ -822,6 +889,38 @@
       })).filter(m => m.url);
     }
 
+    // Normaliza una funcion (o subfuncion) con sus subfunciones
+    function normalizeItem(raw) {
+      return {
+        id: raw.id || newId(),
+        title: raw.title || "",
+        description: raw.description || "",
+        progress: Number(raw.progress) || 0,
+        media: normalizeMedia(raw.media),
+        subfunctions: Array.isArray(raw.subfunctions) ? raw.subfunctions.map(normalizeItem) : []
+      };
+    }
+
+    // Busca un item (funcion o subfuncion) por id en cualquier nivel
+    function findItem(id, list) {
+      const arr = list || objectives;
+      for (const o of arr) {
+        if (o.id === id) return o;
+        const found = findItem(id, o.subfunctions || []);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    // El progreso de una funcion con subfunciones es el promedio de estas
+    function computeProgress(item) {
+      if (Array.isArray(item.subfunctions) && item.subfunctions.length > 0) {
+        const total = item.subfunctions.reduce((sum, s) => sum + computeProgress(s), 0);
+        return Math.round(total / item.subfunctions.length);
+      }
+      return Math.max(0, Math.min(100, Number(item.progress) || 0));
+    }
+
     async function loadData() {
       try {
         const { data, error } = await sb
@@ -833,12 +932,13 @@
         if (error) throw error;
 
         if (data && data.length > 0) {
-          objectives = data.map(row => ({
+          objectives = data.map(row => normalizeItem({
             id: row.id,
             title: row.title || "",
             description: row.description || "",
             progress: Number(row.progress) || 0,
-            media: normalizeMedia(row.media)
+            media: row.media,
+            subfunctions: row.subfunctions
           }));
         } else {
           // Tabla vacía: se muestran los ejemplos (no se guardan)
@@ -866,8 +966,9 @@
             id: o.id,
             title: o.title || "",
             description: o.description || "",
-            progress: Number(o.progress) || 0,
+            progress: computeProgress(o),
             media: o.media || [],
+            subfunctions: o.subfunctions || [],
             sort_order: i,
             updated_at: new Date().toISOString()
           });
@@ -885,8 +986,9 @@
           id: item.id,
           title: item.title || "",
           description: item.description || "",
-          progress: Number(item.progress) || 0,
+          progress: computeProgress(item),
           media: item.media || [],
+          subfunctions: item.subfunctions || [],
           sort_order: index < 0 ? 0 : index,
           updated_at: new Date().toISOString()
         });
@@ -1009,6 +1111,106 @@
     }
 
     // RENDERIZAR LISTA
+    let collapsedIds = new Set();
+
+    function buildRow(item, depth, parentId) {
+      const color = getColorForProgress(computeProgress(item));
+      const primary = getPrimaryMedia(item);
+      const mediaCount = getMediaCount(item);
+      const subs = Array.isArray(item.subfunctions) ? item.subfunctions : [];
+      const hasSubs = subs.length > 0;
+      const isOpen = !collapsedIds.has(item.id);
+
+      const row = document.createElement("div");
+      row.className = "objective-row" + (depth > 0 ? " is-sub" : "");
+      row.dataset.id = item.id;
+
+      let thumbInner = `<div class="thumb-play-overlay"><div class="thumb-play-btn"></div></div>`;
+      if (primary.type === "video") {
+        thumbInner = `<video src="${escapeHtml(primary.url)}" preload="metadata" muted></video>` +
+          `<div class="thumb-play-overlay"><div class="thumb-play-btn"><i class="fa-solid fa-play"></i></div></div>`;
+      } else if (primary.type === "image") {
+        thumbInner = `<img src="${escapeHtml(primary.url)}" alt="">` +
+          `<div class="thumb-play-overlay"><div class="thumb-play-btn"><i class="fa-solid fa-expand"></i></div></div>`;
+      }
+
+      const countBadge = mediaCount > 1 ? `<div class="thumb-count-badge">${mediaCount}</div>` : "";
+
+      const subWord = subs.length === 1 ? "subfunción" : "subfunciones";
+
+      const sliderHtml = hasSubs
+        ? `<span class="computed-hint">Promedio de ${subs.length} ${subWord}</span>`
+        : `<div class="admin-slider-wrap">
+             <input type="range" class="admin-range-slider" min="0" max="100" value="${computeProgress(item)}"
+               oninput="window.handleSliderChange('${escapeHtml(item.id)}', this.value)">
+           </div>`;
+
+      const toggleHtml = hasSubs
+        ? `<button class="sub-toggle-btn visible ${isOpen ? 'open' : ''}" data-role="toggle-sub" data-id="${escapeHtml(item.id)}">
+             <i class="fa-solid fa-chevron-right chev"></i> ${subs.length} ${subWord}
+           </button>`
+        : ``;
+
+      const addSubHtml = depth === 0
+        ? `<button class="btn-add-sub" data-role="add-sub" data-id="${escapeHtml(item.id)}">
+             <i class="fa-solid fa-plus"></i> Subfunción
+           </button>`
+        : ``;
+
+      row.innerHTML = `
+        <div class="row-main">
+          <div class="drag-handle" title="Arrastra para reordenar"><i class="fa-solid fa-grip-vertical"></i></div>
+
+          <div class="media-thumb-box ${color.is100 ? 'is-100' : ''}" onclick="window.openViewer('${escapeHtml(item.id)}')" title="Ver contenido">
+            ${thumbInner}
+            ${countBadge}
+          </div>
+
+          <div class="obj-info-col">
+            <span class="obj-title">${escapeHtml(item.title)}</span>
+            ${item.description ? `<p class="obj-desc">${escapeHtml(item.description)}</p>` : ''}
+            ${toggleHtml}
+          </div>
+
+          <div class="obj-progress-col">
+            ${sliderHtml}
+
+            <span class="progress-pill pill-${escapeHtml(item.id)}" style="background-color: ${color.bg}; color: ${color.text}; border-color: ${color.border};">
+              ${computeProgress(item)}%
+            </span>
+
+            <div class="admin-actions">
+              <button class="btn-action-icon" title="Editar" onclick="window.openEditor('${escapeHtml(item.id)}')">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button class="btn-action-icon btn-delete" title="Eliminar" onclick="window.deleteObjective('${escapeHtml(item.id)}')">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Contenedor de subfunciones (recursivo)
+      const subWrap = document.createElement("div");
+      subWrap.className = "subfunctions-wrap" + (isOpen ? " open" : "");
+      subWrap.dataset.parentId = item.id;
+      subs.forEach(sub => subWrap.appendChild(buildRow(sub, depth + 1, item.id)));
+
+      // Boton para agregar subfuncion (solo en funciones de primer nivel)
+      if (addSubHtml) {
+        const bar = document.createElement("div");
+        bar.style.marginTop = "12px";
+        bar.innerHTML = addSubHtml;
+        row.appendChild(subWrap);
+        row.appendChild(bar);
+      } else {
+        row.appendChild(subWrap);
+      }
+
+      return row;
+    }
+
     function renderList() {
       const listContainer = document.getElementById("objectives-list");
       listContainer.innerHTML = "";
@@ -1023,72 +1225,23 @@
       }
 
       objectives.forEach(item => {
-        const color = getColorForProgress(item.progress);
-        const primary = getPrimaryMedia(item);
-        const mediaCount = getMediaCount(item);
-
-        const row = document.createElement("div");
-        row.className = "objective-row";
-        row.dataset.id = item.id;
-
-        let thumbInner = `<div class="thumb-play-overlay"><div class="thumb-play-btn"></div></div>`;
-        if (primary.type === "video") {
-          thumbInner = `<video src="${escapeHtml(primary.url)}" preload="metadata" muted></video>` +
-            `<div class="thumb-play-overlay"><div class="thumb-play-btn"><i class="fa-solid fa-play"></i></div></div>`;
-        } else if (primary.type === "image") {
-          thumbInner = `<img src="${escapeHtml(primary.url)}" alt="">` +
-            `<div class="thumb-play-overlay"><div class="thumb-play-btn"><i class="fa-solid fa-expand"></i></div></div>`;
-        }
-
-        const countBadge = mediaCount > 1 ? `<div class="thumb-count-badge">${mediaCount}</div>` : "";
-
-        row.innerHTML = `
-          <div class="row-main">
-            <div class="drag-handle" title="Arrastra para reordenar"><i class="fa-solid fa-grip-vertical"></i></div>
-
-            <div class="media-thumb-box ${color.is100 ? 'is-100' : ''}" onclick="window.openViewer('${escapeHtml(item.id)}')" title="Ver contenido">
-              ${thumbInner}
-              ${countBadge}
-            </div>
-
-            <div class="obj-info-col">
-              <span class="obj-title">${escapeHtml(item.title)}</span>
-              ${item.description ? `<p class="obj-desc">${escapeHtml(item.description)}</p>` : ''}
-            </div>
-
-            <div class="obj-progress-col">
-              <div class="admin-slider-wrap">
-                <input type="range" class="admin-range-slider" min="0" max="100" value="${item.progress}"
-                  oninput="window.handleSliderChange('${escapeHtml(item.id)}', this.value)">
-              </div>
-
-              <span class="progress-pill pill-${escapeHtml(item.id)}" style="background-color: ${color.bg}; color: ${color.text}; border-color: ${color.border};">
-                ${item.progress}%
-              </span>
-
-              <div class="admin-actions">
-                <button class="btn-action-icon" title="Editar función" onclick="window.openEditor('${escapeHtml(item.id)}')">
-                  <i class="fa-solid fa-pen"></i>
-                </button>
-                <button class="btn-action-icon btn-delete" title="Eliminar función" onclick="window.deleteObjective('${escapeHtml(item.id)}')">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-
-        listContainer.appendChild(row);
+        listContainer.appendChild(buildRow(item, 0, null));
       });
 
       attachDragHandlers();
     }
 
-    // ARRASTRAR Y SOLTAR PARA REORDENAR
+    // ARRASTRAR Y SOLTAR PARA REORDENAR (por contenedor: nivel superior o subfunciones)
+    function getContainerArray(container) {
+      const pid = container.dataset.parentId;
+      if (!pid) return objectives;
+      const parent = findItem(pid);
+      return parent ? parent.subfunctions : null;
+    }
+
     function attachDragHandlers() {
-      const rows = document.querySelectorAll(".objective-row");
-      rows.forEach(row => {
-        const handle = row.querySelector(".drag-handle");
+      document.querySelectorAll(".objective-row").forEach(row => {
+        const handle = row.querySelector(":scope > .row-main > .drag-handle");
         if (!handle) return;
 
         handle.setAttribute("draggable", "true");
@@ -1103,67 +1256,111 @@
         handle.addEventListener("dragend", () => {
           row.classList.remove("dragging");
           document.querySelectorAll(".objective-row").forEach(r => r.classList.remove("drop-target"));
-          commitDragOrder();
+          commitDragOrder(row.parentElement);
         });
 
         row.addEventListener("dragover", (e) => {
           if (!isUserAdmin || !isEditingActive) return;
+          if (e.target.closest(".objective-row") !== row) return;
           const dragging = document.querySelector(".objective-row.dragging");
           if (!dragging || dragging === row) return;
+          // Solo se reordena dentro del mismo contenedor
+          if (dragging.parentElement !== row.parentElement) return;
           e.preventDefault();
 
-          const list = document.getElementById("objectives-list");
+          const container = row.parentElement;
           const rect = row.getBoundingClientRect();
           const after = (e.clientY - rect.top) > rect.height / 2;
 
           document.querySelectorAll(".objective-row").forEach(r => r.classList.remove("drop-target"));
           row.classList.add("drop-target");
 
-          if (after) list.insertBefore(dragging, row.nextSibling);
-          else list.insertBefore(dragging, row);
+          if (after) container.insertBefore(dragging, row.nextSibling);
+          else container.insertBefore(dragging, row);
         });
 
         row.addEventListener("drop", (e) => {
           if (!isUserAdmin || !isEditingActive) return;
+          if (e.target.closest(".objective-row") !== row) return;
           e.preventDefault();
           document.querySelectorAll(".objective-row").forEach(r => r.classList.remove("drop-target"));
-          commitDragOrder();
+          commitDragOrder(row.parentElement);
         });
       });
     }
 
-    function commitDragOrder() {
-      if (!isUserAdmin || !isEditingActive) return;
-      const ids = Array.from(document.querySelectorAll(".objective-row")).map(r => r.dataset.id);
-      const reordered = [];
-      ids.forEach(id => {
-        const found = objectives.find(o => o.id === id);
-        if (found) reordered.push(found);
-      });
-      if (reordered.length === objectives.length) {
-        objectives = reordered;
+    function commitDragOrder(container) {
+      if (!isUserAdmin || !isEditingActive || !container) return;
+      const arr = getContainerArray(container);
+      if (!arr) return;
+
+      const ids = Array.from(container.querySelectorAll(":scope > .objective-row")).map(r => r.dataset.id);
+      const reordered = ids.map(id => arr.find(o => o.id === id)).filter(Boolean);
+      if (reordered.length === arr.length) {
+        arr.splice(0, arr.length, ...reordered);
         saveData();
       }
     }
 
+    // Alternar subfunciones
+    window.toggleSubfunctions = function(id, btn) {
+      const wrap = document.querySelector(`.subfunctions-wrap[data-parent-id="${CSS.escape(id)}"]`);
+      if (!wrap) return;
+      const open = wrap.classList.toggle("open");
+      if (btn) btn.classList.toggle("open", open);
+      if (open) collapsedIds.delete(id); else collapsedIds.add(id);
+    };
+
     window.handleSliderChange = function(id, val) {
       if (!isUserAdmin) return;
-      const p = Math.max(0, Math.min(100, parseInt(val, 10) || 0));
-      const item = objectives.find(o => o.id === id);
+      const item = findItem(id);
       if (!item) return;
+      if (Array.isArray(item.subfunctions) && item.subfunctions.length > 0) return; // progreso calculado
 
+      const p = Math.max(0, Math.min(100, parseInt(val, 10) || 0));
       item.progress = p;
 
-      const pill = document.querySelector(`.pill-${id}`);
-      if (pill) {
-        const color = getColorForProgress(p);
-        pill.textContent = p + "%";
-        pill.style.backgroundColor = color.bg;
-        pill.style.color = color.text;
-        pill.style.borderColor = color.border;
-      }
-      persistOne(item);
+      // Actualiza los porcentajes (incluye el promedio de la funcion padre)
+      refreshProgressPills();
+
+      // Se persiste la fila de primer nivel que contiene este item
+      const root = findTopLevel(id);
+      if (root) persistOne(root);
     };
+
+    function findTopLevel(id) {
+      for (const o of objectives) {
+        if (o.id === id) return o;
+        if (containsId(o.subfunctions || [], id)) return o;
+      }
+      return null;
+    }
+
+    function containsId(list, id) {
+      for (const o of list) {
+        if (o.id === id) return true;
+        if (containsId(o.subfunctions || [], id)) return true;
+      }
+      return false;
+    }
+
+    function refreshProgressPills() {
+      const walk = (list) => {
+        list.forEach(o => {
+          const pill = document.querySelector(`.pill-${CSS.escape(o.id)}`);
+          if (pill) {
+            const p = computeProgress(o);
+            const color = getColorForProgress(p);
+            pill.textContent = p + "%";
+            pill.style.backgroundColor = color.bg;
+            pill.style.color = color.text;
+            pill.style.borderColor = color.border;
+          }
+          if (o.subfunctions && o.subfunctions.length) walk(o.subfunctions);
+        });
+      };
+      walk(objectives);
+    }
 
     function addNewObjective() {
       if (!isUserAdmin) return;
@@ -1172,7 +1369,8 @@
         title: "Nueva Función",
         description: "",
         progress: 10,
-        media: []
+        media: [],
+        subfunctions: []
       };
       objectives.unshift(item);
       renderList();
@@ -1180,29 +1378,69 @@
       window.openEditor(item.id);
     }
 
+    window.addSubfunction = function(parentId) {
+      if (!isUserAdmin) return;
+      const parent = findItem(parentId);
+      if (!parent) return;
+      if (!Array.isArray(parent.subfunctions)) parent.subfunctions = [];
+
+      const sub = {
+        id: newId(),
+        title: "Nueva Subfunción",
+        description: "",
+        progress: 10,
+        media: [],
+        subfunctions: []
+      };
+      parent.subfunctions.push(sub);
+      collapsedIds.delete(parentId);
+      renderList();
+      saveData();
+      window.openEditor(sub.id);
+    };
+
     window.deleteObjective = async function(id) {
       if (!isUserAdmin) return;
-      const item = objectives.find(o => o.id === id);
+      const item = findItem(id);
       if (!item) return;
 
       if (confirm(`¿Eliminar "${item.title}"?`)) {
-        objectives = objectives.filter(o => o.id !== id);
+        removeItemById(id);
         if (editingId === id) editingId = null;
         renderList();
-        try {
-          await sb.from(TABLE).delete().eq("id", id);
-          saveData();
-        } catch (e) {
-          console.error("Error eliminando:", e);
-        }
+        await persistAll();
       }
     };
+
+    function removeItemById(id) {
+      // Nivel superior
+      const topIdx = objectives.findIndex(o => o.id === id);
+      if (topIdx >= 0) {
+        objectives.splice(topIdx, 1);
+        return true;
+      }
+      // Buscar en subfunciones (recursivo)
+      for (const o of objectives) {
+        if (removeFromArray(o.subfunctions || [], id)) return true;
+      }
+      return false;
+    }
+
+    function removeFromArray(arr, id) {
+      const idx = arr.findIndex(o => o.id === id);
+      if (idx >= 0) { arr.splice(idx, 1); return true; }
+      for (const o of arr) {
+        if (removeFromArray(o.subfunctions || [], id)) return true;
+      }
+      return false;
+    }
+
 
     // ============================================================
     // VISOR DE MEDIOS (SLIDE)
     // ============================================================
     window.openViewer = function(id) {
-      const item = objectives.find(o => o.id === id);
+      const item = findItem(id);
       if (!item) return;
 
       viewerItems = Array.isArray(item.media) ? item.media : [];
@@ -1357,7 +1595,7 @@
     // ============================================================
     window.openEditor = function(id) {
       if (!isUserAdmin) return;
-      const item = objectives.find(o => o.id === id);
+      const item = findItem(id);
       if (!item) return;
 
       editingId = id;
@@ -1366,6 +1604,7 @@
       editorItem.media.forEach(m => {
         if (!Array.isArray(m.strokes)) m.strokes = [];
       });
+      if (!Array.isArray(editorItem.subfunctions)) editorItem.subfunctions = [];
 
       document.getElementById("ed-title").value = editorItem.title || "";
       document.getElementById("ed-desc").value = editorItem.description || "";
@@ -1378,6 +1617,13 @@
       renderEditorStage();
       document.getElementById("editor-modal").classList.add("active");
     };
+
+    function isSubfunctionId(id) {
+      for (const o of objectives) {
+        if ((o.subfunctions || []).some(s => s.id === id)) return true;
+      }
+      return false;
+    }
 
     function closeEditor() {
       document.getElementById("editor-modal").classList.remove("active");
@@ -1624,7 +1870,7 @@
 
     async function saveEditor() {
       if (!isUserAdmin || !editorItem) return;
-      const item = objectives.find(o => o.id === editorItem.id);
+      const item = findItem(editorItem.id);
       if (!item) return;
 
       item.title = document.getElementById("ed-title").value.trim() || item.title;
@@ -1636,15 +1882,33 @@
         strokes: m.strokes || []
       }));
 
+      // Las subfunciones se administran desde la lista, aqui se conservan
+      if (!Array.isArray(item.subfunctions)) item.subfunctions = [];
+
       closeEditor();
       renderList();
-      await persistOne(item);
-      saveData();
+      await persistAll();
     }
 
     function setupEvents() {
       document.getElementById("btn-toggle-admin").addEventListener("click", toggleEditMode);
       document.getElementById("btn-add-inline").addEventListener("click", addNewObjective);
+
+      // Botones de subfunciones en la lista (delegacion de eventos)
+      document.getElementById("objectives-list").addEventListener("click", (e) => {
+        const toggle = e.target.closest('[data-role="toggle-sub"]');
+        if (toggle) {
+          e.stopPropagation();
+          window.toggleSubfunctions(toggle.dataset.id, toggle);
+          return;
+        }
+        const addSub = e.target.closest('[data-role="add-sub"]');
+        if (addSub) {
+          e.stopPropagation();
+          window.addSubfunction(addSub.dataset.id);
+          return;
+        }
+      });
 
       // Visor
       document.getElementById("viewer-modal").addEventListener("click", (e) => {
