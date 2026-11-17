@@ -503,7 +503,7 @@
 
     .editor-body {
       display: grid;
-      grid-template-columns: 1.2fr 1fr;
+      grid-template-columns: 1.5fr 1fr;
       gap: 0;
       overflow: hidden;
       flex: 1;
@@ -520,6 +520,88 @@
       overflow-y: auto;
       background: #f8fafc;
     }
+
+    /* Espacio de trabajo: imagen (izq) + panel de notas (der) */
+    .editor-workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 240px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .notes-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      padding: 12px;
+      min-height: 0;
+    }
+    .notes-panel-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .notes-panel-title i { color: #ea580c; }
+    .notes-panel-hint { font-size: 11px; color: #94a3b8; line-height: 1.35; }
+    .notes-panel-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+    .notes-panel-empty { font-size: 12px; color: #cbd5e1; font-style: italic; padding: 4px 0; }
+
+    .notes-panel-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-sm);
+      padding: 6px 8px;
+      background: #f8fafc;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .notes-panel-item:hover { border-color: #cbd5e1; }
+    .notes-panel-item.active { border-color: #ea580c; box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.12); }
+    .notes-panel-item .np-text {
+      flex: 1;
+      font-size: 12px;
+      color: #0f172a;
+      line-height: 1.35;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    .notes-panel-item .np-text.empty { color: #94a3b8; font-style: italic; }
+    .notes-panel-item .np-actions { display: flex; flex-direction: column; gap: 2px; }
+    .notes-panel-item .np-btn {
+      border: none;
+      background: transparent;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 11px;
+      padding: 1px;
+      line-height: 1;
+    }
+    .notes-panel-item .np-btn:hover { color: #ea580c; }
+    .notes-panel-item .np-btn.del:hover { color: #ef4444; }
+
+    .notes-panel-add { display: flex; flex-direction: column; gap: 6px; }
+    .notes-panel-add textarea {
+      width: 100%;
+      resize: vertical;
+      min-height: 46px;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--radius-sm);
+      padding: 7px 9px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #0f172a;
+      outline: none;
+    }
+    .notes-panel-add textarea:focus { border-color: #ea580c; }
+    .notes-panel-add .btn { width: 100%; justify-content: center; }
 
     .editor-right {
       padding: 18px 22px;
@@ -571,15 +653,7 @@
       height: 100%;
       pointer-events: none;
     }
-    .editor-stage > video {
-      display: block;
-      max-width: 100%;
-      max-height: 46vh;
-      width: auto;
-      height: auto;
-    }
     .editor-stage.drawing canvas { pointer-events: auto; cursor: crosshair; }
-    .editor-stage.tool-note canvas { pointer-events: auto; cursor: copy; }
     .editor-stage.tool-text canvas { pointer-events: auto; cursor: text; }
     .editor-stage.tool-pan { cursor: grab; }
     .editor-stage.tool-pan:active { cursor: grabbing; }
@@ -626,21 +700,15 @@
       cursor: pointer;
       padding: 0 2px;
     }
-    .editor-note .note-input {
+    .editor-note .note-view {
       padding: 6px 9px;
       min-height: 18px;
-      outline: none;
       white-space: pre-wrap;
       word-break: break-word;
-      cursor: text;
       color: #0f172a;
+      user-select: none;
     }
-    .editor-note .note-input:empty::before {
-      content: attr(data-ph);
-      color: #94a3b8;
-      font-style: italic;
-    }
-    .editor-note.placeholder { color: #94a3b8; font-style: italic; }
+    .editor-note .note-view.note-view-empty { color: #94a3b8; font-style: italic; }
 
     /* Entrada de texto flotante (herramienta Texto) */
     .editor-text-input {
@@ -826,6 +894,40 @@
       .obj-progress-col { width: 100%; justify-content: space-between; margin-left: 0; }
       .admin-slider-wrap { width: 100%; }
     }
+    /* ============================================================
+       AVISOS (TOAST)
+       ============================================================ */
+    .toast-wrap {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      z-index: 5000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      max-width: 90vw;
+      background: #0f172a;
+      color: #fff;
+      font-size: 13px;
+      line-height: 1.4;
+      padding: 10px 14px;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: toastIn 0.2s ease-out;
+    }
+    .toast.err { background: #7f1d1d; }
+    .toast.ok { background: #14532d; }
+    .toast.warn { background: #78350f; }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
@@ -855,6 +957,8 @@
     </div>
   </div>
 
+  <div class="toast-wrap" id="toast-wrap"></div>
+
   <!-- EDITOR DE FUNCION -->
   <div class="editor-overlay" id="editor-modal">
     <div class="editor-modal">
@@ -865,9 +969,20 @@
       <div class="editor-body">
         <div class="editor-left">
           <span class="field-label">Editar la imagen seleccionada</span>
-          <div class="editor-stage-wrap">
-            <div class="editor-stage" id="editor-stage"></div>
-            <div class="draw-toolbar" id="draw-toolbar"></div>
+          <div class="editor-workspace">
+            <div class="editor-stage-wrap">
+              <div class="editor-stage" id="editor-stage"></div>
+              <div class="draw-toolbar" id="draw-toolbar"></div>
+            </div>
+            <aside class="notes-panel" id="notes-panel">
+              <div class="notes-panel-title"><i class="fa-solid fa-note-sticky"></i> Notas</div>
+              <div class="notes-panel-hint">Escribe aquí y agrégala. Luego arrástrala sobre la imagen o video.</div>
+              <div class="notes-panel-list" id="notes-panel-list"></div>
+              <div class="notes-panel-add">
+                <textarea id="note-new-text" placeholder="Escribe una nota..."></textarea>
+                <button class="btn btn-primary" id="btn-add-note">Agregar nota</button>
+              </div>
+            </aside>
           </div>
         </div>
         <div class="editor-right">
@@ -904,38 +1019,39 @@
 
     const TABLE = "avances";
 
-    // Datos de ejemplo (solo si la tabla está vacía)
+    // Datos de ejemplo (solo si la tabla está vacía).
+    // Nota: los id deben ser UUID validos porque la tabla usa UUID como PK.
     const DEFAULT_OBJECTIVES = [
       {
-        id: "obj-1",
+        id: "11111111-1111-4111-8111-111111111101",
         title: "Online payment",
         description: "Integración de pasarela de pagos con Stripe Connect para pedidos y reservas.",
         progress: 95,
         media: [{ type: "video", url: "./assets/misAvances/img/onlinepayment.mp4", notes: [], strokes: [] }]
       },
       {
-        id: "obj-2",
+        id: "11111111-1111-4111-8111-111111111102",
         title: "Menu creation",
         description: "Constructor visual de categorías y platillos en tiempo real.",
         progress: 100,
         media: [{ type: "video", url: "./assets/misAvances/img/menucreation.mp4", notes: [], strokes: [] }]
       },
       {
-        id: "obj-3",
+        id: "11111111-1111-4111-8111-111111111103",
         title: "Generador de menu con MenutechIA",
         description: "Lectura de fotos de menú físico e importación automática con IA.",
         progress: 85,
         media: [{ type: "video", url: "./assets/misAvances/img/menutechia.mp4", notes: [], strokes: [] }]
       },
       {
-        id: "obj-4",
+        id: "11111111-1111-4111-8111-111111111104",
         title: "App Android Flutter",
         description: "Aplicación nativa para restaurantes con alertas sonoras y comanderas.",
         progress: 90,
         media: [{ type: "video", url: "./assets/misAvances/img/appflutter.mp4", notes: [], strokes: [] }]
       },
       {
-        id: "obj-5",
+        id: "11111111-1111-4111-8111-111111111105",
         title: "Google play store",
         description: "Preparación de bundle AAB y publicación en Google Play Console.",
         progress: 60,
@@ -966,6 +1082,7 @@
     let editorZoom = 1;          // 1 | 2 | 3
     let editorPan = { x: 0, y: 0 };
     let activeNoteId = null;     // nota seleccionada en el editor
+    let imgElRef = null;         // referencia a la imagen activa del editor
 
     // INICIALIZACION
     async function init() {
@@ -1058,60 +1175,106 @@
             media: row.media,
             subfunctions: row.subfunctions
           }));
+          saveLocalBackup();
         } else {
-          // Tabla vacía: se muestran los ejemplos (no se guardan)
-          objectives = JSON.parse(JSON.stringify(DEFAULT_OBJECTIVES));
+          // Tabla vacía: usa el respaldo local si existe; si no, los ejemplos
+          const backup = loadLocalBackup();
+          objectives = (backup && backup.length)
+            ? backup.map(normalizeItem)
+            : JSON.parse(JSON.stringify(DEFAULT_OBJECTIVES));
         }
       } catch (e) {
         console.error("Error cargando avances:", e);
-        objectives = JSON.parse(JSON.stringify(DEFAULT_OBJECTIVES));
+        lastLoadError = e;
+        // Si no se pudo leer de Supabase, usa el respaldo local; si no, los ejemplos
+        const backup = loadLocalBackup();
+        objectives = (backup && backup.length)
+          ? backup.map(normalizeItem)
+          : JSON.parse(JSON.stringify(DEFAULT_OBJECTIVES));
       }
+    }
+
+    // Avisos visuales (para que el usuario vea si algo fallo)
+    function toast(msg, kind) {
+      const wrap = document.getElementById("toast-wrap");
+      if (!wrap) { console.log("[toast]", msg); return; }
+      const el = document.createElement("div");
+      el.className = "toast" + (kind ? " " + kind : "");
+      el.textContent = msg;
+      wrap.appendChild(el);
+      setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity 0.3s"; }, 3600);
+      setTimeout(() => el.remove(), 4000);
+    }
+
+    // Respaldo local: guarda en localStorage para no perder cambios si Supabase falla
+    const LOCAL_KEY = "mt_avances_backup";
+    function saveLocalBackup() {
+      try { localStorage.setItem(LOCAL_KEY, JSON.stringify(objectives)); } catch (e) {}
+    }
+    function loadLocalBackup() {
+      try {
+        const raw = localStorage.getItem(LOCAL_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) { return null; }
     }
 
     // Persistencia en Supabase (solo admin)
     let saveTimer = null;
+    let lastSaveError = null;
+    let lastLoadError = null;
     function saveData() {
       if (!isUserAdmin) return;
+      saveLocalBackup();
       clearTimeout(saveTimer);
       saveTimer = setTimeout(persistAll, 250);
     }
 
     async function persistAll() {
-      try {
-        for (let i = 0; i < objectives.length; i++) {
-          const o = objectives[i];
-          await sb.from(TABLE).upsert({
-            id: o.id,
-            title: o.title || "",
-            description: o.description || "",
-            progress: computeProgress(o),
-            media: o.media || [],
-            subfunctions: o.subfunctions || [],
-            sort_order: i,
-            updated_at: new Date().toISOString()
-          });
-        }
-      } catch (e) {
-        console.error("Error guardando avances:", e);
+      if (!isUserAdmin) return;
+      let firstError = null;
+      for (let i = 0; i < objectives.length; i++) {
+        const o = objectives[i];
+        const { error } = await sb.from(TABLE).upsert({
+          id: o.id,
+          title: o.title || "",
+          description: o.description || "",
+          progress: computeProgress(o),
+          media: o.media || [],
+          subfunctions: o.subfunctions || [],
+          sort_order: i,
+          updated_at: new Date().toISOString()
+        });
+        if (error && !firstError) firstError = error;
       }
+      if (firstError) {
+        lastSaveError = firstError;
+        console.error("Error guardando avances:", firstError);
+        toast("No se pudo guardar en el servidor: " + (firstError.message || "error desconocido") +
+              ". Los cambios quedan guardados en este navegador.", "err");
+      } else {
+        lastSaveError = null;
+      }
+      return !firstError;
     }
 
     async function persistOne(item) {
       if (!isUserAdmin) return;
-      try {
-        const index = objectives.findIndex(o => o.id === item.id);
-        await sb.from(TABLE).upsert({
-          id: item.id,
-          title: item.title || "",
-          description: item.description || "",
-          progress: computeProgress(item),
-          media: item.media || [],
-          subfunctions: item.subfunctions || [],
-          sort_order: index < 0 ? 0 : index,
-          updated_at: new Date().toISOString()
-        });
-      } catch (e) {
-        console.error("Error guardando avance:", e);
+      saveLocalBackup();
+      const index = objectives.findIndex(o => o.id === item.id);
+      const { error } = await sb.from(TABLE).upsert({
+        id: item.id,
+        title: item.title || "",
+        description: item.description || "",
+        progress: computeProgress(item),
+        media: item.media || [],
+        subfunctions: item.subfunctions || [],
+        sort_order: index < 0 ? 0 : index,
+        updated_at: new Date().toISOString()
+      });
+      if (error) {
+        console.error("Error guardando avance:", error);
+        toast("No se pudo guardar en el servidor: " + (error.message || "error desconocido") +
+              ". Los cambios quedan guardados en este navegador.", "err");
       }
     }
 
@@ -1169,6 +1332,11 @@
     function enableAdminUI() {
       isUserAdmin = true;
       document.body.classList.add("is-admin-user");
+      // Avisa al admin si hubo problemas de lectura al cargar
+      if (lastLoadError) {
+        toast("Atención: no se pudo leer la tabla 'avances'. " +
+              "Revisa que el SQL se haya ejecutado en Supabase. " + (lastLoadError.message || ""), "err");
+      }
     }
 
     function disableAdminUI() {
@@ -1582,6 +1750,15 @@
           v.controls = true;
           v.playsInline = true;
           wrap.appendChild(v);
+
+          // Las notas tambien se muestran sobre el video
+          const notes = Array.isArray(m.notes) ? m.notes : [];
+          if (notes.length > 0) {
+            const layer = document.createElement("div");
+            layer.className = "viewer-notes-layer";
+            wrap.appendChild(layer);
+            positionViewerNotes(v, layer, notes);
+          }
         } else {
           const img = document.createElement("img");
           img.src = m.url;
@@ -1613,10 +1790,12 @@
       document.getElementById("viewer-modal").classList.add("active");
     };
 
-    // Coloca las notas segun su posicion relativa (0..1) dentro de la imagen
-    function positionViewerNotes(img, layer, notes) {
+    // Coloca las notas segun su posicion relativa dentro de la imagen/video.
+    // Se usa el ancho/alto del cuadro real (no solo la imagen) para permitir
+    // notas dentro o ligeramente fuera del medio.
+    function positionViewerNotes(mediaEl, layer, notes) {
       const place = () => {
-        const w = img.clientWidth, h = img.clientHeight;
+        const w = mediaEl.clientWidth, h = mediaEl.clientHeight;
         if (!w || !h) return;
         layer.style.width = w + "px";
         layer.style.height = h + "px";
@@ -1635,8 +1814,13 @@
           box.style.top = (n.y * h) + "px";
         });
       };
-      if (img.complete) place();
-      img.addEventListener("load", place);
+      if (mediaEl.tagName === "VIDEO") {
+        if (mediaEl.readyState >= 1) place();
+        mediaEl.addEventListener("loadedmetadata", place);
+      } else {
+        if (mediaEl.complete) place();
+      }
+      mediaEl.addEventListener("load", place);
     }
 
     function attachViewerStrokes(img, canvas, strokes) {
@@ -1838,16 +2022,13 @@
           : `<img src="${escapeHtml(m.url)}" alt="" onerror="this.style.display='none'">`;
 
         let infoHtml = "";
-        if (m.type === "image") {
-          const nCount = Array.isArray(m.notes) ? m.notes.length : 0;
-          const sCount = Array.isArray(m.strokes) ? m.strokes.length : 0;
-          const parts = [];
-          if (nCount > 0) parts.push(`${nCount} nota${nCount === 1 ? '' : 's'}`);
-          if (sCount > 0) parts.push(`${sCount} trazo${sCount === 1 ? '' : 's'}`);
-          infoHtml = `<span style="font-size:12px;color:#94a3b8;">${parts.length ? parts.join(' · ') : 'Sin anotaciones'}</span>`;
-        } else {
-          infoHtml = `<span style="font-size:12px;color:#94a3b8;">Video</span>`;
-        }
+        const nCount = Array.isArray(m.notes) ? m.notes.length : 0;
+        const sCount = Array.isArray(m.strokes) ? m.strokes.length : 0;
+        const parts = [];
+        if (nCount > 0) parts.push(`${nCount} nota${nCount === 1 ? '' : 's'}`);
+        if (sCount > 0) parts.push(`${sCount} trazo${sCount === 1 ? '' : 's'}`);
+        if (m.type === "video") parts.unshift("Video");
+        infoHtml = `<span style="font-size:12px;color:#94a3b8;">${parts.length ? parts.join(' · ') : 'Sin anotaciones'}</span>`;
 
         el.innerHTML = `
           <div class="media-item-thumb">${thumbHtml}</div>
@@ -1890,13 +2071,36 @@
         stage.innerHTML = `<div class="editor-empty">Agrega una imagen o video</div>`;
         editorCanvasEl = null;
         editorSetupCanvasFn = null;
+        imgElRef = null;
+        renderNotesPanel();
         return;
       }
 
       if (m.type === "video") {
-        stage.innerHTML = `<video src="${escapeHtml(m.url)}" controls playsinline></video>`;
+        // Contenedor para poder poner notas tambien sobre el video
+        const vidLayer = document.createElement("div");
+        vidLayer.className = "editor-zoom-layer";
+        vidLayer.innerHTML = `<video src="${escapeHtml(m.url)}" controls playsinline></video>`;
+        stage.appendChild(vidLayer);
+
+        const videoEl = vidLayer.querySelector("video");
+        imgElRef = videoEl;           // se usa como referencia para posicionar notas
+        const notesLayer = document.createElement("div");
+        notesLayer.className = "editor-notes-layer";
+        vidLayer.appendChild(notesLayer);
+
         editorCanvasEl = null;
         editorSetupCanvasFn = null;
+
+        // La capa de notas usa inset:0 sobre el zoom-layer (que abraza al video),
+        // asi que basta con renderizar; se re-renderiza al conocer las dimensiones.
+        renderEditorNotes(notesLayer, videoEl, m);
+        const rerender = () => renderEditorNotes(notesLayer, videoEl, m);
+        videoEl.addEventListener("loadedmetadata", rerender);
+        videoEl.addEventListener("load", rerender);
+        videoEl.addEventListener("loadeddata", rerender);
+
+        renderNotesPanel();
         return;
       }
 
@@ -1910,6 +2114,7 @@
       stage.appendChild(zoomLayer);
 
       const imgEl = zoomLayer.querySelector("img");
+      imgElRef = imgEl;
       const canvas = zoomLayer.querySelector("canvas");
       const notesLayer = document.createElement("div");
       notesLayer.className = "editor-notes-layer";
@@ -1939,6 +2144,9 @@
 
       if (imgEl.complete) setupCanvas();
       imgEl.addEventListener("load", setupCanvas);
+
+      // Refresca el panel de notas para la imagen activa
+      renderNotesPanel();
 
       toolbar.appendChild(buildToolbar());
 
@@ -1984,13 +2192,6 @@
       canvas.addEventListener("click", (ev) => {
         if (drawTool !== "text") return;
         openTextInput(zoomLayer, canvas, imgEl, m, getPos(ev));
-      });
-
-      // Herramienta de nota: clic para crear una nota en esa posicion
-      canvas.addEventListener("click", (ev) => {
-        if (drawTool !== "note") return;
-        const p = getPos(ev);
-        addNoteAt(p);
       });
 
       // Herramienta de mano (pan)
@@ -2057,7 +2258,8 @@
       inp.addEventListener("click", (e) => e.stopPropagation());
     }
 
-    // Renderiza las notas (cuadros movibles) sobre la imagen del editor
+    // Renderiza las notas como cuadros movibles sobre la imagen del editor.
+    // El texto se edita en el panel lateral; aqui solo se muestra y se arrastra.
     function renderEditorNotes(layer, imgEl, m) {
       layer.innerHTML = "";
       m.notes.forEach((n) => {
@@ -2071,44 +2273,146 @@
             `<span class="note-grip" title="Arrastrar">⠿</span>` +
             `<button class="note-del" title="Eliminar nota">&times;</button>` +
           `</div>` +
-          `<div class="note-input" contenteditable="true" data-ph="Escribe la nota…"></div>`;
+          `<div class="note-view"></div>`;
 
-        // Texto editable directamente (sin ventanas emergentes)
-        const input = box.querySelector(".note-input");
-        input.textContent = n.text || "";
-        input.addEventListener("input", () => { n.text = input.textContent; });
-        // Evita que escribir arrastre la nota o dispare dibujo
-        input.addEventListener("mousedown", (e) => e.stopPropagation());
-        input.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
+        const view = box.querySelector(".note-view");
+        const text = (n.text || "").trim();
+        view.textContent = text || "Nota vacía";
+        if (!text) view.classList.add("note-view-empty");
 
         box.querySelector(".note-del").addEventListener("click", (e) => {
           e.stopPropagation();
           m.notes = m.notes.filter(x => x.id !== n.id);
           if (activeNoteId === n.id) activeNoteId = null;
           renderEditorNotes(layer, imgEl, m);
+          renderNotesPanel();
           renderMediaList();
         });
 
-        // Arrastrar la nota desde su barra
-        const bar = box.querySelector(".note-bar");
-        bar.addEventListener("mousedown", (e) => startNoteDrag(e, box, n, imgEl, layer, m));
-        bar.addEventListener("touchstart", (e) => startNoteDrag(e, box, n, imgEl, layer, m), { passive: false });
+        // Arrastrar la nota desde cualquier parte del cuadro (el texto no es editable aqui)
+        box.addEventListener("mousedown", (e) => startNoteDrag(e, box, n, imgEl, layer, m));
+        box.addEventListener("touchstart", (e) => startNoteDrag(e, box, n, imgEl, layer, m), { passive: false });
 
         layer.appendChild(box);
       });
     }
 
-    // Enfoca el input de la nota recien creada
-    function focusNoteInput() {
-      const input = document.querySelector(".editor-note.active .note-input");
-      if (!input) return;
-      input.focus();
-      const range = document.createRange();
-      range.selectNodeContents(input);
-      range.collapse(false);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
+    // Panel lateral de notas: escribir aqui y luego arrastrar sobre la imagen
+    function renderNotesPanel() {
+      const list = document.getElementById("notes-panel-list");
+      if (!list) return;
+
+      const m = (editorItem && activeMediaIndex >= 0) ? editorItem.media[activeMediaIndex] : null;
+      const addWrap = document.querySelector(".notes-panel-add");
+      const hint = document.querySelector(".notes-panel-hint");
+
+      if (!m) {
+        list.innerHTML = "";
+        if (addWrap) addWrap.style.display = "none";
+        if (hint) hint.textContent = "Selecciona una imagen o video para agregar notas.";
+        return;
+      }
+
+      if (!Array.isArray(m.notes)) m.notes = [];
+      if (addWrap) addWrap.style.display = "";
+      if (hint) hint.textContent = "Escribe aquí y agrégala. Luego arrástrala sobre la imagen o video.";
+
+      list.innerHTML = "";
+      if (m.notes.length === 0) {
+        list.innerHTML = `<div class="notes-panel-empty">Aún no hay notas.</div>`;
+      }
+
+      m.notes.forEach((n) => {
+        const el = document.createElement("div");
+        el.className = "notes-panel-item" + (n.id === activeNoteId ? " active" : "");
+        const txt = (n.text || "").trim();
+        el.innerHTML =
+          `<div class="np-text${txt ? "" : " empty"}"></div>` +
+          `<div class="np-actions">` +
+            `<button class="np-btn" data-role="edit" title="Editar"><i class="fa-solid fa-pen"></i></button>` +
+            `<button class="np-btn del" data-role="del" title="Eliminar"><i class="fa-solid fa-trash"></i></button>` +
+          `</div>`;
+        el.querySelector(".np-text").textContent = txt || "Nota vacía";
+
+        el.addEventListener("click", () => {
+          activeNoteId = n.id;
+          renderNotesPanel();
+          const layer = imgElRef && imgElRef.parentElement
+            ? imgElRef.parentElement.querySelector(".editor-notes-layer")
+            : null;
+          if (layer) renderEditorNotes(layer, imgElRef, m);
+        });
+        el.querySelector('[data-role="edit"]').addEventListener("click", (e) => {
+          e.stopPropagation();
+          editNoteText(n);
+        });
+        el.querySelector('[data-role="del"]').addEventListener("click", (e) => {
+          e.stopPropagation();
+          m.notes = m.notes.filter(x => x.id !== n.id);
+          if (activeNoteId === n.id) activeNoteId = null;
+          renderNotesPanel();
+          renderEditorStage();
+          renderMediaList();
+        });
+
+        list.appendChild(el);
+      });
+    }
+
+    // Edita el texto de una nota con el area de texto del panel
+    function editNoteText(note) {
+      const ta = document.getElementById("note-new-text");
+      const btn = document.getElementById("btn-add-note");
+      if (!ta) return;
+      activeNoteId = note.id;
+      ta.value = note.text || "";
+      ta.dataset.editId = note.id;
+      if (btn) btn.textContent = "Guardar nota";
+      ta.focus();
+      renderNotesPanel();
+    }
+
+    // Agrega una nota nueva (desde el panel). Queda lista para arrastrar.
+    function addNoteFromPanel() {
+      const m = (editorItem && activeMediaIndex >= 0) ? editorItem.media[activeMediaIndex] : null;
+      if (!m) return;
+      if (!Array.isArray(m.notes)) m.notes = [];
+
+      const ta = document.getElementById("note-new-text");
+      const btn = document.getElementById("btn-add-note");
+      const text = (ta ? ta.value : "").trim();
+
+      const editId = ta ? ta.dataset.editId : null;
+      if (editId) {
+        // Guardar edición de una nota existente
+        const note = m.notes.find(x => x.id === editId);
+        if (note) note.text = text;
+        ta.value = "";
+        delete ta.dataset.editId;
+        if (btn) btn.textContent = "Agregar nota";
+        renderNotesPanel();
+        renderEditorStage();
+        renderMediaList();
+        return;
+      }
+
+      if (!text) { if (ta) ta.focus(); return; }
+
+      // Crea la nota; si ya hay notas, se escalonan un poco para que se vean
+      const idx = m.notes.length;
+      const note = {
+        id: newId(),
+        text: text,
+        x: 0.5,
+        y: Math.min(0.9, 0.35 + idx * 0.08)
+      };
+      m.notes.push(note);
+      activeNoteId = note.id;
+      if (ta) ta.value = "";
+
+      renderNotesPanel();
+      renderEditorStage();
+      renderMediaList();
     }
 
     function startNoteDrag(ev, box, note, imgEl, layer, m) {
@@ -2117,15 +2421,15 @@
       ev.preventDefault();
       activeNoteId = note.id;
       layer.querySelectorAll(".editor-note").forEach(b => b.classList.toggle("active", b.dataset.id === note.id));
+      renderNotesPanel();
 
       const rect = imgEl.getBoundingClientRect();
       const move = (e) => {
         const cx = (e.touches ? e.touches[0].clientX : e.clientX);
         const cy = (e.touches ? e.touches[0].clientY : e.clientY);
-        let nx = (cx - rect.left) / rect.width;
-        let ny = (cy - rect.top) / rect.height;
-        note.x = Math.max(0, Math.min(1, nx));
-        note.y = Math.max(0, Math.min(1, ny));
+        // Se permite colocar la nota dentro o fuera de la imagen (sin recortar)
+        note.x = (cx - rect.left) / rect.width;
+        note.y = (cy - rect.top) / rect.height;
         box.style.left = (note.x * 100) + "%";
         box.style.top = (note.y * 100) + "%";
       };
@@ -2139,19 +2443,6 @@
       window.addEventListener("touchmove", move, { passive: false });
       window.addEventListener("mouseup", up);
       window.addEventListener("touchend", up);
-    }
-
-    function addNoteAt(p) {
-      const m = (editorItem && activeMediaIndex >= 0) ? editorItem.media[activeMediaIndex] : null;
-      if (!m || m.type !== "image") return;
-      if (!Array.isArray(m.notes)) m.notes = [];
-      const note = { id: newId(), text: "", x: p.x, y: p.y };
-      m.notes.push(note);
-      activeNoteId = note.id;
-      renderEditorStage();
-      renderMediaList();
-      // Deja el cursor listo para escribir de inmediato
-      requestAnimationFrame(focusNoteInput);
     }
 
     function endStroke() {
@@ -2178,7 +2469,6 @@
         { id: "rect", icon: "fa-vector-square", title: "Rectángulo" },
         { id: "arrow", icon: "fa-arrow-right", title: "Flecha" },
         { id: "text", icon: "fa-font", title: "Texto (Arial 12)" },
-        { id: "note", icon: "fa-note-sticky", title: "Nota" },
         { id: "pan", icon: "fa-hand", title: "Mover" }
       ];
       tools.forEach(t => {
@@ -2303,7 +2593,7 @@
         else activeMediaIndex = editorItem.media.length - 1;
       } catch (e) {
         console.error(e);
-        alert("Error al subir el archivo. Intenta de nuevo.");
+        toast("Error al subir el archivo. Intenta de nuevo.", "err");
       } finally {
         dz.classList.remove("uploading");
         dz.textContent = "Arrastra imágenes o videos aquí";
@@ -2370,6 +2660,16 @@
         if (e.target.id === "editor-modal") closeEditor();
       });
 
+      // Panel de notas
+      const btnAddNote = document.getElementById("btn-add-note");
+      if (btnAddNote) btnAddNote.addEventListener("click", addNoteFromPanel);
+      const noteText = document.getElementById("note-new-text");
+      if (noteText) {
+        noteText.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addNoteFromPanel(); }
+        });
+      }
+
       // Zona de carga
       const dz = document.getElementById("dropzone");
       const fileInput = document.createElement("input");
@@ -2394,10 +2694,12 @@
       });
 
       window.addEventListener("keydown", (e) => {
-        // No interferir mientras se escribe en una nota o en el texto
+        // No interferir mientras se escribe en un campo (nota, titulo, texto)
         const t = e.target;
-        if (t && (t.isContentEditable || t.classList && t.classList.contains("editor-text-input"))) {
-          if (e.key === "Escape") t.blur();
+        const typing = t && (t.isContentEditable || t.tagName === "INPUT" || t.tagName === "TEXTAREA" ||
+          (t.classList && t.classList.contains("editor-text-input")));
+        if (typing) {
+          if (e.key === "Escape" && t.blur) t.blur();
           return;
         }
         if (e.key === "Escape") {
