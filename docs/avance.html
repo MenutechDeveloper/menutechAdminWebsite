@@ -595,41 +595,68 @@
       font-family: Arial, Helvetica, sans-serif;
       font-size: 12px;
       line-height: 1.35;
-      padding: 6px 9px;
       border-radius: 9px;
-      max-width: 180px;
-      min-width: 34px;
+      min-width: 90px;
+      max-width: 220px;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-      cursor: grab;
       border: 1.5px solid transparent;
-      white-space: pre-wrap;
-      word-break: break-word;
       touch-action: none;
       pointer-events: auto;
+      overflow: hidden;
     }
-    .editor-note .note-ph { color: #94a3b8; font-style: italic; }
     .editor-note.active { border-color: #ea580c; box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.25); }
-    .editor-note:active { cursor: grabbing; }
+    .editor-note .note-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      cursor: grab;
+      user-select: none;
+    }
+    .editor-note .note-bar:active { cursor: grabbing; }
+    .editor-note .note-grip { color: #94a3b8; font-size: 10px; letter-spacing: 1px; }
     .editor-note .note-del {
-      position: absolute;
-      top: -9px;
-      right: -9px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
       border: none;
-      background: #ef4444;
-      color: #fff;
-      font-size: 12px;
+      background: transparent;
+      color: #ef4444;
+      font-size: 15px;
       line-height: 1;
       cursor: pointer;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
+      padding: 0 2px;
     }
-    .editor-note.active .note-del { display: inline-flex; }
+    .editor-note .note-input {
+      padding: 6px 9px;
+      min-height: 18px;
+      outline: none;
+      white-space: pre-wrap;
+      word-break: break-word;
+      cursor: text;
+      color: #0f172a;
+    }
+    .editor-note .note-input:empty::before {
+      content: attr(data-ph);
+      color: #94a3b8;
+      font-style: italic;
+    }
     .editor-note.placeholder { color: #94a3b8; font-style: italic; }
+
+    /* Entrada de texto flotante (herramienta Texto) */
+    .editor-text-input {
+      position: absolute;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.96);
+      color: #0f172a;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      border: 1.5px solid #ea580c;
+      border-radius: 6px;
+      padding: 3px 6px;
+      outline: none;
+      min-width: 90px;
+      z-index: 5;
+    }
 
     .editor-empty { color: #94a3b8; font-size: 13px; padding: 40px 20px; text-align: center; }
 
@@ -1953,14 +1980,10 @@
       canvas.addEventListener("touchstart", start, { passive: false });
       canvas.addEventListener("touchmove", move, { passive: false });
 
-      // Colocar texto (Arial 12) con un clic
+      // Colocar texto (Arial 12) con un clic: entrada flotante directa
       canvas.addEventListener("click", (ev) => {
         if (drawTool !== "text") return;
-        const p = getPos(ev);
-        const text = prompt("Texto (Arial 12):");
-        if (text === null || text.trim() === "") return;
-        m.strokes.push({ tool: "text", color: drawColor, size: 12, text: text, pts: [p] });
-        drawStrokesOn(canvas, m.strokes);
+        openTextInput(zoomLayer, canvas, imgEl, m, getPos(ev));
       });
 
       // Herramienta de nota: clic para crear una nota en esa posicion
@@ -1998,6 +2021,42 @@
       window.addEventListener("touchend", stopPan);
     }
 
+    // Entrada flotante para la herramienta Texto (Arial 12), sin prompt
+    function openTextInput(container, canvas, imgEl, m, p) {
+      const existing = container.querySelector(".editor-text-input");
+      if (existing) existing.remove();
+
+      const inp = document.createElement("input");
+      inp.type = "text";
+      inp.className = "editor-text-input";
+      inp.placeholder = "Escribe y pulsa Enter";
+      inp.style.left = (p.x * 100) + "%";
+      inp.style.top = (p.y * 100) + "%";
+      container.appendChild(inp);
+      inp.focus();
+
+      let done = false;
+      const commit = () => {
+        if (done) return;
+        done = true;
+        const text = inp.value;
+        inp.remove();
+        if (text && text.trim() !== "") {
+          m.strokes.push({ tool: "text", color: drawColor, size: 12, text: text, pts: [{ x: p.x, y: p.y }] });
+          drawStrokesOn(canvas, m.strokes);
+          renderMediaList();
+        }
+      };
+      inp.addEventListener("keydown", (e) => {
+        e.stopPropagation();
+        if (e.key === "Enter") { e.preventDefault(); commit(); }
+        else if (e.key === "Escape") { done = true; inp.remove(); }
+      });
+      inp.addEventListener("blur", commit);
+      inp.addEventListener("mousedown", (e) => e.stopPropagation());
+      inp.addEventListener("click", (e) => e.stopPropagation());
+    }
+
     // Renderiza las notas (cuadros movibles) sobre la imagen del editor
     function renderEditorNotes(layer, imgEl, m) {
       layer.innerHTML = "";
@@ -2007,17 +2066,20 @@
         box.dataset.id = n.id;
         box.style.left = (n.x * 100) + "%";
         box.style.top = (n.y * 100) + "%";
-        box.innerHTML = `<span class="note-text">${escapeHtml(n.text || "") || '<span class="note-ph">Escribe…</span>'}</span>` +
-          `<button class="note-del" title="Eliminar nota">&times;</button>`;
+        box.innerHTML =
+          `<div class="note-bar">` +
+            `<span class="note-grip" title="Arrastrar">⠿</span>` +
+            `<button class="note-del" title="Eliminar nota">&times;</button>` +
+          `</div>` +
+          `<div class="note-input" contenteditable="true" data-ph="Escribe la nota…"></div>`;
 
-        // Doble clic para editar el texto
-        box.querySelector(".note-text").addEventListener("dblclick", (e) => {
-          e.stopPropagation();
-          const t = prompt("Editar nota:", n.text || "");
-          if (t === null) return;
-          n.text = t;
-          renderEditorNotes(layer, imgEl, m);
-        });
+        // Texto editable directamente (sin ventanas emergentes)
+        const input = box.querySelector(".note-input");
+        input.textContent = n.text || "";
+        input.addEventListener("input", () => { n.text = input.textContent; });
+        // Evita que escribir arrastre la nota o dispare dibujo
+        input.addEventListener("mousedown", (e) => e.stopPropagation());
+        input.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
 
         box.querySelector(".note-del").addEventListener("click", (e) => {
           e.stopPropagation();
@@ -2027,12 +2089,26 @@
           renderMediaList();
         });
 
-        // Arrastrar la nota
-        box.addEventListener("mousedown", (e) => startNoteDrag(e, box, n, imgEl, layer, m));
-        box.addEventListener("touchstart", (e) => startNoteDrag(e, box, n, imgEl, layer, m), { passive: false });
+        // Arrastrar la nota desde su barra
+        const bar = box.querySelector(".note-bar");
+        bar.addEventListener("mousedown", (e) => startNoteDrag(e, box, n, imgEl, layer, m));
+        bar.addEventListener("touchstart", (e) => startNoteDrag(e, box, n, imgEl, layer, m), { passive: false });
 
         layer.appendChild(box);
       });
+    }
+
+    // Enfoca el input de la nota recien creada
+    function focusNoteInput() {
+      const input = document.querySelector(".editor-note.active .note-input");
+      if (!input) return;
+      input.focus();
+      const range = document.createRange();
+      range.selectNodeContents(input);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
     }
 
     function startNoteDrag(ev, box, note, imgEl, layer, m) {
@@ -2072,15 +2148,10 @@
       const note = { id: newId(), text: "", x: p.x, y: p.y };
       m.notes.push(note);
       activeNoteId = note.id;
-      // Abre el editor de texto de inmediato
-      const text = prompt("Nueva nota:", "");
-      if (text === null) {
-        m.notes = m.notes.filter(n => n.id !== note.id);
-      } else {
-        note.text = text;
-      }
       renderEditorStage();
       renderMediaList();
+      // Deja el cursor listo para escribir de inmediato
+      requestAnimationFrame(focusNoteInput);
     }
 
     function endStroke() {
@@ -2323,6 +2394,12 @@
       });
 
       window.addEventListener("keydown", (e) => {
+        // No interferir mientras se escribe en una nota o en el texto
+        const t = e.target;
+        if (t && (t.isContentEditable || t.classList && t.classList.contains("editor-text-input"))) {
+          if (e.key === "Escape") t.blur();
+          return;
+        }
         if (e.key === "Escape") {
           if (document.getElementById("editor-modal").classList.contains("active")) closeEditor();
           else closeViewer();
