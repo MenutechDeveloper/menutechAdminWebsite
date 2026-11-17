@@ -390,11 +390,10 @@
       border-radius: var(--radius-lg);
       overflow: hidden;
       box-shadow: var(--shadow-modal);
-      width: min(88vw, 1100px);
-      max-height: 86vh;
+      width: min(92vw, 1180px);
+      max-height: 88vh;
       transition: width 0.25s ease;
     }
-    .viewer-stage-wrap.has-note .viewer-stage { width: min(58vw, 820px); }
 
     .viewer-track {
       display: flex;
@@ -405,47 +404,53 @@
     .viewer-slide {
       flex: 0 0 100%;
       width: 100%;
-      height: 86vh;
-      max-height: 86vh;
+      height: 88vh;
+      max-height: 88vh;
       display: flex;
       align-items: center;
       justify-content: center;
       background: #000;
+      padding: 60px 70px;
     }
 
-    .viewer-media { position: relative; display: inline-flex; max-width: 100%; max-height: 86vh; }
+    .viewer-media { position: relative; display: inline-flex; max-width: 100%; max-height: 100%; transform-origin: center center; }
     .viewer-media img,
     .viewer-media video {
       display: block;
       max-width: 100%;
-      max-height: 86vh;
+      max-height: 68vh;
       width: auto;
       height: auto;
       object-fit: contain;
       user-select: none;
       -webkit-user-drag: none;
+      border-radius: var(--radius-md);
     }
     .viewer-media canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 
-    /* Nota lateral */
-    .viewer-note-panel {
-      width: 320px;
-      max-width: 34vw;
-      max-height: 80vh;
-      overflow-y: auto;
-      background: rgba(255, 255, 255, 0.98);
-      color: #0f172a;
-      border-radius: var(--radius-lg);
-      padding: 22px 24px;
-      box-shadow: var(--shadow-modal);
-      font-size: 14px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      display: none;
-      animation: modalFadeIn 0.25s ease-out;
+    /* Notas flotantes (visor) */
+    .viewer-notes-layer {
+      position: absolute;
+      inset: 0;
+      overflow: visible;
+      pointer-events: none;
     }
-    .viewer-note-panel.visible { display: block; }
-    .viewer-note-text { color: #1e293b; font-weight: 500; }
+    .viewer-note-box {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      background: #ffffff;
+      color: #0f172a;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      line-height: 1.4;
+      padding: 8px 10px;
+      border-radius: 10px;
+      max-width: 190px;
+      min-width: 40px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
 
     /* ============================================================
        EDITOR DE FUNCION (MODAL)
@@ -533,28 +538,98 @@
       border-radius: var(--radius-md);
       overflow: hidden;
       width: 100%;
-      max-height: 46vh;
+      height: 46vh;
       display: flex;
       align-items: center;
       justify-content: center;
       touch-action: none;
     }
-    .editor-stage img,
-    .editor-stage video {
-      display: block;
-      width: 100%;
-      height: auto;
-      max-height: 46vh;
-      object-fit: contain;
+
+    .editor-zoom-layer {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: center center;
+      transition: transform 0.18s ease;
     }
-    .editor-stage canvas {
+    .editor-zoom-layer img,
+    .editor-zoom-layer video {
+      display: block;
+      max-width: 100%;
+      max-height: 46vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    .editor-zoom-layer canvas {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       pointer-events: none;
     }
+    .editor-stage > video {
+      display: block;
+      max-width: 100%;
+      max-height: 46vh;
+      width: auto;
+      height: auto;
+    }
     .editor-stage.drawing canvas { pointer-events: auto; cursor: crosshair; }
+    .editor-stage.tool-note canvas { pointer-events: auto; cursor: copy; }
+    .editor-stage.tool-text canvas { pointer-events: auto; cursor: text; }
+    .editor-stage.tool-pan { cursor: grab; }
+    .editor-stage.tool-pan:active { cursor: grabbing; }
+    .editor-stage.tool-pan canvas { pointer-events: none; }
+
+    /* Capa de notas del editor */
+    .editor-notes-layer { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+    .editor-note {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      background: #ffffff;
+      color: #0f172a;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      line-height: 1.35;
+      padding: 6px 9px;
+      border-radius: 9px;
+      max-width: 180px;
+      min-width: 34px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+      cursor: grab;
+      border: 1.5px solid transparent;
+      white-space: pre-wrap;
+      word-break: break-word;
+      touch-action: none;
+      pointer-events: auto;
+    }
+    .editor-note .note-ph { color: #94a3b8; font-style: italic; }
+    .editor-note.active { border-color: #ea580c; box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.25); }
+    .editor-note:active { cursor: grabbing; }
+    .editor-note .note-del {
+      position: absolute;
+      top: -9px;
+      right: -9px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: none;
+      background: #ef4444;
+      color: #fff;
+      font-size: 12px;
+      line-height: 1;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .editor-note.active .note-del { display: inline-flex; }
+    .editor-note.placeholder { color: #94a3b8; font-style: italic; }
 
     .editor-empty { color: #94a3b8; font-size: 13px; padding: 40px 20px; text-align: center; }
 
@@ -715,8 +790,7 @@
     @media (max-width: 860px) {
       .editor-body { grid-template-columns: 1fr; }
       .editor-left { border-right: none; border-bottom: 1px solid #e2e8f0; }
-      .viewer-stage-wrap { flex-direction: column; gap: 16px; }
-      .viewer-note-panel { width: 100%; max-width: 88vw; max-height: 30vh; }
+      .viewer-slide { padding: 40px 24px; }
     }
 
     @media (max-width: 768px) {
@@ -751,9 +825,6 @@
       <div class="viewer-stage" id="viewer-stage">
         <div class="viewer-track" id="viewer-track"></div>
       </div>
-      <div class="viewer-note-panel" id="viewer-note-panel">
-        <div class="viewer-note-text" id="viewer-note-text"></div>
-      </div>
     </div>
   </div>
 
@@ -766,7 +837,7 @@
       </div>
       <div class="editor-body">
         <div class="editor-left">
-          <span class="field-label">Dibujar sobre la imagen seleccionada</span>
+          <span class="field-label">Editar la imagen seleccionada</span>
           <div class="editor-stage-wrap">
             <div class="editor-stage" id="editor-stage"></div>
             <div class="draw-toolbar" id="draw-toolbar"></div>
@@ -813,35 +884,35 @@
         title: "Online payment",
         description: "Integración de pasarela de pagos con Stripe Connect para pedidos y reservas.",
         progress: 95,
-        media: [{ type: "video", url: "./assets/misAvances/img/onlinepayment.mp4", note: "", strokes: [] }]
+        media: [{ type: "video", url: "./assets/misAvances/img/onlinepayment.mp4", notes: [], strokes: [] }]
       },
       {
         id: "obj-2",
         title: "Menu creation",
         description: "Constructor visual de categorías y platillos en tiempo real.",
         progress: 100,
-        media: [{ type: "video", url: "./assets/misAvances/img/menucreation.mp4", note: "", strokes: [] }]
+        media: [{ type: "video", url: "./assets/misAvances/img/menucreation.mp4", notes: [], strokes: [] }]
       },
       {
         id: "obj-3",
         title: "Generador de menu con MenutechIA",
         description: "Lectura de fotos de menú físico e importación automática con IA.",
         progress: 85,
-        media: [{ type: "video", url: "./assets/misAvances/img/menutechia.mp4", note: "", strokes: [] }]
+        media: [{ type: "video", url: "./assets/misAvances/img/menutechia.mp4", notes: [], strokes: [] }]
       },
       {
         id: "obj-4",
         title: "App Android Flutter",
         description: "Aplicación nativa para restaurantes con alertas sonoras y comanderas.",
         progress: 90,
-        media: [{ type: "video", url: "./assets/misAvances/img/appflutter.mp4", note: "", strokes: [] }]
+        media: [{ type: "video", url: "./assets/misAvances/img/appflutter.mp4", notes: [], strokes: [] }]
       },
       {
         id: "obj-5",
         title: "Google play store",
         description: "Preparación de bundle AAB y publicación en Google Play Console.",
         progress: 60,
-        media: [{ type: "video", url: "./assets/misAvances/img/playstore.mp4", note: "", strokes: [] }]
+        media: [{ type: "video", url: "./assets/misAvances/img/playstore.mp4", notes: [], strokes: [] }]
       }
     ];
 
@@ -860,18 +931,21 @@
     let activeMediaIndex = -1;
     let drawColor = "#ef4444";
     let drawSize = 6;
-    let drawMode = true;
+    let drawTool = "pen";        // pen | rect | arrow | text | note | pan
     let isDrawing = false;
     let currentStroke = null;
     let editorCanvasEl = null;
     let editorSetupCanvasFn = null;
+    let editorZoom = 1;          // 1 | 2 | 3
+    let editorPan = { x: 0, y: 0 };
+    let activeNoteId = null;     // nota seleccionada en el editor
 
     // INICIALIZACION
     async function init() {
       await loadData();
       renderList();
       setupEvents();
-      await verifyAdminAuthentication();
+      await window.verifyAdminAuth();
     }
 
     function newId() {
@@ -879,12 +953,29 @@
       return "av-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
     }
 
+    // Migra el formato antiguo (una sola "note") al nuevo (varias "notes")
+    function normalizeNotes(m) {
+      let notes = [];
+      if (Array.isArray(m.notes)) {
+        notes = m.notes.map(n => ({
+          id: n.id || newId(),
+          text: n.text || "",
+          x: typeof n.x === "number" ? n.x : 0.5,
+          y: typeof n.y === "number" ? n.y : 0.5
+        })).filter(n => n.text !== undefined);
+      }
+      if (notes.length === 0 && m.note && String(m.note).trim()) {
+        notes = [{ id: newId(), text: String(m.note), x: 0.5, y: 0.5 }];
+      }
+      return notes;
+    }
+
     function normalizeMedia(media) {
       if (!Array.isArray(media)) return [];
       return media.map(m => ({
         type: m.type === "video" ? "video" : "image",
         url: m.url || m.src || "",
-        note: m.note || "",
+        notes: normalizeNotes(m),
         strokes: Array.isArray(m.strokes) ? m.strokes : []
       })).filter(m => m.url);
     }
@@ -1456,6 +1547,7 @@
 
         const wrap = document.createElement("div");
         wrap.className = "viewer-media";
+        wrap.dataset.mediaIndex = viewerItems.indexOf(m);
 
         if (m.type === "video") {
           const v = document.createElement("video");
@@ -1475,6 +1567,15 @@
             wrap.appendChild(canvas);
             attachViewerStrokes(img, canvas, m.strokes);
           }
+
+          // Notas flotantes posicionadas sobre la imagen
+          const notes = Array.isArray(m.notes) ? m.notes : [];
+          if (notes.length > 0) {
+            const layer = document.createElement("div");
+            layer.className = "viewer-notes-layer";
+            wrap.appendChild(layer);
+            positionViewerNotes(img, layer, notes);
+          }
         }
 
         slide.appendChild(wrap);
@@ -1482,9 +1583,34 @@
       });
 
       updateViewerTransform();
-      updateViewerNote();
       document.getElementById("viewer-modal").classList.add("active");
     };
+
+    // Coloca las notas segun su posicion relativa (0..1) dentro de la imagen
+    function positionViewerNotes(img, layer, notes) {
+      const place = () => {
+        const w = img.clientWidth, h = img.clientHeight;
+        if (!w || !h) return;
+        layer.style.width = w + "px";
+        layer.style.height = h + "px";
+        layer.style.left = "0";
+        layer.style.top = "0";
+        notes.forEach((n, i) => {
+          let box = layer.querySelector(`[data-note="${i}"]`);
+          if (!box) {
+            box = document.createElement("div");
+            box.className = "viewer-note-box";
+            box.dataset.note = i;
+            box.textContent = n.text || "";
+            layer.appendChild(box);
+          }
+          box.style.left = (n.x * w) + "px";
+          box.style.top = (n.y * h) + "px";
+        });
+      };
+      if (img.complete) place();
+      img.addEventListener("load", place);
+    }
 
     function attachViewerStrokes(img, canvas, strokes) {
       const draw = () => {
@@ -1499,51 +1625,80 @@
       else img.addEventListener("load", draw);
     }
 
+    // Dibuja un trazo/formas sobre el canvas (coordenadas normalizadas 0..1)
     function drawStrokesOn(canvas, strokes) {
       const ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (!strokes) return;
-      strokes.forEach(s => {
-        if (!s.pts || s.pts.length === 0) return;
-        ctx.strokeStyle = s.color || "#ef4444";
-        ctx.lineWidth = (s.w || 0.006) * canvas.width;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
+      strokes.forEach(s => drawStroke(ctx, canvas, s));
+    }
+
+    function drawStroke(ctx, canvas, s) {
+      const W = canvas.width, H = canvas.height;
+      const color = s.color || "#ef4444";
+      const tool = s.tool || "pen";
+      const pts = s.pts || [];
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = (s.w || 0.006) * W;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      if (tool === "rect" && pts.length >= 2) {
+        const x1 = pts[0].x * W, y1 = pts[0].y * H;
+        const x2 = pts[pts.length - 1].x * W, y2 = pts[pts.length - 1].y * H;
+        ctx.strokeRect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
+        return;
+      }
+
+      if (tool === "arrow" && pts.length >= 2) {
+        const x1 = pts[0].x * W, y1 = pts[0].y * H;
+        const x2 = pts[pts.length - 1].x * W, y2 = pts[pts.length - 1].y * H;
         ctx.beginPath();
-        s.pts.forEach((p, i) => {
-          const x = p.x * canvas.width;
-          const y = p.y * canvas.height;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+        const head = Math.max(ctx.lineWidth * 3, 10);
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - head * Math.cos(angle - Math.PI / 7), y2 - head * Math.sin(angle - Math.PI / 7));
+        ctx.lineTo(x2 - head * Math.cos(angle + Math.PI / 7), y2 - head * Math.sin(angle + Math.PI / 7));
+        ctx.closePath();
+        ctx.fill();
+        return;
+      }
+
+      if (tool === "text" && pts.length >= 1) {
+        const size = (s.size || 12) * (W / 1000);   // 12px a 1000px de ancho
+        ctx.font = `${size}px Arial, Helvetica, sans-serif`;
+        ctx.textBaseline = "top";
+        const lines = String(s.text || "").split("\n");
+        lines.forEach((line, i) => {
+          ctx.fillText(line, pts[0].x * W, pts[0].y * H + i * size * 1.25);
         });
-        if (s.pts.length === 1) {
-          ctx.arc(s.pts[0].x * canvas.width, s.pts[0].y * canvas.height, ((s.w || 0.006) * canvas.width) / 2, 0, Math.PI * 2);
-          ctx.fillStyle = s.color || "#ef4444";
-          ctx.fill();
-        } else {
-          ctx.stroke();
-        }
+        return;
+      }
+
+      // Trazo libre (pen)
+      if (pts.length === 0) return;
+      ctx.beginPath();
+      pts.forEach((p, i) => {
+        const x = p.x * W, y = p.y * H;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       });
+      if (pts.length === 1) {
+        ctx.arc(pts[0].x * W, pts[0].y * H, ((s.w || 0.006) * W) / 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.stroke();
+      }
     }
 
     function updateViewerTransform() {
       const track = document.getElementById("viewer-track");
       track.style.transform = `translateX(${-viewerIndex * 100}%)`;
-    }
-
-    function updateViewerNote() {
-      const wrap = document.querySelector(".viewer-stage-wrap");
-      const panel = document.getElementById("viewer-note-panel");
-      const textEl = document.getElementById("viewer-note-text");
-      const current = viewerItems[viewerIndex];
-      if (current && current.type === "image" && current.note && current.note.trim()) {
-        textEl.textContent = current.note;
-        panel.classList.add("visible");
-        wrap.classList.add("has-note");
-      } else {
-        panel.classList.remove("visible");
-        wrap.classList.remove("has-note");
-      }
     }
 
     function closeViewer() {
@@ -1561,7 +1716,6 @@
       document.querySelectorAll("#viewer-track video").forEach(v => v.pause());
       viewerIndex = next;
       updateViewerTransform();
-      updateViewerNote();
     }
 
     function setupViewerGestures() {
@@ -1603,6 +1757,7 @@
       if (!Array.isArray(editorItem.media)) editorItem.media = [];
       editorItem.media.forEach(m => {
         if (!Array.isArray(m.strokes)) m.strokes = [];
+        if (!Array.isArray(m.notes)) m.notes = [];
       });
       if (!Array.isArray(editorItem.subfunctions)) editorItem.subfunctions = [];
 
@@ -1612,6 +1767,11 @@
       // Selecciona la primera imagen para dibujar
       activeMediaIndex = editorItem.media.findIndex(m => m.type === "image");
       if (activeMediaIndex < 0 && editorItem.media.length > 0) activeMediaIndex = 0;
+
+      editorZoom = 1;
+      editorPan = { x: 0, y: 0 };
+      drawTool = "pen";
+      activeNoteId = null;
 
       renderMediaList();
       renderEditorStage();
@@ -1631,6 +1791,9 @@
       activeMediaIndex = -1;
       isDrawing = false;
       currentStroke = null;
+      activeNoteId = null;
+      editorZoom = 1;
+      editorPan = { x: 0, y: 0 };
     }
 
     function renderMediaList() {
@@ -1647,26 +1810,34 @@
           ? `<video src="${escapeHtml(m.url)}" muted preload="metadata"></video>`
           : `<img src="${escapeHtml(m.url)}" alt="" onerror="this.style.display='none'">`;
 
-        const noteHtml = m.type === "image"
-          ? `<textarea class="edit-textarea" data-role="note" placeholder="Nota">${escapeHtml(m.note || '')}</textarea>`
-          : ``;
+        let infoHtml = "";
+        if (m.type === "image") {
+          const nCount = Array.isArray(m.notes) ? m.notes.length : 0;
+          const sCount = Array.isArray(m.strokes) ? m.strokes.length : 0;
+          const parts = [];
+          if (nCount > 0) parts.push(`${nCount} nota${nCount === 1 ? '' : 's'}`);
+          if (sCount > 0) parts.push(`${sCount} trazo${sCount === 1 ? '' : 's'}`);
+          infoHtml = `<span style="font-size:12px;color:#94a3b8;">${parts.length ? parts.join(' · ') : 'Sin anotaciones'}</span>`;
+        } else {
+          infoHtml = `<span style="font-size:12px;color:#94a3b8;">Video</span>`;
+        }
 
         el.innerHTML = `
           <div class="media-item-thumb">${thumbHtml}</div>
           <div class="media-item-body">
-            ${noteHtml}
+            ${infoHtml}
           </div>
           <button class="media-remove" data-role="remove" title="Quitar">&times;</button>
         `;
 
         el.querySelector(".media-item-thumb").addEventListener("click", () => {
           activeMediaIndex = idx;
+          activeNoteId = null;
+          editorZoom = 1;
+          editorPan = { x: 0, y: 0 };
           renderMediaList();
           renderEditorStage();
         });
-
-        const noteEl = el.querySelector('[data-role="note"]');
-        if (noteEl) noteEl.addEventListener("input", (e) => { editorItem.media[idx].note = e.target.value; });
 
         el.querySelector('[data-role="remove"]').addEventListener("click", () => {
           editorItem.media.splice(idx, 1);
@@ -1684,11 +1855,11 @@
       const toolbar = document.getElementById("draw-toolbar");
       stage.innerHTML = "";
       toolbar.innerHTML = "";
+      stage.className = "editor-stage";
 
       const m = (editorItem && activeMediaIndex >= 0) ? editorItem.media[activeMediaIndex] : null;
 
       if (!m) {
-        stage.classList.remove("drawing");
         stage.innerHTML = `<div class="editor-empty">Agrega una imagen o video</div>`;
         editorCanvasEl = null;
         editorSetupCanvasFn = null;
@@ -1696,16 +1867,31 @@
       }
 
       if (m.type === "video") {
-        stage.classList.remove("drawing");
         stage.innerHTML = `<video src="${escapeHtml(m.url)}" controls playsinline></video>`;
         editorCanvasEl = null;
         editorSetupCanvasFn = null;
         return;
       }
 
-      stage.innerHTML = `<img src="${escapeHtml(m.url)}" alt="" draggable="false"><canvas></canvas>`;
-      const imgEl = stage.querySelector("img");
-      const canvas = stage.querySelector("canvas");
+      if (!Array.isArray(m.notes)) m.notes = [];
+      if (!Array.isArray(m.strokes)) m.strokes = [];
+
+      // Capa con zoom/pan que contiene imagen + canvas + notas
+      const zoomLayer = document.createElement("div");
+      zoomLayer.className = "editor-zoom-layer";
+      zoomLayer.innerHTML = `<img src="${escapeHtml(m.url)}" alt="" draggable="false"><canvas></canvas>`;
+      stage.appendChild(zoomLayer);
+
+      const imgEl = zoomLayer.querySelector("img");
+      const canvas = zoomLayer.querySelector("canvas");
+      const notesLayer = document.createElement("div");
+      notesLayer.className = "editor-notes-layer";
+      zoomLayer.appendChild(notesLayer);
+
+      const applyZoom = () => {
+        zoomLayer.style.transform = `translate(${editorPan.x}px, ${editorPan.y}px) scale(${editorZoom})`;
+      };
+      applyZoom();
 
       const setupCanvas = () => {
         const rect = imgEl.getBoundingClientRect();
@@ -1714,6 +1900,11 @@
         canvas.width = Math.max(1, Math.round(rect.width * dpr));
         canvas.height = Math.max(1, Math.round(rect.height * dpr));
         drawStrokesOn(canvas, m.strokes);
+        notesLayer.style.width = imgEl.clientWidth + "px";
+        notesLayer.style.height = imgEl.clientHeight + "px";
+        notesLayer.style.left = "0";
+        notesLayer.style.top = "0";
+        renderEditorNotes(notesLayer, imgEl, m);
       };
 
       editorCanvasEl = canvas;
@@ -1724,7 +1915,11 @@
 
       toolbar.appendChild(buildToolbar());
 
-      if (drawMode) stage.classList.add("drawing");
+      // Clases de modo
+      if (drawTool === "pen" || drawTool === "rect" || drawTool === "arrow" || drawTool === "text") {
+        stage.classList.add("drawing");
+      }
+      stage.classList.add("tool-" + drawTool);
 
       const getPos = (ev) => {
         const r = canvas.getBoundingClientRect();
@@ -1733,17 +1928,23 @@
         return { x: cx / r.width, y: cy / r.height };
       };
 
+      const isShapeTool = () => drawTool === "pen" || drawTool === "rect" || drawTool === "arrow";
+
       const start = (ev) => {
-        if (!drawMode) return;
+        if (!isShapeTool()) return;
         ev.preventDefault();
         isDrawing = true;
         const r = canvas.getBoundingClientRect();
-        currentStroke = { color: drawColor, w: drawSize / Math.max(1, r.width), pts: [getPos(ev)] };
+        const stroke = { tool: drawTool, color: drawColor, w: drawSize / Math.max(1, r.width), pts: [getPos(ev)] };
+        if (drawTool === "rect" || drawTool === "arrow") stroke.pts.push(getPos(ev));
+        currentStroke = stroke;
       };
       const move = (ev) => {
         if (!isDrawing || !currentStroke) return;
         ev.preventDefault();
-        currentStroke.pts.push(getPos(ev));
+        const p = getPos(ev);
+        if (drawTool === "pen") currentStroke.pts.push(p);
+        else currentStroke.pts[1] = p;
         drawStrokesOn(canvas, m.strokes.concat([currentStroke]));
       };
 
@@ -1751,6 +1952,135 @@
       canvas.addEventListener("mousemove", move);
       canvas.addEventListener("touchstart", start, { passive: false });
       canvas.addEventListener("touchmove", move, { passive: false });
+
+      // Colocar texto (Arial 12) con un clic
+      canvas.addEventListener("click", (ev) => {
+        if (drawTool !== "text") return;
+        const p = getPos(ev);
+        const text = prompt("Texto (Arial 12):");
+        if (text === null || text.trim() === "") return;
+        m.strokes.push({ tool: "text", color: drawColor, size: 12, text: text, pts: [p] });
+        drawStrokesOn(canvas, m.strokes);
+      });
+
+      // Herramienta de nota: clic para crear una nota en esa posicion
+      canvas.addEventListener("click", (ev) => {
+        if (drawTool !== "note") return;
+        const p = getPos(ev);
+        addNoteAt(p);
+      });
+
+      // Herramienta de mano (pan)
+      let panning = false, panStart = null;
+      stage.addEventListener("mousedown", (ev) => {
+        if (drawTool !== "pan") return;
+        ev.preventDefault();
+        panning = true;
+        panStart = { x: ev.clientX - editorPan.x, y: ev.clientY - editorPan.y };
+      });
+      stage.addEventListener("mousemove", (ev) => {
+        if (!panning) return;
+        editorPan = { x: ev.clientX - panStart.x, y: ev.clientY - panStart.y };
+        applyZoom();
+      });
+      stage.addEventListener("touchstart", (ev) => {
+        if (drawTool !== "pan" || ev.touches.length !== 1) return;
+        panning = true;
+        panStart = { x: ev.touches[0].clientX - editorPan.x, y: ev.touches[0].clientY - editorPan.y };
+      }, { passive: true });
+      stage.addEventListener("touchmove", (ev) => {
+        if (!panning || ev.touches.length !== 1) return;
+        editorPan = { x: ev.touches[0].clientX - panStart.x, y: ev.touches[0].clientY - panStart.y };
+        applyZoom();
+      }, { passive: true });
+      const stopPan = () => { panning = false; };
+      window.addEventListener("mouseup", stopPan);
+      window.addEventListener("touchend", stopPan);
+    }
+
+    // Renderiza las notas (cuadros movibles) sobre la imagen del editor
+    function renderEditorNotes(layer, imgEl, m) {
+      layer.innerHTML = "";
+      m.notes.forEach((n) => {
+        const box = document.createElement("div");
+        box.className = "editor-note" + (n.id === activeNoteId ? " active" : "");
+        box.dataset.id = n.id;
+        box.style.left = (n.x * 100) + "%";
+        box.style.top = (n.y * 100) + "%";
+        box.innerHTML = `<span class="note-text">${escapeHtml(n.text || "") || '<span class="note-ph">Escribe…</span>'}</span>` +
+          `<button class="note-del" title="Eliminar nota">&times;</button>`;
+
+        // Doble clic para editar el texto
+        box.querySelector(".note-text").addEventListener("dblclick", (e) => {
+          e.stopPropagation();
+          const t = prompt("Editar nota:", n.text || "");
+          if (t === null) return;
+          n.text = t;
+          renderEditorNotes(layer, imgEl, m);
+        });
+
+        box.querySelector(".note-del").addEventListener("click", (e) => {
+          e.stopPropagation();
+          m.notes = m.notes.filter(x => x.id !== n.id);
+          if (activeNoteId === n.id) activeNoteId = null;
+          renderEditorNotes(layer, imgEl, m);
+          renderMediaList();
+        });
+
+        // Arrastrar la nota
+        box.addEventListener("mousedown", (e) => startNoteDrag(e, box, n, imgEl, layer, m));
+        box.addEventListener("touchstart", (e) => startNoteDrag(e, box, n, imgEl, layer, m), { passive: false });
+
+        layer.appendChild(box);
+      });
+    }
+
+    function startNoteDrag(ev, box, note, imgEl, layer, m) {
+      if (ev.target.classList.contains("note-del")) return;
+      ev.stopPropagation();
+      ev.preventDefault();
+      activeNoteId = note.id;
+      layer.querySelectorAll(".editor-note").forEach(b => b.classList.toggle("active", b.dataset.id === note.id));
+
+      const rect = imgEl.getBoundingClientRect();
+      const move = (e) => {
+        const cx = (e.touches ? e.touches[0].clientX : e.clientX);
+        const cy = (e.touches ? e.touches[0].clientY : e.clientY);
+        let nx = (cx - rect.left) / rect.width;
+        let ny = (cy - rect.top) / rect.height;
+        note.x = Math.max(0, Math.min(1, nx));
+        note.y = Math.max(0, Math.min(1, ny));
+        box.style.left = (note.x * 100) + "%";
+        box.style.top = (note.y * 100) + "%";
+      };
+      const up = () => {
+        window.removeEventListener("mousemove", move);
+        window.removeEventListener("touchmove", move);
+        window.removeEventListener("mouseup", up);
+        window.removeEventListener("touchend", up);
+      };
+      window.addEventListener("mousemove", move);
+      window.addEventListener("touchmove", move, { passive: false });
+      window.addEventListener("mouseup", up);
+      window.addEventListener("touchend", up);
+    }
+
+    function addNoteAt(p) {
+      const m = (editorItem && activeMediaIndex >= 0) ? editorItem.media[activeMediaIndex] : null;
+      if (!m || m.type !== "image") return;
+      if (!Array.isArray(m.notes)) m.notes = [];
+      const note = { id: newId(), text: "", x: p.x, y: p.y };
+      m.notes.push(note);
+      activeNoteId = note.id;
+      // Abre el editor de texto de inmediato
+      const text = prompt("Nueva nota:", "");
+      if (text === null) {
+        m.notes = m.notes.filter(n => n.id !== note.id);
+      } else {
+        note.text = text;
+      }
+      renderEditorStage();
+      renderMediaList();
     }
 
     function endStroke() {
@@ -1760,6 +2090,7 @@
       if (m && m.type === "image") {
         m.strokes.push(currentStroke);
         if (editorCanvasEl) drawStrokesOn(editorCanvasEl, m.strokes);
+        renderMediaList();
       }
       currentStroke = null;
     }
@@ -1771,12 +2102,26 @@
       wrap.style.gap = "8px";
       wrap.style.flexWrap = "wrap";
 
-      const btnMode = document.createElement("button");
-      btnMode.className = "tool-btn" + (drawMode ? " active" : "");
-      btnMode.title = "Dibujar";
-      btnMode.innerHTML = `<i class="fa-solid fa-pencil"></i>`;
-      btnMode.addEventListener("click", () => { drawMode = !drawMode; renderEditorStage(); });
-      wrap.appendChild(btnMode);
+      const tools = [
+        { id: "pen", icon: "fa-pencil", title: "Lápiz" },
+        { id: "rect", icon: "fa-vector-square", title: "Rectángulo" },
+        { id: "arrow", icon: "fa-arrow-right", title: "Flecha" },
+        { id: "text", icon: "fa-font", title: "Texto (Arial 12)" },
+        { id: "note", icon: "fa-note-sticky", title: "Nota" },
+        { id: "pan", icon: "fa-hand", title: "Mover" }
+      ];
+      tools.forEach(t => {
+        const b = document.createElement("button");
+        b.className = "tool-btn" + (drawTool === t.id ? " active" : "");
+        b.title = t.title;
+        b.innerHTML = `<i class="fa-solid ${t.icon}"></i>`;
+        b.addEventListener("click", () => { drawTool = t.id; renderEditorStage(); });
+        wrap.appendChild(b);
+      });
+
+      const sep = document.createElement("span");
+      sep.style.cssText = "width:1px;height:22px;background:#cbd5e1;margin:0 2px;";
+      wrap.appendChild(sep);
 
       const colors = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#a855f7", "#0f172a", "#ffffff"];
       colors.forEach(c => {
@@ -1797,23 +2142,51 @@
         wrap.appendChild(b);
       });
 
+      const sep2 = document.createElement("span");
+      sep2.style.cssText = "width:1px;height:22px;background:#cbd5e1;margin:0 2px;";
+      wrap.appendChild(sep2);
+
+      // Zoom
+      const btnOut = document.createElement("button");
+      btnOut.className = "tool-btn";
+      btnOut.title = "Alejar";
+      btnOut.innerHTML = `<i class="fa-solid fa-magnifying-glass-minus"></i>`;
+      btnOut.addEventListener("click", () => { editorZoom = Math.max(1, editorZoom - 0.5); renderEditorStage(); });
+      wrap.appendChild(btnOut);
+
+      const zoomLabel = document.createElement("span");
+      zoomLabel.style.cssText = "font-size:12px;font-weight:700;color:#475569;min-width:34px;text-align:center;";
+      zoomLabel.textContent = Math.round(editorZoom * 100) + "%";
+      wrap.appendChild(zoomLabel);
+
+      const btnIn = document.createElement("button");
+      btnIn.className = "tool-btn";
+      btnIn.title = "Acercar";
+      btnIn.innerHTML = `<i class="fa-solid fa-magnifying-glass-plus"></i>`;
+      btnIn.addEventListener("click", () => { editorZoom = Math.min(4, editorZoom + 0.5); renderEditorStage(); });
+      wrap.appendChild(btnIn);
+
+      const sep3 = document.createElement("span");
+      sep3.style.cssText = "width:1px;height:22px;background:#cbd5e1;margin:0 2px;";
+      wrap.appendChild(sep3);
+
       const undo = document.createElement("button");
       undo.className = "tool-btn";
       undo.title = "Deshacer";
       undo.innerHTML = `<i class="fa-solid fa-rotate-left"></i>`;
       undo.addEventListener("click", () => {
         const m = editorItem.media[activeMediaIndex];
-        if (m && m.strokes.length > 0) { m.strokes.pop(); renderEditorStage(); }
+        if (m && m.strokes.length > 0) { m.strokes.pop(); renderEditorStage(); renderMediaList(); }
       });
       wrap.appendChild(undo);
 
       const clear = document.createElement("button");
       clear.className = "tool-btn";
-      clear.title = "Limpiar";
+      clear.title = "Limpiar dibujos";
       clear.innerHTML = `<i class="fa-solid fa-eraser"></i>`;
       clear.addEventListener("click", () => {
         const m = editorItem.media[activeMediaIndex];
-        if (m) { m.strokes = []; renderEditorStage(); }
+        if (m) { m.strokes = []; renderEditorStage(); renderMediaList(); }
       });
       wrap.appendChild(clear);
 
@@ -1836,7 +2209,7 @@
       });
       if (!res.ok) throw new Error("No se pudo subir el archivo");
       const data = await res.json();
-      return { type: isVideo ? "video" : "image", url: data.secure_url, note: "", strokes: [] };
+      return { type: isVideo ? "video" : "image", url: data.secure_url, notes: [], strokes: [] };
     }
 
     async function handleFiles(fileList) {
@@ -1878,7 +2251,9 @@
       item.media = editorItem.media.map(m => ({
         type: m.type,
         url: m.url,
-        note: (m.note || "").trim(),
+        notes: (m.notes || [])
+          .filter(n => (n.text || "").trim() !== "")
+          .map(n => ({ id: n.id, text: (n.text || "").trim(), x: n.x, y: n.y })),
         strokes: m.strokes || []
       }));
 
@@ -1966,6 +2341,25 @@
       window.addEventListener("resize", () => {
         if (document.getElementById("editor-modal").classList.contains("active") && editorSetupCanvasFn) {
           editorSetupCanvasFn();
+        }
+        // Reposiciona las notas del visor si esta abierto
+        if (document.getElementById("viewer-modal").classList.contains("active")) {
+          document.querySelectorAll("#viewer-track .viewer-media").forEach((wrap) => {
+            const img = wrap.querySelector("img");
+            const layer = wrap.querySelector(".viewer-notes-layer");
+            if (!img || !layer) return;
+            const w = img.clientWidth, h = img.clientHeight;
+            layer.style.width = w + "px";
+            layer.style.height = h + "px";
+            const idx = Number(wrap.dataset.mediaIndex) || 0;
+            const notes = (viewerItems[idx] && viewerItems[idx].notes) || [];
+            layer.querySelectorAll(".viewer-note-box").forEach((box, i) => {
+              const n = notes[i];
+              if (!n) return;
+              box.style.left = (n.x * w) + "px";
+              box.style.top = (n.y * h) + "px";
+            });
+          });
         }
       });
 
