@@ -390,8 +390,8 @@
       border-radius: var(--radius-lg);
       overflow: hidden;
       box-shadow: var(--shadow-modal);
-      width: min(96vw, 1440px);
-      max-height: 94vh;
+      width: min(96vw, 1360px);
+      max-height: 92vh;
       transition: width 0.25s ease;
     }
 
@@ -404,13 +404,13 @@
     .viewer-slide {
       flex: 0 0 100%;
       width: 100%;
-      height: 94vh;
-      max-height: 94vh;
+      height: 92vh;
+      max-height: 92vh;
       display: flex;
       align-items: center;
       justify-content: center;
       background: #000;
-      padding: 40px 48px;
+      padding: 48px 56px;
     }
 
     .viewer-media { position: relative; display: inline-flex; max-width: 100%; max-height: 100%; transform-origin: center center; }
@@ -418,7 +418,7 @@
     .viewer-media video {
       display: block;
       max-width: 100%;
-      max-height: 62vh;
+      max-height: 74vh;
       width: auto;
       height: auto;
       object-fit: contain;
@@ -530,87 +530,10 @@
       background: #f8fafc;
     }
 
-    /* Espacio de trabajo: imagen (izq) + panel de notas (der) */
+    /* Espacio de trabajo: imagen/video con las notas encima */
     .editor-workspace {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 240px;
-      gap: 14px;
-      align-items: start;
+      display: block;
     }
-
-    .notes-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--radius-md);
-      padding: 12px;
-      min-height: 0;
-    }
-    .notes-panel-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: #0f172a;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .notes-panel-title i { color: #ea580c; }
-    .notes-panel-hint { font-size: 11px; color: #94a3b8; line-height: 1.35; }
-    .notes-panel-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
-    .notes-panel-empty { font-size: 12px; color: #cbd5e1; font-style: italic; padding: 4px 0; }
-
-    .notes-panel-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 6px;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--radius-sm);
-      padding: 6px 8px;
-      background: #f8fafc;
-      cursor: pointer;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .notes-panel-item:hover { border-color: #cbd5e1; }
-    .notes-panel-item.active { border-color: #ea580c; box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.12); }
-    .notes-panel-item .np-text {
-      flex: 1;
-      font-size: 12px;
-      color: #0f172a;
-      line-height: 1.35;
-      word-break: break-word;
-      white-space: pre-wrap;
-    }
-    .notes-panel-item .np-text.empty { color: #94a3b8; font-style: italic; }
-    .notes-panel-item .np-actions { display: flex; flex-direction: column; gap: 2px; }
-    .notes-panel-item .np-btn {
-      border: none;
-      background: transparent;
-      color: #64748b;
-      cursor: pointer;
-      font-size: 11px;
-      padding: 1px;
-      line-height: 1;
-    }
-    .notes-panel-item .np-btn:hover { color: #ea580c; }
-    .notes-panel-item .np-btn.del:hover { color: #ef4444; }
-
-    .notes-panel-add { display: flex; flex-direction: column; gap: 6px; }
-    .notes-panel-add textarea {
-      width: 100%;
-      resize: vertical;
-      min-height: 46px;
-      border: 1px solid #cbd5e1;
-      border-radius: var(--radius-sm);
-      padding: 7px 9px;
-      font-size: 13px;
-      font-family: inherit;
-      color: #0f172a;
-      outline: none;
-    }
-    .notes-panel-add textarea:focus { border-color: #ea580c; }
-    .notes-panel-add .btn { width: 100%; justify-content: center; }
 
     .editor-right {
       padding: 18px 22px;
@@ -709,15 +632,15 @@
       cursor: pointer;
       padding: 0 2px;
     }
-    .editor-note .note-view {
+    .editor-note .note-input {
       padding: 6px 9px;
       min-height: 18px;
+      outline: none;
       white-space: pre-wrap;
       word-break: break-word;
+      cursor: text;
       color: #0f172a;
-      user-select: none;
     }
-    .editor-note .note-view.note-view-empty { color: #94a3b8; font-style: italic; }
 
     /* Entrada de texto flotante (herramienta Texto) */
     .editor-text-input {
@@ -858,6 +781,23 @@
 
     .media-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 
+    /* Boton unico para agregar una nota sobre la imagen/video seleccionada */
+    .media-add-note {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #ea580c;
+      cursor: pointer;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .media-add-note:hover { background: #fff7ed; border-color: #fdba74; }
+
     .media-remove {
       width: 26px;
       height: 26px;
@@ -983,15 +923,6 @@
               <div class="editor-stage" id="editor-stage"></div>
               <div class="draw-toolbar" id="draw-toolbar"></div>
             </div>
-            <aside class="notes-panel" id="notes-panel">
-              <div class="notes-panel-title"><i class="fa-solid fa-note-sticky"></i> Notas</div>
-              <div class="notes-panel-hint">Escribe aquí y agrégala. Luego arrástrala sobre la imagen o video.</div>
-              <div class="notes-panel-list" id="notes-panel-list"></div>
-              <div class="notes-panel-add">
-                <textarea id="note-new-text" placeholder="Escribe una nota..."></textarea>
-                <button class="btn btn-primary" id="btn-add-note">Agregar nota</button>
-              </div>
-            </aside>
           </div>
         </div>
         <div class="editor-right">
@@ -1259,7 +1190,15 @@
       if (firstError) {
         lastSaveError = firstError;
         console.error("Error guardando avances:", firstError);
-        toast(saveErrorMessage(firstError), "err");
+        const msg = firstError.message || "error desconocido";
+        if (/row-level security|violates row-level/i.test(msg)) {
+          toast("No tienes permisos para guardar en 'avances' (RLS). " +
+                "Un administrador debe ejecutar el SQL de docs/add_avances_table.sql en Supabase. " +
+                "Los cambios quedan guardados en este navegador.", "err");
+        } else {
+          toast("No se pudo guardar en el servidor: " + msg +
+                ". Los cambios quedan guardados en este navegador.", "err");
+        }
       } else {
         lastSaveError = null;
       }
@@ -1354,8 +1293,13 @@
       document.body.classList.add("is-admin-user");
       // Avisa al admin si hubo problemas de lectura al cargar
       if (lastLoadError) {
-        toast("Atención: no se pudo leer la tabla 'avances'. " +
-              "Revisa que el SQL se haya ejecutado en Supabase. " + (lastLoadError.message || ""), "err");
+        const msg = lastLoadError.message || "";
+        const missing = /PGRST205|schema cache|Could not find the table|does not exist/i.test(msg);
+        if (missing) {
+          toast("Falta crear la tabla 'avances' en Supabase. Un administrador debe ejecutar el SQL de docs/add_avances_table.sql en el SQL Editor. Por ahora los cambios se guardan solo en este navegador.", "err");
+        } else {
+          toast("Aviso: no se pudo leer la tabla 'avances'. " + msg, "err");
+        }
       }
     }
 
@@ -1811,32 +1755,11 @@
       document.getElementById("viewer-modal").classList.add("active");
     };
 
-    // Coloca las notas segun su posicion relativa al medio. Las coordenadas x/y
-    // son relativas al medio (0..1) pero NO se limitan a 0..1: asi una nota
-    // puede quedar fuera de la imagen (en la zona negra del visor).
+    // Coloca las notas segun su posicion relativa dentro de la imagen/video.
+    // Se usa el ancho/alto del medio real para permitir notas dentro o fuera.
     function positionViewerNotes(mediaEl, layer, notes) {
-      const place = () => {
-        const w = mediaEl.clientWidth, h = mediaEl.clientHeight;
-        if (!w || !h) return;
-        layer.style.width = w + "px";
-        layer.style.height = h + "px";
-        layer.style.left = "0";
-        layer.style.top = "0";
-        notes.forEach((n, i) => {
-          let box = layer.querySelector(`[data-note="${i}"]`);
-          if (!box) {
-            box = document.createElement("div");
-            box.className = "viewer-note-box";
-            box.dataset.note = i;
-            layer.appendChild(box);
-            // El admin puede arrastrar las notas para acomodarlas (y se guardan)
-            if (isUserAdmin) makeViewerNoteDraggable(box, n, mediaEl, layer, notes);
-          }
-          box.textContent = n.text || "";
-          box.style.left = (n.x * w) + "px";
-          box.style.top = (n.y * h) + "px";
-        });
-      };
+      const visible = notes.filter(n => (n.text || "").trim() !== "");
+      const place = () => layoutViewerNotes(mediaEl, layer, visible);
       if (mediaEl.tagName === "VIDEO") {
         if (mediaEl.readyState >= 1) place();
         mediaEl.addEventListener("loadedmetadata", place);
@@ -1846,48 +1769,63 @@
       mediaEl.addEventListener("load", place);
     }
 
-    // Permite al admin arrastrar una nota del visor dentro o fuera de la imagen.
-    function makeViewerNoteDraggable(box, note, mediaEl, layer, notes) {
-      box.classList.add("draggable");
-      box.title = "Arrastra para acomodar la nota";
-      const startDrag = (ev) => {
-        if (ev.button !== undefined && ev.button !== 0) return;
-        ev.preventDefault();
-        ev.stopPropagation();
-        const rect = mediaEl.getBoundingClientRect();
-        const move = (e) => {
-          const cx = (e.touches ? e.touches[0].clientX : e.clientX);
-          const cy = (e.touches ? e.touches[0].clientY : e.clientY);
-          note.x = (cx - rect.left) / rect.width;
-          note.y = (cy - rect.top) / rect.height;
-          box.style.left = (note.x * rect.width) + "px";
-          box.style.top = (note.y * rect.height) + "px";
-        };
-        const up = () => {
-          window.removeEventListener("mousemove", move);
-          window.removeEventListener("touchmove", move);
-          window.removeEventListener("mouseup", up);
-          window.removeEventListener("touchend", up);
-          saveViewerNotePositions(mediaEl, layer, notes);
-        };
-        window.addEventListener("mousemove", move);
-        window.addEventListener("touchmove", move, { passive: false });
-        window.addEventListener("mouseup", up);
-        window.addEventListener("touchend", up);
-      };
-      box.addEventListener("mousedown", startDrag);
-      box.addEventListener("touchstart", startDrag, { passive: false });
+    // Ubica las notas y luego ajusta la escala para que TODAS se vean.
+    function layoutViewerNotes(mediaEl, layer, notes) {
+      const w = mediaEl.clientWidth, h = mediaEl.clientHeight;
+      if (!w || !h) return;
+      layer.style.width = w + "px";
+      layer.style.height = h + "px";
+      layer.style.left = "0";
+      layer.style.top = "0";
+      notes.forEach((n, i) => {
+        let box = layer.querySelector(`[data-note="${i}"]`);
+        if (!box) {
+          box = document.createElement("div");
+          box.className = "viewer-note-box";
+          box.dataset.note = i;
+          layer.appendChild(box);
+        }
+        box.textContent = n.text || "";
+        box.style.left = (n.x * w) + "px";
+        box.style.top = (n.y * h) + "px";
+      });
+      requestAnimationFrame(() => fitViewerMedia(mediaEl, layer, notes));
     }
 
-    // Guarda en Supabase la nueva posicion de las notas del medio visible
-    function saveViewerNotePositions(mediaEl, layer, notes) {
-      if (!isUserAdmin || !viewerItemId) return;
+    // Escala el medio (con sus notas) para que las notas que estan fuera de la
+    // imagen tambien se vean. Si no hay notas fuera, queda igual (escala 1).
+    function fitViewerMedia(mediaEl, layer, notes) {
       const wrap = mediaEl.closest(".viewer-media");
-      const idx = wrap ? Number(wrap.dataset.mediaIndex) : -1;
-      const item = findItem(viewerItemId);
-      if (!item || !Array.isArray(item.media) || !item.media[idx]) return;
-      item.media[idx].notes = notes.map(n => ({ id: n.id, text: n.text || "", x: n.x, y: n.y }));
-      persistOne(item);
+      const slide = mediaEl.closest(".viewer-slide");
+      if (!wrap || !slide) return;
+      const w = mediaEl.clientWidth, h = mediaEl.clientHeight;
+      if (!w || !h) { wrap.style.transform = ""; return; }
+
+      let minX = 0, minY = 0, maxX = w, maxY = h;
+      layer.querySelectorAll(".viewer-note-box").forEach((box, i) => {
+        const n = notes[i];
+        if (!n) return;
+        const cx = n.x * w, cy = n.y * h;
+        const hw = box.offsetWidth / 2, hh = box.offsetHeight / 2;
+        minX = Math.min(minX, cx - hw);
+        maxX = Math.max(maxX, cx + hw);
+        minY = Math.min(minY, cy - hh);
+        maxY = Math.max(maxY, cy + hh);
+      });
+
+      const contentW = Math.max(1, maxX - minX);
+      const contentH = Math.max(1, maxY - minY);
+
+      const cs = getComputedStyle(slide);
+      const availW = Math.max(1, slide.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+      const availH = Math.max(1, slide.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom));
+
+      const s = Math.min(1, availW / contentW, availH / contentH);
+      const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+      const tx = -s * (cx - w / 2);
+      const ty = -s * (cy - h / 2);
+
+      wrap.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
     }
 
     function attachViewerStrokes(img, canvas, strokes) {
@@ -2089,19 +2027,10 @@
           ? `<video src="${escapeHtml(m.url)}" muted preload="metadata"></video>`
           : `<img src="${escapeHtml(m.url)}" alt="" onerror="this.style.display='none'">`;
 
-        let infoHtml = "";
-        const nCount = Array.isArray(m.notes) ? m.notes.length : 0;
-        const sCount = Array.isArray(m.strokes) ? m.strokes.length : 0;
-        const parts = [];
-        if (nCount > 0) parts.push(`${nCount} nota${nCount === 1 ? '' : 's'}`);
-        if (sCount > 0) parts.push(`${sCount} trazo${sCount === 1 ? '' : 's'}`);
-        if (m.type === "video") parts.unshift("Video");
-        infoHtml = `<span style="font-size:12px;color:#94a3b8;">${parts.length ? parts.join(' · ') : 'Sin anotaciones'}</span>`;
-
         el.innerHTML = `
           <div class="media-item-thumb">${thumbHtml}</div>
           <div class="media-item-body">
-            ${infoHtml}
+            <button class="media-add-note" data-role="add-note" title="Agregar nota"><i class="fa-solid fa-plus"></i></button>
           </div>
           <button class="media-remove" data-role="remove" title="Quitar">&times;</button>
         `;
@@ -2113,6 +2042,15 @@
           editorPan = { x: 0, y: 0 };
           renderMediaList();
           renderEditorStage();
+        });
+
+        el.querySelector('[data-role="add-note"]').addEventListener("click", (e) => {
+          e.stopPropagation();
+          activeMediaIndex = idx;
+          activeNoteId = null;
+          editorZoom = 1;
+          editorPan = { x: 0, y: 0 };
+          addNoteToMedia();
         });
 
         el.querySelector('[data-role="remove"]').addEventListener("click", () => {
@@ -2140,11 +2078,11 @@
         editorCanvasEl = null;
         editorSetupCanvasFn = null;
         imgElRef = null;
-        renderNotesPanel();
         return;
       }
 
       if (m.type === "video") {
+        if (!Array.isArray(m.notes)) m.notes = [];
         // Contenedor para poder poner notas tambien sobre el video
         const vidLayer = document.createElement("div");
         vidLayer.className = "editor-zoom-layer";
@@ -2167,8 +2105,6 @@
         videoEl.addEventListener("loadedmetadata", rerender);
         videoEl.addEventListener("load", rerender);
         videoEl.addEventListener("loadeddata", rerender);
-
-        renderNotesPanel();
         return;
       }
 
@@ -2212,9 +2148,6 @@
 
       if (imgEl.complete) setupCanvas();
       imgEl.addEventListener("load", setupCanvas);
-
-      // Refresca el panel de notas para la imagen activa
-      renderNotesPanel();
 
       toolbar.appendChild(buildToolbar());
 
@@ -2326,8 +2259,7 @@
       inp.addEventListener("click", (e) => e.stopPropagation());
     }
 
-    // Renderiza las notas como cuadros movibles sobre la imagen del editor.
-    // El texto se edita en el panel lateral; aqui solo se muestra y se arrastra.
+    // Renderiza las notas como cuadros movibles sobre la imagen/video del editor.
     function renderEditorNotes(layer, imgEl, m) {
       layer.innerHTML = "";
       m.notes.forEach((n) => {
@@ -2341,146 +2273,58 @@
             `<span class="note-grip" title="Arrastrar">⠿</span>` +
             `<button class="note-del" title="Eliminar nota">&times;</button>` +
           `</div>` +
-          `<div class="note-view"></div>`;
+          `<div class="note-input" contenteditable="true"></div>`;
 
-        const view = box.querySelector(".note-view");
-        const text = (n.text || "").trim();
-        view.textContent = text || "Nota vacía";
-        if (!text) view.classList.add("note-view-empty");
+        // Texto editable directamente sobre la imagen (sin ventanas emergentes)
+        const input = box.querySelector(".note-input");
+        input.textContent = n.text || "";
+        input.addEventListener("input", () => { n.text = input.textContent; });
+        // Evita que escribir arrastre la nota o dispare dibujo
+        input.addEventListener("mousedown", (e) => e.stopPropagation());
+        input.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
 
         box.querySelector(".note-del").addEventListener("click", (e) => {
           e.stopPropagation();
           m.notes = m.notes.filter(x => x.id !== n.id);
           if (activeNoteId === n.id) activeNoteId = null;
           renderEditorNotes(layer, imgEl, m);
-          renderNotesPanel();
           renderMediaList();
         });
 
-        // Arrastrar la nota desde cualquier parte del cuadro (el texto no es editable aqui)
-        box.addEventListener("mousedown", (e) => startNoteDrag(e, box, n, imgEl, layer, m));
-        box.addEventListener("touchstart", (e) => startNoteDrag(e, box, n, imgEl, layer, m), { passive: false });
+        // Arrastrar la nota desde su barra
+        const bar = box.querySelector(".note-bar");
+        bar.addEventListener("mousedown", (e) => startNoteDrag(e, box, n, imgEl, layer, m));
+        bar.addEventListener("touchstart", (e) => startNoteDrag(e, box, n, imgEl, layer, m), { passive: false });
 
         layer.appendChild(box);
       });
     }
 
-    // Panel lateral de notas: escribir aqui y luego arrastrar sobre la imagen
-    function renderNotesPanel() {
-      const list = document.getElementById("notes-panel-list");
-      if (!list) return;
-
-      const m = (editorItem && activeMediaIndex >= 0) ? editorItem.media[activeMediaIndex] : null;
-      const addWrap = document.querySelector(".notes-panel-add");
-      const hint = document.querySelector(".notes-panel-hint");
-
-      if (!m) {
-        list.innerHTML = "";
-        if (addWrap) addWrap.style.display = "none";
-        if (hint) hint.textContent = "Selecciona una imagen o video para agregar notas.";
-        return;
-      }
-
-      if (!Array.isArray(m.notes)) m.notes = [];
-      if (addWrap) addWrap.style.display = "";
-      if (hint) hint.textContent = "Escribe aquí y agrégala. Luego arrástrala sobre la imagen o video.";
-
-      list.innerHTML = "";
-      if (m.notes.length === 0) {
-        list.innerHTML = `<div class="notes-panel-empty">Aún no hay notas.</div>`;
-      }
-
-      m.notes.forEach((n) => {
-        const el = document.createElement("div");
-        el.className = "notes-panel-item" + (n.id === activeNoteId ? " active" : "");
-        const txt = (n.text || "").trim();
-        el.innerHTML =
-          `<div class="np-text${txt ? "" : " empty"}"></div>` +
-          `<div class="np-actions">` +
-            `<button class="np-btn" data-role="edit" title="Editar"><i class="fa-solid fa-pen"></i></button>` +
-            `<button class="np-btn del" data-role="del" title="Eliminar"><i class="fa-solid fa-trash"></i></button>` +
-          `</div>`;
-        el.querySelector(".np-text").textContent = txt || "Nota vacía";
-
-        el.addEventListener("click", () => {
-          activeNoteId = n.id;
-          renderNotesPanel();
-          const layer = imgElRef && imgElRef.parentElement
-            ? imgElRef.parentElement.querySelector(".editor-notes-layer")
-            : null;
-          if (layer) renderEditorNotes(layer, imgElRef, m);
-        });
-        el.querySelector('[data-role="edit"]').addEventListener("click", (e) => {
-          e.stopPropagation();
-          editNoteText(n);
-        });
-        el.querySelector('[data-role="del"]').addEventListener("click", (e) => {
-          e.stopPropagation();
-          m.notes = m.notes.filter(x => x.id !== n.id);
-          if (activeNoteId === n.id) activeNoteId = null;
-          renderNotesPanel();
-          renderEditorStage();
-          renderMediaList();
-        });
-
-        list.appendChild(el);
-      });
-    }
-
-    // Edita el texto de una nota con el area de texto del panel
-    function editNoteText(note) {
-      const ta = document.getElementById("note-new-text");
-      const btn = document.getElementById("btn-add-note");
-      if (!ta) return;
-      activeNoteId = note.id;
-      ta.value = note.text || "";
-      ta.dataset.editId = note.id;
-      if (btn) btn.textContent = "Guardar nota";
-      ta.focus();
-      renderNotesPanel();
-    }
-
-    // Agrega una nota nueva (desde el panel). Queda lista para arrastrar.
-    function addNoteFromPanel() {
+    // Agrega una nota nueva al medio activo (aparece sobre la imagen/video)
+    function addNoteToMedia() {
       const m = (editorItem && activeMediaIndex >= 0) ? editorItem.media[activeMediaIndex] : null;
       if (!m) return;
       if (!Array.isArray(m.notes)) m.notes = [];
-
-      const ta = document.getElementById("note-new-text");
-      const btn = document.getElementById("btn-add-note");
-      const text = (ta ? ta.value : "").trim();
-
-      const editId = ta ? ta.dataset.editId : null;
-      if (editId) {
-        // Guardar edición de una nota existente
-        const note = m.notes.find(x => x.id === editId);
-        if (note) note.text = text;
-        ta.value = "";
-        delete ta.dataset.editId;
-        if (btn) btn.textContent = "Agregar nota";
-        renderNotesPanel();
-        renderEditorStage();
-        renderMediaList();
-        return;
-      }
-
-      if (!text) { if (ta) ta.focus(); return; }
-
-      // Crea la nota; si ya hay notas, se escalonan un poco para que se vean
       const idx = m.notes.length;
-      const note = {
-        id: newId(),
-        text: text,
-        x: 0.5,
-        y: Math.min(0.9, 0.35 + idx * 0.08)
-      };
+      const note = { id: newId(), text: "", x: 0.5, y: Math.min(0.85, 0.4 + idx * 0.08) };
       m.notes.push(note);
       activeNoteId = note.id;
-      if (ta) ta.value = "";
-
-      renderNotesPanel();
       renderEditorStage();
       renderMediaList();
+      requestAnimationFrame(focusNoteInput);
+    }
+
+    // Enfoca el input de la nota recien creada
+    function focusNoteInput() {
+      const input = document.querySelector(".editor-note.active .note-input");
+      if (!input) return;
+      input.focus();
+      const range = document.createRange();
+      range.selectNodeContents(input);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
     }
 
     function startNoteDrag(ev, box, note, imgEl, layer, m) {
@@ -2488,8 +2332,6 @@
       ev.stopPropagation();
       ev.preventDefault();
       activeNoteId = note.id;
-      layer.querySelectorAll(".editor-note").forEach(b => b.classList.toggle("active", b.dataset.id === note.id));
-      renderNotesPanel();
 
       const rect = imgEl.getBoundingClientRect();
       const move = (e) => {
@@ -2728,16 +2570,6 @@
         if (e.target.id === "editor-modal") closeEditor();
       });
 
-      // Panel de notas
-      const btnAddNote = document.getElementById("btn-add-note");
-      if (btnAddNote) btnAddNote.addEventListener("click", addNoteFromPanel);
-      const noteText = document.getElementById("note-new-text");
-      if (noteText) {
-        noteText.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addNoteFromPanel(); }
-        });
-      }
-
       // Zona de carga
       const dz = document.getElementById("dropzone");
       const fileInput = document.createElement("input");
@@ -2795,17 +2627,10 @@
             const media = wrap.querySelector("img, video");
             const layer = wrap.querySelector(".viewer-notes-layer");
             if (!media || !layer) return;
-            const w = media.clientWidth, h = media.clientHeight;
-            layer.style.width = w + "px";
-            layer.style.height = h + "px";
             const idx = Number(wrap.dataset.mediaIndex) || 0;
-            const notes = (viewerItems[idx] && viewerItems[idx].notes) || [];
-            layer.querySelectorAll(".viewer-note-box").forEach((box, i) => {
-              const n = notes[i];
-              if (!n) return;
-              box.style.left = (n.x * w) + "px";
-              box.style.top = (n.y * h) + "px";
-            });
+            const notes = ((viewerItems[idx] && viewerItems[idx].notes) || [])
+              .filter(n => (n.text || "").trim() !== "");
+            layoutViewerNotes(media, layer, notes);
           });
         }
       });
