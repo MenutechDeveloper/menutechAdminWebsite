@@ -390,8 +390,8 @@
       border-radius: var(--radius-lg);
       overflow: hidden;
       box-shadow: var(--shadow-modal);
-      width: min(92vw, 1180px);
-      max-height: 88vh;
+      width: min(96vw, 1440px);
+      max-height: 94vh;
       transition: width 0.25s ease;
     }
 
@@ -404,13 +404,13 @@
     .viewer-slide {
       flex: 0 0 100%;
       width: 100%;
-      height: 88vh;
-      max-height: 88vh;
+      height: 94vh;
+      max-height: 94vh;
       display: flex;
       align-items: center;
       justify-content: center;
       background: #000;
-      padding: 60px 70px;
+      padding: 40px 48px;
     }
 
     .viewer-media { position: relative; display: inline-flex; max-width: 100%; max-height: 100%; transform-origin: center center; }
@@ -418,7 +418,7 @@
     .viewer-media video {
       display: block;
       max-width: 100%;
-      max-height: 68vh;
+      max-height: 62vh;
       width: auto;
       height: auto;
       object-fit: contain;
@@ -441,16 +441,25 @@
       background: #ffffff;
       color: #0f172a;
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      line-height: 1.4;
-      padding: 8px 10px;
+      font-size: 13px;
+      line-height: 1.45;
+      padding: 10px 13px;
       border-radius: 10px;
-      max-width: 190px;
-      min-width: 40px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+      min-width: 100px;
+      max-width: 240px;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
       white-space: pre-wrap;
       word-break: break-word;
     }
+    /* Cuando el admin esta logueado puede arrastrar las notas dentro del visor */
+    .viewer-note-box.draggable {
+      pointer-events: auto;
+      cursor: grab;
+      touch-action: none;
+      outline: 1px dashed rgba(234, 88, 12, 0.6);
+      outline-offset: 3px;
+    }
+    .viewer-note-box.draggable:active { cursor: grabbing; }
 
     /* ============================================================
        EDITOR DE FUNCION (MODAL)
@@ -1068,6 +1077,7 @@
     // Visor
     let viewerItems = [];
     let viewerIndex = 0;
+    let viewerItemId = null;
 
     // Editor
     let editorItem = null;
@@ -1249,12 +1259,23 @@
       if (firstError) {
         lastSaveError = firstError;
         console.error("Error guardando avances:", firstError);
-        toast("No se pudo guardar en el servidor: " + (firstError.message || "error desconocido") +
-              ". Los cambios quedan guardados en este navegador.", "err");
+        toast(saveErrorMessage(firstError), "err");
       } else {
         lastSaveError = null;
       }
       return !firstError;
+    }
+
+    // Mensaje de error claro al guardar (distingue el error de permisos RLS)
+    function saveErrorMessage(err) {
+      const msg = (err && err.message) || "error desconocido";
+      if (/row-level security|violates row-level/i.test(msg)) {
+        return "No tienes permisos para guardar en 'avances' (RLS). " +
+               "Un administrador debe ejecutar el SQL de docs/add_avances_table.sql en Supabase. " +
+               "Los cambios quedan guardados en este navegador.";
+      }
+      return "No se pudo guardar en el servidor: " + msg +
+             ". Los cambios quedan guardados en este navegador.";
     }
 
     async function persistOne(item) {
@@ -1273,8 +1294,7 @@
       });
       if (error) {
         console.error("Error guardando avance:", error);
-        toast("No se pudo guardar en el servidor: " + (error.message || "error desconocido") +
-              ". Los cambios quedan guardados en este navegador.", "err");
+        toast(saveErrorMessage(error), "err");
       }
     }
 
@@ -1319,7 +1339,7 @@
         if (error || !profile) { disableAdminUI(); return; }
 
         const role = (profile.role || '').trim().toUpperCase();
-        const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS'];
+        const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'ADMINCS', 'OWNER', 'SUPERADMIN'];
 
         if (privilegedRoles.includes(role)) enableAdminUI();
         else disableAdminUI();
@@ -1731,6 +1751,7 @@
 
       viewerItems = Array.isArray(item.media) ? item.media : [];
       if (viewerItems.length === 0) return;
+      viewerItemId = item.id;
 
       viewerIndex = 0;
       const track = document.getElementById("viewer-track");
@@ -1790,9 +1811,9 @@
       document.getElementById("viewer-modal").classList.add("active");
     };
 
-    // Coloca las notas segun su posicion relativa dentro de la imagen/video.
-    // Se usa el ancho/alto del cuadro real (no solo la imagen) para permitir
-    // notas dentro o ligeramente fuera del medio.
+    // Coloca las notas segun su posicion relativa al medio. Las coordenadas x/y
+    // son relativas al medio (0..1) pero NO se limitan a 0..1: asi una nota
+    // puede quedar fuera de la imagen (en la zona negra del visor).
     function positionViewerNotes(mediaEl, layer, notes) {
       const place = () => {
         const w = mediaEl.clientWidth, h = mediaEl.clientHeight;
@@ -1807,9 +1828,11 @@
             box = document.createElement("div");
             box.className = "viewer-note-box";
             box.dataset.note = i;
-            box.textContent = n.text || "";
             layer.appendChild(box);
+            // El admin puede arrastrar las notas para acomodarlas (y se guardan)
+            if (isUserAdmin) makeViewerNoteDraggable(box, n, mediaEl, layer, notes);
           }
+          box.textContent = n.text || "";
           box.style.left = (n.x * w) + "px";
           box.style.top = (n.y * h) + "px";
         });
@@ -1821,6 +1844,50 @@
         if (mediaEl.complete) place();
       }
       mediaEl.addEventListener("load", place);
+    }
+
+    // Permite al admin arrastrar una nota del visor dentro o fuera de la imagen.
+    function makeViewerNoteDraggable(box, note, mediaEl, layer, notes) {
+      box.classList.add("draggable");
+      box.title = "Arrastra para acomodar la nota";
+      const startDrag = (ev) => {
+        if (ev.button !== undefined && ev.button !== 0) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        const rect = mediaEl.getBoundingClientRect();
+        const move = (e) => {
+          const cx = (e.touches ? e.touches[0].clientX : e.clientX);
+          const cy = (e.touches ? e.touches[0].clientY : e.clientY);
+          note.x = (cx - rect.left) / rect.width;
+          note.y = (cy - rect.top) / rect.height;
+          box.style.left = (note.x * rect.width) + "px";
+          box.style.top = (note.y * rect.height) + "px";
+        };
+        const up = () => {
+          window.removeEventListener("mousemove", move);
+          window.removeEventListener("touchmove", move);
+          window.removeEventListener("mouseup", up);
+          window.removeEventListener("touchend", up);
+          saveViewerNotePositions(mediaEl, layer, notes);
+        };
+        window.addEventListener("mousemove", move);
+        window.addEventListener("touchmove", move, { passive: false });
+        window.addEventListener("mouseup", up);
+        window.addEventListener("touchend", up);
+      };
+      box.addEventListener("mousedown", startDrag);
+      box.addEventListener("touchstart", startDrag, { passive: false });
+    }
+
+    // Guarda en Supabase la nueva posicion de las notas del medio visible
+    function saveViewerNotePositions(mediaEl, layer, notes) {
+      if (!isUserAdmin || !viewerItemId) return;
+      const wrap = mediaEl.closest(".viewer-media");
+      const idx = wrap ? Number(wrap.dataset.mediaIndex) : -1;
+      const item = findItem(viewerItemId);
+      if (!item || !Array.isArray(item.media) || !item.media[idx]) return;
+      item.media[idx].notes = notes.map(n => ({ id: n.id, text: n.text || "", x: n.x, y: n.y }));
+      persistOne(item);
     }
 
     function attachViewerStrokes(img, canvas, strokes) {
@@ -1919,6 +1986,7 @@
       document.getElementById("viewer-track").innerHTML = "";
       viewerItems = [];
       viewerIndex = 0;
+      viewerItemId = null;
     }
 
     function viewerGo(delta) {
@@ -2724,10 +2792,10 @@
         // Reposiciona las notas del visor si esta abierto
         if (document.getElementById("viewer-modal").classList.contains("active")) {
           document.querySelectorAll("#viewer-track .viewer-media").forEach((wrap) => {
-            const img = wrap.querySelector("img");
+            const media = wrap.querySelector("img, video");
             const layer = wrap.querySelector(".viewer-notes-layer");
-            if (!img || !layer) return;
-            const w = img.clientWidth, h = img.clientHeight;
+            if (!media || !layer) return;
+            const w = media.clientWidth, h = media.clientHeight;
             layer.style.width = w + "px";
             layer.style.height = h + "px";
             const idx = Number(wrap.dataset.mediaIndex) || 0;
