@@ -1709,6 +1709,7 @@
       viewerIndex = 0;
       const track = document.getElementById("viewer-track");
       track.innerHTML = "";
+      const pendingNotes = [];
 
       viewerItems.forEach(m => {
         const slide = document.createElement("div");
@@ -1731,7 +1732,7 @@
             const layer = document.createElement("div");
             layer.className = "viewer-notes-layer";
             wrap.appendChild(layer);
-            positionViewerNotes(v, layer, notes);
+            pendingNotes.push({ mediaEl: v, layer, notes });
           }
         } else {
           const img = document.createElement("img");
@@ -1752,7 +1753,7 @@
             const layer = document.createElement("div");
             layer.className = "viewer-notes-layer";
             wrap.appendChild(layer);
-            positionViewerNotes(img, layer, notes);
+            pendingNotes.push({ mediaEl: img, layer, notes });
           }
         }
 
@@ -1760,17 +1761,26 @@
         track.appendChild(slide);
       });
 
-      updateViewerTransform();
+      // Mostrar el visor ANTES de posicionar las notas: con el modal en
+      // display:none la imagen mide 0 y las notas quedarian fuera de sitio.
       document.getElementById("viewer-modal").classList.add("active");
+      updateViewerTransform();
+      pendingNotes.forEach(p => positionViewerNotes(p.mediaEl, p.layer, p.notes));
     };
 
     // Coloca las notas segun su posicion relativa al medio. Las coordenadas x/y
     // son relativas al medio (0..1) pero NO se limitan a 0..1: asi una nota
     // puede quedar fuera de la imagen (en la zona negra del visor).
     function positionViewerNotes(mediaEl, layer, notes) {
+      let tries = 0;
       const place = () => {
         const w = mediaEl.clientWidth, h = mediaEl.clientHeight;
-        if (!w || !h) return;
+        if (!w || !h) {
+          // El medio aun no tiene tamano (p.ej. imagen no cargada todavia):
+          // reintenta unos frames para no dejar las notas sin colocar.
+          if (++tries <= 120) requestAnimationFrame(place);
+          return;
+        }
         layer.style.width = w + "px";
         layer.style.height = h + "px";
         layer.style.left = "0";
