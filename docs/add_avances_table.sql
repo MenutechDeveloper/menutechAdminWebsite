@@ -5,10 +5,12 @@
 -- Los archivos (imagenes/videos) se suben a Cloudinary; aquí se guarda
 -- la URL y las notas/dibujos de cada imagen.
 --
--- IMPORTANTE: si la página avance.html muestra el aviso
---   "Falta crear la tabla 'avances' en Supabase"
--- es porque este SQL todavía no se ha ejecutado en este proyecto.
--- Pega TODO este archivo en el SQL Editor y pulsa "Run".
+-- IMPORTANTE: si al guardar aparece el aviso
+--   "no se pudo leer la tabla 'avances'" o un error de RLS
+--   ("new row violates row-level security policy for table avances"),
+--   ejecuta TODO este archivo en el SQL Editor y pulsa "Run".
+--   El script es re-ejecutable: crea la tabla si falta y reemplaza las
+--   politicas por las nuevas (roles reales: owner, admin, superadmin, cs...).
 -- ====================================================================
 
 -- 1. Extension uuid (por si el proyecto no la tiene)
@@ -41,11 +43,11 @@ ALTER TABLE public.avances
 ALTER TABLE public.avances ENABLE ROW LEVEL SECURITY;
 
 -- 5. Policies
-DO $$
-BEGIN
-    DROP POLICY IF EXISTS "Public can view avances" ON public.avances;
-    DROP POLICY IF EXISTS "Admins can manage avances" ON public.avances;
-END $$;
+-- Se aceptan los roles reales del proyecto (owner, admin, superadmin, cs, ...)
+-- comparando sin distinguir mayusculas/espacios. Para re-ejecutar sin errores
+-- se eliminan primero las politicas si ya existian.
+DROP POLICY IF EXISTS "Public can view avances" ON public.avances;
+DROP POLICY IF EXISTS "Admins can manage avances" ON public.avances;
 
 -- Cualquiera puede ver los avances (página pública)
 CREATE POLICY "Public can view avances"
@@ -60,13 +62,17 @@ CREATE POLICY "Admins can manage avances"
         EXISTS (
             SELECT 1 FROM public.profiles
             WHERE id = auth.uid()
-            AND role IN ('ADMIN', 'DEVELOPER', 'CS', 'ADMINCS')
+            AND LOWER(TRIM(role)) IN ('admin', 'developer', 'cs', 'admincs', 'owner', 'superadmin')
         )
     )
     WITH CHECK (
         EXISTS (
             SELECT 1 FROM public.profiles
             WHERE id = auth.uid()
-            AND role IN ('ADMIN', 'DEVELOPER', 'CS', 'ADMINCS')
+            AND LOWER(TRIM(role)) IN ('admin', 'developer', 'cs', 'admincs', 'owner', 'superadmin')
         )
     );
+
+-- 6. Si la tabla ya existia con las politicas antiguas (roles en MAYUSCULAS),
+--    las dos sentencias de arriba ya las reemplazan por las nuevas.
+--    Recarga la pagina avance.html y vuelve a intentar guardar.
