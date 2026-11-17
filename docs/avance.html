@@ -598,12 +598,18 @@
       font-size: 15px;
       line-height: 1.5;
       border-radius: 12px;
-      min-width: 220px;
-      max-width: 380px;
+      width: max-content;
+      min-width: 240px;
+      max-width: 330px;
       box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
-      border: 2px solid transparent;
+      border: 2px solid #eab308;
       touch-action: none;
       pointer-events: auto;
+      animation: noteIn 0.16s ease-out;
+    }
+    @keyframes noteIn {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     }
     .editor-note.active { border-color: #ea580c; box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.28); }
     .editor-note .note-bar {
@@ -611,14 +617,14 @@
       align-items: center;
       justify-content: space-between;
       gap: 6px;
-      background: #f1f5f9;
+      background: #fef9c3;
       padding: 5px 10px;
       border-radius: 10px 10px 0 0;
       cursor: grab;
       user-select: none;
     }
     .editor-note .note-bar:active { cursor: grabbing; }
-    .editor-note .note-grip { color: #94a3b8; font-size: 13px; letter-spacing: 1px; }
+    .editor-note .note-grip { color: #a16207; font-size: 13px; letter-spacing: 1px; }
     .editor-note .note-del {
       border: none;
       background: transparent;
@@ -629,8 +635,8 @@
       padding: 0 2px;
     }
     .editor-note .note-input {
-      padding: 12px 15px;
-      min-height: 46px;
+      padding: 14px 16px;
+      min-height: 116px;
       outline: none;
       white-space: pre-wrap;
       word-break: break-word;
@@ -804,10 +810,33 @@
       padding: 14px 22px;
       border-top: 1px solid #e2e8f0;
       display: flex;
-      justify-content: flex-end;
+      align-items: center;
+      justify-content: space-between;
       gap: 10px;
       background: #fff;
     }
+    .editor-footer-actions { display: flex; align-items: center; gap: 10px; }
+
+    /* Icono amarillo de Nota (abajo del form) */
+    .note-fab {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: inherit;
+      border-radius: var(--radius-full);
+      border: 1px solid #eab308;
+      background: #facc15;
+      color: #78350f;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(234, 179, 8, 0.35);
+      transition: all 0.18s ease;
+    }
+    .note-fab i { color: #78350f; font-size: 15px; }
+    .note-fab:hover { background: #fde047; box-shadow: 0 4px 12px rgba(234, 179, 8, 0.5); }
+    .note-fab:active { transform: translateY(1px); }
 
     @keyframes modalFadeIn {
       from { opacity: 0; transform: scale(0.97) translateY(8px); }
@@ -924,8 +953,14 @@
         </div>
       </div>
       <div class="editor-footer">
-        <button class="btn btn-ghost" id="btn-cancel-editor">Cancelar</button>
-        <button class="btn btn-primary" id="btn-save-editor">Guardar Cambios</button>
+        <button class="note-fab" id="btn-note-icon" type="button" title="Agregar una nota">
+          <i class="fa-solid fa-note-sticky"></i>
+          <span>Nota</span>
+        </button>
+        <div class="editor-footer-actions">
+          <button class="btn btn-ghost" id="btn-cancel-editor">Cancelar</button>
+          <button class="btn btn-primary" id="btn-save-editor">Guardar Cambios</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2331,6 +2366,31 @@
       requestAnimationFrame(focusNoteInput);
     }
 
+    // Crea una nota al pulsar el icono amarillo del pie del form.
+    // Aparece centrada sobre la imagen (con una leve cascada si hay varias)
+    // y queda lista para escribir; luego se arrastra a la izquierda o derecha.
+    function addNoteFromButton() {
+      if (!editorItem || editorItem.media.length === 0) { alert("Primero agrega una imagen o un video."); return; }
+      if (activeMediaIndex < 0) {
+        activeMediaIndex = editorItem.media.findIndex(x => x.type === "image");
+        if (activeMediaIndex < 0) activeMediaIndex = 0;
+      }
+      const m = editorItem.media[activeMediaIndex];
+      if (!Array.isArray(m.notes)) m.notes = [];
+      const k = m.notes.length % 6;
+      const note = {
+        id: newId(),
+        text: "",
+        x: 0.5 + (k - 2.5) * 0.05,
+        y: 0.5 + (k - 2.5) * 0.06
+      };
+      m.notes.push(note);
+      activeNoteId = note.id;
+      renderEditorStage();
+      renderMediaList();
+      requestAnimationFrame(focusNoteInput);
+    }
+
     function startNoteDrag(ev, box, note, imgEl, layer, m) {
       if (ev.target.classList.contains("note-del")) return;
       ev.stopPropagation();
@@ -2572,6 +2632,8 @@
       document.getElementById("btn-close-editor").addEventListener("click", closeEditor);
       document.getElementById("btn-cancel-editor").addEventListener("click", closeEditor);
       document.getElementById("btn-save-editor").addEventListener("click", saveEditor);
+      const btnNoteIcon = document.getElementById("btn-note-icon");
+      if (btnNoteIcon) btnNoteIcon.addEventListener("click", addNoteFromButton);
       document.getElementById("editor-modal").addEventListener("click", (e) => {
         if (e.target.id === "editor-modal") closeEditor();
       });
