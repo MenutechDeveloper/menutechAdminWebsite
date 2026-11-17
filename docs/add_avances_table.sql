@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS public.avances (
     title TEXT NOT NULL DEFAULT '',
     description TEXT DEFAULT '',
     progress INTEGER NOT NULL DEFAULT 0,
-    -- media: [{ type: "image"|"video", url, note, strokes: [{color, w, pts:[{x,y}]}] }]
+    -- media: [{ type: "image"|"video", url, notes: [{id,text,x,y}], strokes: [{tool,color,w,pts:[{x,y}]}] }]
     media JSONB NOT NULL DEFAULT '[]'::jsonb,
     -- subfunctions: [{ id, title, description, progress, media, subfunctions: [] }]
     subfunctions JSONB NOT NULL DEFAULT '[]'::jsonb,
