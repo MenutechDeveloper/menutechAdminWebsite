@@ -1334,8 +1334,13 @@
       document.body.classList.add("is-admin-user");
       // Avisa al admin si hubo problemas de lectura al cargar
       if (lastLoadError) {
-        toast("Atención: no se pudo leer la tabla 'avances'. " +
-              "Revisa que el SQL se haya ejecutado en Supabase. " + (lastLoadError.message || ""), "err");
+        const msg = lastLoadError.message || "";
+        const missing = /PGRST205|schema cache|Could not find the table|does not exist/i.test(msg);
+        if (missing) {
+          toast("Falta crear la tabla 'avances' en Supabase. Un administrador debe ejecutar el SQL de docs/add_avances_table.sql en el SQL Editor. Por ahora los cambios se guardan solo en este navegador.", "err");
+        } else {
+          toast("Aviso: no se pudo leer la tabla 'avances'. " + msg, "err");
+        }
       }
     }
 

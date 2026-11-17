@@ -4,9 +4,14 @@
 -- Guarda las funciones (antes "objetivos") de la página avance.html.
 -- Los archivos (imagenes/videos) se suben a Cloudinary; aquí se guarda
 -- la URL y las notas/dibujos de cada imagen.
+--
+-- IMPORTANTE: si la página avance.html muestra el aviso
+--   "Falta crear la tabla 'avances' en Supabase"
+-- es porque este SQL todavía no se ha ejecutado en este proyecto.
+-- Pega TODO este archivo en el SQL Editor y pulsa "Run".
 -- ====================================================================
 
--- 1. Extension uuid
+-- 1. Extension uuid (por si el proyecto no la tiene)
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 2. Tabla
