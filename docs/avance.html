@@ -482,8 +482,8 @@
       background: #ffffff;
       border-radius: var(--radius-lg);
       width: 100%;
-      max-width: 1080px;
-      max-height: 92vh;
+      max-width: 1400px;
+      max-height: 94vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -512,7 +512,7 @@
 
     .editor-body {
       display: grid;
-      grid-template-columns: 1.5fr 1fr;
+      grid-template-columns: minmax(0, 2.3fr) minmax(260px, 1fr);
       gap: 0;
       overflow: hidden;
       flex: 1;
@@ -529,89 +529,6 @@
       overflow: visible;
       background: #f8fafc;
     }
-
-    /* Espacio de trabajo: imagen (izq) + panel de notas (der) */
-    .editor-workspace {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 240px;
-      gap: 14px;
-      align-items: start;
-      overflow: visible;
-    }
-
-    .notes-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--radius-md);
-      padding: 12px;
-      min-height: 0;
-    }
-    .notes-panel-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: #0f172a;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .notes-panel-title i { color: #ea580c; }
-    .notes-panel-hint { font-size: 11px; color: #94a3b8; line-height: 1.35; }
-    .notes-panel-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
-    .notes-panel-empty { font-size: 12px; color: #cbd5e1; font-style: italic; padding: 4px 0; }
-
-    .notes-panel-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 6px;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--radius-sm);
-      padding: 6px 8px;
-      background: #f8fafc;
-      cursor: pointer;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .notes-panel-item:hover { border-color: #cbd5e1; }
-    .notes-panel-item.active { border-color: #ea580c; box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.12); }
-    .notes-panel-item .np-text {
-      flex: 1;
-      font-size: 12px;
-      color: #0f172a;
-      line-height: 1.35;
-      word-break: break-word;
-      white-space: pre-wrap;
-    }
-    .notes-panel-item .np-text.empty { color: #94a3b8; font-style: italic; }
-    .notes-panel-item .np-actions { display: flex; flex-direction: column; gap: 2px; }
-    .notes-panel-item .np-btn {
-      border: none;
-      background: transparent;
-      color: #64748b;
-      cursor: pointer;
-      font-size: 11px;
-      padding: 1px;
-      line-height: 1;
-    }
-    .notes-panel-item .np-btn:hover { color: #ea580c; }
-    .notes-panel-item .np-btn.del:hover { color: #ef4444; }
-
-    .notes-panel-add { display: flex; flex-direction: column; gap: 6px; }
-    .notes-panel-add textarea {
-      width: 100%;
-      resize: vertical;
-      min-height: 46px;
-      border: 1px solid #cbd5e1;
-      border-radius: var(--radius-sm);
-      padding: 7px 9px;
-      font-size: 13px;
-      font-family: inherit;
-      color: #0f172a;
-      outline: none;
-    }
-    .notes-panel-add textarea:focus { border-color: #ea580c; }
-    .notes-panel-add .btn { width: 100%; justify-content: center; }
 
     .editor-right {
       padding: 18px 22px;
@@ -630,7 +547,7 @@
       border-radius: var(--radius-md);
       overflow: visible;
       width: 100%;
-      height: 54vh;
+      height: 64vh;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -648,8 +565,8 @@
     .editor-zoom-layer img,
     .editor-zoom-layer video {
       display: block;
-      max-width: 82%;
-      max-height: 38vh;
+      max-width: 78%;
+      max-height: 46vh;
       width: auto;
       height: auto;
       object-fit: contain;
@@ -665,6 +582,7 @@
     }
     .editor-stage.drawing canvas { pointer-events: auto; cursor: crosshair; }
     .editor-stage.tool-text canvas { pointer-events: auto; cursor: text; }
+    .editor-stage.tool-note canvas { pointer-events: auto; cursor: copy; }
     .editor-stage.tool-pan { cursor: grab; }
     .editor-stage.tool-pan:active { cursor: grabbing; }
     .editor-stage.tool-pan canvas { pointer-events: none; }
@@ -677,48 +595,53 @@
       background: #ffffff;
       color: #0f172a;
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 13px;
-      line-height: 1.45;
-      border-radius: 10px;
-      min-width: 130px;
-      max-width: 300px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-      border: 1.5px solid transparent;
+      font-size: 15px;
+      line-height: 1.5;
+      border-radius: 12px;
+      min-width: 220px;
+      max-width: 380px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+      border: 2px solid transparent;
       touch-action: none;
       pointer-events: auto;
     }
-    .editor-note.active { border-color: #ea580c; box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.25); }
+    .editor-note.active { border-color: #ea580c; box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.28); }
     .editor-note .note-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 6px;
       background: #f1f5f9;
-      padding: 3px 8px;
+      padding: 5px 10px;
       border-radius: 10px 10px 0 0;
       cursor: grab;
       user-select: none;
     }
     .editor-note .note-bar:active { cursor: grabbing; }
-    .editor-note .note-grip { color: #94a3b8; font-size: 11px; letter-spacing: 1px; }
+    .editor-note .note-grip { color: #94a3b8; font-size: 13px; letter-spacing: 1px; }
     .editor-note .note-del {
       border: none;
       background: transparent;
       color: #ef4444;
-      font-size: 16px;
+      font-size: 18px;
       line-height: 1;
       cursor: pointer;
       padding: 0 2px;
     }
-    .editor-note .note-view {
-      padding: 9px 12px;
-      min-height: 20px;
+    .editor-note .note-input {
+      padding: 12px 15px;
+      min-height: 46px;
+      outline: none;
       white-space: pre-wrap;
       word-break: break-word;
+      cursor: text;
       color: #0f172a;
-      user-select: none;
     }
-    .editor-note .note-view.note-view-empty { color: #94a3b8; font-style: italic; }
+    .editor-note .note-input:empty::before {
+      content: attr(data-ph);
+      color: #94a3b8;
+      font-style: italic;
+    }
 
     /* Entrada de texto flotante (herramienta Texto) */
     .editor-text-input {
@@ -979,20 +902,9 @@
       <div class="editor-body">
         <div class="editor-left">
           <span class="field-label">Editar la imagen seleccionada</span>
-          <div class="editor-workspace">
-            <div class="editor-stage-wrap">
-              <div class="editor-stage" id="editor-stage"></div>
-              <div class="draw-toolbar" id="draw-toolbar"></div>
-            </div>
-            <aside class="notes-panel" id="notes-panel">
-              <div class="notes-panel-title"><i class="fa-solid fa-note-sticky"></i> Notas</div>
-              <div class="notes-panel-hint">Escribe aquí y agrégala. Luego arrástrala sobre la imagen o video.</div>
-              <div class="notes-panel-list" id="notes-panel-list"></div>
-              <div class="notes-panel-add">
-                <textarea id="note-new-text" placeholder="Escribe una nota..."></textarea>
-                <button class="btn btn-primary" id="btn-add-note">Agregar nota</button>
-              </div>
-            </aside>
+          <div class="editor-stage-wrap">
+            <div class="editor-stage" id="editor-stage"></div>
+            <div class="draw-toolbar" id="draw-toolbar"></div>
           </div>
         </div>
         <div class="editor-right">
@@ -2164,7 +2076,6 @@
         editorCanvasEl = null;
         editorSetupCanvasFn = null;
         imgElRef = null;
-        renderNotesPanel();
         return;
       }
 
@@ -2192,7 +2103,6 @@
         videoEl.addEventListener("load", rerender);
         videoEl.addEventListener("loadeddata", rerender);
 
-        renderNotesPanel();
         return;
       }
 
@@ -2236,9 +2146,6 @@
 
       if (imgEl.complete) setupCanvas();
       imgEl.addEventListener("load", setupCanvas);
-
-      // Refresca el panel de notas para la imagen activa
-      renderNotesPanel();
 
       toolbar.appendChild(buildToolbar());
 
@@ -2284,6 +2191,12 @@
       canvas.addEventListener("click", (ev) => {
         if (drawTool !== "text") return;
         openTextInput(zoomLayer, canvas, imgEl, m, getPos(ev));
+      });
+
+      // Herramienta Nota: un clic sobre la imagen crea una nota en esa posicion
+      canvas.addEventListener("click", (ev) => {
+        if (drawTool !== "note") return;
+        addNoteAt(getPos(ev));
       });
 
       // Herramienta de mano (pan)
@@ -2351,7 +2264,7 @@
     }
 
     // Renderiza las notas como cuadros movibles sobre la imagen del editor.
-    // El texto se edita en el panel lateral; aqui solo se muestra y se arrastra.
+    // El texto se edita directamente en el cuadro; se arrastra desde su barra.
     function renderEditorNotes(layer, imgEl, m) {
       layer.innerHTML = "";
       m.notes.forEach((n) => {
@@ -2365,146 +2278,57 @@
             `<span class="note-grip" title="Arrastrar">⠿</span>` +
             `<button class="note-del" title="Eliminar nota">&times;</button>` +
           `</div>` +
-          `<div class="note-view"></div>`;
+          `<div class="note-input" contenteditable="true" data-ph="Escribe la nota…"></div>`;
 
-        const view = box.querySelector(".note-view");
-        const text = (n.text || "").trim();
-        view.textContent = text || "Nota vacía";
-        if (!text) view.classList.add("note-view-empty");
+        // Texto editable directamente en el cuadro (sin ventanas emergentes)
+        const input = box.querySelector(".note-input");
+        input.textContent = n.text || "";
+        input.addEventListener("input", () => { n.text = input.textContent; });
+        // Evita que escribir arrastre la nota o dispare el dibujo
+        input.addEventListener("mousedown", (e) => e.stopPropagation());
+        input.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
 
         box.querySelector(".note-del").addEventListener("click", (e) => {
           e.stopPropagation();
           m.notes = m.notes.filter(x => x.id !== n.id);
           if (activeNoteId === n.id) activeNoteId = null;
           renderEditorNotes(layer, imgEl, m);
-          renderNotesPanel();
           renderMediaList();
         });
 
-        // Arrastrar la nota desde cualquier parte del cuadro (el texto no es editable aqui)
-        box.addEventListener("mousedown", (e) => startNoteDrag(e, box, n, imgEl, layer, m));
-        box.addEventListener("touchstart", (e) => startNoteDrag(e, box, n, imgEl, layer, m), { passive: false });
+        // Arrastrar la nota desde su barra superior
+        const bar = box.querySelector(".note-bar");
+        bar.addEventListener("mousedown", (e) => startNoteDrag(e, box, n, imgEl, layer, m));
+        bar.addEventListener("touchstart", (e) => startNoteDrag(e, box, n, imgEl, layer, m), { passive: false });
 
         layer.appendChild(box);
       });
     }
 
-    // Panel lateral de notas: escribir aqui y luego arrastrar sobre la imagen
-    function renderNotesPanel() {
-      const list = document.getElementById("notes-panel-list");
-      if (!list) return;
-
-      const m = (editorItem && activeMediaIndex >= 0) ? editorItem.media[activeMediaIndex] : null;
-      const addWrap = document.querySelector(".notes-panel-add");
-      const hint = document.querySelector(".notes-panel-hint");
-
-      if (!m) {
-        list.innerHTML = "";
-        if (addWrap) addWrap.style.display = "none";
-        if (hint) hint.textContent = "Selecciona una imagen o video para agregar notas.";
-        return;
-      }
-
-      if (!Array.isArray(m.notes)) m.notes = [];
-      if (addWrap) addWrap.style.display = "";
-      if (hint) hint.textContent = "Escribe aquí y agrégala. Luego arrástrala sobre la imagen o video.";
-
-      list.innerHTML = "";
-      if (m.notes.length === 0) {
-        list.innerHTML = `<div class="notes-panel-empty">Aún no hay notas.</div>`;
-      }
-
-      m.notes.forEach((n) => {
-        const el = document.createElement("div");
-        el.className = "notes-panel-item" + (n.id === activeNoteId ? " active" : "");
-        const txt = (n.text || "").trim();
-        el.innerHTML =
-          `<div class="np-text${txt ? "" : " empty"}"></div>` +
-          `<div class="np-actions">` +
-            `<button class="np-btn" data-role="edit" title="Editar"><i class="fa-solid fa-pen"></i></button>` +
-            `<button class="np-btn del" data-role="del" title="Eliminar"><i class="fa-solid fa-trash"></i></button>` +
-          `</div>`;
-        el.querySelector(".np-text").textContent = txt || "Nota vacía";
-
-        el.addEventListener("click", () => {
-          activeNoteId = n.id;
-          renderNotesPanel();
-          const layer = imgElRef && imgElRef.parentElement
-            ? imgElRef.parentElement.querySelector(".editor-notes-layer")
-            : null;
-          if (layer) renderEditorNotes(layer, imgElRef, m);
-        });
-        el.querySelector('[data-role="edit"]').addEventListener("click", (e) => {
-          e.stopPropagation();
-          editNoteText(n);
-        });
-        el.querySelector('[data-role="del"]').addEventListener("click", (e) => {
-          e.stopPropagation();
-          m.notes = m.notes.filter(x => x.id !== n.id);
-          if (activeNoteId === n.id) activeNoteId = null;
-          renderNotesPanel();
-          renderEditorStage();
-          renderMediaList();
-        });
-
-        list.appendChild(el);
-      });
+    // Deja el cursor listo para escribir en la nota recien creada
+    function focusNoteInput() {
+      const input = document.querySelector(".editor-note.active .note-input");
+      if (!input) return;
+      input.focus();
+      const range = document.createRange();
+      range.selectNodeContents(input);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
     }
 
-    // Edita el texto de una nota con el area de texto del panel
-    function editNoteText(note) {
-      const ta = document.getElementById("note-new-text");
-      const btn = document.getElementById("btn-add-note");
-      if (!ta) return;
-      activeNoteId = note.id;
-      ta.value = note.text || "";
-      ta.dataset.editId = note.id;
-      if (btn) btn.textContent = "Guardar nota";
-      ta.focus();
-      renderNotesPanel();
-    }
-
-    // Agrega una nota nueva (desde el panel). Queda lista para arrastrar.
-    function addNoteFromPanel() {
+    // Crea una nota en la posicion indicada (clic con la herramienta Nota)
+    function addNoteAt(p) {
       const m = (editorItem && activeMediaIndex >= 0) ? editorItem.media[activeMediaIndex] : null;
-      if (!m) return;
+      if (!m || m.type !== "image") return;
       if (!Array.isArray(m.notes)) m.notes = [];
-
-      const ta = document.getElementById("note-new-text");
-      const btn = document.getElementById("btn-add-note");
-      const text = (ta ? ta.value : "").trim();
-
-      const editId = ta ? ta.dataset.editId : null;
-      if (editId) {
-        // Guardar edición de una nota existente
-        const note = m.notes.find(x => x.id === editId);
-        if (note) note.text = text;
-        ta.value = "";
-        delete ta.dataset.editId;
-        if (btn) btn.textContent = "Agregar nota";
-        renderNotesPanel();
-        renderEditorStage();
-        renderMediaList();
-        return;
-      }
-
-      if (!text) { if (ta) ta.focus(); return; }
-
-      // Crea la nota; si ya hay notas, se escalonan un poco para que se vean
-      const idx = m.notes.length;
-      const note = {
-        id: newId(),
-        text: text,
-        x: 0.5,
-        y: Math.min(0.9, 0.35 + idx * 0.08)
-      };
+      const note = { id: newId(), text: "", x: p.x, y: p.y };
       m.notes.push(note);
       activeNoteId = note.id;
-      if (ta) ta.value = "";
-
-      renderNotesPanel();
       renderEditorStage();
       renderMediaList();
+      requestAnimationFrame(focusNoteInput);
     }
 
     function startNoteDrag(ev, box, note, imgEl, layer, m) {
@@ -2513,7 +2337,6 @@
       ev.preventDefault();
       activeNoteId = note.id;
       layer.querySelectorAll(".editor-note").forEach(b => b.classList.toggle("active", b.dataset.id === note.id));
-      renderNotesPanel();
 
       const rect = imgEl.getBoundingClientRect();
       const move = (e) => {
@@ -2561,6 +2384,7 @@
         { id: "rect", icon: "fa-vector-square", title: "Rectángulo" },
         { id: "arrow", icon: "fa-arrow-right", title: "Flecha" },
         { id: "text", icon: "fa-font", title: "Texto (Arial 12)" },
+        { id: "note", icon: "fa-note-sticky", title: "Nota" },
         { id: "pan", icon: "fa-hand", title: "Mover" }
       ];
       tools.forEach(t => {
@@ -2751,16 +2575,6 @@
       document.getElementById("editor-modal").addEventListener("click", (e) => {
         if (e.target.id === "editor-modal") closeEditor();
       });
-
-      // Panel de notas
-      const btnAddNote = document.getElementById("btn-add-note");
-      if (btnAddNote) btnAddNote.addEventListener("click", addNoteFromPanel);
-      const noteText = document.getElementById("note-new-text");
-      if (noteText) {
-        noteText.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addNoteFromPanel(); }
-        });
-      }
 
       // Zona de carga
       const dz = document.getElementById("dropzone");
