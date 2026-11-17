@@ -441,16 +441,25 @@
       background: #ffffff;
       color: #0f172a;
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      line-height: 1.4;
-      padding: 8px 10px;
+      font-size: 13px;
+      line-height: 1.45;
+      padding: 10px 13px;
       border-radius: 10px;
-      max-width: 190px;
-      min-width: 40px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+      min-width: 100px;
+      max-width: 240px;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
       white-space: pre-wrap;
       word-break: break-word;
     }
+    /* Cuando el admin esta logueado puede arrastrar las notas dentro del visor */
+    .viewer-note-box.draggable {
+      pointer-events: auto;
+      cursor: grab;
+      touch-action: none;
+      outline: 1px dashed rgba(234, 88, 12, 0.6);
+      outline-offset: 3px;
+    }
+    .viewer-note-box.draggable:active { cursor: grabbing; }
 
     /* ============================================================
        EDITOR DE FUNCION (MODAL)
@@ -999,6 +1008,7 @@
     // Visor
     let viewerItems = [];
     let viewerIndex = 0;
+    let viewerItemId = null;
 
     // Editor
     let editorItem = null;
@@ -1195,6 +1205,18 @@
       return !firstError;
     }
 
+    // Mensaje de error claro al guardar (distingue el error de permisos RLS)
+    function saveErrorMessage(err) {
+      const msg = (err && err.message) || "error desconocido";
+      if (/row-level security|violates row-level/i.test(msg)) {
+        return "No tienes permisos para guardar en 'avances' (RLS). " +
+               "Un administrador debe ejecutar el SQL de docs/add_avances_table.sql en Supabase. " +
+               "Los cambios quedan guardados en este navegador.";
+      }
+      return "No se pudo guardar en el servidor: " + msg +
+             ". Los cambios quedan guardados en este navegador.";
+    }
+
     async function persistOne(item) {
       if (!isUserAdmin) return;
       saveLocalBackup();
@@ -1211,8 +1233,7 @@
       });
       if (error) {
         console.error("Error guardando avance:", error);
-        toast("No se pudo guardar en el servidor: " + (error.message || "error desconocido") +
-              ". Los cambios quedan guardados en este navegador.", "err");
+        toast(saveErrorMessage(error), "err");
       }
     }
 
@@ -1674,6 +1695,7 @@
 
       viewerItems = Array.isArray(item.media) ? item.media : [];
       if (viewerItems.length === 0) return;
+      viewerItemId = item.id;
 
       viewerIndex = 0;
       const track = document.getElementById("viewer-track");
@@ -1902,6 +1924,7 @@
       document.getElementById("viewer-track").innerHTML = "";
       viewerItems = [];
       viewerIndex = 0;
+      viewerItemId = null;
     }
 
     function viewerGo(delta) {
