@@ -255,7 +255,6 @@ serve(async (req: Request) => {
       // Create Stripe Checkout Session
       const params = new URLSearchParams();
       params.append("mode", "payment");
-      params.append("payment_method_types[0]", "card");
       params.append("line_items[0][price_data][currency]", currency);
       params.append("line_items[0][price_data][product_data][name]", `Order #${order.id.substring(0, 8)} - ${order.customer_name || 'Customer'}${deliveryFee > 0 ? ' (incl. Delivery)' : ''}`);
       params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
@@ -401,7 +400,6 @@ serve(async (req: Request) => {
 
       const params = new URLSearchParams();
       params.append("mode", "payment");
-      params.append("payment_method_types[0]", "card");
       params.append("line_items[0][price_data][currency]", currency);
       params.append("line_items[0][price_data][product_data][name]", `Table Reservation Pre-order - ${resv.customer_name}`);
       params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
@@ -490,7 +488,6 @@ serve(async (req: Request) => {
       // Create Stripe Checkout Session (Platform direct payment)
       const params = new URLSearchParams();
       params.append("mode", "payment");
-      params.append("payment_method_types[0]", "card");
       params.append("line_items[0][price_data][currency]", "usd");
       params.append("line_items[0][price_data][product_data][name]", "Menutech Online Payments - Monthly Subscription");
       params.append("line_items[0][price_data][product_data][description]", "Monthly access to Menutech Online Payment processing service.");
