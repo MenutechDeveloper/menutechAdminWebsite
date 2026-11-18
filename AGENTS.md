@@ -46,13 +46,33 @@ Stripe blocks creating Accounts via `POST /v1/accounts` for new Connect integrat
   configuration is rejected there (`Please switch to an account created in a sandbox to test`), so
   the code falls back to the v1 endpoint `POST /v1/account_links` (v1 endpoints accept v2 Account
   IDs). To test v2 end-to-end, use a **general sandbox** instead of the legacy test-mode sandbox.
-- Status reads use `GET /v2/core/accounts/{id}?include[]=...`; v2 outstanding requirements live
-  under `requirements.entries` (not `currently_due`/`past_due`), and capabilities under
-  `configuration.<config>.capabilities.<cap>.status === "active"`.
-- The flat `menutech_stripe_accounts` columns are derived via `mapV2AccountToRecord()`, so the UI
-  and `stripe-webhook` (which still handles v1 `account.updated`) need no changes.
+- Status reads (`get_account_status`) use `GET /v1/accounts/{id}` as the **source of truth** for
+  `charges_enabled` / `payouts_enabled` / `details_submitted`: the v1 retrieve endpoint is fully
+  supported (even for accounts created through v2) and returns those booleans directly. A v2 read
+  (`GET /v2/core/accounts/{id}?include[]=...`) is only a fallback, and stored values are the last
+  resort. In v2, outstanding requirements live under `requirements.entries` (not
+  `currently_due`/`past_due`) and capabilities under
+  `configuration.<config>.capabilities.<cap>.status === "active"`; this is why v1 is preferred for
+  a plain boolean status.
+- The flat `menutech_stripe_accounts` columns are derived via `mapV2AccountToRecord()` for the
+  create/fallback paths, so the UI and `stripe-webhook` (which handles v1 `account.updated`) need
+  no changes.
 - Login links (Express Dashboard) keep using `/v1/accounts/{id}/login_links`; v1 endpoints accept
   v2 Account IDs.
+
+## Online payments: roles & activation
+- Activation is **admin-only**: `ADMIN`/`SUPERADMIN` enable the service (`menutech_restaurant_payment_configs.service_status`)
+  and choose the mode (`own_stripe` vs `menutech_commission`) from `onlinePayment.html`. There is
+  no customer-facing subscribe button.
+- Restaurant `OWNER`s may open `onlinePayment.html` and see **only their own** read-only status,
+  movements, and — when the mode is `own_stripe` — a "Connect with Stripe" button. They never see
+  the admin sections (Service Access / General Account Information).
+- `stripe-connect` resolves the caller's own `user_id` when no `target_user_id` is sent, so an owner
+  can create/reuse their own onboarding link without extra permissions. `isPrivileged` includes
+  `ADMIN`, `SUPERADMIN`, `DEVELOPER`, `CS`, `ADMINCS`.
+- `index.html` shows the Online Payment card to an owner only when `profiles.services_enabled.online_payment === true`.
+- Returning from Stripe (`?stripe_return=true`) must call `get_account_status` before rendering;
+  it does **not** happen automatically otherwise, and Supabase still holds the pre-onboarding values.
 
 ## Destination charges (Connect mode)
 In Checkout Sessions the transfer parameter is `payment_intent_data[transfer_data][destination]`

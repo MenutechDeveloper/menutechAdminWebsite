@@ -65,7 +65,7 @@ serve(async (req: Request) => {
       .single();
 
     const callerRole = (callerProfile?.role || "").toUpperCase();
-    const isPrivileged = ["ADMIN", "DEVELOPER", "CS", "ADMINCS"].includes(callerRole);
+    const isPrivileged = ["ADMIN", "SUPERADMIN", "DEVELOPER", "CS", "ADMINCS"].includes(callerRole);
 
     // Caller can manage their own user_id, or if target_user_id is specified, must be admin
     let effectiveUserId = user.id;
@@ -296,38 +296,53 @@ serve(async (req: Request) => {
         );
       }
 
-      let stripeAccount: any = null;
+      // The v1 retrieve endpoint is fully supported (even for v2 accounts) and returns the
+      // canonical charges_enabled / payouts_enabled / details_submitted booleans directly,
+      // so it's the primary source of truth. Fall back to v2 (and then to stored values)
+      // only if v1 fails.
+      let updatedRecord: any = null;
       try {
-        stripeAccount = await stripeFetchV2(
-          `/core/accounts/${existingAccount.stripe_account_id}` +
-            `?include[0]=configuration.merchant` +
-            `&include[1]=configuration.recipient` +
-            `&include[2]=identity` +
-            `&include[3]=requirements`
-        );
-      } catch (err: any) {
-        console.warn("Error fetching account from Stripe API:", err.message);
+        const v1Account = await stripeFetch(`/accounts/${existingAccount.stripe_account_id}`);
+        updatedRecord = {
+          user_id: effectiveUserId,
+          stripe_account_id: v1Account.id || existingAccount.stripe_account_id,
+          charges_enabled: !!v1Account.charges_enabled,
+          payouts_enabled: !!v1Account.payouts_enabled,
+          details_submitted: !!v1Account.details_submitted,
+          country: (v1Account.country || existingAccount.country || "US").toUpperCase(),
+          currency: v1Account.default_currency || existingAccount.currency || "usd",
+          updated_at: new Date().toISOString()
+        };
+      } catch (v1Err: any) {
+        console.warn("v1 account retrieve failed, trying v2:", v1Err.message);
+        try {
+          const stripeAccount = await stripeFetchV2(
+            `/core/accounts/${existingAccount.stripe_account_id}` +
+              `?include[0]=configuration.merchant` +
+              `&include[1]=configuration.recipient` +
+              `&include[2]=identity` +
+              `&include[3]=requirements`
+          );
+          if (stripeAccount?.configuration?.merchant || stripeAccount?.configuration?.recipient) {
+            updatedRecord = { user_id: effectiveUserId, ...mapV2AccountToRecord(stripeAccount) };
+          }
+        } catch (v2Err: any) {
+          console.warn("v2 account retrieve failed:", v2Err.message);
+        }
       }
 
-      // Prefer the v2 configuration when present; otherwise keep the stored values
-      // (protects pre-existing v1 accounts if a response lacks configuration data).
-      const hasConfigData = !!(
-        stripeAccount &&
-        (stripeAccount.configuration?.merchant || stripeAccount.configuration?.recipient)
-      );
-
-      const updatedRecord = hasConfigData
-        ? { user_id: effectiveUserId, ...mapV2AccountToRecord(stripeAccount) }
-        : {
-            user_id: effectiveUserId,
-            stripe_account_id: existingAccount.stripe_account_id,
-            details_submitted: existingAccount.details_submitted || false,
-            charges_enabled: existingAccount.charges_enabled || false,
-            payouts_enabled: existingAccount.payouts_enabled || false,
-            country: existingAccount.country || "US",
-            currency: existingAccount.currency || "usd",
-            updated_at: new Date().toISOString()
-          };
+      if (!updatedRecord) {
+        updatedRecord = {
+          user_id: effectiveUserId,
+          stripe_account_id: existingAccount.stripe_account_id,
+          details_submitted: existingAccount.details_submitted || false,
+          charges_enabled: existingAccount.charges_enabled || false,
+          payouts_enabled: existingAccount.payouts_enabled || false,
+          country: existingAccount.country || "US",
+          currency: existingAccount.currency || "usd",
+          updated_at: new Date().toISOString()
+        };
+      }
 
       await supabaseAdmin.from("menutech_stripe_accounts").upsert(updatedRecord, { onConflict: "user_id" });
 

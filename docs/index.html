@@ -426,7 +426,12 @@
                         document.getElementById('card-scanner-menus').classList.add('hidden');
                         document.getElementById('card-customer-website').classList.add('hidden');
                         document.getElementById('card-admin-billing').classList.add('hidden');
-                        document.getElementById('card-online-payment').classList.add('hidden');
+                        // Online Payment stays visible for the owner only when the service is active
+                        if ((profile.services_enabled || {}).online_payment === true) {
+                            document.getElementById('card-online-payment').classList.remove('hidden');
+                        } else {
+                            document.getElementById('card-online-payment').classList.add('hidden');
+                        }
                         document.getElementById('card-delivery').classList.add('hidden');
                         document.getElementById('card-reports').classList.add('hidden');
                         document.getElementById('card-services').classList.add('hidden');
