@@ -71,6 +71,18 @@ serve(async (req: Request) => {
       return data;
     }
 
+    // Keep the embedded Checkout form to a plain card entry for US customers:
+    // - card only (filter over the Dashboard-managed method set)
+    // - hide Link (the "pay securely with Link / email" option)
+    // - disable Adaptive Pricing so no local-currency switcher appears (keeps the session currency)
+    // - force English
+    function applyCardOnlyCheckoutOptions(params: URLSearchParams) {
+      params.append("allowed_payment_method_types[0]", "card");
+      params.append("wallet_options[link][display]", "never");
+      params.append("adaptive_pricing[enabled]", "false");
+      params.append("locale", "en");
+    }
+
     // Server-side price calculation helper using database menutech_menus
     function recalculateOrderTotal(menuConfig: any, orderItems: any[]): { calculatedTotal: number; validatedItems: any[] } {
       if (!menuConfig || !menuConfig.categories || !Array.isArray(orderItems)) {
@@ -257,6 +269,7 @@ serve(async (req: Request) => {
       // Create Stripe Checkout Session
       const params = new URLSearchParams();
       params.append("mode", "payment");
+      applyCardOnlyCheckoutOptions(params);
       params.append("line_items[0][price_data][currency]", currency);
       params.append("line_items[0][price_data][product_data][name]", `Order #${order.id.substring(0, 8)} - ${order.customer_name || 'Customer'}${deliveryFee > 0 ? ' (incl. Delivery)' : ''}`);
       params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
@@ -402,6 +415,7 @@ serve(async (req: Request) => {
 
       const params = new URLSearchParams();
       params.append("mode", "payment");
+      applyCardOnlyCheckoutOptions(params);
       params.append("line_items[0][price_data][currency]", currency);
       params.append("line_items[0][price_data][product_data][name]", `Table Reservation Pre-order - ${resv.customer_name}`);
       params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
