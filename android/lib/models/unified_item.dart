@@ -167,7 +167,7 @@ class UnifiedItem {
       'customer_email': customerEmail,
       'status': status,
       'total_amount': totalAmount,
-      'created_at': createdAt.toIso8601String(),
+      'created_at': createdAt.toUtc().toIso8601String(),
       'address': address,
       'reference': reference,
       'order_type': orderType,

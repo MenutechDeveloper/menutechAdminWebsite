@@ -72,7 +72,12 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       if (order.paymentMethod == 'online' &&
           order.paymentStatus != 'paid' &&
           order.status == 'accepted') {
-        final baseTime = order.acceptedAt ?? order.createdAt;
+        // Guard against clock/timezone skew: an order can never be accepted before it was
+        // created. Old builds wrote accepted_at in local time, pushing it hours into the past.
+        var baseTime = order.acceptedAt ?? order.createdAt;
+        if (baseTime.isBefore(order.createdAt)) {
+          baseTime = order.createdAt;
+        }
         final diff = now.difference(baseTime);
         if (diff.inMinutes >= 10) {
           _supabase.client.from('menutech_orders').update({
@@ -106,7 +111,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             if (newOrd.status == 'accepted') {
               _supabase.client.from('menutech_orders').update({
                 'status': 'preparing',
-                'preparing_at': DateTime.now().toIso8601String(),
+                'preparing_at': DateTime.now().toUtc().toIso8601String(),
               }).eq('id', newOrd.id).catchError((_) {});
             }
           }

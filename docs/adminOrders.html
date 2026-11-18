@@ -603,7 +603,10 @@
             unifiedItems.forEach(item => {
                 if (item.entryType === 'order' && item.payment_method === 'online' && item.payment_status !== 'paid' && item.status === 'accepted') {
                     const baseTs = item.accepted_at ? new Date(item.accepted_at).getTime() : null;
-                    if (baseTs && (now - baseTs > TEN_MINUTES_MS)) {
+                    const createdTs = item.created_at ? new Date(item.created_at).getTime() : null;
+                    // Guard against clock/timezone skew: an order can never be accepted before it was created.
+                    const effectiveTs = (baseTs && createdTs && baseTs < createdTs) ? createdTs : baseTs;
+                    if (effectiveTs && (now - effectiveTs > TEN_MINUTES_MS)) {
                         updateOrderStatus(item.id, 'cancelled');
                     }
                 }
