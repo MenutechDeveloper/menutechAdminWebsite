@@ -45,7 +45,9 @@ serve(async (req: Request) => {
     const { action, order_id, reservation_id, target_user_id, origin_url, ui_mode } = payload;
 
     const baseOrigin = origin_url || req.headers.get("origin") || "https://menutech.io";
-    const embedded = ui_mode === "embedded";
+    // Stripe renamed the inline Checkout ui_mode from 'embedded' to 'embedded_page'.
+    // Accept both so older clients keep working; we always send 'embedded_page' to Stripe.
+    const embedded = ui_mode === "embedded" || ui_mode === "embedded_page";
 
     // Helper for Stripe REST API
     async function stripeFetch(endpoint: string, options: any = {}) {
@@ -281,7 +283,7 @@ serve(async (req: Request) => {
 
       // Embedded Checkout: render the Stripe form inline inside the tracking modal
       if (embedded) {
-        params.append("ui_mode", "embedded");
+        params.append("ui_mode", "embedded_page");
         // 'if_required' lets card-only payments complete inline and fire the widget's
         // onComplete callback; a redirect only happens if the method strictly requires it.
         params.append("redirect_on_completion", "if_required");

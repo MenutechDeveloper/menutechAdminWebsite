@@ -4154,7 +4154,7 @@ class MenutechPlatformOrders extends HTMLElement {
                 action: 'create_order_checkout_session',
                 order_id: order.id,
                 origin_url: window.location.origin,
-                ui_mode: 'embedded'
+                ui_mode: 'embedded_page'
             }
         });
 
