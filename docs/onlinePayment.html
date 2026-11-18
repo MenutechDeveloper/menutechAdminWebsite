@@ -570,9 +570,10 @@
                         </div>
 
                         <div style="text-align: center; margin-top: 25px;">
-                            <button class="btn-action btn-primary" style="padding: 18px 42px; font-size: 1rem;" id="btn-owner-subscribe" onclick="ownerSubscribeToOnlinePayments()">
-                                SUBSCRIBE TO ONLINE PAYMENTS
-                            </button>
+                            <div style="display:inline-flex; align-items:center; gap:10px; padding: 14px 22px; border-radius: 16px; background: var(--input); border: 1px dashed var(--border); color: var(--text-dim); font-weight: 600; font-size: 0.9rem;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                <span id="lbl-owner-contact-admin">Contact Menutech support to activate Online Payments for your restaurant.</span>
+                            </div>
                         </div>
                     </div>
 
@@ -614,6 +615,27 @@
                             <div class="info-box">
                                 <label id="lbl-own-stripe-id">Stripe Account ID</label>
                                 <div class="value" id="owner-val-stripe-id">-</div>
+                            </div>
+                        </div>
+
+                        <!-- Stripe Connect (only shown for Own Stripe mode) -->
+                        <div id="owner-connect-panel" class="hidden" style="margin-top: 18px; padding: 20px; border-radius: 20px; background: var(--input); border: 1px solid var(--border);">
+                            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+                                <div>
+                                    <h3 id="lbl-owner-connect-title" style="font-family:'Outfit'; font-size:1.05rem; margin:0 0 4px 0;">Connect your Stripe account</h3>
+                                    <p id="lbl-owner-connect-desc" style="font-size:0.85rem; color:var(--text-dim); margin:0; max-width:520px;">
+                                        To receive online payments directly in your own bank account, connect your Stripe account. Stripe will guide you through the required information.
+                                    </p>
+                                </div>
+                                <div class="status-badge disconnected" id="owner-connect-badge">Not Connected</div>
+                            </div>
+                            <div class="actions-group" style="margin-top: 16px;">
+                                <button class="btn-action btn-stripe" id="owner-btn-connect" onclick="ownerStartStripeConnect()">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.883 15.684.2 12.83.2 6.702.2 2.658 3.376 2.658 8.163c0 5.48 7.375 6.082 7.375 8.91 0 1.054-.925 1.545-2.222 1.545-2.296 0-5.185-1.1-7.05-2.148l-.946 5.568c1.697 1.026 4.793 1.83 7.747 1.83 6.327 0 10.463-2.981 10.463-8.083 0-5.748-7.533-6.26-7.533-8.799z"/></svg>
+                                    <span id="owner-btn-connect-lbl">Connect with Stripe</span>
+                                </button>
+                                <button class="btn-action btn-secondary" id="owner-btn-refresh" onclick="ownerRefreshStatus()">Check Status</button>
+                                <button class="btn-action btn-secondary" id="owner-btn-dashboard" onclick="ownerOpenStripeDashboard()" style="display:none;">Open Stripe Dashboard</button>
                             </div>
                         </div>
 
@@ -880,14 +902,15 @@
 
             activeOwnerProfile = profile;
             userRole = (profile.role || 'OWNER').trim().toUpperCase();
-            const privilegedRoles = ['ADMIN', 'SUPERADMIN'];
+            const adminRoles = ['ADMIN', 'SUPERADMIN'];
+            const allowedRoles = ['ADMIN', 'SUPERADMIN', 'OWNER'];
 
-            if (!privilegedRoles.includes(userRole)) {
+            if (!allowedRoles.includes(userRole)) {
                 location.href = 'index.html';
                 return;
             }
 
-            if (privilegedRoles.includes(userRole)) {
+            if (adminRoles.includes(userRole)) {
                 const sidebarContainer = document.getElementById('sidebar-container');
                 sidebarContainer.classList.remove('hidden');
                 sidebarContainer.classList.add('collapsed');
@@ -902,6 +925,7 @@
                 }
                 showApp(profile);
             } else {
+                // Restaurant owner: only their own account, no context switcher.
                 activeOwnerId = user.id;
                 activeDomain = profile.domain || '';
                 document.getElementById('view-domain-title').textContent = activeDomain;
@@ -978,8 +1002,21 @@
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('stripe_return') === 'true') {
                 showToast("Returned from Stripe Onboarding. Updating account status...", "warning");
+                // Pull the latest status from Stripe (not just Supabase) so the UI reflects
+                // freshly submitted requirements right after onboarding.
+                try {
+                    const resp = await sb.functions.invoke('stripe-connect', {
+                        body: { action: 'get_account_status', target_user_id: activeOwnerId }
+                    });
+                    if (resp.data && resp.data.account) connectedAccountData = resp.data.account;
+                } catch (e) {
+                    console.warn("Could not refresh Stripe status on return:", e);
+                }
+                // Clean the query string so a manual refresh doesn't re-trigger this.
+                window.history.replaceState({}, '', window.location.pathname);
             } else if (urlParams.get('sub_success') === 'true') {
                 showToast("Subscription to Online Payments activated successfully!", "success");
+                window.history.replaceState({}, '', window.location.pathname);
             }
 
             await loadAccountData();
@@ -1568,33 +1605,109 @@
                 document.getElementById('owner-val-stripe-status').textContent = isStripeConn ? dict.statusConnectedEnabled : (connectedAccountData?.stripe_account_id ? dict.statusPending : dict.statusDisconnected);
                 document.getElementById('owner-val-stripe-id').textContent = connectedAccountData?.stripe_account_id || dict.notConnectedVal;
 
+                // Show the Stripe connection panel only for "Own Stripe Account" mode.
+                // Menutech Commission mode needs no action from the restaurant.
+                const isOwnStripeMode = currentRestaurantConfig.payment_mode === 'own_stripe';
+                const connectPanel = document.getElementById('owner-connect-panel');
+                if (isOwnStripeMode) {
+                    connectPanel.classList.remove('hidden');
+
+                    const badge = document.getElementById('owner-connect-badge');
+                    const connectBtn = document.getElementById('owner-btn-connect');
+                    const dashboardBtn = document.getElementById('owner-btn-dashboard');
+                    const connectLbl = document.getElementById('owner-btn-connect-lbl');
+
+                    if (isStripeConn) {
+                        badge.className = 'status-badge connected';
+                        badge.textContent = dict.statusConnectedEnabled;
+                        connectBtn.style.display = 'none';
+                        dashboardBtn.style.display = 'inline-flex';
+                    } else if (connectedAccountData?.stripe_account_id) {
+                        badge.className = 'status-badge pending';
+                        badge.textContent = dict.statusPending;
+                        connectBtn.style.display = 'inline-flex';
+                        connectLbl.textContent = 'Continue Stripe Onboarding';
+                        dashboardBtn.style.display = 'none';
+                    } else {
+                        badge.className = 'status-badge disconnected';
+                        badge.textContent = dict.statusDisconnected;
+                        connectBtn.style.display = 'inline-flex';
+                        connectLbl.textContent = 'Connect with Stripe';
+                        dashboardBtn.style.display = 'none';
+                    }
+                } else {
+                    connectPanel.classList.add('hidden');
+                }
+
                 // Load payments history
                 loadRestaurantPaymentLogs();
             }
         }
 
-        window.ownerSubscribeToOnlinePayments = async () => {
-            const btn = document.getElementById('btn-owner-subscribe');
+        // ==========================================
+        // RESTAURANT OWNER: STRIPE CONNECT ACTIONS
+        // ==========================================
+        window.ownerStartStripeConnect = async () => {
+            const btn = document.getElementById('owner-btn-connect');
             btn.disabled = true;
-            showToast("Initiating Stripe Checkout for Online Payments subscription...", "warning");
+            showToast(I18N[currentLang].toastGeneratingLink, "warning");
 
             try {
-                const response = await sb.functions.invoke('stripe-payment', {
-                    body: {
-                        action: 'create_subscription_checkout_session',
-                        target_user_id: activeOwnerId
-                    }
+                const response = await sb.functions.invoke('stripe-connect', {
+                    body: { action: 'create_onboarding_link', target_user_id: activeOwnerId }
                 });
 
                 if (response.data && response.data.url) {
                     window.location.href = response.data.url;
                 } else {
-                    showToast("Error: " + (response.error?.message || response.data?.error || "Failed to start checkout"), "error");
+                    const errorDetail = await extractFunctionError(response, "Error al generar enlace de Stripe Connect");
+                    showToast("Error: " + errorDetail, "error");
                 }
             } catch (err) {
                 showToast("Exception: " + err.message, "error");
             } finally {
                 btn.disabled = false;
+            }
+        };
+
+        window.ownerRefreshStatus = async () => {
+            showToast(I18N[currentLang].toastCheckingStatus, "warning");
+            try {
+                const response = await sb.functions.invoke('stripe-connect', {
+                    body: { action: 'get_account_status', target_user_id: activeOwnerId }
+                });
+
+                if (response.data && response.data.account) {
+                    connectedAccountData = response.data.account;
+                    renderRestaurantOwnerUI();
+                    showToast(I18N[currentLang].toastStatusUpdated, "success");
+                } else if (response.data && response.data.not_connected) {
+                    connectedAccountData = null;
+                    renderRestaurantOwnerUI();
+                    showToast("No Stripe account connected.", "warning");
+                } else {
+                    const errorDetail = await extractFunctionError(response, "Error al verificar estado de cuenta");
+                    showToast("Error: " + errorDetail, "error");
+                }
+            } catch (err) {
+                showToast("Exception: " + err.message, "error");
+            }
+        };
+
+        window.ownerOpenStripeDashboard = async () => {
+            showToast(I18N[currentLang].toastOpeningDashboard, "warning");
+            try {
+                const response = await sb.functions.invoke('stripe-connect', {
+                    body: { action: 'create_login_link', target_user_id: activeOwnerId }
+                });
+                if (response.data && response.data.url) {
+                    window.open(response.data.url, '_blank');
+                } else {
+                    const errorDetail = await extractFunctionError(response, "Error al abrir dashboard de Stripe");
+                    showToast("Dashboard error: " + errorDetail, "error");
+                }
+            } catch (err) {
+                showToast("Exception: " + err.message, "error");
             }
         };
 
