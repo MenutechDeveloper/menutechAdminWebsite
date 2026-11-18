@@ -51,8 +51,9 @@ Ahora esto ha sido simplificado y unificado:
   sin redirigir a otra página.
 - Al completarse el pago, el paso "Pay" se marca con check automáticamente y el flujo avanza a
   "Preparing". Si el cliente no paga en 10 minutos, la orden se cancela automáticamente.
-- La Edge Function `stripe-payment` crea la sesión de Checkout con `ui_mode: "embedded"` y devuelve
-  el `client_secret`; el widget lo monta con Stripe.js v3 (`initEmbeddedCheckout`).
+- La Edge Function `stripe-payment` crea la sesión de Checkout con `ui_mode: "embedded_page"` y devuelve
+  el `client_secret`; el widget lo monta con Stripe.js v3 (`initEmbeddedCheckout`). (Stripe renombró
+  el valor de `embedded` a `embedded_page`; la Edge Function acepta ambos pero siempre envía `embedded_page`.)
 
    SECRET ADICIONAL REQUERIDO:
    1. Ve a Project Settings -> Edge Functions -> Secrets.
