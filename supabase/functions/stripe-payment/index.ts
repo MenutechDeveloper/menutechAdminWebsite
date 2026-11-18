@@ -35,10 +35,17 @@ serve(async (req: Request) => {
     const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
+    const stripePublishableKey = (
+      Deno.env.get("stripe_publishable") ||
+      Deno.env.get("STRIPE_PUBLISHABLE_KEY") ||
+      ""
+    ).trim();
+
     const payload = await req.json().catch(() => ({}));
-    const { action, order_id, reservation_id, target_user_id, origin_url } = payload;
+    const { action, order_id, reservation_id, target_user_id, origin_url, ui_mode } = payload;
 
     const baseOrigin = origin_url || req.headers.get("origin") || "https://menutech.io";
+    const embedded = ui_mode === "embedded";
 
     // Helper for Stripe REST API
     async function stripeFetch(endpoint: string, options: any = {}) {
@@ -273,8 +280,17 @@ serve(async (req: Request) => {
       params.append("metadata[user_id]", order.user_id);
       params.append("metadata[type]", "order");
 
-      params.append("success_url", `${baseOrigin}/menu.html?domain=${order.domain || ''}&order_paid=true&order_id=${order.id}`);
-      params.append("cancel_url", `${baseOrigin}/menu.html?domain=${order.domain || ''}&order_canceled=true&order_id=${order.id}`);
+      // Embedded Checkout: render the Stripe form inline inside the tracking modal
+      if (embedded) {
+        params.append("ui_mode", "embedded");
+        // 'if_required' lets card-only payments complete inline and fire the widget's
+        // onComplete callback; a redirect only happens if the method strictly requires it.
+        params.append("redirect_on_completion", "if_required");
+        params.append("return_url", `${baseOrigin}/menu.html?domain=${order.domain || ''}&order_paid=true&order_id=${order.id}&session_id={CHECKOUT_SESSION_ID}`);
+      } else {
+        params.append("success_url", `${baseOrigin}/menu.html?domain=${order.domain || ''}&order_paid=true&order_id=${order.id}`);
+        params.append("cancel_url", `${baseOrigin}/menu.html?domain=${order.domain || ''}&order_canceled=true&order_id=${order.id}`);
+      }
 
       const session = await stripeFetch("/checkout/sessions", {
         method: "POST",
@@ -292,7 +308,12 @@ serve(async (req: Request) => {
         .eq("id", order.id);
 
       return new Response(
-        JSON.stringify({ url: session.url, session_id: session.id }),
+        JSON.stringify({
+          url: session.url,
+          session_id: session.id,
+          client_secret: session.client_secret,
+          publishable_key: stripePublishableKey
+        }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 
@@ -489,6 +510,162 @@ serve(async (req: Request) => {
 
       return new Response(
         JSON.stringify({ url: session.url, session_id: session.id }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+
+    // Action: get_stripe_config (returns the public publishable key for embedded Stripe.js)
+    } else if (action === "get_stripe_config") {
+      return new Response(
+        JSON.stringify({ publishable_key: stripePublishableKey }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+
+    // Action: get_checkout_session (lets the widget reuse an open embedded session on reopen)
+    } else if (action === "get_checkout_session") {
+      const sessionId = payload.session_id;
+      if (!sessionId) {
+        return new Response(
+          JSON.stringify({ error: "Missing 'session_id' parameter" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const session = await stripeFetch(`/checkout/sessions/${sessionId}`);
+
+      return new Response(
+        JSON.stringify({
+          status: session.status,
+          client_secret: session.client_secret || null,
+          payment_status: session.payment_status || null,
+          publishable_key: stripePublishableKey
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+
+    // Action: confirm_order_payment (verify the session was paid and settle the order immediately,
+    // without waiting for the webhook, so the tracking UI reflects payment right away)
+    } else if (action === "confirm_order_payment") {
+      if (!order_id) {
+        return new Response(
+          JSON.stringify({ error: "Missing 'order_id' parameter" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: order } = await supabaseAdmin
+        .from("menutech_orders")
+        .select("*")
+        .eq("id", order_id)
+        .maybeSingle();
+
+      if (!order) {
+        return new Response(
+          JSON.stringify({ error: "Order not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (order.payment_status === "paid") {
+        return new Response(
+          JSON.stringify({ paid: true, status: order.status }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (!order.stripe_checkout_session_id) {
+        return new Response(
+          JSON.stringify({ paid: false, reason: "no_session" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      let session: any = null;
+      try {
+        session = await stripeFetch(`/checkout/sessions/${order.stripe_checkout_session_id}`);
+      } catch (e) {
+        return new Response(
+          JSON.stringify({ paid: false, reason: "session_lookup_failed" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (session && session.payment_status === "paid") {
+        const orderUpdates: Record<string, any> = {
+          payment_status: "paid",
+          payment_method: "online",
+          stripe_payment_intent_id: session.payment_intent || null,
+          stripe_checkout_session_id: session.id
+        };
+        if (order.status === "accepted") {
+          orderUpdates.status = "preparing";
+          orderUpdates.preparing_at = new Date().toISOString();
+        }
+        await supabaseAdmin.from("menutech_orders").update(orderUpdates).eq("id", order.id);
+        return new Response(
+          JSON.stringify({ paid: true, status: orderUpdates.status || order.status }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ paid: false, reason: "unpaid" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+
+    // Action: cancel_order_payment (customer cancels or the 10-minute window expires).
+    // Runs with the service role so it works regardless of the table's RLS policies,
+    // and expires the Stripe session so no charge can happen afterwards.
+    } else if (action === "cancel_order_payment") {
+      if (!order_id) {
+        return new Response(
+          JSON.stringify({ error: "Missing 'order_id' parameter" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: order } = await supabaseAdmin
+        .from("menutech_orders")
+        .select("*")
+        .eq("id", order_id)
+        .maybeSingle();
+
+      if (!order) {
+        return new Response(
+          JSON.stringify({ error: "Order not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (order.payment_status === "paid") {
+        return new Response(
+          JSON.stringify({ cancelled: false, reason: "already_paid" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Only ever cancel an online order that is still awaiting payment.
+      if (order.payment_method !== "online" || !["pending", "accepted"].includes(order.status)) {
+        return new Response(
+          JSON.stringify({ cancelled: false, reason: "not_cancellable" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (order.stripe_checkout_session_id) {
+        try {
+          await stripeFetch(`/checkout/sessions/${order.stripe_checkout_session_id}/expire`, { method: "POST" });
+        } catch (e) {
+          // Session may already be expired or completed; ignore and continue cancelling.
+        }
+      }
+
+      await supabaseAdmin.from("menutech_orders").update({
+        status: "cancelled",
+        rejection_reason: payload.reason || "Payment not completed"
+      }).eq("id", order.id);
+
+      return new Response(
+        JSON.stringify({ cancelled: true }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 

@@ -3650,6 +3650,21 @@ class MenutechPlatformOrders extends HTMLElement {
     }
 
     async checkExistingOrder() {
+        // If Stripe redirected the customer back after an embedded payment, settle the order now.
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('order_paid') === 'true') {
+            const paidOrderId = params.get('order_id') || localStorage.getItem('mt_last_order_id');
+            if (paidOrderId) {
+                localStorage.setItem('mt_last_order_id', paidOrderId);
+                await this.confirmOrderPayment(paidOrderId);
+                params.delete('order_paid');
+                params.delete('order_id');
+                params.delete('session_id');
+                const qs = params.toString();
+                window.history.replaceState({}, '', window.location.pathname + (qs ? `?${qs}` : ''));
+            }
+        }
+
         const lastId = localStorage.getItem('mt_last_order_id');
         if (!lastId) return;
 
@@ -3713,6 +3728,13 @@ class MenutechPlatformOrders extends HTMLElement {
         // Subscribe to real-time updates
         if (this.trackingChannel) this.supabase.removeChannel(this.trackingChannel);
 
+        // Reset tracking state so a fresh render (and a fresh payment form/timer) is produced
+        this.destroyEmbeddedCheckout();
+        if (this._paymentCountdownInterval) {
+            clearInterval(this._paymentCountdownInterval);
+            this._paymentCountdownInterval = null;
+        }
+
         this.trackingChannel = this.supabase.channel('tracking_' + orderId.substring(0, 8))
             .on('postgres_changes', {
                 event: 'UPDATE',
@@ -3739,15 +3761,27 @@ class MenutechPlatformOrders extends HTMLElement {
         const popupContent = this.popupRoot.getElementById('popup-content');
         if (!popupContent) return;
 
+        const status = order.status;
+        const isOnlinePayment = order.payment_method === 'online';
+        const isPaid = order.payment_status === 'paid';
+        const canPayOnlineNow = isOnlinePayment && !isPaid && status === 'accepted';
+
+        // Skip redundant re-renders (e.g. only the Stripe session id or a pending payment
+        // status changed) so the embedded Stripe form and the countdown timer are not torn
+        // down and rebuilt while the customer is paying.
+        const trackingSig = `${order.id}|${status}|${isPaid}|${canPayOnlineNow}`;
+        if (this._trackingSig === trackingSig && popupContent.querySelector('.tracking-container')) {
+            return;
+        }
+        // State changed: tear down any previous payment form/timer before rebuilding the view
+        this.destroyEmbeddedCheckout();
+        this._trackingSig = trackingSig;
+
         // Clear any previous timer
         if (this._paymentCountdownInterval) {
             clearInterval(this._paymentCountdownInterval);
             this._paymentCountdownInterval = null;
         }
-
-        const status = order.status;
-        const isOnlinePayment = order.payment_method === 'online';
-        const isPaid = order.payment_status === 'paid';
 
         // Check 10-minute timeout for online payment ONLY once accepted and unpaid
         const TEN_MINUTES_MS = 10 * 60 * 1000;
@@ -3757,11 +3791,14 @@ class MenutechPlatformOrders extends HTMLElement {
         const isExpired = isOnlinePayment && !isPaid && status === 'accepted' && acceptedTime && (now - acceptedTime > TEN_MINUTES_MS);
 
         if (isExpired && status !== 'cancelled' && status !== 'rejected') {
-            // Auto cancel order
-            this.supabase.from('menutech_orders').update({
-                status: 'cancelled',
-                rejection_reason: 'Payment timeout (10 minutes expired)'
-            }).eq('id', order.id).then(() => {
+            // Auto cancel order server-side (works under RLS and expires the Stripe session)
+            this.supabase.functions.invoke('stripe-payment', {
+                body: {
+                    action: 'cancel_order_payment',
+                    order_id: order.id,
+                    reason: 'Payment timeout (10 minutes expired)'
+                }
+            }).then(() => {
                 order.status = 'cancelled';
                 order.rejection_reason = 'Payment timeout (10 minutes expired)';
                 this.renderTrackingUI(order);
@@ -3840,7 +3877,6 @@ class MenutechPlatformOrders extends HTMLElement {
             }
         }
 
-        const canPayOnline = isOnlinePayment && !isPaid && status === 'accepted';
         const isTerminal = ['delivered', 'rejected', 'cancelled'].includes(status);
 
         popupContent.innerHTML = `
@@ -3859,17 +3895,34 @@ class MenutechPlatformOrders extends HTMLElement {
                 .step-label { color: #94a3b8; font-weight: 600; font-size: 0.95rem; }
                 .order-id { margin-top: 25px; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
                 .btn-track-done { margin-top: 15px; width: 100%; padding: 16px; border-radius: 16px; border: none; background: #1a1c1e; color: #fff; font-weight: 700; cursor: pointer; }
-                .btn-pay-now { margin-top: 20px; width: 100%; padding: 18px; border-radius: 16px; border: none; background: #ff9533; color: #fff; font-weight: 800; font-size: 1rem; cursor: pointer; text-transform: uppercase; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); transition: 0.3s; }
-                .btn-pay-now:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); }
                 .btn-cancel-online { margin-top: 10px; width: 100%; padding: 12px; border-radius: 14px; border: 1.5px solid #ef4444; background: transparent; color: #ef4444; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
                 .btn-cancel-online:hover { background: rgba(239, 68, 68, 0.08); }
                 .paid-badge { margin-top: 20px; background: rgba(5, 150, 105, 0.12); color: #059669; border: 1px solid rgba(5, 150, 105, 0.3); padding: 12px 20px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 8px; }
                 .countdown-box { margin-top: 15px; padding: 10px 16px; background: #fff7ed; border-radius: 14px; border: 1px solid #ffedd5; color: #c2410c; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px; }
+                .pay-embed-wrap { margin: 0 0 24px 0; padding: 16px; border-radius: 18px; border: 1.5px solid #ffe3c2; background: #fffdf9; }
+                .pay-embed-head { font-size: 0.75rem; font-weight: 800; color: #c2410c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+                #pay-embed-mount { margin-top: 8px; }
+                .pay-embed-loading { padding: 30px; text-align: center; color: #ff9533; font-weight: 700; font-size: 0.85rem; }
+                .pay-embed-error { padding: 12px 14px; border-radius: 12px; background: #fef2f2; color: #b91c1c; font-weight: 600; font-size: 0.82rem; line-height: 1.4; }
             </style>
             <div class="tracking-container">
                 <button class="close-popup" style="right: 20px; top: 20px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
+
+                ${canPayOnlineNow ? `
+                    <div class="pay-embed-wrap" id="pay-embed-wrap">
+                        <div class="pay-embed-head">Complete your online payment</div>
+                        <div class="countdown-box" id="pay-countdown-box" style="margin-top:0;">
+                            <span>⏱ Time left to pay: <strong id="countdown-timer-val">10:00</strong></span>
+                        </div>
+                        <div id="pay-embed-mount">
+                            <div class="pay-embed-loading">Loading secure payment form…</div>
+                        </div>
+                        <button class="btn-cancel-online" id="btn-cancel-order-now">CANCEL ORDER</button>
+                    </div>
+                ` : ''}
+
                 <h2 class="tracking-title">Track Order</h2>
                 <p class="tracking-msg">${currentMsg}</p>
 
@@ -3884,12 +3937,6 @@ class MenutechPlatformOrders extends HTMLElement {
 
                 ${isPaid ? `
                     <div><div class="paid-badge">✓ Payment Confirmed</div></div>
-                ` : canPayOnline ? `
-                    <div class="countdown-box" id="pay-countdown-box">
-                        <span>⏱ Time left to pay: <strong id="countdown-timer-val">10:00</strong></span>
-                    </div>
-                    <button class="btn-pay-now" id="btn-pay-online-now">ONLINE PAYMENT</button>
-                    <button class="btn-cancel-online" id="btn-cancel-order-now">CANCEL ORDER</button>
                 ` : ''}
 
                 <div class="order-id">Order ID: ${order.id.substring(0, 8)}</div>
@@ -3901,7 +3948,7 @@ class MenutechPlatformOrders extends HTMLElement {
             </div>
         `;
 
-        if (canPayOnline) {
+        if (canPayOnlineNow) {
             // Start 10-minute countdown based on acceptedTime
             const countdownStartTime = acceptedTime || Date.now();
             const updateTimerDisplay = () => {
@@ -3918,10 +3965,15 @@ class MenutechPlatformOrders extends HTMLElement {
                         clearInterval(this._paymentCountdownInterval);
                         this._paymentCountdownInterval = null;
                     }
-                    this.supabase.from('menutech_orders').update({
-                        status: 'cancelled',
-                        rejection_reason: 'Payment timeout (10 minutes expired)'
-                    }).eq('id', order.id).then(() => {
+                    this.destroyEmbeddedCheckout();
+                    // Cancel server-side (service role) so it works under RLS and expires the Stripe session
+                    this.supabase.functions.invoke('stripe-payment', {
+                        body: {
+                            action: 'cancel_order_payment',
+                            order_id: order.id,
+                            reason: 'Payment timeout (10 minutes expired)'
+                        }
+                    }).then(() => {
                         order.status = 'cancelled';
                         order.rejection_reason = 'Payment timeout (10 minutes expired)';
                         this.renderTrackingUI(order);
@@ -3937,56 +3989,22 @@ class MenutechPlatformOrders extends HTMLElement {
                 cancelBtn.onclick = async () => {
                     cancelBtn.disabled = true;
                     cancelBtn.textContent = 'CANCELLING...';
-                    await this.supabase.from('menutech_orders').update({
-                        status: 'cancelled',
-                        rejection_reason: 'Cancelled by customer before payment'
-                    }).eq('id', order.id);
+                    this.destroyEmbeddedCheckout();
+                    await this.supabase.functions.invoke('stripe-payment', {
+                        body: {
+                            action: 'cancel_order_payment',
+                            order_id: order.id,
+                            reason: 'Cancelled by customer before payment'
+                        }
+                    });
                     order.status = 'cancelled';
                     order.rejection_reason = 'Cancelled by customer before payment';
                     this.renderTrackingUI(order);
                 };
             }
-        }
 
-        const payNowBtn = popupContent.querySelector('#btn-pay-online-now');
-        if (payNowBtn) {
-            payNowBtn.onclick = async () => {
-                payNowBtn.textContent = 'PREPARING PAYMENT...';
-                payNowBtn.disabled = true;
-
-                try {
-                    const response = await this.supabase.functions.invoke('stripe-payment', {
-                        body: {
-                            action: 'create_order_checkout_session',
-                            order_id: order.id,
-                            origin_url: window.location.origin
-                        }
-                    });
-
-                    if (response.data && response.data.url) {
-                        window.location.href = response.data.url;
-                    } else if (response.data && response.data.error) {
-                        this.showModal('PAYMENT ERROR', response.data.error);
-                        payNowBtn.textContent = `PAY ONLINE NOW • $${(parseFloat(order.total || 0)).toFixed(2)}`;
-                        payNowBtn.disabled = false;
-                    } else if (response.error) {
-                        let errMsg = response.error.message || 'Payment initiation error';
-                        if (response.error.context) {
-                            try {
-                                const ctxJson = await response.error.context.json();
-                                if (ctxJson && ctxJson.error) errMsg = ctxJson.error;
-                            } catch (_) {}
-                        }
-                        this.showModal('PAYMENT ERROR', errMsg);
-                        payNowBtn.textContent = `PAY ONLINE NOW • $${(parseFloat(order.total || 0)).toFixed(2)}`;
-                        payNowBtn.disabled = false;
-                    }
-                } catch(e) {
-                    this.showModal('ERROR', 'Failed to initiate payment session: ' + e.message);
-                    payNowBtn.textContent = `PAY ONLINE NOW • $${(parseFloat(order.total || 0)).toFixed(2)}`;
-                    payNowBtn.disabled = false;
-                }
-            };
+            // Mount the Stripe Embedded Checkout form right at the top of the tracking
+            this.mountEmbeddedCheckout(order);
         }
 
         popupContent.querySelector('.close-popup').onclick = () => {
@@ -3994,6 +4012,7 @@ class MenutechPlatformOrders extends HTMLElement {
                 clearInterval(this._paymentCountdownInterval);
                 this._paymentCountdownInterval = null;
             }
+            this.destroyEmbeddedCheckout();
             this.popupRoot.getElementById('popup').style.display = 'none';
             this.renderFloatingTracker();
         };
@@ -4005,6 +4024,7 @@ class MenutechPlatformOrders extends HTMLElement {
                     clearInterval(this._paymentCountdownInterval);
                     this._paymentCountdownInterval = null;
                 }
+                this.destroyEmbeddedCheckout();
                 localStorage.removeItem('mt_last_order_id');
                 this.popupRoot.getElementById('popup').style.display = 'none';
                 this.renderFloatingTracker();
@@ -4019,9 +4039,188 @@ class MenutechPlatformOrders extends HTMLElement {
                     clearInterval(this._paymentCountdownInterval);
                     this._paymentCountdownInterval = null;
                 }
+                this.destroyEmbeddedCheckout();
                 this.popupRoot.getElementById('popup').style.display = 'none';
                 this.renderFloatingTracker();
             };
+        }
+    }
+
+    destroyEmbeddedCheckout() {
+        this._trackingSig = null;
+        try {
+            if (this._embeddedCheckout) {
+                this._embeddedCheckout.destroy();
+            }
+        } catch (e) { /* already detached */ }
+        this._embeddedCheckout = null;
+    }
+
+    async getStripePublishableKey() {
+        if (this._stripePublishableKey) return this._stripePublishableKey;
+        try {
+            const { data } = await this.supabase.functions.invoke('stripe-payment', {
+                body: { action: 'get_stripe_config' }
+            });
+            if (data && data.publishable_key) {
+                this._stripePublishableKey = data.publishable_key;
+                return this._stripePublishableKey;
+            }
+        } catch (e) {
+            console.warn('Could not load Stripe publishable key:', e);
+        }
+        return null;
+    }
+
+    async mountEmbeddedCheckout(order) {
+        const mount = this.popupRoot.querySelector('#pay-embed-mount');
+        if (!mount) return;
+
+        try {
+            // Reuse an existing checkout session when one is already open for this order
+            let sessionClientSecret = null;
+            if (order.stripe_checkout_session_id && order.payment_status === 'pending') {
+                const existing = await this.fetchExistingSession(order.stripe_checkout_session_id);
+                // If the session was already paid (e.g. the tab was closed before confirmation
+                // and the webhook is delayed), settle the order instead of starting a new session.
+                if (existing && existing.payment_status === 'paid') {
+                    mount.innerHTML = '<div class="pay-embed-loading">Confirming your payment…</div>';
+                    await this.confirmOrderPayment(order.id);
+                    return;
+                }
+                if (existing && existing.status === 'open' && existing.client_secret) {
+                    sessionClientSecret = existing.client_secret;
+                }
+            }
+
+            let publishableKey = null;
+            if (!sessionClientSecret) {
+                const created = await this.createEmbeddedSession(order, mount);
+                if (!created) return;
+                sessionClientSecret = created.client_secret;
+                publishableKey = created.publishable_key || null;
+            }
+
+            if (!publishableKey) publishableKey = await this.getStripePublishableKey();
+            if (!publishableKey) {
+                mount.innerHTML = `<div class="pay-embed-error">Stripe publishable key is not configured. Add the 'stripe_publishable' secret in Supabase.</div>`;
+                return;
+            }
+
+            const stripe = await this.loadStripeJs(publishableKey);
+            if (!stripe) {
+                mount.innerHTML = `<div class="pay-embed-error">Could not load Stripe. Check your connection and try again.</div>`;
+                return;
+            }
+
+            const mountCheckout = async (secret) => {
+                const checkout = await stripe.initEmbeddedCheckout({
+                    clientSecret: secret,
+                    // Fired when the embedded form finishes. We confirm with Stripe immediately so the
+                    // UI reflects the payment; the webhook remains the source of truth for the order.
+                    onComplete: () => { this.confirmOrderPayment(order.id); }
+                });
+                mount.innerHTML = '';
+                // Pass the element (not a selector): the mount lives inside a Shadow DOM,
+                // where Stripe.js's document.querySelector-based lookup would fail.
+                checkout.mount(mount);
+                this._embeddedCheckout = checkout;
+            };
+
+            try {
+                await mountCheckout(sessionClientSecret);
+            } catch (initErr) {
+                // A reused session may be stale; fall back to a brand new one.
+                console.warn('Embedded checkout init failed, retrying with a new session:', initErr);
+                const created = await this.createEmbeddedSession(order, mount);
+                if (!created) return;
+                await mountCheckout(created.client_secret);
+            }
+        } catch (e) {
+            console.error('Embedded checkout mount error:', e);
+            mount.innerHTML = `<div class="pay-embed-error">Payment form error: ${e.message}</div>`;
+        }
+    }
+
+    async createEmbeddedSession(order, mount) {
+        const response = await this.supabase.functions.invoke('stripe-payment', {
+            body: {
+                action: 'create_order_checkout_session',
+                order_id: order.id,
+                origin_url: window.location.origin,
+                ui_mode: 'embedded'
+            }
+        });
+
+        if (response.error) {
+            let errMsg = response.error.message || 'Payment initiation error';
+            if (response.error.context) {
+                try {
+                    const ctxJson = await response.error.context.json();
+                    if (ctxJson && ctxJson.error) errMsg = ctxJson.error;
+                } catch (_) {}
+            }
+            mount.innerHTML = `<div class="pay-embed-error">${errMsg}</div>`;
+            return null;
+        }
+        if (!response.data || !response.data.client_secret) {
+            mount.innerHTML = `<div class="pay-embed-error">${(response.data && response.data.error) || 'Could not start the payment session.'}</div>`;
+            return null;
+        }
+        if (response.data.publishable_key) this._stripePublishableKey = response.data.publishable_key;
+        return { client_secret: response.data.client_secret, publishable_key: response.data.publishable_key || null };
+    }
+
+    async fetchExistingSession(sessionId) {
+        try {
+            const { data } = await this.supabase.functions.invoke('stripe-payment', {
+                body: { action: 'get_checkout_session', session_id: sessionId }
+            });
+            if (data && data.publishable_key) this._stripePublishableKey = data.publishable_key;
+            return data || null;
+        } catch (e) {
+            console.warn('Could not reuse Stripe session:', e);
+        }
+        return null;
+    }
+
+    loadStripeJs(publishableKey) {
+        if (window.Stripe) return Promise.resolve(window.Stripe(publishableKey));
+        if (this._stripeJsPromise) {
+            return this._stripeJsPromise.then(() => window.Stripe(publishableKey));
+        }
+        this._stripeJsPromise = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://js.stripe.com/v3/';
+            script.async = true;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+        return this._stripeJsPromise.then(() => window.Stripe(publishableKey)).catch(() => null);
+    }
+
+    async confirmOrderPayment(orderId, attempt = 1) {
+        try {
+            const { data } = await this.supabase.functions.invoke('stripe-payment', {
+                body: { action: 'confirm_order_payment', order_id: orderId }
+            });
+            if (data && data.paid) {
+                this.destroyEmbeddedCheckout();
+                if (this._paymentCountdownInterval) {
+                    clearInterval(this._paymentCountdownInterval);
+                    this._paymentCountdownInterval = null;
+                }
+                const { data: order } = await this.supabase.from('menutech_orders').select('*').eq('id', orderId).single();
+                if (order) this.renderTrackingUI(order);
+                return;
+            }
+            // onComplete can fire an instant before the session is marked paid; retry briefly.
+            if (attempt < 5 && data && data.reason !== 'no_session') {
+                setTimeout(() => this.confirmOrderPayment(orderId, attempt + 1), 1500);
+            }
+        } catch (e) {
+            console.warn('Payment confirmation check failed:', e);
         }
     }
 

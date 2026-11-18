@@ -43,4 +43,28 @@ Ahora esto ha sido simplificado y unificado:
      Name: stripe_api
      Value: sk_test_... (o sk_live_...)
   3. Asegúrate de que tu cuenta de Stripe tenga habilitado Connect en Modo Prueba (Test Mode) o Modo Producción.
+
+5. PAGO EMBEBIDO EN EL TRACKING (STRIPE EMBEDDED CHECKOUT)
+--------------------------------------------------------------------------------
+- Cuando el cliente elige "Pago en Línea" y el restaurante acepta la orden, el formulario de
+  Stripe ahora se muestra DENTRO de la pantalla de tracking (arriba del todo, antes de los pasos),
+  sin redirigir a otra página.
+- Al completarse el pago, el paso "Pay" se marca con check automáticamente y el flujo avanza a
+  "Preparing". Si el cliente no paga en 10 minutos, la orden se cancela automáticamente.
+- La Edge Function `stripe-payment` crea la sesión de Checkout con `ui_mode: "embedded"` y devuelve
+  el `client_secret`; el widget lo monta con Stripe.js v3 (`initEmbeddedCheckout`).
+
+   SECRET ADICIONAL REQUERIDO:
+   1. Ve a Project Settings -> Edge Functions -> Secrets.
+   2. Crea un Secret llamado:
+      Name: stripe_publishable
+      Value: pk_test_... (o pk_live_...)
+      (Es la clave pública/publicable de Stripe; no es secreta pero se expone a través de la
+       Edge Function para que el frontend pueda inicializar Stripe.js).
+   3. Si no está configurada, el widget mostrará un mensaje indicando que falta la publishable key.
+
+   WEBHOOK: el webhook `stripe-webhook` sigue siendo la fuente de verdad. Marca la orden como
+   pagada y, si estaba en "accepted", la pasa a "preparing". Además, al completar el pago el
+   widget confirma el estado con la acción `confirm_order_payment` para reflejarlo de inmediato.
+
 ================================================================================

@@ -23,6 +23,20 @@ class ChatbotWidget extends StatefulWidget {
     }
   }
 
+  static void showPaymentReceivedBubble(String text) {
+    final state = _activeState;
+    if (state != null && state.mounted) {
+      final jsonText = jsonEncode(text);
+      state._controller.runJavaScript('''
+        if (window.showPaymentBubbleInWebView) {
+          window.showPaymentBubbleInWebView($jsonText);
+        } else if (window.showOrderBubbleInWebView) {
+          window.showOrderBubbleInWebView($jsonText, null);
+        }
+      ''');
+    }
+  }
+
   static void hideBubble() {
     final state = _activeState;
     if (state != null && state.mounted) {
@@ -353,6 +367,46 @@ class _ChatbotWidgetState extends State<ChatbotWidget> {
       if ('speechSynthesis' in window) {
         try { window.speechSynthesis.cancel(); } catch (e) {}
       }
+    };
+
+    // Payment confirmation notice shown to the restaurant when a customer pays online.
+    window.showPaymentBubbleInWebView = function(text) {
+      var bubbleEl = document.getElementById('mt-admin-thought-bubble');
+      var msgEl = document.getElementById('mt-bubble-msg');
+      var win = document.getElementById('mt-bot-window');
+      if (!bubbleEl || !msgEl) return;
+      if (win && win.classList.contains('active')) return;
+
+      var linkEl = bubbleEl.querySelector('.mt-bubble-link');
+      if (linkEl) linkEl.style.display = 'none';
+
+      var cleanText = (text || '')
+        .replace(/<(thought|think)[\s\S]*?<\/\1>/gi, '')
+        .replace(/(thought|reasoning|proceso de pensamiento):[\s\S]*/gi, '')
+        .replace(/[*_~`]/g, '').trim();
+
+      msgEl.innerText = cleanText;
+      msgEl.style.color = '#059669';
+      msgEl.style.fontWeight = '700';
+      bubbleEl.classList.remove('hidden');
+
+      if ('speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+          var utterance = new SpeechSynthesisUtterance(cleanText);
+          utterance.lang = 'en-US';
+          utterance.rate = 1.0;
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {}
+      }
+
+      bubbleEl.onclick = function(e) {
+        e.stopPropagation();
+        bubbleEl.classList.add('hidden');
+        if ('speechSynthesis' in window) {
+          try { window.speechSynthesis.cancel(); } catch (e) {}
+        }
+      };
     };
   </script>
   <script src="https://menutech.io/chatbot.js"></script>

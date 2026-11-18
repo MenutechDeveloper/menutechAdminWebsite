@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../models/unified_item.dart';
 import '../services/supabase_service.dart';
 import '../services/language_service.dart';
+import '../widgets/chatbot_widget.dart';
 import 'order_detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -100,6 +101,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           _paidOrderIds.add(newOrd.id);
           if (_isInitialFetchCompleted) {
             _playPaymentSuccessSound();
+            _notifyPaymentReceived(newOrd);
 
             if (newOrd.status == 'accepted') {
               _supabase.client.from('menutech_orders').update({
@@ -112,6 +114,16 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       }
     }
     _isInitialFetchCompleted = true;
+  }
+
+  void _notifyPaymentReceived(UnifiedItem order) {
+    final customer = order.customerName.isEmpty || order.customerName == 'N/A'
+        ? 'the customer'
+        : order.customerName;
+    final amount = order.totalAmount.toStringAsFixed(2);
+    ChatbotWidget.showPaymentReceivedBubble(
+      'Payment received from $customer for \$$amount. The order is now being prepared.',
+    );
   }
 
   @override
