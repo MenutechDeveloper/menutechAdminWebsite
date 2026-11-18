@@ -101,6 +101,56 @@ serve(async (req: Request) => {
       return data;
     }
 
+    // API v2 uses JSON encoding and requires the Stripe-Version header.
+    // Account creation must use POST /v2/core/accounts: Stripe no longer allows
+    // creating Accounts through the v1 API for new Connect integrations.
+    const STRIPE_API_VERSION = Deno.env.get("STRIPE_API_VERSION") || "2026-10-28.endive";
+
+    async function stripeFetchV2(endpoint: string, options: any = {}) {
+      const url = `https://api.stripe.com/v2${endpoint}`;
+      const headers = {
+        "Authorization": `Bearer ${stripeApiKey}`,
+        "Stripe-Version": STRIPE_API_VERSION,
+        "Content-Type": "application/json",
+        ...options.headers
+      };
+
+      const res = await fetch(url, {
+        method: options.method || "GET",
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error?.message || data.message || `Stripe API error: ${res.status}`);
+      }
+      return data;
+    }
+
+    // Maps an Accounts v2 object to the flat row shape stored in menutech_stripe_accounts
+    // (which mirrors the old v1 Account fields used across the UI and webhook).
+    function mapV2AccountToRecord(account: any) {
+      const merchantCaps = account?.configuration?.merchant?.capabilities || {};
+      const recipientCaps = account?.configuration?.recipient?.capabilities || {};
+      // v2 exposes outstanding requirements as `entries` (v1 used currently_due/past_due).
+      const pendingEntries = account?.requirements?.entries || [];
+      const hasOpenRequirements = pendingEntries.some(
+        (e: any) => e?.awaiting_action_from === "user"
+      );
+      return {
+        stripe_account_id: account.id,
+        charges_enabled: merchantCaps?.card_payments?.status === "active",
+        payouts_enabled:
+          merchantCaps?.stripe_balance?.payouts?.status === "active" ||
+          recipientCaps?.stripe_balance?.stripe_transfers?.status === "active",
+        details_submitted: !hasOpenRequirements,
+        country: (account?.identity?.country || "US").toUpperCase(),
+        currency: account?.defaults?.currency || "usd",
+        updated_at: new Date().toISOString()
+      };
+    }
+
     // Action 1: create_onboarding_link
     if (action === "create_onboarding_link") {
       // Check existing record
@@ -125,17 +175,49 @@ serve(async (req: Request) => {
 
         const businessName = profile?.username || profile?.domain || "Menutech Restaurant";
 
-        const params = new URLSearchParams();
-        params.append("type", "express");
-        if (email) params.append("email", email);
-        params.append("country", "US");
-        params.append("business_profile[name]", businessName);
-        params.append("capabilities[card_payments][requested]", "true");
-        params.append("capabilities[transfers][requested]", "true");
-
-        const newAccount = await stripeFetch("/accounts", {
+        // Create the connected account with Accounts v2 (Stripe no longer allows
+        // creating Accounts through the v1 API for new Connect integrations).
+        // The merchant configuration lets the account accept card payments; the
+        // recipient configuration lets it receive transfers (destination charges).
+        // dashboard=express mirrors the previous Express onboarding experience.
+        const newAccount = await stripeFetchV2("/core/accounts", {
           method: "POST",
-          body: params.toString()
+          body: {
+            contact_email: email || undefined,
+            display_name: businessName,
+            dashboard: "express",
+            identity: {
+              country: "us"
+            },
+            configuration: {
+              merchant: {
+                capabilities: {
+                  card_payments: { requested: true }
+                }
+              },
+              recipient: {
+                capabilities: {
+                  stripe_balance: {
+                    stripe_transfers: { requested: true }
+                  }
+                }
+              }
+            },
+            defaults: {
+              currency: "usd",
+              responsibilities: {
+                fees_collector: "application",
+                losses_collector: "application"
+              },
+              locales: ["en-US"]
+            },
+            include: [
+              "configuration.merchant",
+              "configuration.recipient",
+              "identity",
+              "requirements"
+            ]
+          }
         });
 
         currentAccountId = newAccount.id;
@@ -143,13 +225,7 @@ serve(async (req: Request) => {
         // Upsert into Supabase
         await supabaseAdmin.from("menutech_stripe_accounts").upsert({
           user_id: effectiveUserId,
-          stripe_account_id: currentAccountId,
-          details_submitted: newAccount.details_submitted || false,
-          charges_enabled: newAccount.charges_enabled || false,
-          payouts_enabled: newAccount.payouts_enabled || false,
-          country: newAccount.country || "US",
-          currency: newAccount.default_currency || "usd",
-          updated_at: new Date().toISOString()
+          ...mapV2AccountToRecord(newAccount)
         }, { onConflict: "user_id" });
       }
 
@@ -158,15 +234,19 @@ serve(async (req: Request) => {
       const refreshUrl = `${reqOrigin}/onlinePayment.html?stripe_refresh=true`;
       const returnUrl = `${reqOrigin}/onlinePayment.html?stripe_return=true`;
 
-      const linkParams = new URLSearchParams();
-      linkParams.append("account", currentAccountId);
-      linkParams.append("refresh_url", refreshUrl);
-      linkParams.append("return_url", returnUrl);
-      linkParams.append("type", "account_onboarding");
-
-      const linkRes = await stripeFetch("/account_links", {
+      // Account Links are created with the v2 endpoint.
+      const linkRes = await stripeFetchV2("/core/account_links", {
         method: "POST",
-        body: linkParams.toString()
+        body: {
+          account: currentAccountId,
+          use_case: {
+            type: "account_onboarding",
+            account_onboarding: {
+              refresh_url: refreshUrl,
+              return_url: returnUrl
+            }
+          }
+        }
       });
 
       return new Response(
@@ -191,21 +271,36 @@ serve(async (req: Request) => {
 
       let stripeAccount: any = null;
       try {
-        stripeAccount = await stripeFetch(`/accounts/${existingAccount.stripe_account_id}`);
+        stripeAccount = await stripeFetchV2(
+          `/core/accounts/${existingAccount.stripe_account_id}` +
+            `?include[0]=configuration.merchant` +
+            `&include[1]=configuration.recipient` +
+            `&include[2]=identity` +
+            `&include[3]=requirements`
+        );
       } catch (err: any) {
         console.warn("Error fetching account from Stripe API:", err.message);
       }
 
-      const updatedRecord = {
-        user_id: effectiveUserId,
-        stripe_account_id: existingAccount.stripe_account_id,
-        details_submitted: stripeAccount ? (stripeAccount.details_submitted || false) : (existingAccount.details_submitted || false),
-        charges_enabled: stripeAccount ? (stripeAccount.charges_enabled || false) : (existingAccount.charges_enabled || false),
-        payouts_enabled: stripeAccount ? (stripeAccount.payouts_enabled || false) : (existingAccount.payouts_enabled || false),
-        country: stripeAccount?.country || existingAccount.country || "US",
-        currency: stripeAccount?.default_currency || existingAccount.currency || "usd",
-        updated_at: new Date().toISOString()
-      };
+      // Prefer the v2 configuration when present; otherwise keep the stored values
+      // (protects pre-existing v1 accounts if a response lacks configuration data).
+      const hasConfigData = !!(
+        stripeAccount &&
+        (stripeAccount.configuration?.merchant || stripeAccount.configuration?.recipient)
+      );
+
+      const updatedRecord = hasConfigData
+        ? { user_id: effectiveUserId, ...mapV2AccountToRecord(stripeAccount) }
+        : {
+            user_id: effectiveUserId,
+            stripe_account_id: existingAccount.stripe_account_id,
+            details_submitted: existingAccount.details_submitted || false,
+            charges_enabled: existingAccount.charges_enabled || false,
+            payouts_enabled: existingAccount.payouts_enabled || false,
+            country: existingAccount.country || "US",
+            currency: existingAccount.currency || "usd",
+            updated_at: new Date().toISOString()
+          };
 
       await supabaseAdmin.from("menutech_stripe_accounts").upsert(updatedRecord, { onConflict: "user_id" });
 
