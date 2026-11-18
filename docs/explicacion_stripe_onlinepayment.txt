@@ -87,6 +87,12 @@ Por eso la Edge Function `stripe-connect` ahora usa la API de Cuentas v2:
     * defaults.currency = "usd"
 - Onboarding: POST https://api.stripe.com/v2/core/account_links con use_case
   { type: "account_onboarding", account_onboarding: { return_url, refresh_url } }.
+  IMPORTANTE: el "legacy test mode sandbox" (el test mode clásico de toda cuenta) solo
+  soporta PARCIALMENTE la API v2: crear un v2 account link para una cuenta con
+  configuración `recipient` se rechaza con "Please switch to an account created in a
+  sandbox to test". Por eso, si el v2 falla, se hace fallback a POST /v1/account_links
+  (los endpoints v1 aceptan IDs de cuentas v2). Para probar el flujo v2 completo usa un
+  "general sandbox" (Sandboxes en el Dashboard), no el test mode clásico.
 - Estado de la cuenta: GET /v2/core/accounts/{id}?include[]=configuration.merchant
   &include[]=configuration.recipient&include[]=identity&include[]=requirements.
 - Login link del Express Dashboard: sigue usando /v1/accounts/{id}/login_links

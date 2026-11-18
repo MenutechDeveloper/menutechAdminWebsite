@@ -41,7 +41,11 @@ Stripe blocks creating Accounts via `POST /v1/accounts` for new Connect integrat
   recipient `stripe_balance.stripe_transfers`, and `defaults.responsibilities` both `application`
   (required when `dashboard` is `express`).
 - Onboarding uses `POST /v2/core/account_links` with
-  `use_case.account_onboarding.{return_url,refresh_url}`.
+  `use_case.account_onboarding.{return_url,refresh_url}`. The **legacy test-mode sandbox only
+  partially supports API v2**, and creating a v2 account link for an account with a `recipient`
+  configuration is rejected there (`Please switch to an account created in a sandbox to test`), so
+  the code falls back to the v1 endpoint `POST /v1/account_links` (v1 endpoints accept v2 Account
+  IDs). To test v2 end-to-end, use a **general sandbox** instead of the legacy test-mode sandbox.
 - Status reads use `GET /v2/core/accounts/{id}?include[]=...`; v2 outstanding requirements live
   under `requirements.entries` (not `currently_due`/`past_due`), and capabilities under
   `configuration.<config>.capabilities.<cap>.status === "active"`.
