@@ -153,7 +153,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
 
   Future<void> _updateOrderStatus(String id, String status) async {
     setState(() => _isUpdating = true);
-    final now = DateTime.now().toIso8601String();
+    final now = DateTime.now().toUtc().toIso8601String();
     final Map<String, dynamic> updates = {'status': status};
 
     if (status == 'accepted') {
@@ -183,7 +183,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
         Future.delayed(const Duration(milliseconds: 1500), () async {
           final autoUpdates = {
             'status': 'preparing',
-            'preparing_at': DateTime.now().toIso8601String(),
+            'preparing_at': DateTime.now().toUtc().toIso8601String(),
           };
           try {
             await _supabase.client.from('menutech_orders').update(autoUpdates).eq('id', id);
@@ -206,7 +206,7 @@ class _OrderDetailViewState extends State<OrderDetailView> {
 
   Future<void> _updateResStatus(String id, String status) async {
     setState(() => _isUpdating = true);
-    final now = DateTime.now().toIso8601String();
+    final now = DateTime.now().toUtc().toIso8601String();
     final Map<String, dynamic> updates = {'status': status, 'updated_at': now};
 
     try {

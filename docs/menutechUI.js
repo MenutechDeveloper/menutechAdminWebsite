@@ -3786,7 +3786,13 @@ class MenutechPlatformOrders extends HTMLElement {
         // Check 10-minute timeout for online payment ONLY once accepted and unpaid
         const TEN_MINUTES_MS = 10 * 60 * 1000;
         // Strictly use accepted_at for the 10m countdown. If accepted_at is missing, default to now (newly accepted) to prevent instant cancellation
-        const acceptedTime = order.accepted_at ? new Date(order.accepted_at).getTime() : (status === 'accepted' ? Date.now() : null);
+        const createdTime = order.created_at ? new Date(order.created_at).getTime() : null;
+        let acceptedTime = order.accepted_at ? new Date(order.accepted_at).getTime() : (status === 'accepted' ? Date.now() : null);
+        // Guard against clock/timezone skew: an order can never be accepted before it was created.
+        // Old app builds wrote accepted_at in local time (stored as UTC), pushing it hours into the past.
+        if (acceptedTime && createdTime && acceptedTime < createdTime) {
+            acceptedTime = createdTime;
+        }
         const now = Date.now();
         const isExpired = isOnlinePayment && !isPaid && status === 'accepted' && acceptedTime && (now - acceptedTime > TEN_MINUTES_MS);
 

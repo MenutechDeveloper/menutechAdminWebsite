@@ -64,7 +64,7 @@ class PrintService {
         await _supabase.client.from('menutech_tickets').upsert({
           'user_id': user.id,
           'printer_ip': ip,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
         }, onConflict: 'user_id');
       } catch (e) {
         // Error saving IP to Supabase
@@ -201,7 +201,7 @@ class PrintService {
         await _supabase.client.from('menutech_tickets').upsert({
           'user_id': user.id,
           'printer_ip': newRemoteIp,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
         }, onConflict: 'user_id');
       } catch (e) {
         print("Error updating Supabase after printer deletion: $e");

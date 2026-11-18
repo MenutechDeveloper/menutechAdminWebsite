@@ -61,7 +61,7 @@ class LanguageService {
 
       final user = SupabaseService().currentUser;
       if (user != null) {
-        final now = DateTime.now().toIso8601String();
+        final now = DateTime.now().toUtc().toIso8601String();
         try {
           await SupabaseService().client.from('menutech_restaurants').upsert({
             'user_id': user.id,

@@ -36,3 +36,9 @@ Static admin site + customer menu widgets + Supabase backend + Flutter Android a
   service role (e.g. `cancel_order_payment`), not a direct table update.
 - Validate JS with `node --check docs/menutechUI.js`; type-check edge functions with
   `npx esbuild supabase/functions/<fn>/index.ts --bundle=false --outfile=/tmp/out.js --loader:.ts=ts`.
+- **Timestamps must be UTC.** The Flutter app must write timestamps with
+  `DateTime.now().toUtc().toIso8601String()` (never `DateTime.now().toIso8601String()`, which emits
+  local time with no offset and Postgres then stores it as UTC). A skew here made `accepted_at`
+  land hours in the past and every 10-minute timeout check cancelled online orders instantly.
+  As a safety net, `docs/fix_order_accepted_at_timezone.sql` clamps `accepted_at >= created_at`
+  with a DB trigger, and the web/admin/app timeout checks ignore `accepted_at < created_at`.
