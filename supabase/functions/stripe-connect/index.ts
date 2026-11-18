@@ -234,23 +234,50 @@ serve(async (req: Request) => {
       const refreshUrl = `${reqOrigin}/onlinePayment.html?stripe_refresh=true`;
       const returnUrl = `${reqOrigin}/onlinePayment.html?stripe_return=true`;
 
-      // Account Links are created with the v2 endpoint.
-      const linkRes = await stripeFetchV2("/core/account_links", {
-        method: "POST",
-        body: {
-          account: currentAccountId,
-          use_case: {
-            type: "account_onboarding",
-            account_onboarding: {
-              refresh_url: refreshUrl,
-              return_url: returnUrl
+      // Account Links are created with the v2 endpoint. The legacy test-mode sandbox
+      // only partially supports API v2 (account links with a recipient config are
+      // rejected with "Please switch to an account created in a sandbox to test"),
+      // so fall back to the v1 endpoint, which accepts v2 Account IDs.
+      let linkUrl: string;
+      try {
+        const linkRes = await stripeFetchV2("/core/account_links", {
+          method: "POST",
+          body: {
+            account: currentAccountId,
+            use_case: {
+              type: "account_onboarding",
+              account_onboarding: {
+                refresh_url: refreshUrl,
+                return_url: returnUrl
+              }
             }
           }
+        });
+        linkUrl = linkRes.url;
+      } catch (err: any) {
+        console.warn("v2 account link failed, falling back to v1:", err.message);
+
+        const linkParams = new URLSearchParams();
+        linkParams.append("account", currentAccountId);
+        linkParams.append("refresh_url", refreshUrl);
+        linkParams.append("return_url", returnUrl);
+        linkParams.append("type", "account_onboarding");
+
+        try {
+          const linkRes = await stripeFetch("/account_links", {
+            method: "POST",
+            body: linkParams.toString()
+          });
+          linkUrl = linkRes.url;
+        } catch (v1Err: any) {
+          throw new Error(
+            `No se pudo crear el enlace de onboarding. v2: ${err.message}. v1: ${v1Err.message}`
+          );
         }
-      });
+      }
 
       return new Response(
-        JSON.stringify({ url: linkRes.url, account_id: currentAccountId }),
+        JSON.stringify({ url: linkUrl, account_id: currentAccountId }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 
