@@ -29,6 +29,33 @@ Static admin site + customer menu widgets + Supabase backend + Flutter Android a
 - `stripe_api` — Stripe secret key (`sk_...`).
 - `stripe_publishable` — Stripe publishable key (`pk_...`), exposed to the browser via the
   `get_stripe_config` action so the widget can init Stripe.js.
+- `STRIPE_API_VERSION` (optional) — overrides the `Stripe-Version` header used by v2 API calls
+  (defaults to `2026-10-28.endive`).
+
+## Stripe Connect accounts (online payments activation)
+`stripe-connect` creates connected accounts with the **Accounts v2 API** (`POST /v2/core/accounts`).
+Stripe blocks creating Accounts via `POST /v1/accounts` for new Connect integrations
+(`accounts_v1_support`), which returned the error the admin saw in `onlinePayment.html`.
+- Account creation is JSON + `Stripe-Version` header (v2 namespace; v1 uses form-encoding).
+- Config mirrors the old `type=express`: `dashboard:"express"`, merchant `card_payments`,
+  recipient `stripe_balance.stripe_transfers`, and `defaults.responsibilities` both `application`
+  (required when `dashboard` is `express`).
+- Onboarding uses `POST /v2/core/account_links` with
+  `use_case.account_onboarding.{return_url,refresh_url}`.
+- Status reads use `GET /v2/core/accounts/{id}?include[]=...`; v2 outstanding requirements live
+  under `requirements.entries` (not `currently_due`/`past_due`), and capabilities under
+  `configuration.<config>.capabilities.<cap>.status === "active"`.
+- The flat `menutech_stripe_accounts` columns are derived via `mapV2AccountToRecord()`, so the UI
+  and `stripe-webhook` (which still handles v1 `account.updated`) need no changes.
+- Login links (Express Dashboard) keep using `/v1/accounts/{id}/login_links`; v1 endpoints accept
+  v2 Account IDs.
+
+## Destination charges (Connect mode)
+In Checkout Sessions the transfer parameter is `payment_intent_data[transfer_data][destination]`
+(NOT top-level `transfer_data[destination]`, which is not a valid Checkout parameter). Commission
+mode (`menutech_commission`) uses the same transfer plus
+`payment_intent_data[application_fee_amount]`; with no connected account it charges the platform
+directly.
 
 ## Conventions
 - Customer client is anonymous; `menutech_orders` has public INSERT/SELECT RLS but **no public

@@ -69,3 +69,50 @@ Ahora esto ha sido simplificado y unificado:
    widget confirma el estado con la acción `confirm_order_payment` para reflejarlo de inmediato.
 
 ================================================================================
+6. STRIPE CONNECT: CUENTAS v2 (ACTUALIZADO)
+================================================================================
+Stripe ya no permite crear cuentas Connect con la API v1 (POST /v1/accounts) en
+integraciones nuevas: devuelve el error "Stripe no longer recommends Accounts v1
+for new Connect integrations... Create connected accounts with POST /v2/core/accounts".
+Por eso la Edge Function `stripe-connect` ahora usa la API de Cuentas v2:
+
+- Creación de cuenta: POST https://api.stripe.com/v2/core/accounts (JSON).
+  Configuración usada (equivalente al antiguo `type=express`):
+    * dashboard: "express"  (dashboard alojado por Stripe para el restaurante)
+    * configuration.merchant.capabilities.card_payments.requested = true
+    * configuration.recipient.capabilities.stripe_balance.stripe_transfers.requested = true
+    * defaults.responsibilities.fees_collector = "application"
+    * defaults.responsibilities.losses_collector = "application"
+      (recomendado por Stripe para destination charges; obligatorio con dashboard express)
+    * defaults.currency = "usd"
+- Onboarding: POST https://api.stripe.com/v2/core/account_links con use_case
+  { type: "account_onboarding", account_onboarding: { return_url, refresh_url } }.
+- Estado de la cuenta: GET /v2/core/accounts/{id}?include[]=configuration.merchant
+  &include[]=configuration.recipient&include[]=identity&include[]=requirements.
+- Login link del Express Dashboard: sigue usando /v1/accounts/{id}/login_links
+  (Stripe permite usar endpoints v1 con cuentas v2).
+
+La API v2 usa JSON (no form-encoded) y requiere el header `Stripe-Version`
+(configurable con el secret opcional STRIPE_API_VERSION; por defecto
+`2026-10-28.endive`).
+
+NOTA: si al crear la cuenta Stripe responde con un error de "liability
+unacknowledged" (account_creation_liability_unacknowledged), confirma las
+responsabilidades de la plataforma (pérdidas/recolección) en el Dashboard de
+Stripe -> Connect -> Platform profile.
+
+Los campos planos guardados en `menutech_stripe_accounts` (charges_enabled,
+payouts_enabled, details_submitted, country, currency) se derivan del objeto v2
+mediante mapV2AccountToRecord(), por lo que la UI de onlinePayment.html y el
+webhook siguen funcionando sin cambios.
+
+================================================================================
+7. CORRECCIÓN DE DESTINATION CHARGES (MODO CONNECT)
+================================================================================
+En las Checkout Sessions el parámetro correcto para enviar los fondos al
+restaurante conectado es `payment_intent_data[transfer_data][destination]`.
+Antes se usaba `transfer_data[destination]`, que NO es un parámetro válido de
+Checkout y provocaba que el modo Connect (Own Stripe Account) no funcionara
+correctamente. Corregido en `stripe-payment` (pedidos y reservaciones).
+
+================================================================================

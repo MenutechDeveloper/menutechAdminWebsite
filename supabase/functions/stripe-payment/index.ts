@@ -277,7 +277,7 @@ serve(async (req: Request) => {
 
       // Destination Charge if connected account available
       if (stripeAcc && stripeAcc.stripe_account_id && stripeAcc.charges_enabled) {
-        params.append("transfer_data[destination]", stripeAcc.stripe_account_id);
+        params.append("payment_intent_data[transfer_data][destination]", stripeAcc.stripe_account_id);
 
         // If Menutech Commission mode is active and commission rate is configured, apply application fee
         if (resPayCfg && resPayCfg.payment_mode === "menutech_commission" && parseFloat(resPayCfg.commission_rate || 0) > 0) {
@@ -423,7 +423,7 @@ serve(async (req: Request) => {
 
       // Destination Charge if connected account available
       if (stripeAcc && stripeAcc.stripe_account_id && stripeAcc.charges_enabled) {
-        params.append("transfer_data[destination]", stripeAcc.stripe_account_id);
+        params.append("payment_intent_data[transfer_data][destination]", stripeAcc.stripe_account_id);
 
         if (resPayCfg && resPayCfg.payment_mode === "menutech_commission" && parseFloat(resPayCfg.commission_rate || 0) > 0) {
           const commissionPct = parseFloat(resPayCfg.commission_rate);
