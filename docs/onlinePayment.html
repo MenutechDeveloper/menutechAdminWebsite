@@ -331,6 +331,7 @@
                             <button class="btn-action btn-secondary" id="admin-btn-dashboard" onclick="adminOpenStripeDashboard()" style="display:none;" id="lbl-adm-btn-express">Open Express Dashboard</button>
                             <button class="btn-action btn-danger" id="admin-btn-disconnect" onclick="adminDisconnectStripeAccount()" style="display:none; margin-left:auto;" id="lbl-adm-btn-disconnect">Disconnect Account</button>
                         </div>
+                        <div id="admin-requirements-note" class="hidden" style="margin-top:14px; padding:14px 16px; border-radius:14px; background: rgba(255,170,0,0.10); border:1px solid rgba(255,170,0,0.35); font-size:0.82rem; color: var(--text-dim); line-height:1.5;"></div>
                     </div>
 
                     <!-- TAB 2: MENUTECH COMMISSION -->
@@ -718,6 +719,8 @@
 
         let user = null, userRole = null, activeOwnerId = null, activeDomain = null, activeOwnerProfile = null;
         let connectedAccountData = null;
+        let accountRequirementsDue = [];
+        let accountCanReceive = false;
         let currentRestaurantConfig = null;
         let globalConfig = null;
         let allOwners = [];
@@ -916,7 +919,18 @@
                 sidebarContainer.classList.add('collapsed');
 
                 await setupContextSwitcher();
-                if (!activeOwnerId && allOwners.length > 0) {
+
+                // Returning from Stripe onboarding must reopen the SAME restaurant.
+                // Without this an admin lands on the first owner and never sees the
+                // freshly submitted account, which looks like "status never changed".
+                const returnOwnerId = new URLSearchParams(window.location.search).get('owner_id');
+                const preferredOwnerId = (returnOwnerId && allOwners.some(o => o.id === returnOwnerId))
+                    ? returnOwnerId
+                    : null;
+
+                if (preferredOwnerId) {
+                    await switchContext(preferredOwnerId);
+                } else if (!activeOwnerId && allOwners.length > 0) {
                     await switchContext(allOwners[0].id);
                 } else if (!activeOwnerId) {
                     activeOwnerId = user.id;
@@ -1000,7 +1014,11 @@
 
             // Check URL parameters for return alerts
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('stripe_return') === 'true') {
+            const fromStripe = urlParams.get('stripe_return') === 'true' || urlParams.get('stripe_refresh') === 'true';
+            let freshAccount = null;
+            let freshRequirements = [];
+            let freshCanReceive = false;
+            if (fromStripe) {
                 showToast("Returned from Stripe Onboarding. Updating account status...", "warning");
                 // Pull the latest status from Stripe (not just Supabase) so the UI reflects
                 // freshly submitted requirements right after onboarding.
@@ -1008,7 +1026,11 @@
                     const resp = await sb.functions.invoke('stripe-connect', {
                         body: { action: 'get_account_status', target_user_id: activeOwnerId }
                     });
-                    if (resp.data && resp.data.account) connectedAccountData = resp.data.account;
+                    if (resp.data && resp.data.account) {
+                        freshAccount = resp.data.account;
+                        freshRequirements = resp.data.requirements_due || [];
+                        freshCanReceive = !!resp.data.can_receive;
+                    }
                 } catch (e) {
                     console.warn("Could not refresh Stripe status on return:", e);
                 }
@@ -1020,6 +1042,16 @@
             }
 
             await loadAccountData();
+
+            // loadAccountData re-reads Supabase, which can still hold stale values if the
+            // upsert failed. Prefer the values Stripe just returned.
+            if (freshAccount) {
+                connectedAccountData = freshAccount;
+                accountRequirementsDue = freshRequirements;
+                accountCanReceive = freshCanReceive;
+                if (userRole === 'ADMIN' || userRole === 'SUPERADMIN') renderAdminUI();
+                else renderRestaurantOwnerUI();
+            }
         }
 
         async function loadAccountData() {
@@ -1032,6 +1064,9 @@
             // Load Connected Stripe Account
             const { data: stripeAcc } = await sb.from('menutech_stripe_accounts').select('*').eq('user_id', activeOwnerId).maybeSingle();
             connectedAccountData = stripeAcc;
+            // Requirements belong to the previous restaurant; clear until re-checked.
+            accountRequirementsDue = [];
+            accountCanReceive = !!(stripeAcc && stripeAcc.payouts_enabled);
 
             // Load Restaurant Payment Config
             const { data: payCfg } = await sb.from('menutech_restaurant_payment_configs').select('*').eq('user_id', activeOwnerId).maybeSingle();
@@ -1117,6 +1152,24 @@
                 stripeBadge.textContent = dict.statusDisconnected;
                 btnDashboard.style.display = 'none';
                 btnDisconnect.style.display = 'none';
+            }
+
+            // Surface the exact requirements Stripe still needs. Without this, a
+            // half-finished onboarding only shows "Pending" with no explanation.
+            const reqNote = document.getElementById('admin-requirements-note');
+            if (reqNote) {
+                if (connectedAccountData && connectedAccountData.stripe_account_id &&
+                    !accountCanReceive && accountRequirementsDue.length) {
+                    reqNote.classList.remove('hidden');
+                    reqNote.innerHTML = `<strong>Stripe still needs from this restaurant:</strong><br>` +
+                        accountRequirementsDue.map(r => `• ${r}`).join('<br>');
+                } else if (connectedAccountData && connectedAccountData.stripe_account_id &&
+                    !accountCanReceive && !accountRequirementsDue.length) {
+                    reqNote.classList.remove('hidden');
+                    reqNote.innerHTML = `Stripe hasn't enabled this account yet. Click <strong>Check Status &amp; Requirements</strong>, and if it stays pending open <strong>Open Express Dashboard</strong> to finish the missing steps.`;
+                } else {
+                    reqNote.classList.add('hidden');
+                }
             }
 
             // Tab 2: Menutech Commission
@@ -1244,10 +1297,14 @@
 
                 if (response.data && response.data.account) {
                     connectedAccountData = response.data.account;
+                    accountRequirementsDue = response.data.requirements_due || [];
+                    accountCanReceive = !!response.data.can_receive;
                     renderAdminUI();
                     showToast(dict.toastStatusUpdated, "success");
                 } else if (response.data && response.data.not_connected) {
                     connectedAccountData = null;
+                    accountRequirementsDue = [];
+                    accountCanReceive = false;
                     renderAdminUI();
                     showToast("No Stripe account connected.", "warning");
                 } else {
@@ -1343,8 +1400,16 @@
             const pctInput = document.getElementById('admin-input-commission-pct');
             const pct = parseFloat(pctInput.value);
 
-            if (isNaN(pct) || pct < 0 || pct > 100) {
-                showToast("Please enter a valid commission percentage between 0% and 100%.", "warning");
+            if (isNaN(pct) || pct <= 0 || pct >= 100) {
+                showToast("Please enter a valid commission percentage greater than 0% and below 100%.", "warning");
+                return;
+            }
+
+            // Commission mode is still a destination charge: the restaurant must have a
+            // connected account that can receive funds, or the fee cannot be collected
+            // and the money would silently land on the platform account instead.
+            if (!accountCanReceive) {
+                showToast("This restaurant must connect a Stripe account (bank account) before authorizing Menutech Commission. Use 'Conectar con Stripe' first.", "error");
                 return;
             }
 
@@ -1605,19 +1670,31 @@
                 document.getElementById('owner-val-stripe-status').textContent = isStripeConn ? dict.statusConnectedEnabled : (connectedAccountData?.stripe_account_id ? dict.statusPending : dict.statusDisconnected);
                 document.getElementById('owner-val-stripe-id').textContent = connectedAccountData?.stripe_account_id || dict.notConnectedVal;
 
-                // Show the Stripe connection panel only for "Own Stripe Account" mode.
-                // Menutech Commission mode needs no action from the restaurant.
+                // Both modes pay out to the restaurant's connected account, so the
+                // connection panel must stay visible in commission mode too — that is
+                // where the restaurant enters the bank account that will receive funds.
                 const isOwnStripeMode = currentRestaurantConfig.payment_mode === 'own_stripe';
+                const isCommMode = currentRestaurantConfig.payment_mode === 'menutech_commission';
                 const connectPanel = document.getElementById('owner-connect-panel');
-                if (isOwnStripeMode) {
+                if (isOwnStripeMode || isCommMode) {
                     connectPanel.classList.remove('hidden');
+
+                    const connectTitle = document.getElementById('lbl-owner-connect-title');
+                    const connectDesc = document.getElementById('lbl-owner-connect-desc');
+                    if (isCommMode) {
+                        if (connectTitle) connectTitle.textContent = 'Vincula tu cuenta bancaria para recibir tus pagos';
+                        if (connectDesc) connectDesc.textContent = 'Menutech procesa los pagos y te transfiere el monto neto (después de la comisión). Stripe te pedirá tus datos y tu cuenta bancaria una sola vez.';
+                    } else {
+                        if (connectTitle) connectTitle.textContent = 'Connect your Stripe account';
+                        if (connectDesc) connectDesc.textContent = 'To receive online payments directly in your own bank account, connect your Stripe account. Stripe will guide you through the required information.';
+                    }
 
                     const badge = document.getElementById('owner-connect-badge');
                     const connectBtn = document.getElementById('owner-btn-connect');
                     const dashboardBtn = document.getElementById('owner-btn-dashboard');
                     const connectLbl = document.getElementById('owner-btn-connect-lbl');
 
-                    if (isStripeConn) {
+                    if (accountCanReceive) {
                         badge.className = 'status-badge connected';
                         badge.textContent = dict.statusConnectedEnabled;
                         connectBtn.style.display = 'none';
@@ -1632,7 +1709,7 @@
                         badge.className = 'status-badge disconnected';
                         badge.textContent = dict.statusDisconnected;
                         connectBtn.style.display = 'inline-flex';
-                        connectLbl.textContent = 'Connect with Stripe';
+                        connectLbl.textContent = isCommMode ? 'Vincular mi cuenta bancaria' : 'Connect with Stripe';
                         dashboardBtn.style.display = 'none';
                     }
                 } else {
@@ -1679,10 +1756,14 @@
 
                 if (response.data && response.data.account) {
                     connectedAccountData = response.data.account;
+                    accountRequirementsDue = response.data.requirements_due || [];
+                    accountCanReceive = !!response.data.can_receive;
                     renderRestaurantOwnerUI();
                     showToast(I18N[currentLang].toastStatusUpdated, "success");
                 } else if (response.data && response.data.not_connected) {
                     connectedAccountData = null;
+                    accountRequirementsDue = [];
+                    accountCanReceive = false;
                     renderRestaurantOwnerUI();
                     showToast("No Stripe account connected.", "warning");
                 } else {
@@ -1756,10 +1837,23 @@
             renderRestaurantLogsTable(filtered);
         };
 
+        // Commission actually charged by Stripe for a log row. Falls back to the
+        // configured rate only for older rows recorded before the webhook stored it.
+        function resolveLogCommission(log, commRate, isCommMode) {
+            const stored = parseFloat(log?.payload?.commission_amount);
+            if (!isNaN(stored) && log?.payload?.commission_amount != null) return stored;
+            const amt = parseFloat(log.amount) || 0;
+            return isCommMode ? (amt * (commRate / 100)) : 0;
+        }
+
         function renderRestaurantStats(logs) {
             let totalVol = 0;
             let countSucceeded = 0;
             let totalRefunded = 0;
+            let totalCommission = 0;
+
+            const commRate = parseFloat(currentRestaurantConfig?.commission_rate || 0);
+            const isCommMode = currentRestaurantConfig?.payment_mode === 'menutech_commission';
 
             logs.forEach(l => {
                 const status = (l.status || '').toLowerCase();
@@ -1768,15 +1862,14 @@
                 if (status === 'succeeded') {
                     totalVol += amt;
                     countSucceeded++;
+                    totalCommission += resolveLogCommission(l, commRate, isCommMode);
                 } else if (status === 'refunded') {
                     const refAmt = parseFloat(l.payload?.amount_refunded ? l.payload.amount_refunded / 100 : amt) || amt;
                     totalRefunded += refAmt;
                 }
             });
 
-            const commRate = parseFloat(currentRestaurantConfig?.commission_rate || 0);
-            const isCommMode = currentRestaurantConfig?.payment_mode === 'menutech_commission';
-            const menutechCommissionTotal = isCommMode ? (totalVol * (commRate / 100)) : 0;
+            const menutechCommissionTotal = totalCommission;
             const clientPayoutTotal = totalVol - menutechCommissionTotal;
 
             // Restaurant Owner View Elements
@@ -1857,7 +1950,7 @@
                 const amt = parseFloat(l.amount) || 0;
                 const currency = (l.currency || 'usd').toUpperCase();
 
-                const commAmt = isCommMode ? (amt * (commRate / 100)) : 0;
+                const commAmt = resolveLogCommission(l, commRate, isCommMode);
                 const netRest = amt - commAmt;
 
                 let relatedStr = '-';
@@ -1899,16 +1992,24 @@
                 return;
             }
 
-            const header = [dict.thDate, dict.thStripeId, dict.thRelated, dict.thAmount, "Currency", dict.thStatus];
+            const header = [dict.thDate, dict.thStripeId, dict.thRelated, dict.thAmount, "Currency", "Menutech Commission", "Net Restaurant", dict.thStatus];
             const localeStr = currentLang === 'es' ? 'es-MX' : 'en-US';
-            const rows = rawRestaurantLogs.map(l => [
-                `"${l.created_at ? new Date(l.created_at).toLocaleString(localeStr) : ''}"`,
-                `"${l.stripe_event_id || l.id}"`,
-                `"${l.order_id ? dict.orderTag + ' #' + l.order_id : l.reservation_id ? dict.reservationTag + ' #' + l.reservation_id : '-'}"`,
-                `"${l.amount || 0}"`,
-                `"${(l.currency || 'usd').toUpperCase()}"`,
-                `"${l.status || ''}"`
-            ]);
+            const commRate = parseFloat(currentRestaurantConfig?.commission_rate || 0);
+            const isCommMode = currentRestaurantConfig?.payment_mode === 'menutech_commission';
+            const rows = rawRestaurantLogs.map(l => {
+                const amt = parseFloat(l.amount) || 0;
+                const comm = resolveLogCommission(l, commRate, isCommMode);
+                return [
+                    `"${l.created_at ? new Date(l.created_at).toLocaleString(localeStr) : ''}"`,
+                    `"${l.stripe_event_id || l.id}"`,
+                    `"${l.order_id ? dict.orderTag + ' #' + l.order_id : l.reservation_id ? dict.reservationTag + ' #' + l.reservation_id : '-'}"`,
+                    `"${l.amount || 0}"`,
+                    `"${(l.currency || 'usd').toUpperCase()}"`,
+                    `"${comm.toFixed(2)}"`,
+                    `"${(amt - comm).toFixed(2)}"`,
+                    `"${l.status || ''}"`
+                ];
+            });
 
             const csvContent = "\uFEFF" + [header.join(","), ...rows.map(r => r.join(","))].join("\n");
             const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });

@@ -113,3 +113,45 @@ El modo "Own Stripe" y el modo "Comisión" usan la MISMA mecánica de Connect. L
 diferencia es solo quién se queda la comisión:
 - Own Stripe  -> comisión 0% (todo al restaurante).
 - Comisión    -> comisión X% (tu parte se retiene automáticamente).
+
+================================================================================
+ACTUALIZACIÓN (implementado en código)
+================================================================================
+El modo comisión ya quedó automatizado. Ambos modos usan la misma mecánica
+(destination charge a la cuenta Connect del restaurante); la diferencia es solo
+la comisión:
+
+- Own Stripe  -> application_fee = 0  (100% al restaurante)
+- Comisión    -> application_fee = total * commission_rate  (Stripe retiene tu %)
+
+Qué cambió:
+1. `stripe-payment` exige una cuenta Connect que pueda RECIBIR dinero (transfers
+   o payouts activos) en AMBOS modos. Antes, sin cuenta, se cobraba todo a la
+   plataforma y la comisión se perdía. Ahora devuelve error claro con los
+   requisitos pendientes de Stripe (`requirements_due`).
+2. La comisión se envía siempre como `application_fee_amount` en modo comisión
+   (ya no depende de que la cuenta tenga `charges_enabled`).
+3. `stripe-webhook` guarda en `menutech_payment_logs.payload` el modo de pago, la
+   tasa, el monto de comisión real y el neto, además de `stripe_account_id`
+   (antes quedaba NULL porque `transfer_data` no vive en el Checkout Session).
+4. `stripe-connect`:
+   - El return/refresh de Stripe incluye `owner_id`, para que al volver se abra
+     el MISMO restaurante (antes un admin volvía al primero de la lista y parecía
+     que el estado "nunca cambiaba").
+   - `get_account_status` devuelve `requirements_due` y `can_receive`, y calcula
+     `payouts_enabled` con `capabilities.transfers` (no solo `payouts_enabled`).
+5. `onlinePayment.html`:
+   - Muestra el panel de vinculación de Stripe TAMBIÉN en modo comisión (ahí es
+     donde el restaurante captura su cuenta bancaria). Antes estaba oculto.
+   - Muestra los requisitos pendientes exactos que Stripe pide.
+   - No deja autorizar comisión sin cuenta receptora.
+   - El reporte y el CSV usan la comisión REAL cobrada, no un cálculo en pantalla.
+
+Flujo final en modo comisión (automático):
+  Cliente paga -> Stripe cobra en tu cuenta de plataforma -> transfiere el neto a
+  la cuenta Connect del restaurante -> Stripe hace el payout a su banco.
+  Tú conservas `application_fee` sin hacer nada.
+
+IMPORTANTE: el restaurante SÍ debe hacer el onboarding de Stripe una vez (datos +
+cuenta bancaria). No hay forma de evitar ese paso: es el único mecanismo de
+Stripe para enviar dinero a un banco.

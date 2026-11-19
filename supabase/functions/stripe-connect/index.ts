@@ -138,12 +138,14 @@ serve(async (req: Request) => {
       const hasOpenRequirements = pendingEntries.some(
         (e: any) => e?.awaiting_action_from === "user"
       );
+      // Payouts live under the merchant config in v2; recipients get transfers.
+      const canReceive =
+        merchantCaps?.stripe_balance?.payouts?.status === "active" ||
+        recipientCaps?.stripe_balance?.stripe_transfers?.status === "active";
       return {
         stripe_account_id: account.id,
         charges_enabled: merchantCaps?.card_payments?.status === "active",
-        payouts_enabled:
-          merchantCaps?.stripe_balance?.payouts?.status === "active" ||
-          recipientCaps?.stripe_balance?.stripe_transfers?.status === "active",
+        payouts_enabled: canReceive,
         details_submitted: !hasOpenRequirements,
         country: (account?.identity?.country || "US").toUpperCase(),
         currency: account?.defaults?.currency || "usd",
@@ -229,10 +231,13 @@ serve(async (req: Request) => {
         }, { onConflict: "user_id" });
       }
 
-      // Origin for return/refresh URLs
+      // Origin for return/refresh URLs.
+      // Include the restaurant id: an admin returning from Stripe would otherwise land on
+      // the first restaurant in the sidebar and never see this account's fresh status.
       const reqOrigin = req.headers.get("origin") || "https://menutech.io";
-      const refreshUrl = `${reqOrigin}/onlinePayment.html?stripe_refresh=true`;
-      const returnUrl = `${reqOrigin}/onlinePayment.html?stripe_return=true`;
+      const ownerParam = `owner_id=${encodeURIComponent(effectiveUserId)}`;
+      const refreshUrl = `${reqOrigin}/onlinePayment.html?stripe_refresh=true&${ownerParam}`;
+      const returnUrl = `${reqOrigin}/onlinePayment.html?stripe_return=true&${ownerParam}`;
 
       // Account Links are created with the v2 endpoint. The legacy test-mode sandbox
       // only partially supports API v2 (account links with a recipient config are
@@ -301,13 +306,22 @@ serve(async (req: Request) => {
       // so it's the primary source of truth. Fall back to v2 (and then to stored values)
       // only if v1 fails.
       let updatedRecord: any = null;
+      let requirementsDue: string[] = [];
+      let canReceive = false;
       try {
         const v1Account = await stripeFetch(`/accounts/${existingAccount.stripe_account_id}`);
+        canReceive =
+          v1Account?.capabilities?.transfers === "active" ||
+          !!v1Account?.payouts_enabled;
+        requirementsDue = [
+          ...(v1Account?.requirements?.currently_due || []),
+          ...(v1Account?.requirements?.past_due || [])
+        ];
         updatedRecord = {
           user_id: effectiveUserId,
           stripe_account_id: v1Account.id || existingAccount.stripe_account_id,
           charges_enabled: !!v1Account.charges_enabled,
-          payouts_enabled: !!v1Account.payouts_enabled,
+          payouts_enabled: canReceive,
           details_submitted: !!v1Account.details_submitted,
           country: (v1Account.country || existingAccount.country || "US").toUpperCase(),
           currency: v1Account.default_currency || existingAccount.currency || "usd",
@@ -324,7 +338,12 @@ serve(async (req: Request) => {
               `&include[3]=requirements`
           );
           if (stripeAccount?.configuration?.merchant || stripeAccount?.configuration?.recipient) {
-            updatedRecord = { user_id: effectiveUserId, ...mapV2AccountToRecord(stripeAccount) };
+            const mapped = { user_id: effectiveUserId, ...mapV2AccountToRecord(stripeAccount) };
+            canReceive = mapped.payouts_enabled;
+            requirementsDue = (stripeAccount?.requirements?.entries || [])
+              .filter((e: any) => e?.awaiting_action_from === "user")
+              .map((e: any) => e?.description || e?.requirement || "additional_requirements");
+            updatedRecord = mapped;
           }
         } catch (v2Err: any) {
           console.warn("v2 account retrieve failed:", v2Err.message);
@@ -332,6 +351,7 @@ serve(async (req: Request) => {
       }
 
       if (!updatedRecord) {
+        canReceive = !!(existingAccount.payouts_enabled || existingAccount.charges_enabled);
         updatedRecord = {
           user_id: effectiveUserId,
           stripe_account_id: existingAccount.stripe_account_id,
@@ -346,7 +366,9 @@ serve(async (req: Request) => {
 
       await supabaseAdmin.from("menutech_stripe_accounts").upsert(updatedRecord, { onConflict: "user_id" });
 
-      // Automatically ensure payment_mode is own_stripe if charges_enabled and payment_mode is none
+      // Auto-set own_stripe only when the account can actually take card payments.
+      // (A recipient-only account can receive transfers but not charge, so we no longer
+      // key this off charges_enabled alone.)
       if (updatedRecord.charges_enabled) {
         const { data: currentCfg } = await supabaseAdmin
           .from("menutech_restaurant_payment_configs")
@@ -367,7 +389,11 @@ serve(async (req: Request) => {
       }
 
       return new Response(
-        JSON.stringify({ account: updatedRecord }),
+        JSON.stringify({
+          account: updatedRecord,
+          can_receive: canReceive,
+          requirements_due: requirementsDue
+        }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 

@@ -185,9 +185,16 @@ serve(async (req: Request) => {
       }
 
       // Record Audit Log
+      // Destination/commission come from the Checkout Session metadata (transfer_data
+      // lives on the PaymentIntent, not on the session, so it was always null before).
+      const destinationAccount = metadata.destination_account || null;
+      const commissionRate = parseFloat(metadata.commission_rate || "0") || 0;
+      const commissionAmount = parseFloat(metadata.commission_amount || "0") || 0;
+      const paymentMode = metadata.payment_mode || "own_stripe";
+
       await supabaseAdmin.from("menutech_payment_logs").insert({
         user_id: userId || "00000000-0000-0000-0000-000000000000",
-        stripe_account_id: session.transfer_data?.destination || null,
+        stripe_account_id: destinationAccount,
         order_id: orderId || null,
         reservation_id: reservationId || null,
         event_type: eventType,
@@ -195,7 +202,14 @@ serve(async (req: Request) => {
         amount: amountTotal,
         currency: currency,
         status: "succeeded",
-        payload: eventData
+        payload: {
+          ...eventData,
+          payment_mode: paymentMode,
+          commission_rate: commissionRate,
+          commission_amount: commissionAmount,
+          net_amount: Math.round((amountTotal - commissionAmount) * 100) / 100,
+          destination_account: destinationAccount
+        }
       });
 
     } else if (eventType === "charge.refunded" || eventType === "payment_intent.refunded") {

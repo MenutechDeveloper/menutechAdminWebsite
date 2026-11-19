@@ -71,6 +71,53 @@ serve(async (req: Request) => {
       return data;
     }
 
+    // Every online payment is a destination charge, so the restaurant needs a connected
+    // account able to RECEIVE funds (transfers / payouts). Checking `charges_enabled`
+    // alone wrongly rejects recipient-only accounts and silently drops the commission.
+    async function resolveReceivingAccount(userId: string) {
+      const { data: rec } = await supabaseAdmin
+        .from("menutech_stripe_accounts")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!rec || !rec.stripe_account_id) {
+        return { accountId: null, ready: false, record: rec, requirementsDue: [], reason: "no_account" };
+      }
+
+      try {
+        const acc = await stripeFetch(`/accounts/${rec.stripe_account_id}`);
+        const transfersActive = acc?.capabilities?.transfers === "active";
+        const payoutsEnabled = !!acc?.payouts_enabled;
+        const ready = transfersActive || payoutsEnabled;
+        return {
+          accountId: acc?.id || rec.stripe_account_id,
+          ready,
+          record: { ...rec, currency: acc?.default_currency || rec.currency },
+          chargesEnabled: !!acc?.charges_enabled,
+          payoutsEnabled,
+          detailsSubmitted: !!acc?.details_submitted,
+          requirementsDue: [
+            ...(acc?.requirements?.currently_due || []),
+            ...(acc?.requirements?.past_due || [])
+          ],
+          reason: ready ? null : "not_ready"
+        };
+      } catch (_e) {
+        const ready = !!(rec.payouts_enabled || rec.charges_enabled);
+        return {
+          accountId: rec.stripe_account_id,
+          ready,
+          record: rec,
+          chargesEnabled: !!rec.charges_enabled,
+          payoutsEnabled: !!rec.payouts_enabled,
+          detailsSubmitted: !!rec.details_submitted,
+          requirementsDue: [],
+          reason: ready ? null : "not_ready"
+        };
+      }
+    }
+
     // Keep the embedded Checkout form to a plain card entry for US customers:
     // - card only (filter over the Dashboard-managed method set)
     // - hide Link (the "pay securely with Link / email" option)
@@ -196,17 +243,27 @@ serve(async (req: Request) => {
         );
       }
 
-      // Verify connected Stripe account
-      const { data: stripeAcc } = await supabaseAdmin
-        .from("menutech_stripe_accounts")
-        .select("*")
-        .eq("user_id", order.user_id)
-        .maybeSingle();
+      // Both modes are destination charges: the restaurant must have a connected account
+      // able to receive funds. In commission mode the platform keeps `commission_rate`
+      // via application_fee; in own_stripe mode the restaurant keeps 100%.
+      const receiving = await resolveReceivingAccount(order.user_id);
+      if (!receiving.ready) {
+        return new Response(
+          JSON.stringify({
+            error: "The restaurant has not completed Stripe onboarding to receive online payments",
+            code: receiving.reason,
+            requirements_due: receiving.requirementsDue
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const stripeAcc = receiving.record;
 
       const isCommissionMode = resPayCfg?.payment_mode === "menutech_commission";
-      if (!isCommissionMode && (!stripeAcc || !stripeAcc.stripe_account_id || !stripeAcc.charges_enabled)) {
+      const commissionPct = isCommissionMode ? parseFloat(resPayCfg?.commission_rate || 0) : 0;
+      if (isCommissionMode && !(commissionPct > 0 && commissionPct < 100)) {
         return new Response(
-          JSON.stringify({ error: "The restaurant has not connected a valid Stripe account for online payments" }),
+          JSON.stringify({ error: "Menutech Commission mode requires a commission rate between 0 and 100" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -275,24 +332,27 @@ serve(async (req: Request) => {
       params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
       params.append("line_items[0][quantity]", "1");
 
-      // Destination Charge if connected account available
-      if (stripeAcc && stripeAcc.stripe_account_id && stripeAcc.charges_enabled) {
-        params.append("payment_intent_data[transfer_data][destination]", stripeAcc.stripe_account_id);
+      // Destination charge: funds land on the restaurant's connected account.
+      params.append("payment_intent_data[transfer_data][destination]", receiving.accountId);
 
-        // If Menutech Commission mode is active and commission rate is configured, apply application fee
-        if (resPayCfg && resPayCfg.payment_mode === "menutech_commission" && parseFloat(resPayCfg.commission_rate || 0) > 0) {
-          const commissionPct = parseFloat(resPayCfg.commission_rate);
-          const commissionAmountCents = Math.round((amountInCents * commissionPct) / 100);
-          if (commissionAmountCents > 0 && commissionAmountCents < amountInCents) {
-            params.append("payment_intent_data[application_fee_amount]", commissionAmountCents.toString());
-          }
+      // Commission mode: the platform keeps its percentage via application_fee_amount,
+      // so the restaurant receives the net amount automatically (no manual transfers).
+      let commissionAmountCents = 0;
+      if (isCommissionMode) {
+        commissionAmountCents = Math.round((amountInCents * commissionPct) / 100);
+        if (commissionAmountCents > 0 && commissionAmountCents < amountInCents) {
+          params.append("payment_intent_data[application_fee_amount]", commissionAmountCents.toString());
         }
       }
 
-      // Metadata for webhook correlation
+      // Metadata for webhook correlation and commission auditing
       params.append("metadata[order_id]", order.id);
       params.append("metadata[user_id]", order.user_id);
       params.append("metadata[type]", "order");
+      params.append("metadata[payment_mode]", isCommissionMode ? "menutech_commission" : "own_stripe");
+      params.append("metadata[commission_rate]", commissionPct.toString());
+      params.append("metadata[commission_amount]", (commissionAmountCents / 100).toFixed(2));
+      params.append("metadata[destination_account]", receiving.accountId);
 
       // Embedded Checkout: render the Stripe form inline inside the tracking modal
       if (embedded) {
@@ -376,17 +436,25 @@ serve(async (req: Request) => {
         );
       }
 
-      // Verify Connected Account
-      const { data: stripeAcc } = await supabaseAdmin
-        .from("menutech_stripe_accounts")
-        .select("*")
-        .eq("user_id", resv.user_id)
-        .maybeSingle();
+      // Same destination-charge requirement for reservations.
+      const receiving = await resolveReceivingAccount(resv.user_id);
+      if (!receiving.ready) {
+        return new Response(
+          JSON.stringify({
+            error: "The restaurant has not completed Stripe onboarding to receive online payments",
+            code: receiving.reason,
+            requirements_due: receiving.requirementsDue
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const stripeAcc = receiving.record;
 
       const isCommissionMode = resPayCfg?.payment_mode === "menutech_commission";
-      if (!isCommissionMode && (!stripeAcc || !stripeAcc.stripe_account_id || !stripeAcc.charges_enabled)) {
+      const commissionPct = isCommissionMode ? parseFloat(resPayCfg?.commission_rate || 0) : 0;
+      if (isCommissionMode && !(commissionPct > 0 && commissionPct < 100)) {
         return new Response(
-          JSON.stringify({ error: "The restaurant has not connected a valid Stripe account for online payments" }),
+          JSON.stringify({ error: "Menutech Commission mode requires a commission rate between 0 and 100" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -421,22 +489,24 @@ serve(async (req: Request) => {
       params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
       params.append("line_items[0][quantity]", "1");
 
-      // Destination Charge if connected account available
-      if (stripeAcc && stripeAcc.stripe_account_id && stripeAcc.charges_enabled) {
-        params.append("payment_intent_data[transfer_data][destination]", stripeAcc.stripe_account_id);
+      // Destination charge + commission (same rules as orders).
+      params.append("payment_intent_data[transfer_data][destination]", receiving.accountId);
 
-        if (resPayCfg && resPayCfg.payment_mode === "menutech_commission" && parseFloat(resPayCfg.commission_rate || 0) > 0) {
-          const commissionPct = parseFloat(resPayCfg.commission_rate);
-          const commissionAmountCents = Math.round((amountInCents * commissionPct) / 100);
-          if (commissionAmountCents > 0 && commissionAmountCents < amountInCents) {
-            params.append("payment_intent_data[application_fee_amount]", commissionAmountCents.toString());
-          }
+      let commissionAmountCents = 0;
+      if (isCommissionMode) {
+        commissionAmountCents = Math.round((amountInCents * commissionPct) / 100);
+        if (commissionAmountCents > 0 && commissionAmountCents < amountInCents) {
+          params.append("payment_intent_data[application_fee_amount]", commissionAmountCents.toString());
         }
       }
 
       params.append("metadata[reservation_id]", resv.id);
       params.append("metadata[user_id]", resv.user_id);
       params.append("metadata[type]", "reservation");
+      params.append("metadata[payment_mode]", isCommissionMode ? "menutech_commission" : "own_stripe");
+      params.append("metadata[commission_rate]", commissionPct.toString());
+      params.append("metadata[commission_amount]", (commissionAmountCents / 100).toFixed(2));
+      params.append("metadata[destination_account]", receiving.accountId);
 
       params.append("success_url", `${baseOrigin}/menu.html?domain=${resv.domain || ''}&res_paid=true&res_id=${resv.id}`);
       params.append("cancel_url", `${baseOrigin}/menu.html?domain=${resv.domain || ''}&res_canceled=true&res_id=${resv.id}`);
