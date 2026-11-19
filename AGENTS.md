@@ -73,13 +73,30 @@ Stripe blocks creating Accounts via `POST /v1/accounts` for new Connect integrat
 - `index.html` shows the Online Payment card to an owner only when `profiles.services_enabled.online_payment === true`.
 - Returning from Stripe (`?stripe_return=true`) must call `get_account_status` before rendering;
   it does **not** happen automatically otherwise, and Supabase still holds the pre-onboarding values.
+  The return/refresh URLs also carry `owner_id` so an admin reopens the same restaurant instead of
+  falling back to the first one in the sidebar.
+- The owner "connect Stripe" panel is shown for **both** `own_stripe` and `menutech_commission`,
+  because commission mode also needs the restaurant's bank account (captured by Stripe onboarding).
 
-## Destination charges (Connect mode)
+## Destination charges (both payment modes)
 In Checkout Sessions the transfer parameter is `payment_intent_data[transfer_data][destination]`
-(NOT top-level `transfer_data[destination]`, which is not a valid Checkout parameter). Commission
-mode (`menutech_commission`) uses the same transfer plus
-`payment_intent_data[application_fee_amount]`; with no connected account it charges the platform
-directly.
+(NOT top-level `transfer_data[destination]`, which is not a valid Checkout parameter).
+`menutech_commission` is **also** a destination charge: the net goes to the restaurant's connected
+account and the platform keeps `payment_intent_data[application_fee_amount]`
+(`total * commission_rate`). `own_stripe` sends the same transfer with no application fee.
+
+Both modes require a connected account that can **receive** funds — checked in
+`resolveReceivingAccount()` as `capabilities.transfers === "active"` OR `payouts_enabled`
+(NOT `charges_enabled`, which only means the account can charge and excludes recipient-only
+accounts). Without such an account the function returns 400 with `requirements_due` instead of
+silently charging the platform account (which used to drop the commission).
+
+Stripe has no API to push money to a bank account without a connected account, so restaurants in
+commission mode still complete Connect onboarding once to enter their bank account. The payout
+to their bank is automatic afterwards. `stripe-webhook` stores `payment_mode`,
+`commission_rate`, `commission_amount`, `net_amount` and `destination_account` in
+`menutech_payment_logs.payload` (Checkout Sessions have no `transfer_data`, so reading it from the
+session always produced NULL `stripe_account_id`).
 
 ## Conventions
 - Customer client is anonymous; `menutech_orders` has public INSERT/SELECT RLS but **no public
