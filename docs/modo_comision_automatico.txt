@@ -1,181 +1,79 @@
-================================================================================
-MODO COMISIÓN MENUTECH — CÓMO FUNCIONA HOY Y CÓMO AUTOMATIZARLO
-================================================================================
+==========================================================
+MODO COMISIÓN MENUTECH — RESUMEN
+==========================================================
 
-RESUMEN (1 minuto)
---------------------------------------------------------------------------------
-Hoy el modo comisión NO es automático. Está a medias:
-- La comisión (application_fee) SOLO se cobra si el restaurante tiene una cuenta
-  Stripe Connect vinculada.
-- Si NO tiene cuenta Connect, el código IGNORA la comisión y cobra TODO a tu
-  cuenta. El reporte solo calcula la comisión "en pantalla".
-- NO existe nada que envíe el dinero a la cuenta bancaria del restaurante. Eso hoy
-  lo haces tú a mano.
+CÓMO FUNCIONA (ya es automático)
+----------------------------------------------------------
+1. Cliente paga en la web.
+2. El dinero entra a TU cuenta de Stripe.
+3. Stripe retiene tu % (comisión).
+4. Stripe manda el resto a la cuenta del restaurante.
+5. Stripe deposita en el banco del restaurante.
+6. Tú no haces nada.
 
-¿SE PUEDE SEPARAR "COMISIONES" DE "CONNECT" (que el usuario NO se registre en Stripe)?
---------------------------------------------------------------------------------
-Respuesta corta: NO del todo. En Stripe no existe forma de enviar dinero a la
-cuenta bancaria de alguien sin que ese alguien tenga una cuenta Connect que lo
-reciba. Stripe lo dice textual en su documentación (Manage payout accounts for
-connected accounts):
+EJEMPLO (comisión 10%)
+----------------------------------------------------------
+- 5 órdenes de $10 = $50
+- Tú te quedas: $5
+- Restaurante recibe: $45
 
-  "Learn how to manage external bank accounts and debit cards for CONNECTED
-   ACCOUNTS."
+LO ÚNICO "MANUAL" (una vez por restaurante)
+----------------------------------------------------------
+- El restaurante llena el formulario de Stripe (datos + banco).
+- Tarda ~5 minutos. No ve panel de Stripe.
+- Sin este paso Stripe NO puede depositar a un banco.
+- No hay forma de evitarlo.
 
-Es decir, para hacer un payout a un banco, el destino SIEMPRE tiene que ser una
-cuenta Connect. No hay atajo.
-
-PERO: "Connect" no obliga al restaurante a usar Stripe para su negocio. Hay
-cuentas Connect de tipo "recipient" (solo reciben dinero) que son mucho más
-ligeras que la típica Express: el restaurante solo da sus datos y su banco una
-vez y ya. No ve un dashboard de Stripe ni cobra a sus clientes por su lado.
-
-CONCLUSIÓN HONESTA
---------------------------------------------------------------------------------
-No puedes tener comisiones 100% automáticas sin Connect. Las dos únicas opciones
-reales son:
-
-  OPCIÓN A — Connect "recipient" (semi-automática, recomendada)
-  - El restaurante hace UNA vez un mini-registro (datos + cuenta bancaria) en el
-    formulario seguro de Stripe.
-  - Después: cliente paga -> Stripe deposita en el restaurante y retiene tu
-    comisión -> Stripe hace el payout a su banco.
-  - TODO automático a partir de ahí. Tú no haces nada.
-
-  OPCIÓN B — Todo a tu cuenta (como hoy)
-  - Todo el dinero entra a tu Stripe.
-  - Tú transfieres a cada restaurante a mano (o con un script que use la API de
-    Transfers).
-  - OJO: para que la API de Transfers funcione, el destino TAMBIÉN necesita una
-    cuenta Connect. Así que igual acabas usando Connect, solo que tú disparas la
-    transferencia.
-
-En resumen: el modo comisión NO puede ser automático sin Connect. La diferencia
-con "Own Stripe" es solo QUIÉN se queda la comisión y QUÉ TAN LIGERO es el
-registro del restaurante, no si se usa Connect o no.
-
-QUÉ QUIERE DECIR "EN MODO COMISIÓN, EXIGIR CUENTA CONNECT ACTIVA"
---------------------------------------------------------------------------------
-Hoy el código deja autorizar el modo comisión aunque el restaurante NO tenga
-cuenta Connect. En ese caso pasa esto (archivo stripe-payment/index.ts):
-
-  // Solo reparte si hay cuenta Connect
-  if (stripeAcc && stripeAcc.stripe_account_id && stripeAcc.charges_enabled) {
-     params.append("payment_intent_data[transfer_data][destination]", ...);
-     // ... aquí se aplica el application_fee (tu comisión)
-  }
-
-  Si NO hay cuenta Connect -> no entra al if -> se cobra TODO a tu cuenta y la
-  comisión NO se retiene. El reporte la muestra, pero no mueve dinero.
-
-"Exigir cuenta Connect activa" significa: bloquear la autorización del modo
-comisión hasta que el restaurante tenga una cuenta Connect con charges_enabled.
-Así te aseguras de que la comisión SÍ se cobre de verdad y no se te escape.
-
-POR QUÉ (técnico)
---------------------------------------------------------------------------------
-Archivo: supabase/functions/stripe-payment/index.ts
-- El bloque que reparte el dinero (`payment_intent_data[transfer_data][destination]`
-  + `payment_intent_data[application_fee_amount]`) solo se ejecuta si existe
-  `menutech_stripe_accounts.stripe_account_id` con `charges_enabled = true`.
-- Si no existe, se cobra todo a la plataforma y la comisión queda solo en el reporte.
+QUÉ CONFIGURAR EN STRIPE (una vez, tú)
+----------------------------------------------------------
+1. Dashboard -> Connect -> "Get started".
+2. Completar "Platform profile" (tipo de negocio + responsabilidades).
+3. Activar pagos con tarjeta (card payments).
+4. Verificar tu banco de plataforma (ahí caen tus comisiones).
+5. Webhook -> endpoint `stripe-webhook` -> eventos:
+   - checkout.session.completed
+   - account.updated
+   - payment_intent.succeeded
+6. Supabase -> Edge Functions -> Secrets:
+   - stripe_api            = sk_...
+   - stripe_publishable    = pk_...
+   - stripe_webhook_secret = whsec_...
 
 DÓNDE VA LA CUENTA BANCARIA DEL USUARIO
---------------------------------------------------------------------------------
-- NUNCA en tu base de datos ni en un formulario tuyo.
-- Los datos bancarios se capturan en el onboarding seguro de Stripe Connect.
-- Tú solo guardas el `stripe_account_id` (acct_xxx) en `menutech_stripe_accounts`.
-- El dinero del restaurante cae directo a SU cuenta Stripe y de ahí a SU banco.
+----------------------------------------------------------
+- La captura Stripe, NO tú.
+- NO se guarda en tu base de datos.
+- Tú solo guardas el `acct_...` en `menutech_stripe_accounts`.
+- Si el restaurante cambia de banco, lo hace en su panel de Stripe.
 
-QUÉ CONFIGURAR EN TU CUENTA DE STRIPE
---------------------------------------------------------------------------------
-1. Activar Connect: Dashboard -> Connect -> "Get started".
-2. Completar tu "Platform profile" (tipo de negocio y responsabilidades de
-   pérdidas / cobro de fees). Si falta, Stripe rechaza crear cuentas.
-3. Cuentas tipo Express o "recipient" (la más ligera para comisiones).
-4. Supabase -> Project Settings -> Edge Functions -> Secrets:
-   - `stripe_api`            = sk_live_... / sk_test_...
-   - `stripe_publishable`    = pk_live_... / pk_test_...
-   - `stripe_webhook_secret` = whsec_... (del webhook)
-5. Webhook: crear endpoint `stripe-webhook` y suscribir eventos
-   `checkout.session.completed`, `account.updated`, etc.
+PASOS EN TU PANEL (por restaurante)
+----------------------------------------------------------
+1. Activar el servicio Online Payments.
+2. Pestaña "Menutech Commission" -> "Vincular cuenta bancaria".
+3. El restaurante llena el formulario de Stripe.
+4. Escribir el % -> "Guardar y Autorizar Comisión".
+5. Listo. Ya cobra solo.
 
-QUÉ FALTA EN EL CÓDIGO (para que sea automático de verdad)
---------------------------------------------------------------------------------
-1. En modo comisión, EXIGIR cuenta Connect activa (hoy lo permite sin cuenta y
-   termina cobrando todo a la plataforma sin retener tu comisión).
-2. Mantener destination charge + application_fee (ya está; solo falta el punto 1).
-3. Guardar en el webhook la comisión real aplicada (hoy el log no la registra).
+CAMBIAR DE MODO (Own Stripe <-> Comisión)
+----------------------------------------------------------
+- NO desconectes. Usa los botones de modo.
+- La MISMA cuenta sirve para los dos modos.
+- Own Stripe = 0%  |  Comisión = tu %.
 
-NOTA IMPORTANTE
---------------------------------------------------------------------------------
-El modo "Own Stripe" y el modo "Comisión" usan la MISMA mecánica de Connect. La
-diferencia es solo quién se queda la comisión:
-- Own Stripe  -> comisión 0% (todo al restaurante).
-- Comisión    -> comisión X% (tu parte se retiene automáticamente).
+BOTÓN "DISCONNECT"
+----------------------------------------------------------
+- Solo desvincula la cuenta en Menutech.
+- La cuenta NO se borra en Stripe (sigue con historial y saldo).
+- El modo vuelve a "none". Tu % se conserva.
+- Si vuelves a conectar, se crea una cuenta NUEVA (la vieja queda huérfana).
 
-================================================================================
-ACTUALIZACIÓN (implementado en código)
-================================================================================
-El modo comisión ya quedó automatizado. Ambos modos usan la misma mecánica
-(destination charge a la cuenta Connect del restaurante); la diferencia es solo
-la comisión:
+LO QUE NO SE PUEDE
+----------------------------------------------------------
+- Cobrar comisión sin cuenta Connect.
+- Mandar dinero a un banco sin Connect.
+- Stripe no tiene atajos para esto.
 
-- Own Stripe  -> application_fee = 0  (100% al restaurante)
-- Comisión    -> application_fee = total * commission_rate  (Stripe retiene tu %)
-
-Qué cambió:
-1. `stripe-payment` exige una cuenta Connect que pueda RECIBIR dinero (transfers
-   o payouts activos) en AMBOS modos. Antes, sin cuenta, se cobraba todo a la
-   plataforma y la comisión se perdía. Ahora devuelve error claro con los
-   requisitos pendientes de Stripe (`requirements_due`).
-2. La comisión se envía siempre como `application_fee_amount` en modo comisión
-   (ya no depende de que la cuenta tenga `charges_enabled`).
-3. `stripe-webhook` guarda en `menutech_payment_logs.payload` el modo de pago, la
-   tasa, el monto de comisión real y el neto, además de `stripe_account_id`
-   (antes quedaba NULL porque `transfer_data` no vive en el Checkout Session).
-4. `stripe-connect`:
-   - El return/refresh de Stripe incluye `owner_id`, para que al volver se abra
-     el MISMO restaurante (antes un admin volvía al primero de la lista y parecía
-     que el estado "nunca cambiaba").
-   - `get_account_status` devuelve `requirements_due` y `can_receive`, y calcula
-     `payouts_enabled` con `capabilities.transfers` (no solo `payouts_enabled`).
-5. `onlinePayment.html`:
-   - Muestra el panel de vinculación de Stripe TAMBIÉN en modo comisión (ahí es
-     donde el restaurante captura su cuenta bancaria). Antes estaba oculto.
-   - Muestra los requisitos pendientes exactos que Stripe pide.
-   - No deja autorizar comisión sin cuenta receptora.
-   - El reporte y el CSV usan la comisión REAL cobrada, no un cálculo en pantalla.
-
-Flujo final en modo comisión (automático):
-  Cliente paga -> Stripe cobra en tu cuenta de plataforma -> transfiere el neto a
-  la cuenta Connect del restaurante -> Stripe hace el payout a su banco.
-  Tú conservas `application_fee` sin hacer nada.
-
-IMPORTANTE: el restaurante SÍ debe hacer el onboarding de Stripe una vez (datos +
-cuenta bancaria). No hay forma de evitar ese paso: es el único mecanismo de
-Stripe para enviar dinero a un banco.
-
-================================================================================
-DESCONECTAR ("Disconnect") Y CAMBIAR DE MODO
-================================================================================
-Al picar "Disconnect":
-- SOLO se borra la fila en `menutech_stripe_accounts` (tu base de datos).
-- La cuenta `acct_...` NO se borra en Stripe: Stripe no permite eliminar cuentas
-  Connect por API. Sigue en tu dashboard con su historial y su saldo.
-- `payment_mode` se reinicia a `none` (los pagos en línea se detienen hasta
-  vincular otra vez). El `commission_rate` se CONSERVA.
-
-OJO: si desconectas y vuelves a "Conectar", el sistema crea una cuenta NUEVA en
-Stripe porque ya no recuerda la anterior. Terminas con cuentas huérfanas.
-
-Para cambiar de modo NO necesitas desconectar:
-- La MISMA cuenta Connect sirve para los dos modos.
-- El modo vive en `menutech_restaurant_payment_configs.payment_mode`, no en Stripe.
-- Own Stripe -> application_fee = 0
-- Comisión   -> application_fee = total * commission_rate
-
-En el panel admin:
-- Pestaña 1 "Own Stripe": botón "Connect with Stripe".
-- Pestaña 2 "Menutech Commission": botón "Vincular cuenta bancaria" (no cambia el
-  modo, solo abre/reusa el onboarding de Stripe).
+DIFERENCIA ENTRE MODOS
+----------------------------------------------------------
+- Own Stripe -> el restaurante cobra y se queda el 100%.
+- Comisión   -> tú cobras, te quedas tu % y el resto va al restaurante.
