@@ -155,3 +155,27 @@ Flujo final en modo comisión (automático):
 IMPORTANTE: el restaurante SÍ debe hacer el onboarding de Stripe una vez (datos +
 cuenta bancaria). No hay forma de evitar ese paso: es el único mecanismo de
 Stripe para enviar dinero a un banco.
+
+================================================================================
+DESCONECTAR ("Disconnect") Y CAMBIAR DE MODO
+================================================================================
+Al picar "Disconnect":
+- SOLO se borra la fila en `menutech_stripe_accounts` (tu base de datos).
+- La cuenta `acct_...` NO se borra en Stripe: Stripe no permite eliminar cuentas
+  Connect por API. Sigue en tu dashboard con su historial y su saldo.
+- `payment_mode` se reinicia a `none` (los pagos en línea se detienen hasta
+  vincular otra vez). El `commission_rate` se CONSERVA.
+
+OJO: si desconectas y vuelves a "Conectar", el sistema crea una cuenta NUEVA en
+Stripe porque ya no recuerda la anterior. Terminas con cuentas huérfanas.
+
+Para cambiar de modo NO necesitas desconectar:
+- La MISMA cuenta Connect sirve para los dos modos.
+- El modo vive en `menutech_restaurant_payment_configs.payment_mode`, no en Stripe.
+- Own Stripe -> application_fee = 0
+- Comisión   -> application_fee = total * commission_rate
+
+En el panel admin:
+- Pestaña 1 "Own Stripe": botón "Connect with Stripe".
+- Pestaña 2 "Menutech Commission": botón "Vincular cuenta bancaria" (no cambia el
+  modo, solo abre/reusa el onboarding de Stripe).
