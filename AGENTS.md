@@ -77,6 +77,13 @@ Stripe blocks creating Accounts via `POST /v1/accounts` for new Connect integrat
   falling back to the first one in the sidebar.
 - The owner "connect Stripe" panel is shown for **both** `own_stripe` and `menutech_commission`,
   because commission mode also needs the restaurant's bank account (captured by Stripe onboarding).
+- `disconnect_account` only deletes the `menutech_stripe_accounts` row (Stripe cannot delete Connect
+  accounts) and resets `payment_mode` to `none`, keeping `commission_rate`. Reconnecting therefore
+  creates a **new** Stripe account, leaving the old one orphaned — so switch modes with the mode
+  buttons, never by disconnecting.
+- `adminStartStripeConnect` must not force `payment_mode = own_stripe` unless the mode is `none`;
+  doing so silently overwrote an authorized commission config. The commission tab has its own
+  `adminConnectPayouts` button that only opens onboarding.
 
 ## Destination charges (both payment modes)
 In Checkout Sessions the transfer parameter is `payment_intent_data[transfer_data][destination]`

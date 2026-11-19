@@ -422,6 +422,9 @@ serve(async (req: Request) => {
       );
 
     // Action 5: disconnect_account
+    // Only unlinks the account from Menutech. The Stripe Connect account itself is NOT
+    // deleted (Stripe doesn't allow deleting accounts), so it stays in the platform
+    // dashboard with its history and any remaining balance.
     } else if (action === "disconnect_account") {
       if (!isPrivileged && effectiveUserId !== user.id) {
         return new Response(
@@ -430,10 +433,30 @@ serve(async (req: Request) => {
         );
       }
 
-      await supabaseAdmin.from("menutech_stripe_accounts").delete().eq("user_id", effectiveUserId);
+      const { data: removed } = await supabaseAdmin
+        .from("menutech_stripe_accounts")
+        .delete()
+        .eq("user_id", effectiveUserId)
+        .select()
+        .maybeSingle();
+
+      // Leave the restaurant in a coherent state: a disconnected account cannot keep
+      // a commission or own_stripe mode pointing at a destination that no longer exists.
+      // commission_rate is preserved so re-authorizing does not require retyping it.
+      await supabaseAdmin
+        .from("menutech_restaurant_payment_configs")
+        .upsert({
+          user_id: effectiveUserId,
+          payment_mode: "none",
+          updated_at: new Date().toISOString()
+        }, { onConflict: "user_id" });
 
       return new Response(
-        JSON.stringify({ success: true }),
+        JSON.stringify({
+          success: true,
+          stripe_account_id: removed?.stripe_account_id || null,
+          note: "The account was unlinked from Menutech but still exists in your Stripe dashboard."
+        }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 

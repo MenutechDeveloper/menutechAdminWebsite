@@ -363,6 +363,24 @@
                             <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;" id="lbl-adm-comm-note">This commission fee will be collected as an application fee on every processed customer checkout session.</p>
                         </div>
 
+                        <!-- Bank account for payouts: commission mode still needs a connected
+                             account, so linking it must be possible without leaving this tab. -->
+                        <div style="margin-top: 18px; padding: 20px; border-radius: 20px; background: var(--input); border: 1px solid var(--border);">
+                            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+                                <div>
+                                    <h3 style="font-family:'Outfit'; font-size:1.05rem; margin:0 0 4px 0;" id="lbl-adm-payout-title">Cuenta bancaria para pagos (Stripe Connect)</h3>
+                                    <p style="font-size:0.85rem; color:var(--text-dim); margin:0; max-width:560px;" id="lbl-adm-payout-desc">
+                                        El restaurante debe vincular su cuenta bancaria una vez para recibir el neto. Stripe captura los datos de forma segura; Menutech retiene solo la comisión.
+                                    </p>
+                                </div>
+                                <div class="status-badge disconnected" id="admin-payout-badge">Not Connected</div>
+                            </div>
+                            <div class="actions-group" style="margin-top: 16px;">
+                                <button class="btn-action btn-stripe" id="admin-btn-connect-payouts" onclick="adminConnectPayouts()">Vincular cuenta bancaria</button>
+                                <button class="btn-action btn-secondary" onclick="adminCheckAccountStatus()">Check Status &amp; Requirements</button>
+                            </div>
+                        </div>
+
                         <div class="actions-group">
                             <button class="btn-action btn-primary" onclick="adminSaveCommissionConfig(true)" id="lbl-adm-btn-auth-comm">Guardar y Autorizar Comisión</button>
                             <button class="btn-action btn-danger" id="admin-btn-revoke-comm" onclick="adminRevokeCommissionMode()" style="display:none; margin-left:auto;" id="lbl-adm-btn-revoke-comm">Revoke Commission Modality</button>
@@ -760,7 +778,7 @@
                 toastCheckingStatus: "Checking Stripe connection status...",
                 toastStatusUpdated: "Stripe status updated!",
                 toastOpeningDashboard: "Opening Stripe Express Dashboard...",
-                toastDisconnectConfirm: "Are you sure you want to disconnect this Stripe account? Online payments will be disabled.",
+                toastDisconnectConfirm: "Unlink this Stripe account from Menutech?\n\n• The account is NOT deleted in Stripe (it stays in your dashboard with its history and balance).\n• The payment mode is reset to None. Your commission % is kept for later.\n• Online payments stop working until an account is linked again.\n\nIf you only want to switch between Own Stripe and Commission, do NOT disconnect: use the mode buttons instead.",
                 toastDisconnecting: "Disconnecting Stripe account...",
                 toastDisconnectedSucc: "Stripe account disconnected successfully.",
                 toastConfigSaved: "Configuration saved successfully!",
@@ -815,7 +833,7 @@
                 toastCheckingStatus: "Verificando estado con Stripe...",
                 toastStatusUpdated: "¡Estado de Stripe actualizado!",
                 toastOpeningDashboard: "Abriendo Panel Express de Stripe...",
-                toastDisconnectConfirm: "¿Está seguro de que desea desconectar esta cuenta de Stripe? Los pagos en línea quedarán deshabilitados.",
+                toastDisconnectConfirm: "¿Desvincular esta cuenta de Stripe de Menutech?\n\n• La cuenta NO se borra en Stripe (sigue en tu dashboard con su historial y saldo).\n• El modo de pago se reinicia a Ninguno. Tu % de comisión se conserva.\n• Los pagos en línea dejan de funcionar hasta vincular una cuenta de nuevo.\n\nSi solo quieres cambiar entre Cuenta Propia y Comisión, NO desconectes: usa los botones de modo.",
                 toastDisconnecting: "Desconectando cuenta de Stripe...",
                 toastDisconnectedSucc: "Cuenta de Stripe desconectada con éxito.",
                 toastConfigSaved: "¡Configuración guardada exitosamente!",
@@ -1197,6 +1215,27 @@
                 if (btnRevokeComm) btnRevokeComm.style.display = 'none';
             }
 
+            // Bank-account status for the commission tab (payout destination).
+            const payoutBadge = document.getElementById('admin-payout-badge');
+            const btnConnectPayouts = document.getElementById('admin-btn-connect-payouts');
+            if (payoutBadge) {
+                if (accountCanReceive) {
+                    payoutBadge.className = 'status-badge connected';
+                    payoutBadge.textContent = 'Connected & Enabled';
+                } else if (connectedAccountData?.stripe_account_id) {
+                    payoutBadge.className = 'status-badge pending';
+                    payoutBadge.textContent = 'Pending Requirements';
+                } else {
+                    payoutBadge.className = 'status-badge disconnected';
+                    payoutBadge.textContent = 'Not Connected';
+                }
+            }
+            if (btnConnectPayouts) {
+                btnConnectPayouts.textContent = accountCanReceive
+                    ? 'Abrir panel de Stripe'
+                    : (connectedAccountData?.stripe_account_id ? 'Continuar verificación bancaria' : 'Vincular cuenta bancaria');
+            }
+
             // General Information Section
             document.getElementById('admin-gen-res-name').textContent = activeOwnerProfile?.username || activeOwnerProfile?.domain || 'Restaurant';
 
@@ -1250,6 +1289,21 @@
         }
 
         // Admin Stripe Actions
+        // Shared: opens (or reuses) the Stripe onboarding link for the selected restaurant.
+        async function startStripeOnboarding() {
+            const response = await sb.functions.invoke('stripe-connect', {
+                body: { action: 'create_onboarding_link', target_user_id: activeOwnerId }
+            });
+
+            if (response.data && response.data.url) {
+                window.location.href = response.data.url;
+                return true;
+            }
+            const errorDetail = await extractFunctionError(response, "Error al generar enlace de Stripe Connect");
+            showToast("Error: " + errorDetail, "error");
+            return false;
+        }
+
         window.adminStartStripeConnect = async () => {
             const btn = document.getElementById('admin-btn-connect');
             btn.disabled = true;
@@ -1257,32 +1311,55 @@
             showToast(dict.toastGeneratingLink, "warning");
 
             try {
-                // Ensure payment_mode is set to own_stripe
-                await sb.functions.invoke('stripe-connect', {
-                    body: {
-                        action: 'update_payment_config',
-                        target_user_id: activeOwnerId,
-                        payment_config: {
-                            payment_mode: 'own_stripe',
-                            commission_rate: 0.00
+                // Only default to own_stripe when no mode is set. Forcing it here used to
+                // overwrite an authorized menutech_commission config (and zero the rate)
+                // just because the admin needed to link the restaurant's bank account.
+                const currentMode = currentRestaurantConfig?.payment_mode || 'none';
+                if (currentMode === 'none') {
+                    await sb.functions.invoke('stripe-connect', {
+                        body: {
+                            action: 'update_payment_config',
+                            target_user_id: activeOwnerId,
+                            payment_config: {
+                                payment_mode: 'own_stripe',
+                                commission_rate: 0.00
+                            }
                         }
-                    }
-                }).catch(() => {});
-
-                const response = await sb.functions.invoke('stripe-connect', {
-                    body: { action: 'create_onboarding_link', target_user_id: activeOwnerId }
-                });
-
-                if (response.data && response.data.url) {
-                    window.location.href = response.data.url;
-                } else {
-                    const errorDetail = await extractFunctionError(response, "Error al generar enlace de Stripe Connect");
-                    showToast("Error: " + errorDetail, "error");
+                    }).catch(() => {});
                 }
+
+                await startStripeOnboarding();
             } catch (err) {
                 showToast("Exception: " + err.message, "error");
             } finally {
                 btn.disabled = false;
+            }
+        };
+
+        // Commission tab: link/reuse the bank account WITHOUT touching the payment mode.
+        // Once the account can receive funds, this opens the Express dashboard instead.
+        window.adminConnectPayouts = async () => {
+            const btn = document.getElementById('admin-btn-connect-payouts');
+            if (btn) btn.disabled = true;
+            showToast(I18N[currentLang].toastGeneratingLink, "warning");
+            try {
+                if (accountCanReceive) {
+                    const resp = await sb.functions.invoke('stripe-connect', {
+                        body: { action: 'create_login_link', target_user_id: activeOwnerId }
+                    });
+                    if (resp.data && resp.data.url) {
+                        window.open(resp.data.url, '_blank');
+                    } else {
+                        const errorDetail = await extractFunctionError(resp, "Error al abrir dashboard de Stripe");
+                        showToast("Dashboard error: " + errorDetail, "error");
+                    }
+                } else {
+                    await startStripeOnboarding();
+                }
+            } catch (err) {
+                showToast("Exception: " + err.message, "error");
+            } finally {
+                if (btn) btn.disabled = false;
             }
         };
 
@@ -1349,8 +1426,14 @@
 
                 if (response.data && response.data.success) {
                     connectedAccountData = null;
-                    renderAdminUI();
+                    accountRequirementsDue = [];
+                    accountCanReceive = false;
+                    // The function resets payment_mode to none; reload so the UI matches.
+                    await loadAccountData();
                     showToast(dict.toastDisconnectedSucc, "success");
+                    if (response.data.stripe_account_id) {
+                        showToast(`Stripe account ${response.data.stripe_account_id} still exists in your Stripe dashboard.`, "warning");
+                    }
                 } else {
                     const errorDetail = await extractFunctionError(response, "Error al desconectar cuenta de Stripe");
                     showToast("Error: " + errorDetail, "error");
@@ -1408,8 +1491,28 @@
             // Commission mode is still a destination charge: the restaurant must have a
             // connected account that can receive funds, or the fee cannot be collected
             // and the money would silently land on the platform account instead.
+            // Re-query Stripe first so a stale local row doesn't block a valid account.
             if (!accountCanReceive) {
-                showToast("This restaurant must connect a Stripe account (bank account) before authorizing Menutech Commission. Use 'Conectar con Stripe' first.", "error");
+                try {
+                    const statusResp = await sb.functions.invoke('stripe-connect', {
+                        body: { action: 'get_account_status', target_user_id: activeOwnerId }
+                    });
+                    if (statusResp.data && statusResp.data.account) {
+                        connectedAccountData = statusResp.data.account;
+                        accountRequirementsDue = statusResp.data.requirements_due || [];
+                        accountCanReceive = !!statusResp.data.can_receive;
+                    }
+                } catch (e) {
+                    console.warn("Could not refresh Stripe status:", e);
+                }
+            }
+
+            if (!accountCanReceive) {
+                const missing = accountRequirementsDue.length
+                    ? ` Stripe still needs: ${accountRequirementsDue.join(', ')}.`
+                    : '';
+                showToast("This restaurant must link a Stripe bank account before authorizing Menutech Commission." + missing, "error");
+                renderAdminUI();
                 return;
             }
 
