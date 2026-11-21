@@ -325,12 +325,13 @@
                         <div class="actions-group">
                             <button class="btn-action btn-stripe" id="admin-btn-connect" onclick="adminStartStripeConnect()">
                                 <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.883 15.684.2 12.83.2 6.702.2 2.658 3.376 2.658 8.163c0 5.48 7.375 6.082 7.375 8.91 0 1.054-.925 1.545-2.222 1.545-2.296 0-5.185-1.1-7.05-2.148l-.946 5.568c1.697 1.026 4.793 1.83 7.747 1.83 6.327 0 10.463-2.981 10.463-8.083 0-5.748-7.533-6.26-7.533-8.799z"/></svg>
-                                <span id="admin-btn-connect-lbl">Conectar con Stripe</span>
+                                <span id="admin-btn-connect-lbl">Connect with Stripe</span>
                             </button>
                             <button class="btn-action btn-secondary" onclick="adminCheckAccountStatus()" id="lbl-adm-btn-refresh-status">Check Status</button>
-                            <button class="btn-action btn-secondary" onclick="adminLinkExistingAccount()" style="padding: 10px 18px; font-size: 0.8rem;">Vincular cuenta existente</button>
-                            <button class="btn-action btn-secondary" id="admin-btn-dashboard" onclick="adminOpenStripeDashboard()" style="display:none;" id="lbl-adm-btn-express">Open Express Dashboard</button>
-                            <button class="btn-action btn-danger" id="admin-btn-disconnect" onclick="adminDisconnectStripeAccount()" style="display:none; margin-left:auto;" id="lbl-adm-btn-disconnect">Disconnect Account</button>
+                            <button class="btn-action btn-secondary" onclick="adminLinkExistingAccount()">Link Existing Account</button>
+                            <button class="btn-action btn-primary" id="admin-btn-activate-own" onclick="adminActivateOwnStripeMode()" style="display:none;">Activate Own Stripe Mode</button>
+                            <button class="btn-action btn-secondary" id="admin-btn-dashboard" onclick="adminOpenStripeDashboard()" style="display:none;">Open Express Dashboard</button>
+                            <button class="btn-action btn-danger" id="admin-btn-disconnect" onclick="adminDisconnectStripeAccount()" style="display:none; margin-left:auto;">Disconnect Account</button>
                         </div>
                         <div id="admin-requirements-note" class="hidden" style="margin-top:14px; padding:14px 16px; border-radius:14px; background: rgba(255,170,0,0.10); border:1px solid rgba(255,170,0,0.35); font-size:0.82rem; color: var(--text-dim); line-height:1.5;"></div>
                     </div>
@@ -340,26 +341,54 @@
                         <div class="card-header">
                             <div>
                                 <h2 id="lbl-adm-tab2-title">Menutech Commission</h2>
+                                <p id="lbl-adm-tab2-desc" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">Menutech charges the customer and keeps the commission. The rest is transferred to the restaurant's bank account automatically.</p>
                             </div>
                             <div id="admin-commission-badge" class="status-badge disconnected">Inactive</div>
                         </div>
 
-                        <div style="background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px 24px; margin-top: 10px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                        <div class="info-grid">
+                            <div class="info-box">
+                                <label id="lbl-adm-comm-acc-id">Stripe Account ID</label>
+                                <div class="value" id="admin-comm-acc-id">Not Connected</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-comm-details-sub">Details Submitted</label>
+                                <div class="value" id="admin-comm-details">❌ No</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-comm-charges-en">Charges Enabled</label>
+                                <div class="value" id="admin-comm-charges">❌ No</div>
+                            </div>
+                            <div class="info-box">
+                                <label id="lbl-adm-comm-payouts-en">Payouts Enabled</label>
+                                <div class="value" id="admin-comm-payouts">❌ No</div>
+                            </div>
+                        </div>
+
+                        <div class="actions-group">
+                            <button class="btn-action btn-stripe" id="admin-btn-connect-comm" onclick="adminConnectPayouts()">
+                                <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.883 15.684.2 12.83.2 6.702.2 2.658 3.376 2.658 8.163c0 5.48 7.375 6.082 7.375 8.91 0 1.054-.925 1.545-2.222 1.545-2.296 0-5.185-1.1-7.05-2.148l-.946 5.568c1.697 1.026 4.793 1.83 7.747 1.83 6.327 0 10.463-2.981 10.463-8.083 0-5.748-7.533-6.26-7.533-8.799z"/></svg>
+                                <span id="admin-btn-connect-comm-lbl">Connect with Stripe</span>
+                            </button>
+                            <button class="btn-action btn-secondary" onclick="adminCheckAccountStatus()" id="lbl-adm-comm-btn-refresh-status">Check Status</button>
+                            <button class="btn-action btn-secondary" onclick="adminLinkExistingAccount()">Link Existing Account</button>
+                            <button class="btn-action btn-secondary" id="admin-btn-dashboard-comm" onclick="adminOpenStripeDashboard()" style="display:none;">Open Express Dashboard</button>
+                            <button class="btn-action btn-danger" id="admin-btn-disconnect-comm" onclick="adminDisconnectStripeAccount()" style="display:none; margin-left:auto;">Disconnect Account</button>
+                        </div>
+                        <div id="admin-comm-requirements-note" class="hidden" style="margin-top:14px; padding:14px 16px; border-radius:14px; background: rgba(255,170,0,0.10); border:1px solid rgba(255,170,0,0.35); font-size:0.82rem; color: var(--text-dim); line-height:1.5;"></div>
+
+                        <div style="background: var(--input); border: 1px solid var(--border); border-radius: 20px; padding: 20px 24px; margin-top: 18px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
                             <div class="input-group" style="margin: 0;">
                                 <label id="lbl-adm-input-comm">Commission %</label>
                                 <input type="number" id="admin-input-commission-pct" step="0.1" min="0" max="100" style="max-width: 160px;" onchange="adminCommissionInputChanged()">
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
-                                <span id="admin-payout-badge" class="status-badge disconnected">Not Connected</span>
-                                <button class="btn-action btn-stripe" id="admin-btn-connect-payouts" onclick="adminConnectPayouts()" style="padding: 10px 18px; font-size: 0.8rem;">Vincular cuenta bancaria</button>
-                                <button class="btn-action btn-secondary" onclick="adminCheckAccountStatus()" style="padding: 10px 18px; font-size: 0.8rem;">Check Status</button>
-                                <button class="btn-action btn-secondary" onclick="adminOpenStripeReport()" style="padding: 10px 18px; font-size: 0.8rem;">Ver reporte en Stripe</button>
+                                <button class="btn-action btn-primary" id="admin-btn-activate-comm" onclick="adminActivateCommissionMode()">Activate Commission Mode</button>
                             </div>
                         </div>
 
                         <div class="actions-group" style="margin-top: 14px;">
-                            <button class="btn-action btn-secondary" onclick="adminLinkExistingAccount()" style="padding: 10px 18px; font-size: 0.8rem;">Vincular cuenta existente</button>
-                            <button class="btn-action btn-danger" id="admin-btn-revoke-comm" onclick="adminRevokeCommissionMode()" style="display:none; margin-left:auto;">Revoke Commission Modality</button>
+                            <button class="btn-action btn-danger" id="admin-btn-revoke-comm" onclick="adminRevokeCommissionMode()" style="display:none; margin-left:auto;">Revoke Commission Mode</button>
                         </div>
                     </div>
 
@@ -379,7 +408,7 @@
                                 <div class="value" id="admin-gen-svc-status">-</div>
                             </div>
                             <div class="info-box">
-                                <label id="lbl-adm-info-sub-status">Estado Mensualidad</label>
+                                <label id="lbl-adm-info-sub-status">Subscription Status</label>
                                 <div class="value" id="admin-gen-sub-status">-</div>
                             </div>
                             <div class="info-box">
@@ -631,7 +660,7 @@
                                 </button>
                                 <button class="btn-action btn-secondary" id="owner-btn-refresh" onclick="ownerRefreshStatus()">Check Status</button>
                                 <button class="btn-action btn-secondary" id="owner-btn-dashboard" onclick="ownerOpenStripeDashboard()" style="display:none;">Open Stripe Dashboard</button>
-                                <button class="btn-action btn-secondary" id="owner-btn-report" onclick="ownerOpenStripeReport()" style="display:none; padding: 10px 18px; font-size: 0.8rem;">Ver reporte en Stripe</button>
+                                <button class="btn-action btn-secondary" id="owner-btn-report" onclick="ownerOpenStripeReport()" style="display:none;">Stripe Report</button>
                             </div>
                         </div>
 
@@ -793,7 +822,7 @@
                 statusActive: "Activo",
                 statusInactive: "Inactivo",
                 statusSuspended: "Suspendido",
-                statusFreeAccess: "Acceso Gratuito",
+                statusFreeAccess: "Free Access",
                 statusOverdue: "Vencido",
                 modeNone: "Ninguna / No Autorizada",
                 modeOwnStripe: "Cuenta Stripe Propia",
@@ -1122,6 +1151,15 @@
             const valPayouts = document.getElementById('admin-val-payouts');
             const btnDashboard = document.getElementById('admin-btn-dashboard');
             const btnDisconnect = document.getElementById('admin-btn-disconnect');
+            const btnActivateOwn = document.getElementById('admin-btn-activate-own');
+
+            // Own Stripe is only meaningful when the account can actually charge, and the
+            // button only shows while the restaurant is on another mode.
+            const isOwnStripeActive = currentRestaurantConfig.payment_mode === 'own_stripe';
+            if (btnActivateOwn) {
+                btnActivateOwn.style.display =
+                    (!isOwnStripeActive && connectedAccountData?.charges_enabled) ? 'inline-flex' : 'none';
+            }
 
             if (connectedAccountData && connectedAccountData.stripe_account_id) {
                 valAccId.textContent = connectedAccountData.stripe_account_id;
@@ -1168,15 +1206,66 @@
             }
 
             // Tab 2: Menutech Commission
+            // Both modes pay out to the same connected account, so this tab mirrors
+            // tab 1's account status instead of hiding it behind a single badge.
             const commBadge = document.getElementById('admin-commission-badge');
             const inputCommPct = document.getElementById('admin-input-commission-pct');
 
             const isCommMode = currentRestaurantConfig.payment_mode === 'menutech_commission';
             const commRate = parseFloat(currentRestaurantConfig.commission_rate || 0).toFixed(2);
 
+            const commAccId = document.getElementById('admin-comm-acc-id');
+            const commDetails = document.getElementById('admin-comm-details');
+            const commCharges = document.getElementById('admin-comm-charges');
+            const commPayouts = document.getElementById('admin-comm-payouts');
+            const commDashboardBtn = document.getElementById('admin-btn-dashboard-comm');
+            const commDisconnectBtn = document.getElementById('admin-btn-disconnect-comm');
+            const commConnectBtn = document.getElementById('admin-btn-connect-comm');
+            const commConnectLbl = document.getElementById('admin-btn-connect-comm-lbl');
+
+            if (connectedAccountData && connectedAccountData.stripe_account_id) {
+                commAccId.textContent = connectedAccountData.stripe_account_id;
+                commDetails.textContent = connectedAccountData.details_submitted ? dict.yesVal : dict.pendingVal;
+                commCharges.textContent = connectedAccountData.charges_enabled ? dict.activeVal : dict.inactiveVal;
+                commPayouts.textContent = connectedAccountData.payouts_enabled ? dict.activeVal : dict.inactiveVal;
+                commDashboardBtn.style.display = 'inline-flex';
+                commDisconnectBtn.style.display = 'inline-flex';
+                if (accountCanReceive) {
+                    commConnectBtn.style.display = 'none';
+                } else {
+                    commConnectBtn.style.display = 'inline-flex';
+                    commConnectLbl.textContent = 'Continue Stripe Onboarding';
+                }
+            } else {
+                commAccId.textContent = dict.notConnectedVal;
+                commDetails.textContent = dict.noVal;
+                commCharges.textContent = dict.noVal;
+                commPayouts.textContent = dict.noVal;
+                commDashboardBtn.style.display = 'none';
+                commDisconnectBtn.style.display = 'none';
+                commConnectBtn.style.display = 'inline-flex';
+                commConnectLbl.textContent = 'Connect with Stripe';
+            }
+
+            const commReqNote = document.getElementById('admin-comm-requirements-note');
+            if (commReqNote) {
+                if (connectedAccountData && connectedAccountData.stripe_account_id && !accountCanReceive) {
+                    commReqNote.classList.remove('hidden');
+                    commReqNote.innerHTML = accountRequirementsDue.length
+                        ? `<strong>Stripe still needs from this restaurant:</strong><br>` +
+                          accountRequirementsDue.map(r => `• ${r}`).join('<br>')
+                        : `Stripe hasn't enabled this account yet. Click <strong>Check Status</strong>, and if it stays pending open the <strong>Express Dashboard</strong> to finish the missing steps.`;
+                } else {
+                    commReqNote.classList.add('hidden');
+                }
+            }
+
             if (document.activeElement !== inputCommPct) {
                 inputCommPct.value = currentRestaurantConfig.commission_rate != null && currentRestaurantConfig.commission_rate !== '' ? currentRestaurantConfig.commission_rate : '';
             }
+
+            const btnActivateComm = document.getElementById('admin-btn-activate-comm');
+            if (btnActivateComm) btnActivateComm.style.display = isCommMode ? 'none' : 'inline-flex';
 
             const btnRevokeComm = document.getElementById('admin-btn-revoke-comm');
             if (isCommMode) {
@@ -1187,30 +1276,6 @@
                 commBadge.className = 'status-badge disconnected';
                 commBadge.textContent = 'Inactive';
                 if (btnRevokeComm) btnRevokeComm.style.display = 'none';
-            }
-
-            // Bank-account status for the commission tab (payout destination).
-            const payoutBadge = document.getElementById('admin-payout-badge');
-            const btnConnectPayouts = document.getElementById('admin-btn-connect-payouts');
-            if (payoutBadge) {
-                if (accountCanReceive) {
-                    payoutBadge.className = 'status-badge connected';
-                    payoutBadge.textContent = 'Connected & Enabled';
-                } else if (connectedAccountData?.stripe_account_id) {
-                    payoutBadge.className = 'status-badge pending';
-                    payoutBadge.textContent = 'Pending Requirements';
-                } else {
-                    payoutBadge.className = 'status-badge disconnected';
-                    payoutBadge.textContent = 'Not Connected';
-                }
-            }
-            if (btnConnectPayouts) {
-                // Once the account can receive funds the onboarding link is pointless;
-                // "Ver reporte en Stripe" covers the audit path.
-                btnConnectPayouts.style.display = accountCanReceive ? 'none' : 'inline-flex';
-                btnConnectPayouts.textContent = connectedAccountData?.stripe_account_id
-                    ? 'Continuar verificación bancaria'
-                    : 'Vincular cuenta bancaria';
             }
 
             // General Information Section
@@ -1240,10 +1305,10 @@
                 const diffTime = new Date(currentRestaurantConfig.next_due_date) - new Date();
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 document.getElementById('admin-gen-days-left').textContent = diffDays > 0 ? `${diffDays} days` : 'Expired';
-                document.getElementById('admin-gen-sub-status').textContent = diffDays > 0 ? 'Al Día' : 'Vencida';
+                document.getElementById('admin-gen-sub-status').textContent = diffDays > 0 ? 'Up to Date' : 'Overdue';
             } else {
                 document.getElementById('admin-gen-days-left').textContent = '-';
-                document.getElementById('admin-gen-sub-status').textContent = svcStatus === 'free_access' ? 'Acceso Gratuito' : 'Sin Vencimiento';
+                document.getElementById('admin-gen-sub-status').textContent = svcStatus === 'free_access' ? 'Free Access' : 'No Due Date';
             }
 
             // Mode string
@@ -1313,26 +1378,14 @@
             }
         };
 
-        // Commission tab: link/reuse the bank account WITHOUT touching the payment mode.
-        // Once the account can receive funds, this opens the Express dashboard instead.
+        // Commission tab: link the bank account only. It never touches the payment mode,
+        // so linking from tab 2 cannot silently turn a commission restaurant into own_stripe.
         window.adminConnectPayouts = async () => {
-            const btn = document.getElementById('admin-btn-connect-payouts');
+            const btn = document.getElementById('admin-btn-connect-comm');
             if (btn) btn.disabled = true;
             showToast(I18N[currentLang].toastGeneratingLink, "warning");
             try {
-                if (accountCanReceive) {
-                    const resp = await sb.functions.invoke('stripe-connect', {
-                        body: { action: 'create_login_link', target_user_id: activeOwnerId }
-                    });
-                    if (resp.data && resp.data.url) {
-                        window.open(resp.data.url, '_blank');
-                    } else {
-                        const errorDetail = await extractFunctionError(resp, "Error al abrir dashboard de Stripe");
-                        showToast("Dashboard error: " + errorDetail, "error");
-                    }
-                } else {
-                    await startStripeOnboarding();
-                }
+                await startStripeOnboarding();
             } catch (err) {
                 showToast("Exception: " + err.message, "error");
             } finally {
@@ -1420,6 +1473,53 @@
             }
         };
 
+        // Explicit switch back to own_stripe. Kept as a deliberate action with a
+        // confirmation because it zeroes the commission rate and stops Menutech's fee.
+        window.adminActivateOwnStripeMode = async () => {
+            if (!connectedAccountData?.stripe_account_id) {
+                showToast("Cannot activate Own Stripe Mode: no Stripe account connected.", "error");
+                return;
+            }
+            if (!connectedAccountData.charges_enabled) {
+                showToast("Stripe charges are not enabled yet. Complete the onboarding requirements first.", "warning");
+                return;
+            }
+
+            const wasCommission = currentRestaurantConfig?.payment_mode === 'menutech_commission';
+            const confirmMsg = wasCommission
+                ? `This restaurant is on Menutech Commission.\n\n` +
+                  `Switch to "Own Stripe Account"?\n` +
+                  `- Menutech will stop charging its commission (rate resets to 0%).\n` +
+                  `- The restaurant keeps 100% of every online order.\n` +
+                  `- The Stripe account and its history stay the same.\n\n` +
+                  `Proceed?`
+                : `Activate "Own Stripe Account" for this restaurant?\n\n` +
+                  `The restaurant keeps 100% of every online order. No commission is charged.\n\n` +
+                  `Proceed?`;
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const response = await sb.functions.invoke('stripe-connect', {
+                    body: {
+                        action: 'update_payment_config',
+                        target_user_id: activeOwnerId,
+                        payment_config: { payment_mode: 'own_stripe', commission_rate: 0.00 }
+                    }
+                });
+
+                if (response.data && response.data.success) {
+                    currentRestaurantConfig = response.data.config;
+                    renderAdminUI();
+                    showToast("Own Stripe Mode activated (0% commission).", "success");
+                } else {
+                    const errorDetail = await extractFunctionError(response, "Error activating own Stripe mode");
+                    showToast("Error: " + errorDetail, "error");
+                }
+            } catch (err) {
+                showToast("Exception: " + err.message, "error");
+            }
+        };
+
         window.adminAuthorizePaymentMode = async (mode) => {
             if (mode === 'own_stripe') {
                 if (!connectedAccountData || !connectedAccountData.stripe_account_id) {
@@ -1456,10 +1556,10 @@
             }
         };
 
-        // The commission % saves itself: no button and no separate "authorize" step.
-        // The rate is stored immediately; the mode only switches to menutech_commission
-        // once the restaurant can actually receive funds, otherwise the fee would be
-        // charged to the platform instead of being transferred to the restaurant.
+        // The commission % saves itself. Saving the rate NEVER changes the payment mode:
+        // switching modes silently is what made "I clicked commission and it became
+        // own_stripe" (or the reverse) happen. Mode changes are explicit, see
+        // adminActivateCommissionMode below.
         let commissionSaveTimer = null;
 
         window.adminSaveCommissionConfig = async (silent = false) => {
@@ -1471,9 +1571,39 @@
                 return;
             }
 
-            // Commission mode is a destination charge: without an account able to receive
-            // funds the fee cannot be collected and the money would land on the platform.
-            // The rate is always saved; only the mode switch waits for the account.
+            try {
+                const response = await sb.functions.invoke('stripe-connect', {
+                    body: {
+                        action: 'update_payment_config',
+                        target_user_id: activeOwnerId,
+                        payment_config: { commission_rate: pct }
+                    }
+                });
+
+                if (response.data && response.data.success) {
+                    currentRestaurantConfig = response.data.config;
+                    renderAdminUI();
+                    if (!silent) showToast(`Commission ${pct}% saved.`, "success");
+                } else {
+                    const errorDetail = await extractFunctionError(response, "Error saving commission");
+                    showToast("Error: " + errorDetail, "error");
+                }
+            } catch (err) {
+                showToast("Exception: " + err.message, "error");
+            }
+        };
+
+        // Explicit switch to menutech_commission. Requires an account able to receive
+        // funds: without a destination the fee would be charged to the platform and the
+        // restaurant would get nothing.
+        window.adminActivateCommissionMode = async () => {
+            const pctInput = document.getElementById('admin-input-commission-pct');
+            const pct = parseFloat(pctInput.value);
+            if (isNaN(pct) || pct <= 0 || pct >= 100) {
+                showToast("Enter a commission % greater than 0 and below 100.", "warning");
+                return;
+            }
+
             if (!accountCanReceive) {
                 try {
                     const statusResp = await sb.functions.invoke('stripe-connect', {
@@ -1489,39 +1619,50 @@
                 }
             }
 
-            const wantsCommission = accountCanReceive;
-            if (!wantsCommission && !silent) {
+            if (!accountCanReceive) {
                 const missing = accountRequirementsDue.length
                     ? ` Stripe still needs: ${accountRequirementsDue.join(', ')}.`
                     : '';
-                showToast("Commission % saved. Link the bank account to start charging it." + missing, "warning");
+                showToast("This restaurant must finish Stripe onboarding before commission can be activated." + missing, "error");
+                renderAdminUI();
+                return;
             }
 
-            const config = { commission_rate: pct };
-            if (wantsCommission) {
-                Object.assign(config, {
-                    payment_mode: 'menutech_commission',
-                    action_type: 'authorize_commission',
-                    commission_authorized_at: new Date().toISOString(),
-                    commission_authorized_by: user.email || user.id
-                });
-            }
+            const previousMode = currentRestaurantConfig?.payment_mode || 'none';
+            const confirmMsg = previousMode === 'own_stripe'
+                ? `This restaurant is currently on "Own Stripe Account" (it keeps 100%).\n\n` +
+                  `Switch to Menutech Commission at ${pct}%?\n` +
+                  `- Menutech will keep ${pct}% of every online order.\n` +
+                  `- The restaurant receives the remaining ${(100 - pct).toFixed(2)}%.\n` +
+                  `- The Stripe account and its history stay the same.\n\n` +
+                  `Proceed?`
+                : `Activate Menutech Commission at ${pct}%?\n\n` +
+                  `- Menutech keeps ${pct}% of every online order.\n` +
+                  `- The restaurant receives the remaining ${(100 - pct).toFixed(2)}% automatically.\n\n` +
+                  `Proceed?`;
+            if (!confirm(confirmMsg)) return;
 
             try {
                 const response = await sb.functions.invoke('stripe-connect', {
                     body: {
                         action: 'update_payment_config',
                         target_user_id: activeOwnerId,
-                        payment_config: config
+                        payment_config: {
+                            payment_mode: 'menutech_commission',
+                            commission_rate: pct,
+                            action_type: 'authorize_commission',
+                            commission_authorized_at: new Date().toISOString(),
+                            commission_authorized_by: user.email || user.id
+                        }
                     }
                 });
 
                 if (response.data && response.data.success) {
                     currentRestaurantConfig = response.data.config;
                     renderAdminUI();
-                    if (wantsCommission) showToast(`Commission ${pct}% saved.`, "success");
+                    showToast(`Menutech Commission activated at ${pct}%.`, "success");
                 } else {
-                    const errorDetail = await extractFunctionError(response, "Error saving commission");
+                    const errorDetail = await extractFunctionError(response, "Error activating commission");
                     showToast("Error: " + errorDetail, "error");
                 }
             } catch (err) {
@@ -1826,8 +1967,8 @@
                     const connectTitle = document.getElementById('lbl-owner-connect-title');
                     const connectDesc = document.getElementById('lbl-owner-connect-desc');
                     if (isCommMode) {
-                        if (connectTitle) connectTitle.textContent = 'Vincula tu cuenta bancaria para recibir tus pagos';
-                        if (connectDesc) connectDesc.textContent = 'Menutech procesa los pagos y te transfiere el monto neto (después de la comisión). Stripe te pedirá tus datos y tu cuenta bancaria una sola vez.';
+                        if (connectTitle) connectTitle.textContent = 'Connect your bank account to receive your payouts';
+                        if (connectDesc) connectDesc.textContent = 'Menutech processes the payment and transfers your net amount (after commission). Stripe asks for your details and bank account only once.';
                     } else {
                         if (connectTitle) connectTitle.textContent = 'Connect your Stripe account';
                         if (connectDesc) connectDesc.textContent = 'To receive online payments directly in your own bank account, connect your Stripe account. Stripe will guide you through the required information.';
@@ -1858,7 +1999,7 @@
                         badge.className = 'status-badge disconnected';
                         badge.textContent = dict.statusDisconnected;
                         connectBtn.style.display = 'inline-flex';
-                        connectLbl.textContent = isCommMode ? 'Vincular mi cuenta bancaria' : 'Connect with Stripe';
+                        connectLbl.textContent = 'Connect with Stripe';
                         dashboardBtn.style.display = 'none';
                     }
                 } else {
