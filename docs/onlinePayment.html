@@ -328,7 +328,6 @@
                                 <span id="admin-btn-connect-lbl">Connect with Stripe</span>
                             </button>
                             <button class="btn-action btn-secondary" onclick="adminCheckAccountStatus()" id="lbl-adm-btn-refresh-status">Check Status</button>
-                            <button class="btn-action btn-secondary" id="admin-btn-relink" onclick="adminLinkExistingAccount()" style="display:none;">Reconnect Account</button>
                             <button class="btn-action btn-primary" id="admin-btn-activate-own" onclick="adminActivateOwnStripeMode()" style="display:none;">Activate Own Stripe Mode</button>
                             <button class="btn-action btn-secondary" id="admin-btn-dashboard" onclick="adminOpenStripeDashboard()" style="display:none;">Open Express Dashboard</button>
                             <button class="btn-action btn-danger" id="admin-btn-disconnect" onclick="adminDisconnectStripeAccount()" style="display:none; margin-left:auto;">Disconnect Account</button>
@@ -371,7 +370,6 @@
                                 <span id="admin-btn-connect-comm-lbl">Connect with Stripe</span>
                             </button>
                             <button class="btn-action btn-secondary" onclick="adminCheckAccountStatus()" id="lbl-adm-comm-btn-refresh-status">Check Status</button>
-                            <button class="btn-action btn-secondary" id="admin-btn-relink-comm" onclick="adminLinkExistingAccount()" style="display:none;">Reconnect Account</button>
                             <button class="btn-action btn-secondary" id="admin-btn-dashboard-comm" onclick="adminOpenStripeDashboard()" style="display:none;">Open Express Dashboard</button>
                             <button class="btn-action btn-danger" id="admin-btn-disconnect-comm" onclick="adminDisconnectStripeAccount()" style="display:none; margin-left:auto;">Disconnect Account</button>
                         </div>
@@ -1153,14 +1151,6 @@
             const btnDisconnect = document.getElementById('admin-btn-disconnect');
             const btnActivateOwn = document.getElementById('admin-btn-activate-own');
 
-            // "Reconnect Account" only makes sense right after a disconnect: a previous
-            // acct_... exists but nothing is linked. With an account connected there is
-            // nothing to restore, and with no history the button would have no target.
-            const lastAcctId = currentRestaurantConfig?.last_stripe_account_id || '';
-            const showRelink = !!lastAcctId && !connectedAccountData?.stripe_account_id;
-            const btnRelink = document.getElementById('admin-btn-relink');
-            if (btnRelink) btnRelink.style.display = showRelink ? 'inline-flex' : 'none';
-
             // Own Stripe is only meaningful when the account can actually charge, and the
             // button only shows while the restaurant is on another mode.
             const isOwnStripeActive = currentRestaurantConfig.payment_mode === 'own_stripe';
@@ -1230,11 +1220,6 @@
             const commDisconnectBtn = document.getElementById('admin-btn-disconnect-comm');
             const commConnectBtn = document.getElementById('admin-btn-connect-comm');
             const commConnectLbl = document.getElementById('admin-btn-connect-comm-lbl');
-
-            // Same rule as tab 1: only offer reconnect when a previous account exists
-            // and nothing is currently linked.
-            const commBtnRelink = document.getElementById('admin-btn-relink-comm');
-            if (commBtnRelink) commBtnRelink.style.display = showRelink ? 'inline-flex' : 'none';
 
             if (connectedAccountData && connectedAccountData.stripe_account_id) {
                 commAccId.textContent = connectedAccountData.stripe_account_id;
@@ -1707,49 +1692,6 @@
                 ? `https://dashboard.stripe.com/${acct}/payments`
                 : `https://dashboard.stripe.com/${acct}/settings`;
             window.open(target, '_blank');
-        };
-
-        // Restores the account that was unlinked with "Disconnect Account". Stripe never
-        // deletes Connect accounts, so the same acct_... can be re-attached instead of
-        // creating a duplicate. The id comes from the disconnect, not from the admin.
-        window.adminLinkExistingAccount = async () => {
-            const lastAcctId = currentRestaurantConfig?.last_stripe_account_id || '';
-            if (!lastAcctId) {
-                showToast("There is no previously connected account to restore.", "error");
-                return;
-            }
-
-            const dict = I18N[currentLang];
-            const confirmed = confirm(
-                `Reconnect ${lastAcctId}?\n\n` +
-                "This is the same Stripe account the restaurant had before disconnecting, " +
-                "so its history and payouts are kept. No new account is created."
-            );
-            if (!confirmed) return;
-
-            showToast(dict.toastCheckingStatus, "warning");
-
-            try {
-                const resp = await sb.functions.invoke('stripe-connect', {
-                    body: {
-                        action: 'link_existing_account',
-                        target_user_id: activeOwnerId,
-                        stripe_account_id: lastAcctId
-                    }
-                });
-                if (resp.data && resp.data.success) {
-                    connectedAccountData = resp.data.account;
-                    accountCanReceive = !!resp.data.can_receive;
-                    accountRequirementsDue = resp.data.requirements_due || [];
-                    await loadAccountData();
-                    showToast(`Account ${lastAcctId} reconnected.`, "success");
-                } else {
-                    const errorDetail = await extractFunctionError(resp, "Error reconnecting account");
-                    showToast("Error: " + errorDetail, "error");
-                }
-            } catch (err) {
-                showToast("Exception: " + err.message, "error");
-            }
         };
 
         window.adminRevokeCommissionMode = async () => {
