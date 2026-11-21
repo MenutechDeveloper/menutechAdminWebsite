@@ -495,13 +495,28 @@ serve(async (req: Request) => {
       // Leave the restaurant in a coherent state: a disconnected account cannot keep
       // a commission or own_stripe mode pointing at a destination that no longer exists.
       // commission_rate is preserved so re-authorizing does not require retyping it.
-      await supabaseAdmin
+      // last_stripe_account_id keeps the acct_... so "Reconnect Account" can restore the
+      // SAME account instead of creating a duplicate one in Stripe.
+      const disconnectConfig: any = {
+        user_id: effectiveUserId,
+        payment_mode: "none",
+        updated_at: new Date().toISOString()
+      };
+      if (removed?.stripe_account_id) disconnectConfig.last_stripe_account_id = removed.stripe_account_id;
+
+      const { error: disconnectCfgErr } = await supabaseAdmin
         .from("menutech_restaurant_payment_configs")
-        .upsert({
-          user_id: effectiveUserId,
-          payment_mode: "none",
-          updated_at: new Date().toISOString()
-        }, { onConflict: "user_id" });
+        .upsert(disconnectConfig, { onConflict: "user_id" });
+
+      // add_last_stripe_account_id.sql may not be applied yet. Retry without the column
+      // so a missing migration cannot leave the restaurant stuck on a dead payment mode.
+      if (disconnectCfgErr && disconnectConfig.last_stripe_account_id) {
+        console.warn("Could not store last_stripe_account_id, retrying without it:", disconnectCfgErr.message);
+        delete disconnectConfig.last_stripe_account_id;
+        await supabaseAdmin
+          .from("menutech_restaurant_payment_configs")
+          .upsert(disconnectConfig, { onConflict: "user_id" });
+      }
 
       return new Response(
         JSON.stringify({
@@ -572,6 +587,13 @@ serve(async (req: Request) => {
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+
+      // The account is linked again, so there is nothing left to reconnect.
+      // Ignored on purpose: add_last_stripe_account_id.sql may not be applied yet.
+      await supabaseAdmin
+        .from("menutech_restaurant_payment_configs")
+        .update({ last_stripe_account_id: null })
+        .eq("user_id", effectiveUserId);
 
       return new Response(
         JSON.stringify({
