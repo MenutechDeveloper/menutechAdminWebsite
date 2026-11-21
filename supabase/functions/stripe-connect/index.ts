@@ -182,21 +182,25 @@ serve(async (req: Request) => {
         // The merchant configuration lets the account accept card payments; the
         // recipient configuration lets it receive transfers (destination charges).
         // dashboard=express mirrors the previous Express onboarding experience.
-        const newAccount = await stripeFetchV2("/core/accounts", {
-          method: "POST",
-          body: {
-            contact_email: email || undefined,
-            display_name: businessName,
-            dashboard: "express",
-            identity: {
-              country: "us"
+        //
+        // The legacy test-mode sandbox does not accept every v2 configuration. Adding
+        // `recipient` there can make account creation fail outright, which also broke
+        // the plain "own Stripe" flow. Retry without it so method 1 always works; the
+        // transfers capability is requested again later if commission mode needs it.
+        const buildAccountBody = (withRecipient: boolean) => ({
+          contact_email: email || undefined,
+          display_name: businessName,
+          dashboard: "express",
+          identity: {
+            country: "us"
+          },
+          configuration: {
+            merchant: {
+              capabilities: {
+                card_payments: { requested: true }
+              }
             },
-            configuration: {
-              merchant: {
-                capabilities: {
-                  card_payments: { requested: true }
-                }
-              },
+            ...(withRecipient ? {
               recipient: {
                 capabilities: {
                   stripe_balance: {
@@ -204,23 +208,71 @@ serve(async (req: Request) => {
                   }
                 }
               }
+            } : {})
+          },
+          defaults: {
+            currency: "usd",
+            responsibilities: {
+              fees_collector: "application",
+              losses_collector: "application"
             },
-            defaults: {
-              currency: "usd",
-              responsibilities: {
-                fees_collector: "application",
-                losses_collector: "application"
-              },
-              locales: ["en-US"]
-            },
-            include: [
-              "configuration.merchant",
-              "configuration.recipient",
-              "identity",
-              "requirements"
-            ]
-          }
+            locales: ["en-US"]
+          },
+          include: [
+            "configuration.merchant",
+            ...(withRecipient ? ["configuration.recipient"] : []),
+            "identity",
+            "requirements"
+          ]
         });
+
+        let newAccount: any;
+        let usedMerchantOnly = false;
+        try {
+          newAccount = await stripeFetchV2("/core/accounts", {
+            method: "POST",
+            body: buildAccountBody(true)
+          });
+        } catch (createErr: any) {
+          console.warn("Account create with recipient config failed, retrying merchant-only:", createErr.message);
+          try {
+            newAccount = await stripeFetchV2("/core/accounts", {
+              method: "POST",
+              body: buildAccountBody(false)
+            });
+            usedMerchantOnly = true;
+          } catch (retryErr: any) {
+            throw new Error(
+              `No se pudo crear la cuenta Connect. ${retryErr.message}`
+            );
+          }
+        }
+
+        // The merchant-only fallback cannot receive transfers, which commission mode
+        // needs for destination charges. Try to add the recipient configuration to the
+        // account afterwards; when the sandbox rejects it too, commission mode stays
+        // blocked by the "bank account not ready" check instead of silently paying out
+        // to the platform.
+        if (usedMerchantOnly) {
+          try {
+            await stripeFetchV2(`/core/accounts/${newAccount.id}`, {
+              method: "POST",
+              body: {
+                configuration: {
+                  recipient: {
+                    capabilities: {
+                      stripe_balance: {
+                        stripe_transfers: { requested: true }
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          } catch (recipErr: any) {
+            console.warn("Could not add recipient configuration:", recipErr.message);
+          }
+        }
 
         currentAccountId = newAccount.id;
 
@@ -460,7 +512,77 @@ serve(async (req: Request) => {
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 
-    // Action 5: update_payment_config (Admin updates payment mode, commissions, service status, due dates with audit trail)
+    // Action: link_existing_account
+    // Re-attaches an acct_... that already exists in Stripe. disconnect_account only
+    // deletes the local row (Stripe never deletes Connect accounts), so without this
+    // the only way back was to create a brand-new account, orphaning the old one.
+    } else if (action === "link_existing_account") {
+      if (!isPrivileged && effectiveUserId !== user.id) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden: Cannot modify another user's Stripe account" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const accountIdToLink = (stripe_account_id || "").trim();
+      if (!accountIdToLink.startsWith("acct_")) {
+        return new Response(
+          JSON.stringify({ error: "Invalid Stripe account ID. It must start with acct_." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Validate against Stripe before storing, so a typo cannot silently break payments.
+      let v1Linked: any = null;
+      try {
+        v1Linked = await stripeFetch(`/accounts/${accountIdToLink}`);
+      } catch (err: any) {
+        return new Response(
+          JSON.stringify({ error: `Stripe does not recognize ${accountIdToLink}: ${err.message}` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const canReceiveLinked =
+        v1Linked?.capabilities?.transfers === "active" ||
+        !!v1Linked?.payouts_enabled;
+      const requirementsLinked = [
+        ...(v1Linked?.requirements?.currently_due || []),
+        ...(v1Linked?.requirements?.past_due || [])
+      ];
+
+      const linkedRecord = {
+        user_id: effectiveUserId,
+        stripe_account_id: v1Linked.id || accountIdToLink,
+        charges_enabled: !!v1Linked.charges_enabled,
+        payouts_enabled: canReceiveLinked,
+        details_submitted: !!v1Linked.details_submitted,
+        country: (v1Linked.country || "US").toUpperCase(),
+        currency: v1Linked.default_currency || "usd",
+        updated_at: new Date().toISOString()
+      };
+
+      const { error: linkErr } = await supabaseAdmin
+        .from("menutech_stripe_accounts")
+        .upsert(linkedRecord, { onConflict: "user_id" });
+
+      if (linkErr) {
+        return new Response(
+          JSON.stringify({ error: `Could not link the account: ${linkErr.message}` }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          account: linkedRecord,
+          can_receive: canReceiveLinked,
+          requirements_due: requirementsLinked
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+
     } else if (action === "update_payment_config") {
       if (!isPrivileged) {
         return new Response(
