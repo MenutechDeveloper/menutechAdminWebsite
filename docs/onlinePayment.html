@@ -1172,6 +1172,7 @@
             const inputCommPct = document.getElementById('admin-input-commission-pct');
 
             const isCommMode = currentRestaurantConfig.payment_mode === 'menutech_commission';
+            const commRate = parseFloat(currentRestaurantConfig.commission_rate || 0).toFixed(2);
 
             if (document.activeElement !== inputCommPct) {
                 inputCommPct.value = currentRestaurantConfig.commission_rate != null && currentRestaurantConfig.commission_rate !== '' ? currentRestaurantConfig.commission_rate : '';
