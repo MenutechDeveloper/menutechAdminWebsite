@@ -1,72 +1,151 @@
-MODO COMISIÓN MENUTECH — QUÉ HACER EN STRIPE
-=============================================
+MENUTECH COMMISSION MODE - STRIPE SETUP
+=======================================
 
-CÓMO FUNCIONA (resumen)
------------------------
-1. El cliente paga en la web → el dinero entra a TU cuenta de Stripe (la de Menutech).
-2. Stripe retiene tu comisión (application_fee) automáticamente.
-3. El resto se transfiere SOLO a la cuenta Connect del restaurante.
-4. Stripe paga ese saldo a la cuenta bancaria del restaurante (payout) solo.
+WHAT IT DOES (short version)
+----------------------------
+Customer pays on the restaurant site with a card.
+Money goes into YOUR Stripe account (Menutech).
+Stripe keeps your commission automatically.
+The rest is transferred to the restaurant's connected account, and Stripe
+pays that balance out to their bank account.
 
-Nadie calcula nada a mano. Ejemplo: 5 órdenes de $10 con 10% de comisión
-→ tú te quedas $5 (5 × $1) y al restaurante le llegan $45.
+Nobody calculates anything by hand.
+Example: 5 orders of $10 with a 10% commission
+  -> you keep $5 (5 x $1)
+  -> the restaurant receives $45 automatically.
 
-DÓNDE VA LA CUENTA BANCARIA DEL USUARIO
----------------------------------------
-NO la capturas tú. El restaurante la escribe en el formulario de Stripe
-(hosted onboarding) cuando pulsas "Vincular cuenta bancaria".
-Stripe la guarda y hace los payouts. Menutech nunca ve el número de cuenta.
+THE COMMISSION TAB USES STRIPE CONNECT (YES, IT DOES)
+-----------------------------------------------------
+This is the part that confuses everyone, so read it once:
 
-QUÉ CONFIGURAR EN STRIPE (una sola vez)
----------------------------------------
-[ ] 1. Connect → Settings → Branding
-       - Nombre: Menutech
-       - Color: #FF9533
-       - Icono: logomt.png (512×512)
-       (Opcional, pero hace que el formulario se vea tuyo.)
+  Both tabs create the SAME kind of Stripe connected account.
+  Both tabs show the SAME Stripe Account ID (acct_...).
+  The only difference is who keeps what:
 
-[ ] 2. Connect → Settings → Payment methods
-       - Activa "Transfers" (necesario para destination charges).
+    Tab 1 "Own Stripe Account"
+      commission_rate = 0
+      The restaurant keeps 100%. Menutech charges nothing.
 
-[ ] 3. Connect → Settings → Payouts
-       - "Payout schedule": deja el que Stripe propone (diario/semanal).
-       - NO necesitas configurar nada más: los payouts son automáticos.
+    Tab 2 "Menutech Commission"
+      commission_rate = X%
+      Menutech keeps X% via application_fee_amount.
+      The restaurant receives the remaining (100 - X)%.
 
-[ ] 4. Verifica que las cuentas conectadas estén en modo Express
-       (el código ya las crea así con dashboard:"express").
+  Internally both are "destination charges": one payment, split in two.
 
-[ ] 5. Webhook (ya existente): eventos necesarios
+So yes: in commission mode a Stripe Account ID IS generated, and the
+commission tab now shows it with the same layout as tab 1
+(Account ID / Details Submitted / Charges Enabled / Payouts Enabled).
+
+WHY THE RESTAURANT STILL HAS TO REGISTER WITH STRIPE
+----------------------------------------------------
+This is a legal requirement, not a design choice. Stripe must verify who
+receives the money (KYC/AML). There is no way to send money to a bank
+account that Stripe has not verified.
+
+What changes is who is the merchant of record:
+  - Commission mode: YOU are. Charges, disputes and refunds are managed in
+    YOUR account. The restaurant only receives a transfer.
+  - Own Stripe mode: the restaurant is. They manage their own disputes.
+
+WHERE THE RESTAURANT'S BANK ACCOUNT GOES
+----------------------------------------
+You never type it, and Menutech never sees the account number.
+The restaurant enters it in the Stripe hosted form when you click
+"Connect with Stripe" (in either tab).
+Stripe stores it and makes the payouts. This is deliberate: handling raw
+bank numbers yourself would put you in PCI/AML scope.
+
+ONE-TIME STRIPE CONFIGURATION
+-----------------------------
+[ ] 1. Connect -> Settings -> Branding
+       Name: Menutech / Color: #FF9533 / Icon: logomt.png (512x512)
+       Optional, but the form then looks like yours.
+
+[ ] 2. Connect -> Settings -> Payment methods
+       Enable "Transfers". Required for destination charges.
+
+[ ] 3. Connect -> Settings -> Payouts
+       Leave Stripe's default schedule (daily/weekly). Payouts are automatic.
+       Do NOT enable manual payouts, or the restaurant's money will sit
+       waiting for you to release it by hand.
+
+[ ] 4. Connected accounts must be Express.
+       The code already creates them that way (dashboard: "express").
+
+[ ] 5. Webhook events (existing webhook):
        - checkout.session.completed
        - account.updated
-       (account.updated mantiene el estado "conectado" actualizado solo.)
+       account.updated keeps the connected status fresh by itself.
 
-CÓMO SE USA EN LA INTERFAZ (onlinePayment.html)
+HOW TO USE IT IN THE PANEL (onlinePayment.html)
 -----------------------------------------------
-1. Pestaña "Menutech Commission".
-2. Pulsa "Vincular cuenta bancaria" → el restaurante llena el formulario de Stripe.
-3. Al volver, el badge pasa a "Connected & Enabled".
-4. Escribe el % de comisión. Se guarda SOLO (no hay botón guardar).
-5. Listo. Cada orden nueva cobra la comisión automáticamente.
+1. Open the "Menutech Commission" tab.
+2. Click "Connect with Stripe" and let the restaurant fill the Stripe form.
+   Same button, same look as tab 1. It only links the bank account; it does
+   NOT change the payment mode.
+3. Click "Check Status". The badge turns to "Connected & Enabled".
+4. Type the commission % (for example 10). It saves automatically.
+5. Click "Activate Commission Mode" and confirm.
+6. Done. Every new order charges the commission automatically.
 
-SI UN RESTAURANTE YA TENÍA CUENTA Y SE DESCONECTÓ
--------------------------------------------------
-La cuenta NO se borra en Stripe. Para volver a usarla:
-   Pestaña Commission → "Vincular cuenta existente" → pega el acct_...
-No se crea una cuenta nueva ni se pierde el historial.
+WHY THERE IS AN "ACTIVATE" BUTTON
+---------------------------------
+Saving the % and switching the mode are separate on purpose. In the past,
+typing a % silently switched the restaurant into commission mode, which
+charged a fee nobody had approved. Now the % is just a number until you
+press Activate.
 
-VER EL DINERO EN STRIPE
------------------------
-Botón "Ver reporte en Stripe" abre el dashboard de esa cuenta conectada.
-También puedes verlo en tu propio dashboard: Payments → filtrar por
-"Connected account".
+Activation is blocked while the account cannot receive funds. Without a
+destination account the fee would be charged to the platform and the
+restaurant would get nothing.
 
-PUNTOS IMPORTANTES
-------------------
-- El modo comisión SÍ necesita que el restaurante se registre en Stripe
-  (es obligatorio por ley: Stripe debe verificar quién recibe el dinero).
-  La diferencia es que TÚ eres el merchant of record: los cobros,
-  disputas y reembolsos se gestionan en tu cuenta, no en la suya.
-- Si el restaurante no completa el onboarding, el badge queda en
-  "Pending Requirements" y NO se puede activar la comisión (a propósito:
-  sin cuenta destino, la comisión se te cobraría a ti).
-- Comisión 0% no es válida en este modo; usa "Cuenta Stripe Propia".
+WHAT HAPPENS IF A RESTAURANT IS ALREADY ON OWN STRIPE AND YOU ACTIVATE
+COMMISSION (OR THE OTHER WAY ROUND)
+------------------------------------
+Only one mode can be active at a time. They are stored in one row
+(menutech_restaurant_payment_configs.payment_mode), so the last action wins.
+
+  Own Stripe  -> Commission (10%)
+    - A confirmation dialog warns you first.
+    - commission_rate is set to 10 and payment_mode to menutech_commission.
+    - From the NEXT order on, Menutech keeps 10%.
+    - The Stripe account (acct_...) does not change. Same account, same
+      history, same bank details.
+    - Orders already paid are NOT re-charged. Commission is applied at
+      checkout time and stored in that order's metadata.
+
+  Commission -> Own Stripe
+    - Confirmation dialog.
+    - payment_mode becomes own_stripe and commission_rate is reset to 0.
+    - From the NEXT order on the restaurant keeps 100%.
+
+  Commission -> Revoke
+    - payment_mode becomes none. Online payments stop until a mode is set.
+    - The Stripe account stays connected.
+
+So: no double charge, no retroactive fee, and no account is created twice.
+The single thing to remember is that the change applies from the next order,
+not to past ones.
+
+RECOVERING AN ACCOUNT THAT WAS DISCONNECTED
+-------------------------------------------
+Disconnecting only removes the row in Menutech. The account is NOT deleted
+in Stripe.
+  Tab -> "Link Existing Account" -> paste the acct_...
+No new account is created and no history is lost.
+
+SEEING THE MONEY IN STRIPE
+--------------------------
+Stripe Dashboard -> Payments, filter by "Connected account".
+You can also open the restaurant's Express dashboard from the panel with
+"Open Express Dashboard".
+
+IMPORTANT NOTES
+---------------
+- Commission 0% is not valid in this mode. Use "Own Stripe Account" instead.
+- If onboarding is incomplete the badge stays "Pending Requirements" and
+  commission cannot be activated. That is intentional.
+- Stripe's own processing fee (about 2.9% + $0.30) is charged on top of
+  your commission, in both modes. Your 10% is not reduced by it; it comes
+  out of the restaurant's share.
