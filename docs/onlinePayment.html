@@ -1260,8 +1260,10 @@
                 }
             }
 
-            if (document.activeElement !== inputCommPct) {
-                inputCommPct.value = currentRestaurantConfig.commission_rate != null && currentRestaurantConfig.commission_rate !== '' ? currentRestaurantConfig.commission_rate : '';
+            // Only a commission-mode restaurant has a real rate. Prefilling the stored
+            // value in any other mode shows a fee that is not being charged.
+            if (isCommMode && document.activeElement !== inputCommPct) {
+                inputCommPct.value = currentRestaurantConfig.commission_rate != null ? currentRestaurantConfig.commission_rate : '';
             }
 
             const btnActivateComm = document.getElementById('admin-btn-activate-comm');
@@ -1319,7 +1321,12 @@
 
             document.getElementById('admin-gen-stripe-status').textContent = (connectedAccountData && connectedAccountData.stripe_account_id) ? (connectedAccountData.charges_enabled ? dict.statusConnectedEnabled : dict.statusPending) : dict.statusDisconnected;
             document.getElementById('admin-gen-stripe-acc').textContent = connectedAccountData?.stripe_account_id || '-';
-            document.getElementById('admin-gen-comm-rate').textContent = `${commRate}%`;
+            // Own Stripe mode charges 0% by definition (stripe-payment only applies
+            // application_fee_amount in commission mode). Show the effective rate so a
+            // stale commission_rate left in the DB cannot look like an active fee.
+            const effectiveCommRate = isCommMode ? commRate : '0.00';
+            document.getElementById('admin-gen-comm-rate').textContent = `${effectiveCommRate}%`;
+
 
             // Access Controls Form Inputs
             document.getElementById('admin-ctrl-service-status').value = currentRestaurantConfig.service_status || 'inactive';
@@ -1746,6 +1753,7 @@
                         target_user_id: activeOwnerId,
                         payment_config: {
                             payment_mode: 'none',
+                            commission_rate: 0.00,
                             commission_revoked_at: new Date().toISOString(),
                             action_type: 'revoke_commission'
                         }
@@ -2192,7 +2200,7 @@
 
             if (admVol) admVol.textContent = `$${totalVol.toFixed(2)}`;
             if (admCount) admCount.textContent = countSucceeded;
-            if (admCommPctLbl) admCommPctLbl.textContent = `${commRate.toFixed(1)}%`;
+            if (admCommPctLbl) admCommPctLbl.textContent = `${isCommMode ? commRate.toFixed(1) : '0.0'}%`;
             if (admCommVal) admCommVal.textContent = `$${menutechCommissionTotal.toFixed(2)}`;
             if (admClientPayout) admClientPayout.textContent = `$${clientPayoutTotal.toFixed(2)}`;
             if (admRef) admRef.textContent = `$${totalRefunded.toFixed(2)}`;
