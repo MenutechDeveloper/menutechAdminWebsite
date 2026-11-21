@@ -59,6 +59,16 @@ Stripe blocks creating Accounts via `POST /v1/accounts` for new Connect integrat
   no changes.
 - Login links (Express Dashboard) keep using `/v1/accounts/{id}/login_links`; v1 endpoints accept
   v2 Account IDs.
+- `link_existing_account` re-attaches an `acct_...` that already exists in Stripe (validated with
+  `GET /v1/accounts/{id}` before upsert). Needed because `disconnect_account` only deletes the local
+  row, so without it the only way back was creating a brand-new account and orphaning the old one.
+- Account creation retries without the `recipient` configuration when the sandbox rejects the full
+  v2 payload, then tries to add `recipient` in a follow-up `POST /v2/core/accounts/{id}`. The
+  merchant-only path keeps "own Stripe" working; commission mode stays blocked until an account can
+  actually receive transfers.
+- Commission % autosaves on change (debounced, no Save button). The rate is always stored; the mode
+  only flips to `menutech_commission` once `can_receive` is true, so a fee is never charged to the
+  platform by accident.
 
 ## Online payments: roles & activation
 - Activation is **admin-only**: `ADMIN`/`SUPERADMIN` enable the service (`menutech_restaurant_payment_configs.service_status`)

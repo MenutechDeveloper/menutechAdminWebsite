@@ -1,0 +1,72 @@
+MODO COMISIÓN MENUTECH — QUÉ HACER EN STRIPE
+=============================================
+
+CÓMO FUNCIONA (resumen)
+-----------------------
+1. El cliente paga en la web → el dinero entra a TU cuenta de Stripe (la de Menutech).
+2. Stripe retiene tu comisión (application_fee) automáticamente.
+3. El resto se transfiere SOLO a la cuenta Connect del restaurante.
+4. Stripe paga ese saldo a la cuenta bancaria del restaurante (payout) solo.
+
+Nadie calcula nada a mano. Ejemplo: 5 órdenes de $10 con 10% de comisión
+→ tú te quedas $5 (5 × $1) y al restaurante le llegan $45.
+
+DÓNDE VA LA CUENTA BANCARIA DEL USUARIO
+---------------------------------------
+NO la capturas tú. El restaurante la escribe en el formulario de Stripe
+(hosted onboarding) cuando pulsas "Vincular cuenta bancaria".
+Stripe la guarda y hace los payouts. Menutech nunca ve el número de cuenta.
+
+QUÉ CONFIGURAR EN STRIPE (una sola vez)
+---------------------------------------
+[ ] 1. Connect → Settings → Branding
+       - Nombre: Menutech
+       - Color: #FF9533
+       - Icono: logomt.png (512×512)
+       (Opcional, pero hace que el formulario se vea tuyo.)
+
+[ ] 2. Connect → Settings → Payment methods
+       - Activa "Transfers" (necesario para destination charges).
+
+[ ] 3. Connect → Settings → Payouts
+       - "Payout schedule": deja el que Stripe propone (diario/semanal).
+       - NO necesitas configurar nada más: los payouts son automáticos.
+
+[ ] 4. Verifica que las cuentas conectadas estén en modo Express
+       (el código ya las crea así con dashboard:"express").
+
+[ ] 5. Webhook (ya existente): eventos necesarios
+       - checkout.session.completed
+       - account.updated
+       (account.updated mantiene el estado "conectado" actualizado solo.)
+
+CÓMO SE USA EN LA INTERFAZ (onlinePayment.html)
+-----------------------------------------------
+1. Pestaña "Menutech Commission".
+2. Pulsa "Vincular cuenta bancaria" → el restaurante llena el formulario de Stripe.
+3. Al volver, el badge pasa a "Connected & Enabled".
+4. Escribe el % de comisión. Se guarda SOLO (no hay botón guardar).
+5. Listo. Cada orden nueva cobra la comisión automáticamente.
+
+SI UN RESTAURANTE YA TENÍA CUENTA Y SE DESCONECTÓ
+-------------------------------------------------
+La cuenta NO se borra en Stripe. Para volver a usarla:
+   Pestaña Commission → "Vincular cuenta existente" → pega el acct_...
+No se crea una cuenta nueva ni se pierde el historial.
+
+VER EL DINERO EN STRIPE
+-----------------------
+Botón "Ver reporte en Stripe" abre el dashboard de esa cuenta conectada.
+También puedes verlo en tu propio dashboard: Payments → filtrar por
+"Connected account".
+
+PUNTOS IMPORTANTES
+------------------
+- El modo comisión SÍ necesita que el restaurante se registre en Stripe
+  (es obligatorio por ley: Stripe debe verificar quién recibe el dinero).
+  La diferencia es que TÚ eres el merchant of record: los cobros,
+  disputas y reembolsos se gestionan en tu cuenta, no en la suya.
+- Si el restaurante no completa el onboarding, el badge queda en
+  "Pending Requirements" y NO se puede activar la comisión (a propósito:
+  sin cuenta destino, la comisión se te cobraría a ti).
+- Comisión 0% no es válida en este modo; usa "Cuenta Stripe Propia".
