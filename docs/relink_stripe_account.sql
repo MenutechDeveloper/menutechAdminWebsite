@@ -27,6 +27,11 @@ on conflict (user_id) do update
 -- After running this, open onlinePayment.html, select the restaurant and click
 -- "Check Status". That pulls charges_enabled / payouts_enabled straight from
 -- Stripe and refreshes the badges (a webhook account.updated also does it).
+--
+-- You normally do NOT need this file: after a disconnect the panel shows a
+-- "Reconnect Account" button that restores the same account by itself. Use this
+-- script only when that stored account is wrong, or before
+-- add_last_stripe_account_id.sql exists.
 
 -- Verify:
 -- select user_id, stripe_account_id, charges_enabled, payouts_enabled, details_submitted

@@ -132,8 +132,22 @@ RECOVERING AN ACCOUNT THAT WAS DISCONNECTED
 -------------------------------------------
 Disconnecting only removes the row in Menutech. The account is NOT deleted
 in Stripe.
-  Tab -> "Link Existing Account" -> paste the acct_...
-No new account is created and no history is lost.
+
+After a disconnect, a "Reconnect Account" button appears in BOTH tabs. It
+restores the SAME acct_... that was unlinked, so no duplicate account is
+created and no history is lost. The id is remembered by Menutech, so you
+do not have to copy anything.
+
+The button only shows when there is something to restore:
+  - it is hidden while an account is connected
+  - it is hidden for a restaurant that never connected an account
+
+Requires docs/add_last_stripe_account_id.sql to be applied once. Without
+it the disconnect still works, but the button never appears and the
+fallback is docs/relink_stripe_account.sql.
+
+If the stored account is wrong (for example the restaurant opened a new
+one in Stripe), fix it with docs/relink_stripe_account.sql.
 
 SEEING THE MONEY IN STRIPE
 --------------------------
