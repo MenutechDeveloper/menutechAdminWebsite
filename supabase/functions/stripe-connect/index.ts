@@ -614,8 +614,10 @@ serve(async (req: Request) => {
       if (payment_config.commission_authorized_by !== undefined) updateData.commission_authorized_by = payment_config.commission_authorized_by;
       if (payment_config.commission_revoked_at !== undefined) updateData.commission_revoked_at = payment_config.commission_revoked_at;
 
-      // Ensure modalities are strictly mutually exclusive: if own_stripe is authorized, commission_rate is reset to 0
-      if (payment_config.payment_mode === "own_stripe") {
+      // Modalities are strictly mutually exclusive: commission_rate only means something
+      // in menutech_commission. Leaving a stale rate on any other mode makes the admin
+      // panel show a fee that stripe-payment never charges.
+      if (payment_config.payment_mode !== undefined && payment_config.payment_mode !== "menutech_commission") {
         updateData.commission_rate = 0.00;
       }
 
