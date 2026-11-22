@@ -270,13 +270,12 @@ serve(async (req: Request) => {
       }
 
       const receiving = await resolveReceivingAccount(order.user_id);
-      const canProcess = isCommissionMode ? receiving.ready : !!receiving.chargesEnabled;
-      if (!receiving.accountId || !canProcess) {
+      // Destination charges only need the connected account to RECEIVE funds; the
+      // platform charges the card, so the account's charges_enabled is not required.
+      if (!receiving.accountId || !receiving.ready) {
         return new Response(
           JSON.stringify({
-            error: isCommissionMode
-              ? "The restaurant has not completed Stripe onboarding to receive online payments"
-              : "The restaurant's Stripe account cannot charge cards yet. Complete Stripe onboarding first.",
+            error: "The restaurant has not completed Stripe onboarding to receive online payments",
             code: receiving.reason,
             requirements_due: receiving.requirementsDue
           }),
@@ -480,13 +479,12 @@ serve(async (req: Request) => {
       }
 
       const receiving = await resolveReceivingAccount(resv.user_id);
-      const canProcess = isCommissionMode ? receiving.ready : !!receiving.chargesEnabled;
-      if (!receiving.accountId || !canProcess) {
+      // Destination charges only need the connected account to RECEIVE funds; the
+      // platform charges the card, so the account's charges_enabled is not required.
+      if (!receiving.accountId || !receiving.ready) {
         return new Response(
           JSON.stringify({
-            error: isCommissionMode
-              ? "The restaurant has not completed Stripe onboarding to receive online payments"
-              : "The restaurant's Stripe account cannot charge cards yet. Complete Stripe onboarding first.",
+            error: "The restaurant has not completed Stripe onboarding to receive online payments",
             code: receiving.reason,
             requirements_due: receiving.requirementsDue
           }),
