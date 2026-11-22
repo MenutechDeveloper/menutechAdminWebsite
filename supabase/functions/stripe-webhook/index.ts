@@ -187,9 +187,10 @@ serve(async (req: Request) => {
       // Record Audit Log
       // Destination/commission come from the Checkout Session metadata (transfer_data
       // lives on the PaymentIntent, not on the session, so it was always null before).
-      const destinationAccount = metadata.destination_account || null;
+      const destinationAccount = metadata.destination_account || event.account || null;
       const commissionRate = parseFloat(metadata.commission_rate || "0") || 0;
       const commissionAmount = parseFloat(metadata.commission_amount || "0") || 0;
+      const stripeFeePassThrough = parseFloat(metadata.stripe_fee_pass_through || "0") || 0;
       const paymentMode = metadata.payment_mode || "own_stripe";
 
       await supabaseAdmin.from("menutech_payment_logs").insert({
@@ -205,9 +206,11 @@ serve(async (req: Request) => {
         payload: {
           ...eventData,
           payment_mode: paymentMode,
+          charge_type: metadata.charge_type || "destination",
           commission_rate: commissionRate,
           commission_amount: commissionAmount,
-          net_amount: Math.round((amountTotal - commissionAmount) * 100) / 100,
+          stripe_fee_pass_through: stripeFeePassThrough,
+          net_amount: Math.round((amountTotal - commissionAmount - stripeFeePassThrough) * 100) / 100,
           destination_account: destinationAccount
         }
       });
@@ -233,6 +236,7 @@ serve(async (req: Request) => {
 
       await supabaseAdmin.from("menutech_payment_logs").insert({
         user_id: userId,
+        stripe_account_id: metadata.destination_account || event.account || null,
         order_id: orderId || null,
         reservation_id: reservationId || null,
         event_type: eventType,
@@ -281,6 +285,7 @@ serve(async (req: Request) => {
 
       await supabaseAdmin.from("menutech_payment_logs").insert({
         user_id: metadata.user_id || "00000000-0000-0000-0000-000000000000",
+        stripe_account_id: metadata.destination_account || event.account || null,
         order_id: orderId || null,
         reservation_id: reservationId || null,
         event_type: eventType,
@@ -294,14 +299,15 @@ serve(async (req: Request) => {
       const stripeAccountId = account.id;
 
       if (stripeAccountId) {
+        // v2 accounts may send events without the v1 booleans; only overwrite fields
+        // that are actually present so a partial event cannot reset the status to false.
+        const accountUpdates: Record<string, any> = { updated_at: new Date().toISOString() };
+        if (typeof account.details_submitted === "boolean") accountUpdates.details_submitted = account.details_submitted;
+        if (typeof account.charges_enabled === "boolean") accountUpdates.charges_enabled = account.charges_enabled;
+        if (typeof account.payouts_enabled === "boolean") accountUpdates.payouts_enabled = account.payouts_enabled;
         await supabaseAdmin
           .from("menutech_stripe_accounts")
-          .update({
-            details_submitted: account.details_submitted || false,
-            charges_enabled: account.charges_enabled || false,
-            payouts_enabled: account.payouts_enabled || false,
-            updated_at: new Date().toISOString()
-          })
+          .update(accountUpdates)
           .eq("stripe_account_id", stripeAccountId);
 
         console.log(`Updated Stripe account ${stripeAccountId} capabilities.`);

@@ -1,6 +1,7 @@
 // Supabase Edge Function: stripe-payment
 // Creates Stripe Checkout sessions for orders and reservations with server-side price validation,
-// supports destination charges and application fee commissions (Menutech Commission mode),
+// Supports destination charges with application fees (Own Stripe fee pass-through
+// and Menutech Commission),
 // and supports Online Payments subscription checkout sessions.
 // Required Secret: stripe_api
 
@@ -71,9 +72,9 @@ serve(async (req: Request) => {
       return data;
     }
 
-    // Every online payment is a destination charge, so the restaurant needs a connected
-    // account able to RECEIVE funds (transfers / payouts). Checking `charges_enabled`
-    // alone wrongly rejects recipient-only accounts and silently drops the commission.
+    // Resolves the restaurant's connected account and its capabilities.
+    // Destination charges need the account to RECEIVE funds (transfers / payouts).
+    // Own Stripe mode also requires card_payments, i.e. a fully onboarded account.
     async function resolveReceivingAccount(userId: string) {
       const { data: rec } = await supabaseAdmin
         .from("menutech_stripe_accounts")
@@ -116,6 +117,20 @@ serve(async (req: Request) => {
           reason: ready ? null : "not_ready"
         };
       }
+    }
+
+    // Estimated Stripe processing fee on the order total. The platform pays Stripe and
+    // recovers it through application_fee_amount, so the restaurant bears it.
+    // Override with STRIPE_FEE_PERCENT / STRIPE_FEE_FIXED_CENTS if your pricing differs.
+    const stripeFeePercentRaw = parseFloat(Deno.env.get("STRIPE_FEE_PERCENT") || "2.9");
+    const stripeFeePercent = Number.isFinite(stripeFeePercentRaw)
+      ? Math.max(0, Math.min(20, stripeFeePercentRaw))
+      : 2.9;
+    const stripeFeeFixedRaw = parseInt(Deno.env.get("STRIPE_FEE_FIXED_CENTS") || "30", 10);
+    const stripeFeeFixedCents = Number.isFinite(stripeFeeFixedRaw) ? Math.max(0, stripeFeeFixedRaw) : 30;
+    function estimateStripeFeeCents(amountCents: number) {
+      if (!Number.isFinite(amountCents) || amountCents <= 0) return 0;
+      return Math.min(amountCents, Math.round((amountCents * stripeFeePercent) / 100) + stripeFeeFixedCents);
     }
 
     // Keep the embedded Checkout form to a plain card entry for US customers:
@@ -243,22 +258,8 @@ serve(async (req: Request) => {
         );
       }
 
-      // Both modes are destination charges: the restaurant must have a connected account
-      // able to receive funds. In commission mode the platform keeps `commission_rate`
-      // via application_fee; in own_stripe mode the restaurant keeps 100%.
-      const receiving = await resolveReceivingAccount(order.user_id);
-      if (!receiving.ready) {
-        return new Response(
-          JSON.stringify({
-            error: "The restaurant has not completed Stripe onboarding to receive online payments",
-            code: receiving.reason,
-            requirements_due: receiving.requirementsDue
-          }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const stripeAcc = receiving.record;
-
+      // Both modes are destination charges: the restaurant must be able to RECEIVE
+      // funds. Own Stripe also requires card_payments (fully onboarded account).
       const isCommissionMode = resPayCfg?.payment_mode === "menutech_commission";
       const commissionPct = isCommissionMode ? parseFloat(resPayCfg?.commission_rate || 0) : 0;
       if (isCommissionMode && !(commissionPct > 0 && commissionPct < 100)) {
@@ -267,6 +268,23 @@ serve(async (req: Request) => {
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+
+      const receiving = await resolveReceivingAccount(order.user_id);
+      const canProcess = isCommissionMode ? receiving.ready : !!receiving.chargesEnabled;
+      if (!receiving.accountId || !canProcess) {
+        return new Response(
+          JSON.stringify({
+            error: isCommissionMode
+              ? "The restaurant has not completed Stripe onboarding to receive online payments"
+              : "The restaurant's Stripe account cannot charge cards yet. Complete Stripe onboarding first.",
+            code: receiving.reason,
+            requirements_due: receiving.requirementsDue
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const stripeAcc = receiving.record;
+      const chargeType = "destination";
 
       // Fetch menu config to validate and recalculate price server-side
       const { data: menu } = await supabaseAdmin
@@ -332,27 +350,40 @@ serve(async (req: Request) => {
       params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
       params.append("line_items[0][quantity]", "1");
 
-      // Destination charge: funds land on the restaurant's connected account.
-      params.append("payment_intent_data[transfer_data][destination]", receiving.accountId);
+      // The customer pays only the order total. The platform pays Stripe's processing
+      // fee and recovers it (plus the commission, if any) through application_fee_amount,
+      // so the restaurant bears the fee and Menutech keeps the full commission.
+      const stripeFeeCents = estimateStripeFeeCents(amountInCents);
+      const commissionAmountCents = isCommissionMode
+        ? Math.round((amountInCents * commissionPct) / 100)
+        : 0;
 
-      // Commission mode: the platform keeps its percentage via application_fee_amount,
-      // so the restaurant receives the net amount automatically (no manual transfers).
-      let commissionAmountCents = 0;
-      if (isCommissionMode) {
-        commissionAmountCents = Math.round((amountInCents * commissionPct) / 100);
-        if (commissionAmountCents > 0 && commissionAmountCents < amountInCents) {
-          params.append("payment_intent_data[application_fee_amount]", commissionAmountCents.toString());
-        }
+      params.append("payment_intent_data[transfer_data][destination]", receiving.accountId);
+      const applicationFeeCents = stripeFeeCents + commissionAmountCents;
+      if (applicationFeeCents > 0 && applicationFeeCents < amountInCents) {
+        params.append("payment_intent_data[application_fee_amount]", applicationFeeCents.toString());
       }
 
-      // Metadata for webhook correlation and commission auditing
-      params.append("metadata[order_id]", order.id);
-      params.append("metadata[user_id]", order.user_id);
-      params.append("metadata[type]", "order");
-      params.append("metadata[payment_mode]", isCommissionMode ? "menutech_commission" : "own_stripe");
-      params.append("metadata[commission_rate]", commissionPct.toString());
-      params.append("metadata[commission_amount]", (commissionAmountCents / 100).toFixed(2));
-      params.append("metadata[destination_account]", receiving.accountId);
+      // Session metadata is used by checkout.session.completed. PaymentIntent metadata is
+      // required for payment_intent.payment_failed / charge.refunded, which do not inherit
+      // the session metadata.
+      const metadataEntries: [string, string][] = [
+        ["order_id", order.id],
+        ["user_id", order.user_id],
+        ["type", "order"],
+        ["payment_mode", isCommissionMode ? "menutech_commission" : "own_stripe"],
+        ["charge_type", chargeType],
+        ["commission_rate", commissionPct.toString()],
+        ["commission_amount", (commissionAmountCents / 100).toFixed(2)],
+        ["stripe_fee_pass_through", (stripeFeeCents / 100).toFixed(2)],
+        ["order_total", (amountInCents / 100).toFixed(2)],
+        ["charge_total", (amountInCents / 100).toFixed(2)],
+        ["destination_account", receiving.accountId]
+      ];
+      for (const [key, value] of metadataEntries) {
+        params.append(`metadata[${key}]`, value);
+        params.append(`payment_intent_data[metadata][${key}]`, value);
+      }
 
       // Embedded Checkout: render the Stripe form inline inside the tracking modal
       if (embedded) {
@@ -386,7 +417,9 @@ serve(async (req: Request) => {
           url: session.url,
           session_id: session.id,
           client_secret: session.client_secret,
-          publishable_key: stripePublishableKey
+          publishable_key: stripePublishableKey,
+          charge_type: chargeType,
+          stripe_account_id: null
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -436,20 +469,7 @@ serve(async (req: Request) => {
         );
       }
 
-      // Same destination-charge requirement for reservations.
-      const receiving = await resolveReceivingAccount(resv.user_id);
-      if (!receiving.ready) {
-        return new Response(
-          JSON.stringify({
-            error: "The restaurant has not completed Stripe onboarding to receive online payments",
-            code: receiving.reason,
-            requirements_due: receiving.requirementsDue
-          }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const stripeAcc = receiving.record;
-
+      // Same rules as orders: destination charge; Own Stripe also needs card_payments.
       const isCommissionMode = resPayCfg?.payment_mode === "menutech_commission";
       const commissionPct = isCommissionMode ? parseFloat(resPayCfg?.commission_rate || 0) : 0;
       if (isCommissionMode && !(commissionPct > 0 && commissionPct < 100)) {
@@ -458,6 +478,23 @@ serve(async (req: Request) => {
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+
+      const receiving = await resolveReceivingAccount(resv.user_id);
+      const canProcess = isCommissionMode ? receiving.ready : !!receiving.chargesEnabled;
+      if (!receiving.accountId || !canProcess) {
+        return new Response(
+          JSON.stringify({
+            error: isCommissionMode
+              ? "The restaurant has not completed Stripe onboarding to receive online payments"
+              : "The restaurant's Stripe account cannot charge cards yet. Complete Stripe onboarding first.",
+            code: receiving.reason,
+            requirements_due: receiving.requirementsDue
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const stripeAcc = receiving.record;
+      const chargeType = "destination";
 
       // Recalculate pre-order items total from menu
       const { data: menu } = await supabaseAdmin
@@ -489,24 +526,35 @@ serve(async (req: Request) => {
       params.append("line_items[0][price_data][unit_amount]", amountInCents.toString());
       params.append("line_items[0][quantity]", "1");
 
-      // Destination charge + commission (same rules as orders).
-      params.append("payment_intent_data[transfer_data][destination]", receiving.accountId);
+      // Customer pays only the order total; the restaurant bears Stripe's fee.
+      const stripeFeeCents = estimateStripeFeeCents(amountInCents);
+      const commissionAmountCents = isCommissionMode
+        ? Math.round((amountInCents * commissionPct) / 100)
+        : 0;
 
-      let commissionAmountCents = 0;
-      if (isCommissionMode) {
-        commissionAmountCents = Math.round((amountInCents * commissionPct) / 100);
-        if (commissionAmountCents > 0 && commissionAmountCents < amountInCents) {
-          params.append("payment_intent_data[application_fee_amount]", commissionAmountCents.toString());
-        }
+      params.append("payment_intent_data[transfer_data][destination]", receiving.accountId);
+      const applicationFeeCents = stripeFeeCents + commissionAmountCents;
+      if (applicationFeeCents > 0 && applicationFeeCents < amountInCents) {
+        params.append("payment_intent_data[application_fee_amount]", applicationFeeCents.toString());
       }
 
-      params.append("metadata[reservation_id]", resv.id);
-      params.append("metadata[user_id]", resv.user_id);
-      params.append("metadata[type]", "reservation");
-      params.append("metadata[payment_mode]", isCommissionMode ? "menutech_commission" : "own_stripe");
-      params.append("metadata[commission_rate]", commissionPct.toString());
-      params.append("metadata[commission_amount]", (commissionAmountCents / 100).toFixed(2));
-      params.append("metadata[destination_account]", receiving.accountId);
+      const metadataEntries: [string, string][] = [
+        ["reservation_id", resv.id],
+        ["user_id", resv.user_id],
+        ["type", "reservation"],
+        ["payment_mode", isCommissionMode ? "menutech_commission" : "own_stripe"],
+        ["charge_type", chargeType],
+        ["commission_rate", commissionPct.toString()],
+        ["commission_amount", (commissionAmountCents / 100).toFixed(2)],
+        ["stripe_fee_pass_through", (stripeFeeCents / 100).toFixed(2)],
+        ["order_total", (amountInCents / 100).toFixed(2)],
+        ["charge_total", (amountInCents / 100).toFixed(2)],
+        ["destination_account", receiving.accountId]
+      ];
+      for (const [key, value] of metadataEntries) {
+        params.append(`metadata[${key}]`, value);
+        params.append(`payment_intent_data[metadata][${key}]`, value);
+      }
 
       params.append("success_url", `${baseOrigin}/menu.html?domain=${resv.domain || ''}&res_paid=true&res_id=${resv.id}`);
       params.append("cancel_url", `${baseOrigin}/menu.html?domain=${resv.domain || ''}&res_canceled=true&res_id=${resv.id}`);
@@ -525,7 +573,14 @@ serve(async (req: Request) => {
         .eq("id", resv.id);
 
       return new Response(
-        JSON.stringify({ url: session.url, session_id: session.id }),
+        JSON.stringify({
+          url: session.url,
+          session_id: session.id,
+          client_secret: session.client_secret,
+          publishable_key: stripePublishableKey,
+          charge_type: chargeType,
+          stripe_account_id: null
+        }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 
@@ -620,7 +675,9 @@ serve(async (req: Request) => {
           status: session.status,
           client_secret: session.client_secret || null,
           payment_status: session.payment_status || null,
-          publishable_key: stripePublishableKey
+          publishable_key: stripePublishableKey,
+          charge_type: session.metadata?.charge_type || "destination",
+          stripe_account_id: null
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
