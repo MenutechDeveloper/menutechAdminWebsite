@@ -95,25 +95,38 @@ Stripe blocks creating Accounts via `POST /v1/accounts` for new Connect integrat
   doing so silently overwrote an authorized commission config. The commission tab has its own
   `adminConnectPayouts` button that only opens onboarding.
 
-## Destination charges (both payment modes)
-In Checkout Sessions the transfer parameter is `payment_intent_data[transfer_data][destination]`
-(NOT top-level `transfer_data[destination]`, which is not a valid Checkout parameter).
-`menutech_commission` is **also** a destination charge: the net goes to the restaurant's connected
-account and the platform keeps `payment_intent_data[application_fee_amount]`
-(`total * commission_rate`). `own_stripe` sends the same transfer with no application fee.
+## Charge types: destination + restaurant-paid Stripe fee
+Both modes use **destination charges**: `payment_intent_data[transfer_data][destination]` (NOT
+top-level `transfer_data[destination]`, which is not a valid Checkout parameter) plus
+`payment_intent_data[application_fee_amount]`. The platform is the merchant of record and Stripe
+debits its processing fee from the platform's balance. Express accounts force
+`defaults.responsibilities.fees_collector = "application"`.
 
-Both modes require a connected account that can **receive** funds — checked in
-`resolveReceivingAccount()` as `capabilities.transfers === "active"` OR `payouts_enabled`
-(NOT `charges_enabled`, which only means the account can charge and excludes recipient-only
-accounts). Without such an account the function returns 400 with `requirements_due` instead of
-silently charging the platform account (which used to drop the commission).
+The customer pays only the order total (no surcharge). The platform pays Stripe's processing fee
+and recovers it through the application fee, so the restaurant bears the fee:
+
+- `own_stripe`: application fee = estimated Stripe fee (`STRIPE_FEE_PERCENT` /
+  `STRIPE_FEE_FIXED_CENTS`, default 2.9% + 30¢). The restaurant receives `order_total - fee`;
+  Menutech nets 0.
+- `menutech_commission`: application fee = estimated Stripe fee + `order_total * commission_rate`.
+  The restaurant receives `order_total - commission - fee`; Menutech keeps the full commission.
+
+`estimateStripeFeeCents()` is an estimate: set the env vars to match your Stripe pricing
+(international cards cost more).
+
+Readiness: commission needs the account to **receive** funds (`capabilities.transfers === "active"`
+OR `payouts_enabled`). Own Stripe also requires `charges_enabled` (a fully onboarded Express
+account). `resolveReceivingAccount()` returns both and each action checks the right one.
+
+PaymentIntent metadata (`payment_intent_data[metadata][...]`) is set alongside session metadata so
+`payment_intent.payment_failed` and `charge.refunded` can find the order; those events do not
+inherit the Checkout Session metadata.
 
 Stripe has no API to push money to a bank account without a connected account, so restaurants in
 commission mode still complete Connect onboarding once to enter their bank account. The payout
-to their bank is automatic afterwards. `stripe-webhook` stores `payment_mode`,
-`commission_rate`, `commission_amount`, `net_amount` and `destination_account` in
-`menutech_payment_logs.payload` (Checkout Sessions have no `transfer_data`, so reading it from the
-session always produced NULL `stripe_account_id`).
+to their bank is automatic afterwards. `stripe-webhook` stores `payment_mode`, `charge_type`,
+`commission_rate`, `commission_amount`, `stripe_fee_pass_through`, `net_amount` and
+`destination_account` in `menutech_payment_logs.payload`.
 
 ## Conventions
 - Customer client is anonymous; `menutech_orders` has public INSERT/SELECT RLS but **no public

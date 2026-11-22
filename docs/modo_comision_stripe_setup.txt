@@ -3,16 +3,22 @@ MENUTECH COMMISSION MODE - STRIPE SETUP
 
 WHAT IT DOES (short version)
 ----------------------------
-Customer pays on the restaurant site with a card.
-Money goes into YOUR Stripe account (Menutech).
-Stripe keeps your commission automatically.
-The rest is transferred to the restaurant's connected account, and Stripe
-pays that balance out to their bank account.
+There are two modes:
 
-Nobody calculates anything by hand.
-Example: 5 orders of $10 with a 10% commission
-  -> you keep $5 (5 x $1)
-  -> the restaurant receives $45 automatically.
+1) Own Stripe (destination charge, restaurant pays Stripe fee)
+   The customer pays only the order total. The platform pays Stripe's
+   processing fee and recovers it through an application fee, so the
+   restaurant receives the order total minus Stripe's fee. Menutech
+   keeps 0% commission.
+
+2) Menutech Commission (destination charge, restaurant pays Stripe fee)
+   The customer pays only the order total. The application fee includes
+   the commission plus Stripe's processing fee, so Menutech keeps the
+   full commission and the restaurant receives the order total minus
+   the commission minus Stripe's fee.
+   Example: a $100 order with 10% commission
+     -> Menutech keeps $10
+     -> the restaurant receives $90 minus Stripe's fee.
 
 THE COMMISSION TAB USES STRIPE CONNECT (YES, IT DOES)
 -----------------------------------------------------
@@ -147,6 +153,7 @@ IMPORTANT NOTES
 - Commission 0% is not valid in this mode. Use "Own Stripe Account" instead.
 - If onboarding is incomplete the badge stays "Pending Requirements" and
   commission cannot be activated. That is intentional.
-- Stripe's own processing fee (about 2.9% + $0.30) is charged on top of
-  your commission, in both modes. Your 10% is not reduced by it; it comes
-  out of the restaurant's share.
+- The customer pays only the order total; there is no surcharge.
+- The restaurant bears Stripe's processing fee in both modes.
+- Menutech commission is a fixed % of the order total; Stripe fees do not
+  reduce it.

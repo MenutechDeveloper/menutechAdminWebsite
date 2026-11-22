@@ -1115,7 +1115,10 @@
                         body: {
                             action: 'create_order_checkout_session',
                             order_id: id,
-                            origin_url: window.location.origin
+                            origin_url: window.location.origin,
+                            // Must match the embedded form the customer tracking mounts;
+                            // a hosted session here would fail init and create a second session.
+                            ui_mode: 'embedded_page'
                         }
                     }).catch(e => console.error("Error creating checkout session:", e));
                 }

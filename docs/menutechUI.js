@@ -4085,6 +4085,8 @@ class MenutechPlatformOrders extends HTMLElement {
         try {
             // Reuse an existing checkout session when one is already open for this order
             let sessionClientSecret = null;
+            let stripeAccountId = null;
+            let publishableKey = null;
             if (order.stripe_checkout_session_id && order.payment_status === 'pending') {
                 const existing = await this.fetchExistingSession(order.stripe_checkout_session_id);
                 // If the session was already paid (e.g. the tab was closed before confirmation
@@ -4096,15 +4098,17 @@ class MenutechPlatformOrders extends HTMLElement {
                 }
                 if (existing && existing.status === 'open' && existing.client_secret) {
                     sessionClientSecret = existing.client_secret;
+                    stripeAccountId = existing.stripe_account_id || null;
+                    publishableKey = existing.publishable_key || null;
                 }
             }
 
-            let publishableKey = null;
             if (!sessionClientSecret) {
                 const created = await this.createEmbeddedSession(order, mount);
                 if (!created) return;
                 sessionClientSecret = created.client_secret;
                 publishableKey = created.publishable_key || null;
+                stripeAccountId = created.stripe_account_id || null;
             }
 
             if (!publishableKey) publishableKey = await this.getStripePublishableKey();
@@ -4113,14 +4117,20 @@ class MenutechPlatformOrders extends HTMLElement {
                 return;
             }
 
-            const stripe = await this.loadStripeJs(publishableKey);
+            // Direct-charge sessions (Own Stripe mode) live on the restaurant's connected
+            // account, so Stripe.js must be scoped to that account.
+            const stripe = await this.loadStripeJs(publishableKey, stripeAccountId);
             if (!stripe) {
                 mount.innerHTML = `<div class="pay-embed-error">Could not load Stripe. Check your connection and try again.</div>`;
                 return;
             }
 
-            const mountCheckout = async (secret) => {
-                const checkout = await stripe.initEmbeddedCheckout({
+            const mountCheckout = async (secret, accountId) => {
+                const scopedStripe = accountId === stripeAccountId
+                    ? stripe
+                    : await this.loadStripeJs(publishableKey, accountId);
+                if (!scopedStripe) throw new Error('Could not load Stripe.');
+                const checkout = await scopedStripe.initEmbeddedCheckout({
                     clientSecret: secret,
                     // Fired when the embedded form finishes. We confirm with Stripe immediately so the
                     // UI reflects the payment; the webhook remains the source of truth for the order.
@@ -4134,13 +4144,13 @@ class MenutechPlatformOrders extends HTMLElement {
             };
 
             try {
-                await mountCheckout(sessionClientSecret);
+                await mountCheckout(sessionClientSecret, stripeAccountId);
             } catch (initErr) {
                 // A reused session may be stale; fall back to a brand new one.
                 console.warn('Embedded checkout init failed, retrying with a new session:', initErr);
                 const created = await this.createEmbeddedSession(order, mount);
                 if (!created) return;
-                await mountCheckout(created.client_secret);
+                await mountCheckout(created.client_secret, created.stripe_account_id || null);
             }
         } catch (e) {
             console.error('Embedded checkout mount error:', e);
@@ -4174,7 +4184,12 @@ class MenutechPlatformOrders extends HTMLElement {
             return null;
         }
         if (response.data.publishable_key) this._stripePublishableKey = response.data.publishable_key;
-        return { client_secret: response.data.client_secret, publishable_key: response.data.publishable_key || null };
+        return {
+            client_secret: response.data.client_secret,
+            publishable_key: response.data.publishable_key || null,
+            stripe_account_id: response.data.stripe_account_id || null,
+            charge_type: response.data.charge_type || null
+        };
     }
 
     async fetchExistingSession(sessionId) {
@@ -4190,10 +4205,14 @@ class MenutechPlatformOrders extends HTMLElement {
         return null;
     }
 
-    loadStripeJs(publishableKey) {
-        if (window.Stripe) return Promise.resolve(window.Stripe(publishableKey));
+    loadStripeJs(publishableKey, stripeAccount = null) {
+        const build = () => window.Stripe(
+            publishableKey,
+            stripeAccount ? { stripeAccount } : undefined
+        );
+        if (window.Stripe) return Promise.resolve(build());
         if (this._stripeJsPromise) {
-            return this._stripeJsPromise.then(() => window.Stripe(publishableKey));
+            return this._stripeJsPromise.then(build);
         }
         this._stripeJsPromise = new Promise((resolve, reject) => {
             const script = document.createElement('script');
@@ -4203,7 +4222,7 @@ class MenutechPlatformOrders extends HTMLElement {
             script.onerror = reject;
             document.head.appendChild(script);
         });
-        return this._stripeJsPromise.then(() => window.Stripe(publishableKey)).catch(() => null);
+        return this._stripeJsPromise.then(build).catch(() => null);
     }
 
     async confirmOrderPayment(orderId, attempt = 1) {
