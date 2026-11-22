@@ -114,9 +114,10 @@ and recovers it through the application fee, so the restaurant bears the fee:
 `estimateStripeFeeCents()` is an estimate: set the env vars to match your Stripe pricing
 (international cards cost more).
 
-Readiness: commission needs the account to **receive** funds (`capabilities.transfers === "active"`
-OR `payouts_enabled`). Own Stripe also requires `charges_enabled` (a fully onboarded Express
-account). `resolveReceivingAccount()` returns both and each action checks the right one.
+Readiness: **both** modes need the account to **receive** funds (`capabilities.transfers === "active"`
+OR `payouts_enabled`). `charges_enabled` is for direct charges and is **not** required: the platform
+processes the card and sends a destination transfer, so a recipient-only Express account works.
+`resolveReceivingAccount()` returns all three and each action checks `ready`.
 
 PaymentIntent metadata (`payment_intent_data[metadata][...]`) is set alongside session metadata so
 `payment_intent.payment_failed` and `charge.refunded` can find the order; those events do not

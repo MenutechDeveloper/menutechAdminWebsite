@@ -418,10 +418,9 @@ serve(async (req: Request) => {
 
       await supabaseAdmin.from("menutech_stripe_accounts").upsert(updatedRecord, { onConflict: "user_id" });
 
-      // Auto-set own_stripe only when the account can actually take card payments.
-      // (A recipient-only account can receive transfers but not charge, so we no longer
-      // key this off charges_enabled alone.)
-      if (updatedRecord.charges_enabled) {
+      // Both modes are destination charges: the connected account only needs to
+      // RECEIVE funds. Auto-set own_stripe when payouts/transfers are active.
+      if (updatedRecord.payouts_enabled || updatedRecord.charges_enabled) {
         const { data: currentCfg } = await supabaseAdmin
           .from("menutech_restaurant_payment_configs")
           .select("payment_mode")
