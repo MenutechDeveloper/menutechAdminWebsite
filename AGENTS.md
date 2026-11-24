@@ -141,3 +141,25 @@ to their bank is automatic afterwards. `stripe-webhook` stores `payment_mode`, `
   land hours in the past and every 10-minute timeout check cancelled online orders instantly.
   As a safety net, `docs/fix_order_accepted_at_timezone.sql` clamps `accepted_at >= created_at`
   with a DB trigger, and the web/admin/app timeout checks ignore `accepted_at < created_at`.
+
+## Customer notification emails (`mailgun-email`)
+`mailgun-email` sends the "your order is ready" / "your table is ready" email. It is invoked from
+`adminOrders.html` and from the Flutter app (`order_detail_screen.dart`) when an order moves to
+`finished` or a reservation to `attended`.
+
+Secrets: `mailgunApi` (required, Mailgun **Private** API key), optional `MAILGUN_DOMAIN`
+(defaults to `mg.menutech.io`), `MAILGUN_REGION` (`us`/`eu`), `MAILGUN_API_BASE`, `MAILGUN_FROM`.
+A key from an **EU-region** domain only authenticates against `api.eu.mailgun.net`; the function
+tries the other region on 401/403/404, so a region mismatch no longer fails silently.
+`POST {action:"verify"}` lists the domains each region accepts and is the quickest way to tell a
+bad key (401 everywhere) from a missing domain (404).
+
+The function resolves branding server-side (service role) by merging `menutech_restaurants`,
+`menutech_web_templates.config` (`title`, `logoImg`, `contact`), `menutech_menus.config`
+(`restaurant_name`), `menutech_footers.config` (`logo`, `primaryColor`) and
+`menutech_tickets.config` (`logo_url`) — the same precedence used by `restaurantInfo.html`.
+It also re-reads the order/reservation row, so the client cannot fake the recipient or totals.
+
+`email_notified_at` (see `docs/add_email_notified_at.sql`) makes sending idempotent: a second
+"ready" action skips the email. Pass `force: true` to resend. The column is optional — if the
+migration has not been run the send still works, only dedupe is disabled.

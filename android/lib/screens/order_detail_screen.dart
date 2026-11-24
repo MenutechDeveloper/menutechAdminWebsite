@@ -91,7 +91,9 @@ class _OrderDetailViewState extends State<OrderDetailView> {
 
   Future<void> _sendMailgunEmailIfNeeded(UnifiedItem item, String status) async {
     final isOrderReady = item.entryType == EntryType.order && (status == 'finished' || status == 'ready');
-    final isResReady = item.entryType == EntryType.reservation && (status == 'attended' || status == 'finished' || status == 'confirmed');
+    // "Confirmed" only books the table; the "table is ready" email belongs to 'attended'.
+    final isResReady = item.entryType == EntryType.reservation &&
+        (status == 'attended' || status == 'finished');
 
     if (!isOrderReady && !isResReady) return;
 
