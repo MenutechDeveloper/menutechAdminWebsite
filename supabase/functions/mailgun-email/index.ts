@@ -1,6 +1,15 @@
 // Supabase Edge Function: mailgun-email
-// Sends order and reservation notification emails via Mailgun API when items reach 'Ready' status.
-// Required Supabase Secret: mailgunApi
+// Sends "order ready" / "table ready" emails to customers through the Mailgun API.
+//
+// Secrets (Project Settings -> Edge Functions -> Secrets):
+//   mailgunApi       (required) Mailgun Private API key ("key-..." or the newer key)
+//   MAILGUN_DOMAIN   (optional) sending domain, defaults to mg.menutech.io
+//   MAILGUN_REGION   (optional) "us" (default) or "eu"
+//   MAILGUN_API_BASE (optional) full override, e.g. https://api.eu.mailgun.net
+//   MAILGUN_FROM     (optional) full From header, e.g. "Menutech <no-reply@mg.menutech.io>"
+//
+// A key from an EU-region domain only works against api.eu.mailgun.net, so the
+// function retries the other region on 401/403/404 instead of failing outright.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -10,132 +19,446 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const DEFAULT_DOMAIN = "mg.menutech.io";
+const DEFAULT_BRAND_COLOR = "#ff9533";
+const DEFAULT_LOGO = "https://menutech.services/assets/img/logomt.png";
+const REGION_BASES: Record<string, string> = {
+  us: "https://api.mailgun.net",
+  eu: "https://api.eu.mailgun.net",
+};
+const RETRYABLE_STATUS = new Set([401, 403, 404]);
+
+const SUPABASE_URL = (Deno.env.get("SUPABASE_URL") || "").replace(/\/+$/, "");
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+const jsonResponse = (body: unknown, status = 200): Response =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+function readSecret(...names: string[]): string {
+  for (const name of names) {
+    const raw = Deno.env.get(name);
+    if (!raw) continue;
+    const value = raw
+      .trim()
+      .replace(/^["'`]+|["'`]+$/g, "")
+      .replace(/^Bearer\s+/i, "")
+      .trim();
+    if (value) return value;
+  }
+  return "";
+}
+
+function basicAuthHeader(key: string): string | null {
+  try {
+    return `Basic ${btoa(`api:${key}`)}`;
+  } catch {
+    return null;
+  }
+}
+
+function regionOf(base: string): string {
+  return /eu\.mailgun\.net/i.test(base) ? "eu" : "us";
+}
+
+function isUuid(value: unknown): boolean {
+  return typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+const HTML_ESCAPES: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+function escapeHtml(value: unknown): string {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => HTML_ESCAPES[char]);
+}
+
+function sanitizeDeep(value: unknown): unknown {
+  if (typeof value === "string") return escapeHtml(value);
+  if (Array.isArray(value)) return value.map(sanitizeDeep);
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+      out[key] = sanitizeDeep(val);
+    }
+    return out;
+  }
+  return value;
+}
+
+function asArray(value: unknown): any[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function safeColor(value: unknown): string {
+  const color = String(value ?? "").trim();
+  return /^#[0-9a-f]{3,8}$/i.test(color) ? color : DEFAULT_BRAND_COLOR;
+}
+
+function safeUrl(value: unknown, fallback = ""): string {
+  const url = String(value ?? "").trim();
+  if (!url) return fallback;
+  if (!/^(https?:\/\/|data:image\/)/i.test(url)) return fallback;
+  return url.replace(/["'<>]/g, "");
+}
+
+function sanitizeDomain(value: unknown): string {
+  const domain = String(value ?? "").trim().toLowerCase();
+  return /^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain) ? domain : DEFAULT_DOMAIN;
+}
+
+function sanitizeHeader(value: string): string {
+  return value.replace(/[\r\n]+/g, " ").trim();
+}
+
+async function dbSelect(table: string, query: string): Promise<any[] | null> {
+  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
+      headers: {
+        apikey: SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        Accept: "application/json",
+      },
+    });
+    if (!res.ok) {
+      console.warn(`DB select ${table} failed: ${res.status} ${await res.text().catch(() => "")}`);
+      return null;
+    }
+    const data = await res.json();
+    return Array.isArray(data) ? data : data ? [data] : [];
+  } catch (err) {
+    console.warn(`DB select ${table} error:`, err);
+    return null;
+  }
+}
+
+async function dbPatch(table: string, id: string, values: Record<string, unknown>): Promise<void> {
+  if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !isUuid(id)) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: "PATCH",
+      headers: {
+        apikey: SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(values),
+    });
+    if (!res.ok) {
+      console.warn(`DB patch ${table} failed: ${res.status} ${await res.text().catch(() => "")}`);
+    }
+  } catch (err) {
+    console.warn(`DB patch ${table} error:`, err);
+  }
+}
+
+type Branding = { name: string; logo: string; color: string; phone: string; address: string };
+
+function rowTime(row: any): number {
+  const ts = row?.updated_at;
+  return ts ? Date.parse(ts) || 0 : 0;
+}
+
+// Mirrors the merge logic in restaurantInfo.html: web templates and menus win
+// over menutech_restaurants only when they were updated more recently.
+async function resolveBranding(userId: string, fallback: any): Promise<Branding> {
+  const brand: Branding = {
+    name: String(fallback?.name || fallback?.restaurant_name || "").trim() || "Menutech",
+    logo: safeUrl(fallback?.logo_url || fallback?.logo, ""),
+    color: safeColor(fallback?.brand_color || fallback?.primaryColor),
+    phone: String(fallback?.phone || "").trim(),
+    address: String(fallback?.address || "").trim(),
+  };
+
+  if (!isUuid(userId)) {
+    brand.logo = brand.logo || DEFAULT_LOGO;
+    return brand;
+  }
+
+  const [restRows, webRows, menuRows, footerRows, ticketRows] = await Promise.all([
+    dbSelect("menutech_restaurants", `select=*&user_id=eq.${userId}&limit=1`),
+    dbSelect("menutech_web_templates", `select=*&user_id=eq.${userId}&limit=1`),
+    dbSelect("menutech_menus", `select=*&user_id=eq.${userId}&limit=1`),
+    dbSelect("menutech_footers", `select=*&user_id=eq.${userId}&limit=1`),
+    dbSelect("menutech_tickets", `select=*&user_id=eq.${userId}&limit=1`),
+  ]);
+
+  const rest = restRows?.[0];
+  const web = webRows?.[0];
+  const menu = menuRows?.[0];
+  const webCfg = web?.config || {};
+  const menuCfg = menu?.config || {};
+  const footerCfg = footerRows?.[0]?.config || {};
+  const ticketCfg = ticketRows?.[0]?.config || {};
+
+  const restTime = rowTime(rest);
+  const webTime = rowTime(web);
+  const menuTime = rowTime(menu);
+
+  if (rest?.name) brand.name = String(rest.name).trim();
+  if (webCfg.title && webTime > restTime) brand.name = String(webCfg.title).trim();
+  if (menuCfg.restaurant_name && menuTime > restTime && menuTime >= webTime) {
+    brand.name = String(menuCfg.restaurant_name).trim();
+  }
+
+  let logo = "";
+  if (rest?.logo_url) logo = safeUrl(rest.logo_url, "");
+  if (webCfg.logoImg && webTime > restTime) logo = safeUrl(webCfg.logoImg, logo);
+  if (!logo) logo = safeUrl(footerCfg.logo, "") || safeUrl(ticketCfg.logo_url, "");
+  brand.logo = logo || DEFAULT_LOGO;
+
+  if (rest?.phone) brand.phone = String(rest.phone).trim();
+  if (rest?.address) brand.address = String(rest.address).trim();
+  if (webTime > restTime) {
+    if (webCfg.contact?.phone) brand.phone = String(webCfg.contact.phone).trim();
+    if (webCfg.contact?.address) brand.address = String(webCfg.contact.address).trim();
+  }
+
+  brand.color = safeColor(
+    footerCfg.primaryColor || webCfg.primaryColor || rest?.brand_color || brand.color,
+  );
+  return brand;
+}
+
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "Método no permitido." }, 405);
+  }
 
   try {
     const payload = await req.json().catch(() => ({}));
-    const { type, item, restaurant, domain: customDomain } = payload;
 
-    if (!type || !item) {
-      return new Response(
-        JSON.stringify({ error: "Faltan parámetros requeridos ('type' y 'item')." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const mailgunKey = readSecret("mailgunApi", "MAILGUN_API_KEY", "MAILGUN_KEY");
+    if (!mailgunKey) {
+      return jsonResponse({
+        error: "No se encontró el secret 'mailgunApi'. Configúralo en Project Settings → Edge Functions → Secrets.",
+      }, 500);
     }
 
-    const mailgunApiKey = (
-      Deno.env.get("mailgunApi") ||
-      Deno.env.get("MAILGUN_API_KEY") ||
-      ""
+    const authHeader = basicAuthHeader(mailgunKey);
+    if (!authHeader) {
+      return jsonResponse({ error: "El secret 'mailgunApi' contiene caracteres inválidos." }, 500);
+    }
+
+    const regionPref = readSecret("MAILGUN_REGION", "mailgunRegion").toLowerCase();
+    const customBase = readSecret("MAILGUN_API_BASE", "mailgunApiBase").replace(/\/+$/, "");
+    const bases = customBase
+      ? [customBase]
+      : regionPref === "eu"
+      ? [REGION_BASES.eu, REGION_BASES.us]
+      : [REGION_BASES.us, REGION_BASES.eu];
+
+    if (payload.action === "verify" || payload.action === "diagnose") {
+      const results: Array<Record<string, unknown>> = [];
+      for (const base of [REGION_BASES.us, REGION_BASES.eu]) {
+        try {
+          const res = await fetch(`${base}/v3/domains?limit=100`, {
+            headers: { Authorization: authHeader },
+          });
+          const text = await res.text();
+          let data: any = null;
+          try {
+            data = JSON.parse(text);
+          } catch {
+            // Mailgun returns plain text for some auth failures.
+          }
+          results.push({
+            region: regionOf(base),
+            status: res.status,
+            ok: res.ok,
+            domains: Array.isArray(data?.items) ? data.items.map((d: any) => d.name) : undefined,
+            message: res.ok ? undefined : (data?.message || text.slice(0, 200)),
+          });
+        } catch (err) {
+          results.push({ region: regionOf(base), status: 0, ok: false, message: String(err) });
+        }
+      }
+      const ok = results.some((r) => r.ok);
+      return jsonResponse({ ok, results }, ok ? 200 : 502);
+    }
+
+    const type = String(payload.type || "").trim();
+    if (type !== "order" && type !== "reservation") {
+      return jsonResponse({ error: "Parámetro 'type' inválido. Usa 'order' o 'reservation'." }, 400);
+    }
+
+    const domain = sanitizeDomain(
+      payload.domain || readSecret("MAILGUN_DOMAIN", "mailgunDomain") || DEFAULT_DOMAIN,
+    );
+
+    const table = type === "order" ? "menutech_orders" : "menutech_reservations";
+    const incomingItem = payload.item && typeof payload.item === "object" ? payload.item : {};
+    const itemId = String(payload.item_id || incomingItem.id || "").trim();
+
+    const dbRow = isUuid(itemId)
+      ? (await dbSelect(table, `select=*&id=eq.${itemId}&limit=1`))?.[0] ?? null
+      : null;
+
+    if (!dbRow && Object.keys(incomingItem).length === 0) {
+      return jsonResponse({ error: "Faltan parámetros: envía 'item' o un 'item_id' válido." }, 400);
+    }
+
+    if (dbRow?.email_notified_at && !payload.force) {
+      return jsonResponse({
+        success: true,
+        skipped: true,
+        reason: "already_notified",
+        notified_at: dbRow.email_notified_at,
+      });
+    }
+
+    // DB values win over the client payload, but never wipe it with nulls.
+    const merged: Record<string, any> = { ...incomingItem };
+    for (const [key, value] of Object.entries(dbRow || {})) {
+      if (value !== null && value !== undefined && value !== "") merged[key] = value;
+    }
+    merged.items = asArray(merged.items);
+    merged.preorder_items = asArray(merged.preorder_items);
+
+    const recipientEmail = String(
+      merged.customer_email || merged.email || merged.customerEmail || "",
     ).trim();
-
-    if (!mailgunApiKey) {
-      return new Response(
-        JSON.stringify({ error: "Secret 'mailgunApi' no encontrada en Supabase. Configura el secret 'mailgunApi' en tu proyecto." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
+      return jsonResponse({ error: "El cliente no cuenta con una dirección de correo válida." }, 400);
     }
 
-    const mailgunDomain = (
-      customDomain ||
-      Deno.env.get("MAILGUN_DOMAIN") ||
-      Deno.env.get("mailgunDomain") ||
-      "mg.menutech.io"
-    ).trim();
+    const ownerId = String(payload.owner_id || merged.user_id || incomingItem.user_id || "").trim();
+    const brand = await resolveBranding(ownerId, payload.restaurant);
 
-    const recipientEmail = item.customer_email || item.email || item.customerEmail;
-    if (!recipientEmail) {
-      return new Response(
-        JSON.stringify({ error: "El cliente no cuenta con una dirección de correo válida." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const safeItem = sanitizeDeep(merged) as Record<string, any>;
+    const restName = escapeHtml(brand.name);
+    const restPhone = escapeHtml(brand.phone);
+    const restAddress = escapeHtml(brand.address);
+    const restLogo = safeUrl(brand.logo, "");
 
-    // Extract restaurant brand information
-    const restName = restaurant?.name || restaurant?.restaurant_name || "Menutech";
-    const restLogo = restaurant?.logo_url || "https://menutech.services/assets/img/logomt.png";
-    const brandColor = restaurant?.brand_color || "#ff9533";
-    const restPhone = restaurant?.phone || "";
-    const restAddress = restaurant?.address || "";
+    const subject = sanitizeHeader(
+      type === "order"
+        ? `¡Tu pedido está listo! - ${brand.name}`
+        : `¡Tu reservación está lista! - ${brand.name}`,
+    );
 
-    let subject = "";
-    let htmlContent = "";
-
-    if (type === "order") {
-      subject = `¡Tu pedido está listo! - ${restName}`;
-      htmlContent = renderOrderEmailTemplate({
-        item,
+    const htmlContent = type === "order"
+      ? renderOrderEmailTemplate({
+        item: safeItem,
         restName,
         restLogo,
-        brandColor,
+        brandColor: brand.color,
         restPhone,
-        restAddress
-      });
-    } else if (type === "reservation") {
-      subject = `¡Tu reservación está lista! - ${restName}`;
-      htmlContent = renderReservationEmailTemplate({
-        item,
+        restAddress,
+      })
+      : renderReservationEmailTemplate({
+        item: safeItem,
         restName,
         restLogo,
-        brandColor,
+        brandColor: brand.color,
         restPhone,
-        restAddress
+        restAddress,
       });
-    } else {
-      return new Response(
-        JSON.stringify({ error: `Tipo de correo no válido: '${type}'` }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
-    // Send email via Mailgun REST API v3
+    const fromOverride = sanitizeHeader(readSecret("MAILGUN_FROM", "mailgunFrom"));
+    const fromName = brand.name.replace(/[<>"\r\n]/g, " ").replace(/\s+/g, " ").trim() || "Menutech";
+    const from = fromOverride || `${fromName} <no-reply@${domain}>`;
+
     const formData = new URLSearchParams();
-    formData.append("from", `${restName} <no-reply@${mailgunDomain}>`);
+    formData.append("from", from);
     formData.append("to", recipientEmail);
     formData.append("subject", subject);
     formData.append("html", htmlContent);
+    formData.append("h:X-Mailgun-Variables", JSON.stringify({ type, item_id: itemId || null }));
 
-    const mailgunUrl = `https://api.mailgun.net/v3/${mailgunDomain}/messages`;
-    const authHeader = `Basic ${btoa(`api:${mailgunApiKey}`)}`;
+    const attempts: Array<{ region: string; status: number; message: string }> = [];
+    let lastData: any = null;
+    let sent = false;
 
-    console.log(`Sending Mailgun email to ${recipientEmail} via domain ${mailgunDomain}`);
+    for (const base of bases) {
+      let res: Response;
+      try {
+        res = await fetch(`${base}/v3/${domain}/messages`, {
+          method: "POST",
+          headers: {
+            Authorization: authHeader,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: formData.toString(),
+        });
+      } catch (err) {
+        attempts.push({ region: regionOf(base), status: 0, message: String(err) });
+        break;
+      }
 
-    const mgRes = await fetch(mailgunUrl, {
-      method: "POST",
-      headers: {
-        "Authorization": authHeader,
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: formData.toString()
-    });
+      const text = await res.text();
+      let parsed: any = null;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        // Mailgun returns plain text for some errors.
+      }
+      const message = String(parsed?.message || text || `HTTP ${res.status}`).slice(0, 400);
+      attempts.push({ region: regionOf(base), status: res.status, message });
 
-    const mgData = await mgRes.json().catch(() => ({}));
+      if (res.ok) {
+        sent = true;
+        lastData = parsed ?? text;
+        break;
+      }
 
-    if (!mgRes.ok) {
-      console.error("Mailgun API error response:", mgData);
-      return new Response(
-        JSON.stringify({
-          error: mgData.message || `Mailgun retornó código HTTP ${mgRes.status}`,
-          details: mgData
-        }),
-        { status: mgRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      lastData = parsed ?? { message };
+      if (!RETRYABLE_STATUS.has(res.status)) break;
     }
 
-    return new Response(
-      JSON.stringify({ success: true, message: "Correo enviado exitosamente", data: mgData }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    if (!sent) {
+      const last = attempts[attempts.length - 1] || { region: "us", status: 0, message: "sin respuesta" };
+      console.error("Mailgun send failed:", attempts);
+      const hint = last.status === 401
+        ? "Mailgun rechazó la API key. Usa la Private API key del mismo dominio (Settings → API keys) y, si tu dominio está en la región EU, configura el secret MAILGUN_REGION=eu."
+        : last.status === 404
+        ? `El dominio '${domain}' no existe en tu cuenta de Mailgun. Configura el secret MAILGUN_DOMAIN.`
+        : undefined;
+      return jsonResponse({
+        error: `Mailgun ${last.status} (${last.region}): ${last.message}`,
+        hint,
+        attempts,
+        domain,
+        recipient: recipientEmail,
+      }, 502);
+    }
 
+    if (isUuid(itemId)) {
+      await dbPatch(table, itemId, { email_notified_at: new Date().toISOString() });
+    }
+
+    return jsonResponse({
+      success: true,
+      message: "Correo enviado exitosamente",
+      recipient: recipientEmail,
+      domain,
+      region: attempts[attempts.length - 1]?.region,
+      data: lastData,
+    });
   } catch (err: any) {
     console.error("Internal Edge Function Error:", err);
-    return new Response(
-      JSON.stringify({ error: "Error interno en Edge Function: " + err.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ error: "Error interno en Edge Function: " + err.message }, 500);
   }
 });
 

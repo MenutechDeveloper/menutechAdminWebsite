@@ -1045,16 +1045,29 @@
                     body: {
                         type: type,
                         item: item,
+                        item_id: item.id,
+                        owner_id: activeOwnerId,
                         restaurant: restData
                     }
                 });
 
                 if (response.error) {
-                    console.error('Mailgun Edge Function error:', response.error);
-                    showToast('No se pudo enviar el correo: ' + (response.error.message || 'Error en Edge Function'), 'error');
+                    // Non-2xx responses expose the Edge Function body via error.context.
+                    let payload = null;
+                    try {
+                        const ctx = response.error.context;
+                        if (ctx && typeof ctx.json === 'function') payload = await ctx.clone().json();
+                    } catch (_) { /* body not JSON */ }
+
+                    console.error('Mailgun Edge Function error:', response.error, payload);
+                    const detail = [payload?.error, payload?.hint].filter(Boolean).join(' — ') ||
+                        response.error.message || 'Error en Edge Function';
+                    showToast('No se pudo enviar el correo: ' + detail, 'error');
                 } else if (response.data && response.data.error) {
                     console.error('Mailgun API error:', response.data.error);
                     showToast('Error Mailgun: ' + response.data.error, 'error');
+                } else if (response.data && response.data.skipped) {
+                    showToast('Este pedido ya tenía un correo de notificación enviado.', 'warning');
                 } else {
                     showToast('¡Correo de notificación enviado al cliente con éxito!', 'success');
                 }
