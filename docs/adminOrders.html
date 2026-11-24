@@ -1027,14 +1027,10 @@
 
         async function sendMailgunNotification(item, type) {
             const recipientEmail = item.customer_email || item.email;
-            if (!recipientEmail || !recipientEmail.includes('@')) {
-                showToast('El cliente no proporcionó un correo válido para notificación.', 'warning');
-                return;
-            }
+            // Email is optional: customers who did not leave one simply get no notification.
+            if (!recipientEmail || !recipientEmail.includes('@')) return;
 
             try {
-                showToast('Enviando notificación por correo al cliente...', 'warning');
-
                 let restData = null;
                 if (activeOwnerId) {
                     const { data } = await sb.from('menutech_restaurants').select('*').eq('user_id', activeOwnerId).maybeSingle();
@@ -1066,10 +1062,9 @@
                 } else if (response.data && response.data.error) {
                     console.error('Mailgun API error:', response.data.error);
                     showToast('Error Mailgun: ' + response.data.error, 'error');
-                } else if (response.data && response.data.skipped) {
-                    showToast('Este pedido ya tenía un correo de notificación enviado.', 'warning');
                 } else {
-                    showToast('¡Correo de notificación enviado al cliente con éxito!', 'success');
+                    // Sent (or already sent): stay silent, the customer sees it in the tracking link.
+                    console.log('Mailgun notification:', response.data);
                 }
             } catch (err) {
                 console.error('Email exception:', err);

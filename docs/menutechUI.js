@@ -3761,15 +3761,20 @@ class MenutechPlatformOrders extends HTMLElement {
         const popupContent = this.popupRoot.getElementById('popup-content');
         if (!popupContent) return;
 
+        const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[char]));
+
         const status = order.status;
         const isOnlinePayment = order.payment_method === 'online';
         const isPaid = order.payment_status === 'paid';
         const canPayOnlineNow = isOnlinePayment && !isPaid && status === 'accepted';
+        const emailNotifiedAt = order.email_notified_at || null;
 
         // Skip redundant re-renders (e.g. only the Stripe session id or a pending payment
         // status changed) so the embedded Stripe form and the countdown timer are not torn
         // down and rebuilt while the customer is paying.
-        const trackingSig = `${order.id}|${status}|${isPaid}|${canPayOnlineNow}`;
+        const trackingSig = `${order.id}|${status}|${isPaid}|${canPayOnlineNow}|${emailNotifiedAt || ''}`;
         if (this._trackingSig === trackingSig && popupContent.querySelector('.tracking-container')) {
             return;
         }
@@ -3904,6 +3909,7 @@ class MenutechPlatformOrders extends HTMLElement {
                 .btn-cancel-online { margin-top: 10px; width: 100%; padding: 12px; border-radius: 14px; border: 1.5px solid #ef4444; background: transparent; color: #ef4444; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
                 .btn-cancel-online:hover { background: rgba(239, 68, 68, 0.08); }
                 .paid-badge { margin-top: 20px; background: rgba(5, 150, 105, 0.12); color: #059669; border: 1px solid rgba(5, 150, 105, 0.3); padding: 12px 20px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 8px; }
+                .email-badge { margin-top: 12px; background: rgba(59, 130, 246, 0.10); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.28); padding: 10px 18px; border-radius: 18px; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 8px; max-width: 100%; overflow-wrap: anywhere; }
                 .countdown-box { margin-top: 15px; padding: 10px 16px; background: #fff7ed; border-radius: 14px; border: 1px solid #ffedd5; color: #c2410c; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px; }
                 .pay-embed-wrap { margin: 0 0 24px 0; padding: 16px; border-radius: 18px; border: 1.5px solid #ffe3c2; background: #fffdf9; }
                 .pay-embed-head { font-size: 0.75rem; font-weight: 800; color: #c2410c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
@@ -3943,6 +3949,10 @@ class MenutechPlatformOrders extends HTMLElement {
 
                 ${isPaid ? `
                     <div><div class="paid-badge">✓ Payment Confirmed</div></div>
+                ` : ''}
+
+                ${emailNotifiedAt && order.customer_email ? `
+                    <div><div class="email-badge">📧 Your receipt was emailed to ${esc(order.customer_email)}</div></div>
                 ` : ''}
 
                 <div class="order-id">Order ID: ${order.id.substring(0, 8)}</div>

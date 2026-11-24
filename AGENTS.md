@@ -163,3 +163,8 @@ It also re-reads the order/reservation row, so the client cannot fake the recipi
 `email_notified_at` (see `docs/add_email_notified_at.sql`) makes sending idempotent: a second
 "ready" action skips the email. Pass `force: true` to resend. The column is optional — if the
 migration has not been run the send still works, only dedupe is disabled.
+
+Sending is silent by design: `adminOrders.html` only toasts when it fails, and the customer sees
+`📧 Your receipt was emailed to <email>` in the public tracking link (`<menutech-platform-orders>`)
+once `email_notified_at` is set. That badge needs the SQL migration; without the column it simply
+never appears.
