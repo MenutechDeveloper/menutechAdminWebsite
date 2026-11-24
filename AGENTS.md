@@ -159,6 +159,11 @@ The function resolves branding server-side (service role) by merging `menutech_r
 (`restaurant_name`), `menutech_footers.config` (`logo`, `primaryColor`) and
 `menutech_tickets.config` (`logo_url`) — the same precedence used by `restaurantInfo.html`.
 It also re-reads the order/reservation row, so the client cannot fake the recipient or totals.
+The rendered email includes the order number, customer name/phone/email, pickup/delivery mode,
+scheduled date/time, address and reference, payment method, every item (size, toppings, notes),
+and the subtotal, delivery fee and total; reservations include date, time, party size, preorder
+items and the preorder total. Customer strings are escaped once by `sanitizeDeep()` before they
+reach the templates — do not escape them again inside the template or `&amp;` shows up literally.
 
 `email_notified_at` (see `docs/add_email_notified_at.sql`) makes sending idempotent: a second
 "ready" action skips the email. Pass `force: true` to resend. The column is optional — if the
@@ -168,3 +173,22 @@ Sending is silent by design: `adminOrders.html` only toasts when it fails, and t
 `📧 Your receipt was emailed to <email>` in the public tracking link (`<menutech-platform-orders>`)
 once `email_notified_at` is set. That badge needs the SQL migration; without the column it simply
 never appears.
+
+## Customer order form & tracking
+The checkout form (`menutechUI.js`, `openCartPopup`) requires name, phone and a valid email;
+delivery orders also require the address, and scheduled orders require date and time.
+`validateOrderForm()` marks missing inputs in red and blocks the insert until everything is
+filled, so every new order has a recipient for the ready email.
+
+The tracked order is stored per restaurant (`mt_last_order_<user_id>`, plus the legacy
+`mt_last_order_id`). On load the widget validates ownership and status: active orders keep the
+floating "TRACK MY ORDER" button and, once the order is `accepted`/`preparing`/`finished`,
+reopen the tracking modal after a refresh. `delivered`/`cancelled`/`rejected` clear the key.
+
+## Admin order history
+`adminOrders.html` History is a full-width table of every order and reservation for the active
+account: date, type, customer (name/phone/email), fulfillment (pickup/delivery + address/reference
+or reservation date/time/guests), items, payment, status and total. Filters cover free-text search
+(name, email, phone, address, ID), period (today, last 7 days, this month, last 30 days, all
+time), type and status, with a result count and revenue summary. Clicking a row opens a details
+drawer; status actions keep the drawer open instead of jumping tabs.

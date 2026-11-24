@@ -1471,7 +1471,10 @@ class MenutechPlatformOrders extends HTMLElement {
     }
 
     renderFloatingTracker() {
-        const lastOrderId = localStorage.getItem('mt_last_order_id');
+        // Scope the tracked order to this restaurant so visiting another menu does not
+        // show someone else's tracker.
+        const ownerId = this.menuData?.user_id;
+        const lastOrderId = ownerId ? localStorage.getItem('mt_last_order_' + ownerId) : null;
         if (!lastOrderId) {
             const existing = this.popupRoot.getElementById('floating-tracker');
             if (existing) existing.remove();
@@ -1687,6 +1690,18 @@ class MenutechPlatformOrders extends HTMLElement {
     }
 
     async loadData() {
+        // Reuse an in-flight load: connectedCallback, render() and checkExistingOrder()
+        // can all ask for the menu at once, and a second render would wipe the tracking modal.
+        if (this._loadDataPromise) return this._loadDataPromise;
+        this._loadDataPromise = this._fetchAndRenderData();
+        try {
+            return await this._loadDataPromise;
+        } finally {
+            this._loadDataPromise = null;
+        }
+    }
+
+    async _fetchAndRenderData() {
         const slug = this.getAttribute('restaurant');
         const domain = this.getAttribute('domain') || window.location.hostname.replace(/^www\./, '');
 
@@ -2042,6 +2057,8 @@ class MenutechPlatformOrders extends HTMLElement {
                     font-family: inherit; font-size: 0.95rem; box-sizing: border-box; transition: 0.3s;
                 }
                 .cart-input:focus { outline: none; border-color: #ff9533; background: #fffefb; }
+                .cart-input.input-error { border-color: #dc2626; background: #fef2f2; }
+                .cart-input.input-error:focus { border-color: #dc2626; }
 
                 .payment-option, .type-option, .time-option {
                     display: flex; align-items: center; justify-content: space-between; padding: 16px;
@@ -2825,16 +2842,16 @@ class MenutechPlatformOrders extends HTMLElement {
                             <div class="cart-section-header">1. CONTACT INFORMATION <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                             <div class="cart-section-content">
                                 <div class="cart-input-group">
-                                    <label>FULL NAME</label>
-                                    <input type="text" id="cust-name" class="cart-input">
+                                    <label>FULL NAME *</label>
+                                    <input type="text" id="cust-name" class="cart-input" required autocomplete="name">
                                 </div>
                                 <div class="cart-input-group">
-                                    <label>PHONE</label>
-                                    <input type="tel" id="cust-phone" class="cart-input">
+                                    <label>PHONE *</label>
+                                    <input type="tel" id="cust-phone" class="cart-input" required autocomplete="tel">
                                 </div>
                                 <div class="cart-input-group">
-                                    <label>EMAIL</label>
-                                    <input type="email" id="cust-email" class="cart-input">
+                                    <label>EMAIL *</label>
+                                    <input type="email" id="cust-email" class="cart-input" required autocomplete="email">
                                 </div>
                             </div>
                         </div>
@@ -2857,9 +2874,9 @@ class MenutechPlatformOrders extends HTMLElement {
                                 </div>
                                 <div id="delivery-fields" style="display:none; margin-top:15px;">
                                     <div class="cart-input-group">
-                                        <label>FULL ADDRESS</label>
+                                        <label>FULL ADDRESS *</label>
                                         <div style="display:flex; gap:8px;">
-                                            <input type="text" id="order-address" class="cart-input" placeholder="Street, number, neighborhood...">
+                                            <input type="text" id="order-address" class="cart-input" placeholder="Street, number, neighborhood..." required autocomplete="street-address">
                                             <button type="button" id="btn-verify-delivery-addr" style="background:#ff9533; color:#fff; border:none; border-radius:8px; padding:0 12px; font-weight:700; cursor:pointer; font-size:0.75rem;">CHECK</button>
                                         </div>
                                     </div>
@@ -2890,11 +2907,11 @@ class MenutechPlatformOrders extends HTMLElement {
                                 </div>
                                 <div id="later-fields" style="display:none; margin-top:15px; gap:10px;">
                                     <div class="cart-input-group" style="flex:1">
-                                        <label>DATE</label>
+                                        <label>DATE *</label>
                                         <input type="date" id="order-date" class="cart-input">
                                     </div>
                                     <div class="cart-input-group" style="flex:1">
-                                        <label>TIME</label>
+                                        <label>TIME *</label>
                                         <input type="time" id="order-time" class="cart-input">
                                     </div>
                                 </div>
@@ -3101,6 +3118,12 @@ class MenutechPlatformOrders extends HTMLElement {
 
         const sendBtn = popupContent.querySelector('#send-order-btn');
         if (sendBtn) sendBtn.onclick = () => this.sendOrder();
+
+        // Clear the red highlight as soon as the customer fixes a required field
+        ['#cust-name', '#cust-phone', '#cust-email', '#order-address', '#order-date', '#order-time'].forEach(selector => {
+            const input = popupContent.querySelector(selector);
+            if (input) input.addEventListener('input', () => input.classList.remove('input-error'));
+        });
 
         // Cart manipulation logic
         popupContent.querySelectorAll('.cart-plus').forEach(btn => {
@@ -3540,23 +3563,50 @@ class MenutechPlatformOrders extends HTMLElement {
         }
     }
 
+    validateOrderForm(popupContent) {
+        const val = (selector) => (popupContent.querySelector(selector)?.value || '').trim();
+        const orderType = popupContent.querySelector('.type-option.active')?.dataset.type || 'pickup';
+        const timeMode = popupContent.querySelector('.time-option.active')?.dataset.time || 'asap';
+
+        const checks = [
+            { el: popupContent.querySelector('#cust-name'), label: 'Full name', ok: !!val('#cust-name') },
+            { el: popupContent.querySelector('#cust-phone'), label: 'Phone', ok: !!val('#cust-phone') },
+            { el: popupContent.querySelector('#cust-email'), label: 'Email', ok: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val('#cust-email')) }
+        ];
+
+        if (orderType === 'delivery') {
+            checks.push({ el: popupContent.querySelector('#order-address'), label: 'Delivery address', ok: !!val('#order-address') });
+        }
+        if (timeMode === 'later') {
+            checks.push({ el: popupContent.querySelector('#order-date'), label: 'Date', ok: !!val('#order-date') });
+            checks.push({ el: popupContent.querySelector('#order-time'), label: 'Time', ok: !!val('#order-time') });
+        }
+
+        checks.forEach(check => check.el?.classList.toggle('input-error', !check.ok));
+        const missing = checks.filter(check => !check.ok).map(check => check.label);
+        return { valid: missing.length === 0, missing, firstInvalid: checks.find(check => !check.ok)?.el || null };
+    }
+
     async sendOrder() {
         const popupContent = this.popupRoot.getElementById('popup-content');
-        const name = popupContent.querySelector('#cust-name').value;
-        const phone = popupContent.querySelector('#cust-phone').value;
-        const email = popupContent.querySelector('#cust-email')?.value || '';
 
-        if (!name || !phone) {
-            this.showModal('MISSING DATA', 'Please complete your name and phone.');
+        const validation = this.validateOrderForm(popupContent);
+        if (!validation.valid) {
+            this.showModal('MISSING DATA', 'Please complete the required fields: ' + validation.missing.join(', ') + '.');
+            validation.firstInvalid?.focus();
             return;
         }
 
+        const name = popupContent.querySelector('#cust-name').value.trim();
+        const phone = popupContent.querySelector('#cust-phone').value.trim();
+        const email = (popupContent.querySelector('#cust-email')?.value || '').trim();
+
         const orderType = popupContent.querySelector('.type-option.active').dataset.type;
-        const address = popupContent.querySelector('#order-address')?.value || '';
-        const reference = popupContent.querySelector('#order-reference')?.value || '';
+        const address = (popupContent.querySelector('#order-address')?.value || '').trim();
+        const reference = (popupContent.querySelector('#order-reference')?.value || '').trim();
         const timeMode = popupContent.querySelector('.time-option.active').dataset.time;
-        const date = popupContent.querySelector('#order-date')?.value || '';
-        const time = popupContent.querySelector('#order-time')?.value || '';
+        const date = (popupContent.querySelector('#order-date')?.value || '').trim();
+        const time = (popupContent.querySelector('#order-time')?.value || '').trim();
         const payment = popupContent.querySelector('.payment-option.active').dataset.pay;
 
         // If delivery order, validate delivery address and coverage
@@ -3636,6 +3686,9 @@ class MenutechPlatformOrders extends HTMLElement {
 
             if (data && data.id) {
                 localStorage.setItem('mt_last_order_id', data.id);
+                if (this.menuData?.user_id) {
+                    localStorage.setItem('mt_last_order_' + this.menuData.user_id, data.id);
+                }
             }
 
             this.showSuccessAnimation(data ? data.id : null);
@@ -3647,6 +3700,12 @@ class MenutechPlatformOrders extends HTMLElement {
             btn.textContent = `SEND ORDER • $${total.toFixed(2)}`;
             btn.disabled = false;
         }
+    }
+
+    clearTrackedOrder(order) {
+        localStorage.removeItem('mt_last_order_id');
+        const ownerIds = new Set([order?.user_id, this.menuData?.user_id].filter(Boolean));
+        ownerIds.forEach(id => localStorage.removeItem('mt_last_order_' + id));
     }
 
     async checkExistingOrder() {
@@ -3665,14 +3724,61 @@ class MenutechPlatformOrders extends HTMLElement {
             }
         }
 
-        const lastId = localStorage.getItem('mt_last_order_id');
-        if (!lastId) return;
+        // Make sure the menu (and therefore the restaurant id) is loaded before scoping
+        // the tracked order, otherwise a refresh cannot tell which restaurant it belongs to.
+        if (!this.menuData) {
+            try { await this.loadData(); } catch (_) { /* menu unavailable */ }
+        }
+
+        const ownerId = this.menuData?.user_id || null;
+        if (!ownerId) return;
+
+        const scopedId = localStorage.getItem('mt_last_order_' + ownerId);
+        const legacyId = localStorage.getItem('mt_last_order_id');
+        const lastId = scopedId || legacyId;
+        if (!lastId) {
+            this.renderFloatingTracker();
+            return;
+        }
 
         if (!this.supabase) await this.initSupabase();
-        const { data } = await this.supabase.from('menutech_orders').select('status').eq('id', lastId).single();
-        if (data && (data.status === 'delivered' || data.status === 'rejected')) {
-            localStorage.removeItem('mt_last_order_id');
+        const { data: order } = await this.supabase
+            .from('menutech_orders')
+            .select('*')
+            .eq('id', lastId)
+            .maybeSingle();
+
+        if (!order) {
+            localStorage.removeItem('mt_last_order_' + ownerId);
+            if (legacyId === lastId) localStorage.removeItem('mt_last_order_id');
             this.renderFloatingTracker();
+            return;
+        }
+
+        // The legacy single key may point to a different restaurant's order.
+        if (order.user_id !== ownerId) {
+            if (scopedId) localStorage.removeItem('mt_last_order_' + ownerId);
+            this.renderFloatingTracker();
+            return;
+        }
+
+        const terminalStatuses = ['delivered', 'cancelled', 'rejected'];
+        if (terminalStatuses.includes(order.status)) {
+            this.clearTrackedOrder(order);
+            this.renderFloatingTracker();
+            return;
+        }
+
+        // Keep the order for this restaurant so it survives a refresh.
+        localStorage.setItem('mt_last_order_' + ownerId, lastId);
+        localStorage.setItem('mt_last_order_id', lastId);
+        this.renderFloatingTracker();
+
+        // If the restaurant already accepted/prepared it, reopen the tracking so the
+        // customer can keep following it after refreshing the page.
+        if (['accepted', 'preparing', 'finished'].includes(order.status) &&
+            this.popupRoot?.getElementById('popup')) {
+            this.showOrderTracking(lastId);
         }
     }
 
@@ -3889,6 +3995,10 @@ class MenutechPlatformOrders extends HTMLElement {
         }
 
         const isTerminal = ['delivered', 'rejected', 'cancelled'].includes(status);
+        if (isTerminal) {
+            this.clearTrackedOrder(order);
+            this.renderFloatingTracker();
+        }
 
         popupContent.innerHTML = `
             <style>
@@ -4041,7 +4151,7 @@ class MenutechPlatformOrders extends HTMLElement {
                     this._paymentCountdownInterval = null;
                 }
                 this.destroyEmbeddedCheckout();
-                localStorage.removeItem('mt_last_order_id');
+                this.clearTrackedOrder(order);
                 this.popupRoot.getElementById('popup').style.display = 'none';
                 this.renderFloatingTracker();
                 if (this.trackingChannel) this.supabase.removeChannel(this.trackingChannel);

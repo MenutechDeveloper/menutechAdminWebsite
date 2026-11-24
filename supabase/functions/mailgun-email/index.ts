@@ -480,6 +480,7 @@ function renderOrderEmailTemplate(data: {
   const subtotal = item.subtotal !== undefined && item.subtotal !== null
     ? parseFloat(item.subtotal).toFixed(2)
     : (deliveryFee > 0 ? (parseFloat(total) - deliveryFee).toFixed(2) : total);
+  // `item` is the DB row after sanitizeDeep(), so its strings are already HTML-escaped.
   const zoneName = item.delivery_zone_name || item.deliveryZoneName;
   const orderType = item.order_type || item.orderType;
   const deliveryType = orderType === "delivery"
@@ -488,7 +489,14 @@ function renderOrderEmailTemplate(data: {
   const paymentMethod = (item.payment_method || item.paymentMethod || "Efectivo").toUpperCase();
   const customerName = item.customer_name || item.customerName || "Cliente";
   const customerPhone = item.customer_phone || item.customerPhone || "N/A";
+  const customerEmail = item.customer_email || item.customerEmail || "";
   const customerNotes = item.customer_notes || item.customerNotes;
+  const address = item.address || "";
+  const reference = item.reference || "";
+  const schedule = item.delivery_time_mode === "later"
+    ? [item.delivery_date, item.delivery_time].filter(Boolean).join(" · ")
+    : "";
+  const shortId = String(item.id || "").slice(0, 8).toUpperCase();
 
   const itemsRowsHtml = items.map((it: any) => {
     const qty = it.quantity || 1;
@@ -565,10 +573,13 @@ function renderOrderEmailTemplate(data: {
                 <tr>
                   <td style="font-size: 14px; color: #2d3748; line-height: 1.8;">
                     <strong>Modalidad:</strong> ${deliveryType}<br>
+                    ${shortId ? `<strong>Pedido:</strong> #${shortId}<br>` : ""}
+                    ${schedule ? `<strong>Programado:</strong> ${schedule}<br>` : ""}
                     <strong>Teléfono:</strong> ${customerPhone}<br>
+                    ${customerEmail ? `<strong>Correo:</strong> ${customerEmail}<br>` : ""}
                     <strong>Método de pago:</strong> ${paymentMethod}<br>
-                    ${item.address ? `<strong>Dirección:</strong> ${item.address}<br>` : ""}
-                    ${item.reference ? `<strong>Referencia:</strong> ${item.reference}<br>` : ""}
+                    ${address ? `<strong>Dirección:</strong> ${address}<br>` : ""}
+                    ${reference ? `<strong>Referencia:</strong> ${reference}<br>` : ""}
                     ${customerNotes ? `<strong>Instrucciones:</strong> <em>"${customerNotes}"</em><br>` : ""}
                   </td>
                 </tr>
@@ -656,11 +667,19 @@ function renderReservationEmailTemplate(data: {
   const preorderItems = Array.isArray(item.preorder_items)
     ? item.preorder_items
     : (Array.isArray(item.preorderItems) ? item.preorderItems : []);
+  // `item` is the DB row after sanitizeDeep(), so its strings are already HTML-escaped.
   const partySize = item.party_size || item.partySize || item.guests_count || 2;
   const resDate = item.reservation_date || item.reservationDate || "Hoy";
   const resTime = item.reservation_time || item.reservationTime || "Por llegar";
   const customerName = item.customer_name || item.customerName || "Comensal";
   const customerPhone = item.customer_phone || item.customerPhone || "N/A";
+  const customerEmail = item.customer_email || item.customerEmail || "";
+  const comments = item.comments || "";
+  const shortId = String(item.id || "").slice(0, 8).toUpperCase();
+  const preorderTotal = preorderItems.reduce(
+    (sum: number, it: any) => sum + parseFloat(it.price || 0) * (it.quantity || 1),
+    0,
+  );
 
   const preorderRowsHtml = preorderItems.map((it: any) => {
     const qty = it.quantity || 1;
@@ -668,7 +687,7 @@ function renderReservationEmailTemplate(data: {
     return `
       <tr>
         <td style="padding: 10px 14px; border-bottom: 1px solid #334155; font-size: 13px; color: #e2e8f0;">
-          <strong>${qty}x ${it.name}</strong>
+          <strong>${qty}x ${it.name || "Producto"}</strong>
           ${it.instructions ? `<div style="font-size: 11px; color: #94a3b8;">"${it.instructions}"</div>` : ""}
         </td>
         <td style="padding: 10px 14px; border-bottom: 1px solid #334155; font-size: 13px; font-weight: bold; color: #f59e0b; text-align: right;">
@@ -755,10 +774,24 @@ function renderReservationEmailTemplate(data: {
                           📞 Teléfono: <strong style="color: #f8fafc;">${customerPhone}</strong>
                         </td>
                       </tr>
+                      ${customerEmail ? `
+                        <tr>
+                          <td colspan="2" style="padding: 6px 0; font-size: 14px; color: #94a3b8;">
+                            ✉️ Correo: <strong style="color: #f8fafc;">${customerEmail}</strong>
+                          </td>
+                        </tr>
+                      ` : ""}
+                      ${shortId ? `
+                        <tr>
+                          <td colspan="2" style="padding: 6px 0; font-size: 14px; color: #94a3b8;">
+                            🔖 Reservación: <strong style="color: #f8fafc;">#${shortId}</strong>
+                          </td>
+                        </tr>
+                      ` : ""}
                     </table>
-                    ${item.comments ? `
+                    ${comments ? `
                       <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #1e293b; font-size: 13px; color: #cbd5e1;">
-                        <strong>Solicitudes Especiales:</strong> <em>"${item.comments}"</em>
+                        <strong>Solicitudes Especiales:</strong> <em>"${comments}"</em>
                       </div>
                     ` : ""}
                   </td>
@@ -774,6 +807,14 @@ function renderReservationEmailTemplate(data: {
                   <tbody>
                     ${preorderRowsHtml}
                   </tbody>
+                  ${preorderTotal > 0 ? `
+                    <tfoot>
+                      <tr>
+                        <td style="padding: 12px 14px; font-size: 13px; color: #94a3b8; font-weight: 700; border-top: 1px solid #334155;">Total pre-orden</td>
+                        <td style="padding: 12px 14px; font-size: 15px; color: #f59e0b; font-weight: 800; text-align: right; border-top: 1px solid #334155;">$${preorderTotal.toFixed(2)}</td>
+                      </tr>
+                    </tfoot>
+                  ` : ""}
                 </table>
               ` : ""}
 

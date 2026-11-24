@@ -255,6 +255,53 @@
         .filter-chip:hover { border-color: var(--orange); color: var(--orange); }
         .filter-chip.active { background: var(--orange); border-color: var(--orange); color: #fff; box-shadow: 0 4px 12px rgba(255, 149, 51, 0.2); }
 
+        /* History table */
+        .history-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .history-control {
+            padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--input);
+            color: var(--text); font-family: inherit; font-size: 0.8rem; font-weight: 600;
+        }
+        .history-control:focus { outline: none; border-color: var(--orange); }
+        #history-search { flex: 1 1 260px; min-width: 200px; }
+        .history-view { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 16px; }
+        .history-summary { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; font-size: 0.78rem; color: var(--text-dim); font-weight: 600; }
+        .history-summary strong { color: var(--orange); }
+        .history-table-wrap { overflow-x: auto; }
+        .history-table { width: 100%; border-collapse: collapse; min-width: 1040px; }
+        .history-table th {
+            text-align: left; padding: 10px 12px; font-size: 0.6rem; letter-spacing: 0.6px; text-transform: uppercase;
+            color: var(--text-dim); border-bottom: 1px solid var(--border); white-space: nowrap;
+        }
+        .history-table td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 0.8rem; }
+        .history-table tbody tr { cursor: pointer; transition: background 0.2s; }
+        .history-table tbody tr:hover { background: var(--input); }
+        .history-table tbody tr:last-child td { border-bottom: none; }
+        .history-cell-main { font-weight: 700; color: var(--text); }
+        .history-cell-sub { font-size: 0.72rem; color: var(--text-dim); margin-top: 3px; line-height: 1.45; }
+        .history-cell-sub a { color: var(--orange); text-decoration: none; }
+        .history-total { font-weight: 800; color: var(--orange); white-space: nowrap; }
+        .history-empty { text-align: center; padding: 40px; color: var(--text-dim); opacity: 0.6; }
+        .history-detail-modal { position: fixed; inset: 0; z-index: 8000; display: none; background: rgba(0,0,0,0.5); }
+        .history-detail-modal.open { display: flex; justify-content: flex-end; }
+        .history-detail-sheet {
+            position: relative; width: min(560px, 100%); height: 100%; background: var(--card);
+            border-left: 1px solid var(--border); overflow-y: auto; padding: 24px; animation: historySlideIn 0.25s ease;
+        }
+        @keyframes historySlideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .history-detail-close {
+            position: absolute; top: 14px; right: 14px; width: 38px; height: 38px; border-radius: 50%;
+            border: 1px solid var(--border); background: var(--input); color: var(--text); font-size: 16px; cursor: pointer; z-index: 2;
+        }
+        .history-detail-sheet .order-details-pane {
+            position: static; transform: none; display: block; height: auto; min-height: 0;
+            padding: 0; border: none; box-shadow: none; background: transparent; overflow: visible;
+        }
+        .history-detail-sheet .close-details { display: none !important; }
+        @media (max-width: 768px) {
+            .history-detail-modal.open { align-items: flex-end; justify-content: center; }
+            .history-detail-sheet { width: 100%; height: 92%; border-left: none; border-radius: 24px 24px 0 0; }
+        }
+
         /* Responsive Mobile Styles */
         @media (max-width: 1024px) {
             .orders-split-view { flex-direction: column; height: auto; }
@@ -349,23 +396,35 @@
                     <button class="tab-btn" data-tab="history" onclick="switchTab('history')">History <span class="count" id="count-history">0</span></button>
                 </div>
 
-                <!-- History Filters (Type & Date) -->
+                <!-- History Filters -->
                 <div id="history-filters" class="history-filters hidden">
-                    <div class="filter-group">
-                        <span class="filter-label">Type:</span>
-                        <button class="filter-chip active" id="type-filter-all" onclick="setTypeFilter('all')">All</button>
-                        <button class="filter-chip" id="type-filter-order" onclick="setTypeFilter('order')">Orders</button>
-                        <button class="filter-chip" id="type-filter-reservation" onclick="setTypeFilter('reservation')">Reservations</button>
-                    </div>
-                    <div class="filter-group">
-                        <span class="filter-label">Period:</span>
-                        <button class="filter-chip active" id="time-filter-today" onclick="setHistoryFilter('today')">Today</button>
-                        <button class="filter-chip" id="time-filter-week" onclick="setHistoryFilter('week')">This Week</button>
-                        <button class="filter-chip" id="time-filter-month" onclick="setHistoryFilter('month')">This Month</button>
+                    <div class="history-toolbar">
+                        <input type="search" id="history-search" class="history-control" placeholder="Search name, email, phone, address or order ID...">
+                        <select id="history-period" class="history-control" title="Period">
+                            <option value="today">Today</option>
+                            <option value="7d" selected>Last 7 days</option>
+                            <option value="month">This month</option>
+                            <option value="30d">Last 30 days</option>
+                            <option value="all">All time</option>
+                        </select>
+                        <select id="history-type" class="history-control" title="Type">
+                            <option value="all">All types</option>
+                            <option value="order">Orders</option>
+                            <option value="reservation">Reservations</option>
+                        </select>
+                        <select id="history-status" class="history-control" title="Status">
+                            <option value="all">All statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="in_process">In process</option>
+                            <option value="ready">Ready</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled / Rejected</option>
+                        </select>
+                        <button type="button" id="history-clear" class="filter-chip">Clear</button>
                     </div>
                 </div>
 
-                <div class="orders-split-view">
+                <div class="orders-split-view" id="orders-split-view">
                     <div id="orders-list" class="orders-list-pane">
                         <!-- Compact orders / reservations list -->
                     </div>
@@ -377,7 +436,40 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Full order/reservation history -->
+                <div id="history-view" class="history-view hidden">
+                    <div class="history-summary">
+                        <span id="history-summary-text">No results</span>
+                        <span>Click any row to open the full details</span>
+                    </div>
+                    <div class="history-table-wrap">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Customer</th>
+                                    <th>Fulfillment</th>
+                                    <th>Items</th>
+                                    <th>Payment</th>
+                                    <th>Status</th>
+                                    <th style="text-align:right;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Details drawer for history rows -->
+    <div id="history-detail-modal" class="history-detail-modal" onclick="if (event.target === this) closeDetails()">
+        <div class="history-detail-sheet">
+            <button class="history-detail-close" onclick="closeDetails()">✕</button>
+            <div id="history-detail-content" class="order-details-pane"></div>
         </div>
     </div>
 
@@ -391,15 +483,31 @@
         let resChannel = null;
 
         let currentTab = 'pending';
-        let historyFilter = 'today';
-        let typeFilter = 'all'; // 'all' | 'order' | 'reservation'
+        let historyPeriod = '7d';
+        let historyType = 'all'; // 'all' | 'order' | 'reservation'
+        let historyStatus = 'all'; // 'all' | 'pending' | 'in_process' | 'ready' | 'completed' | 'cancelled'
+        let historySearch = '';
+        let detailTargetId = 'order-details';
         let selectedItemId = null;
         let crossedItems = new Set();
         let alertAudio = null;
 
+        const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[char]));
+
+        const fmtDateTime = (iso) => {
+            if (!iso) return '—';
+            const date = new Date(iso);
+            return Number.isNaN(date.getTime())
+                ? '—'
+                : date.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+        };
+
         async function init() {
             initTheme();
             initEvents();
+            initHistoryControls();
 
             const { data: { session } } = await sb.auth.getSession();
             if (!session) { location.href = 'index.html'; return; }
@@ -594,7 +702,6 @@
         function isPending(item) { return item.status === 'pending'; }
         function isInProcess(item) { return item.status === 'accepted' || item.status === 'preparing' || item.status === 'confirmed'; }
         function isReady(item) { return item.status === 'finished' || item.status === 'attended'; }
-        function isHistory(item) { return item.status === 'delivered' || item.status === 'rejected' || item.status === 'cancelled'; }
 
         // Periodically verify 10-minute timeout for unpaid accepted online orders
         setInterval(() => {
@@ -617,7 +724,7 @@
             const pending = unifiedItems.filter(isPending).length;
             const inProcess = unifiedItems.filter(isInProcess).length;
             const ready = unifiedItems.filter(isReady).length;
-            const history = unifiedItems.filter(isHistory).length;
+            const history = unifiedItems.length;
 
             document.getElementById('count-pending').textContent = pending;
             document.getElementById('count-in-process').textContent = inProcess;
@@ -656,38 +763,192 @@
             }
         }
 
+        function setHistoryView(show) {
+            document.getElementById('orders-split-view').classList.toggle('hidden', show);
+            document.getElementById('history-view').classList.toggle('hidden', !show);
+            document.getElementById('history-filters').classList.toggle('hidden', !show);
+        }
+
         window.switchTab = (tab) => {
             currentTab = tab;
             selectedItemId = null;
+            detailTargetId = 'order-details';
+            document.getElementById('history-detail-modal').classList.remove('open');
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
             });
 
-            const filters = document.getElementById('history-filters');
-            if (tab === 'history') filters.classList.remove('hidden');
-            else filters.classList.add('hidden');
+            setHistoryView(tab === 'history');
 
             renderList();
             renderDetails(null);
         };
 
-        window.setTypeFilter = (type) => {
-            typeFilter = type;
-            document.getElementById('type-filter-all').classList.toggle('active', type === 'all');
-            document.getElementById('type-filter-order').classList.toggle('active', type === 'order');
-            document.getElementById('type-filter-reservation').classList.toggle('active', type === 'reservation');
-            renderList();
+        function initHistoryControls() {
+            const search = document.getElementById('history-search');
+            const period = document.getElementById('history-period');
+            const type = document.getElementById('history-type');
+            const status = document.getElementById('history-status');
+            const clear = document.getElementById('history-clear');
+
+            search?.addEventListener('input', () => {
+                historySearch = search.value.trim().toLowerCase();
+                renderList();
+            });
+            period?.addEventListener('change', () => {
+                historyPeriod = period.value;
+                renderList();
+            });
+            type?.addEventListener('change', () => {
+                historyType = type.value;
+                renderList();
+            });
+            status?.addEventListener('change', () => {
+                historyStatus = status.value;
+                renderList();
+            });
+            clear?.addEventListener('click', () => {
+                historySearch = '';
+                historyPeriod = '7d';
+                historyType = 'all';
+                historyStatus = 'all';
+                if (search) search.value = '';
+                if (period) period.value = '7d';
+                if (type) type.value = 'all';
+                if (status) status.value = 'all';
+                renderList();
+            });
+        }
+
+        const STATUS_GROUPS = {
+            pending: ['pending'],
+            in_process: ['accepted', 'preparing', 'confirmed'],
+            ready: ['finished', 'attended'],
+            completed: ['delivered'],
+            cancelled: ['cancelled', 'rejected']
         };
 
-        window.setHistoryFilter = (filter) => {
-            historyFilter = filter;
-            document.getElementById('time-filter-today').classList.toggle('active', filter === 'today');
-            document.getElementById('time-filter-week').classList.toggle('active', filter === 'week');
-            document.getElementById('time-filter-month').classList.toggle('active', filter === 'month');
-            renderList();
+        function historyPeriodStart(period) {
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            if (period === 'today') return startOfToday;
+            if (period === '7d') return startOfToday - 6 * 24 * 60 * 60 * 1000;
+            if (period === '30d') return startOfToday - 29 * 24 * 60 * 60 * 1000;
+            if (period === 'month') return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+            return 0;
+        }
+
+        function filterHistoryItems() {
+            const periodStart = historyPeriodStart(historyPeriod);
+            const allowedStatuses = STATUS_GROUPS[historyStatus] || null;
+
+            return unifiedItems.filter(item => {
+                if (historyType !== 'all' && item.entryType !== historyType) return false;
+                if (allowedStatuses && !allowedStatuses.includes(item.status)) return false;
+                if (periodStart && (item.timestamp || 0) < periodStart) return false;
+                if (!historySearch) return true;
+
+                const haystack = [
+                    item.customer_name,
+                    item.customer_phone,
+                    item.customer_email,
+                    item.address,
+                    item.reference,
+                    item.comments,
+                    item.id
+                ].filter(Boolean).join(' ').toLowerCase();
+                return haystack.includes(historySearch);
+            });
+        }
+
+        function itemNames(items) {
+            return (items || []).map(it => {
+                const qty = it.quantity > 1 ? `${it.quantity}× ` : '';
+                const size = it.size ? ` (${it.size})` : '';
+                return `${qty}${it.name}${size}`;
+            });
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('history-tbody');
+            const summary = document.getElementById('history-summary-text');
+            if (!tbody) return;
+
+            const filtered = filterHistoryItems();
+            const orderCount = filtered.filter(item => item.entryType === 'order').length;
+            const reservationCount = filtered.length - orderCount;
+            const revenue = filtered.reduce((sum, item) => sum + (item.total || 0), 0);
+
+            if (summary) {
+                summary.innerHTML = `<strong>${filtered.length}</strong> result${filtered.length === 1 ? '' : 's'} · ${orderCount} order${orderCount === 1 ? '' : 's'} · ${reservationCount} reservation${reservationCount === 1 ? '' : 's'} · <strong>$${revenue.toFixed(2)}</strong>`;
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8"><div class="history-empty">No orders match these filters.</div></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(item => {
+                const isOrd = item.entryType === 'order';
+                const statusLabel = (item.status || '').charAt(0).toUpperCase() + (item.status || '').slice(1);
+                const paymentMethod = item.payment_method || (isOrd ? 'cash' : 'restaurant');
+                const payLabel = paymentMethod === 'online' ? 'Online' : 'At restaurant';
+                const payStatus = item.payment_status === 'paid' ? 'Paid' : (paymentMethod === 'online' ? 'Unpaid' : 'Pay later');
+                const items = isOrd ? itemNames(item.items) : itemNames(item.preorder_items);
+                const fulfillment = isOrd
+                    ? [
+                        item.order_type === 'delivery' ? 'Delivery' : 'Pickup',
+                        item.delivery_time_mode === 'later' ? `${item.delivery_date || ''} ${item.delivery_time || ''}`.trim() : 'ASAP',
+                        item.address || '',
+                        item.reference ? `Ref: ${item.reference}` : ''
+                    ].filter(Boolean)
+                    : [
+                        item.reservation_date || '',
+                        item.reservation_time || '',
+                        `${item.party_size || 2} guests`,
+                        item.comments || ''
+                    ].filter(Boolean);
+
+                return `
+                    <tr onclick="openHistoryDetails('${item.id}')">
+                        <td style="white-space:nowrap;">
+                            <div class="history-cell-main">${esc(fmtDateTime(item.created_at))}</div>
+                            <div class="history-cell-sub">${esc((item.id || '').substring(0, 8))}</div>
+                        </td>
+                        <td><span class="type-badge ${item.entryType}">${isOrd ? '🛒 Order' : '📅 Reservation'}</span></td>
+                        <td>
+                            <div class="history-cell-main">${esc(item.customer_name || '—')}</div>
+                            ${item.customer_phone ? `<div class="history-cell-sub"><a href="tel:${esc(item.customer_phone)}">${esc(item.customer_phone)}</a></div>` : ''}
+                            ${item.customer_email ? `<div class="history-cell-sub"><a href="mailto:${esc(item.customer_email)}">${esc(item.customer_email)}</a></div>` : ''}
+                        </td>
+                        <td><div class="history-cell-sub" style="margin-top:0;">${fulfillment.map(esc).join('<br>') || '—'}</div></td>
+                        <td><div class="history-cell-sub" style="margin-top:0;">${items.map(esc).join('<br>') || '—'}</div></td>
+                        <td>
+                            <div class="history-cell-main" style="font-size:0.75rem;">${esc(payLabel)}</div>
+                            <div class="history-cell-sub">${esc(payStatus)}</div>
+                        </td>
+                        <td><span class="status-tag ${item.status}">${esc(statusLabel)}</span></td>
+                        <td style="text-align:right;"><span class="history-total">$${(item.total || 0).toFixed(2)}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.openHistoryDetails = (id) => {
+            const item = unifiedItems.find(i => i.id === id);
+            if (!item) return;
+            selectedItemId = id;
+            detailTargetId = 'history-detail-content';
+            renderDetails(item);
+            document.getElementById('history-detail-modal').classList.add('open');
         };
 
         function renderList() {
+            if (currentTab === 'history') {
+                renderHistoryTable();
+                return;
+            }
+
             const list = document.getElementById('orders-list');
             let filtered = [];
 
@@ -697,24 +958,6 @@
                 filtered = unifiedItems.filter(isInProcess);
             } else if (currentTab === 'ready') {
                 filtered = unifiedItems.filter(isReady);
-            } else if (currentTab === 'history') {
-                const now = new Date();
-                const todayStr = now.toLocaleDateString();
-                const todayTs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-                const lastWeekTs = todayTs - (7 * 24 * 60 * 60 * 1000);
-                const lastMonthTs = todayTs - (30 * 24 * 60 * 60 * 1000);
-
-                filtered = unifiedItems.filter(item => {
-                    if (!isHistory(item)) return false;
-                    if (typeFilter !== 'all' && item.entryType !== typeFilter) return false;
-
-                    const iDate = new Date(item.created_at);
-                    const iTs = iDate.getTime();
-                    if (historyFilter === 'today') return iDate.toLocaleDateString() === todayStr;
-                    if (historyFilter === 'week') return iTs >= lastWeekTs;
-                    if (historyFilter === 'month') return iTs >= lastMonthTs;
-                    return true;
-                });
             }
 
             if (filtered.length === 0) {
@@ -763,8 +1006,8 @@
             }
         };
 
-        function renderDetails(item) {
-            const pane = document.getElementById('order-details');
+        function renderDetails(item, targetId = detailTargetId) {
+            const pane = document.getElementById(targetId);
             if (!item) {
                 pane.innerHTML = `
                     <div class="empty-details">
@@ -1015,7 +1258,9 @@
         }
 
         window.closeDetails = () => {
+            document.getElementById('history-detail-modal')?.classList.remove('open');
             document.getElementById('order-details').classList.remove('open');
+            detailTargetId = 'order-details';
         };
 
         window.toggleItem = (itemId) => {
@@ -1093,21 +1338,22 @@
                 Object.assign(targetOrder, updates);
                 updateCounts();
 
-                if (status === 'accepted' || status === 'preparing') {
+                const stayInHistory = detailTargetId === 'history-detail-content';
+                if (!stayInHistory && (status === 'accepted' || status === 'preparing')) {
                     switchTab('in_process');
                     selectedItemId = id;
                     renderList();
                     renderDetails(targetOrder);
-                } else if (status === 'finished') {
+                } else if (!stayInHistory && status === 'finished') {
                     switchTab('ready');
                     selectedItemId = id;
                     renderList();
                     renderDetails(targetOrder);
-                    sendMailgunNotification(targetOrder, 'order');
                 } else {
                     renderList();
                     if (selectedItemId === id) renderDetails(targetOrder);
                 }
+                if (status === 'finished') sendMailgunNotification(targetOrder, 'order');
             }
 
             const { error } = await sb.from('menutech_orders').update(updates).eq('id', id);
@@ -1141,21 +1387,22 @@
                 Object.assign(unifiedItems[itemIdx], updates);
                 updateCounts();
 
-                if (status === 'confirmed') {
+                const stayInHistory = detailTargetId === 'history-detail-content';
+                if (!stayInHistory && status === 'confirmed') {
                     switchTab('in_process');
                     selectedItemId = id;
                     renderList();
                     renderDetails(unifiedItems[itemIdx]);
-                } else if (status === 'attended') {
+                } else if (!stayInHistory && status === 'attended') {
                     switchTab('ready');
                     selectedItemId = id;
                     renderList();
                     renderDetails(unifiedItems[itemIdx]);
-                    sendMailgunNotification(unifiedItems[itemIdx], 'reservation');
                 } else {
                     renderList();
                     if (selectedItemId === id) renderDetails(unifiedItems[itemIdx]);
                 }
+                if (status === 'attended') sendMailgunNotification(unifiedItems[itemIdx], 'reservation');
             }
 
             const { error } = await sb.from('menutech_reservations').update(updates).eq('id', id);
